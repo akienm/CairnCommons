@@ -23,9 +23,13 @@ One record = one datum of evidence about one gate. Fields:
 - `signal` — Akien's response (a correction, a CC++, a CC--, or silence).
 - `evidence` — `correction` | `confirmation` | `weak` (silence ≠ approval: silence is
   `weak` at most, an explicit positive is `confirmation`).
+- `ceiling` — `true` if this gate must **never auto-open** (irreversible / outward /
+  steering), however much evidence accrues. A structured guardrail read by the fold,
+  not a prose match (rung 3): a never-auto-open gate is physics, not a substring the
+  projection might miss (Law 4).
 - `confidence_move` — direction + rough magnitude on that gate's *autonomy* (may this
-  gate open for CC?), with a `ceiling` note if it is an irreversible/outward gate that
-  must never auto-open.
+  gate open for CC?); the prose rationale for the move (the `ceiling` field carries the
+  guardrail structurally).
 - `note` — the why, in one line.
 - `provenance` — where in the record this came from (session/turn).
 
