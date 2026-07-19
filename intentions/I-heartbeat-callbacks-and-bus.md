@@ -4,9 +4,11 @@
 runtime architecture for how Cairn devices are driven and how they talk. It sharpens
 and partly supersedes the earlier "operational-driver primitive" + "host/rack" +
 "peers fire in two modes" sketches in `MAP.md` and `tickets/state-machine-physics.json`.
-The code shipped 2026-07-18 (`ground_loop` `584aa74`, `system_rackmount` `5cb593a`)
-was built to the OLD shape (a generic `run_driver` executor + a central scheduler) —
-that shape is the goof this document corrects; the code rework is pending.*
+The code shipped 2026-07-18 morning (`ground_loop` `584aa74`, `system_rackmount` `5cb593a`)
+was built to the OLD shape (a generic `run_driver` executor + a central scheduler) — that
+shape was the goof this document corrects. The rework SHIPPED the same evening (commits
+`d27ce1d` bus, `ae2d372` base callback+shim, `a535de0` heartbeat, `faafb70` system device),
+each piece proven under the tester — see "What this changes in code — DONE" at the bottom.*
 
 ## The two universal substrates
 
@@ -162,15 +164,31 @@ CC (I) froze Cairn-fluid categories three times; Akien caught each at n=1:
 
 The tell: I turn examples/metaphors into frozen taxonomies. The fix flows them apart.
 
-## What this changes in code (rework pending — do not treat as done)
+## What this changes in code — DONE (reworked + proven 2026-07-18 evening)
 
-- `ground_loop` → strip to the heartbeat (no `run_driver`, no resolve, no write).
-- `BaseShim` → gains per-pulse callback-firing, message receipt, and on-demand device
-  start (each device its own process).
-- callbacks → immutable declarations in the device's class-space code tree; the fire
-  path is a separate ephemeral process → bus message → target shim.
-- tickets → the mutable workflow species (instance-space), distinct from callbacks.
-- `system_rackmount` → the *system device* (host-resource predicate owner); the central
-  `SchedulerService` dissolves; `interval/date/quantity/state` enum is deleted.
-- the **bus** → a new component (the sole communication path; db_domain-backed transit;
-  MCP adapter; per-device channels). Not yet built.
+The rework shipped the night the model converged, each piece proven bare AND under the
+tester, each committed separately:
+
+- the **bus** → BUILT (`cairn/bus/`, commit `d27ce1d`). The sole comms path; durable transit
+  rides db_domain (owner `bus`); per-device channels (announce/personal records, info/debug
+  diagnostic); record channels refuse to collapse, diagnostic views may (Law 7); every
+  envelope carries why + causality (Law 5). Filed: MCP wire-adapter; per-device-owned channels.
+- the **Callback primitive** → BUILT (`cairn/base/callback.py`, commit `ae2d372`). Immutable;
+  a trigger is ANY predicate `(now, context) -> bool`, NOT a named kind (the enum is deleted);
+  evaluated where its data is owned (Law 6).
+- `BaseShim` → REWORKED (`cairn/base/shim.py`, `ae2d372`). Gains per-pulse callback-firing
+  (`on_pulse`, batch-safe), message receipt + on-demand device start (`deliver`/`_start_device`).
+  The long-deferred one-loop primitive is resolved: the heartbeat IS the one loop. Filed: each
+  device its own OS process (the shape — start-on-demand — is proven; real spawn grows against need).
+- `ground_loop` → STRIPPED to the heartbeat (`cairn/ground_loop/loop.py`, commit `a535de0`).
+  `beat(now, context)` pulses subscribed shims; no `run_driver`, no resolve, no write. The
+  method-registry + collect fixtures + executor proof were RETIRED (the proven-space registry
+  returns with the emit-chokepoint when a real consumer pulls it).
+- `system_rackmount` → REWORKED to the *system device* (`cairn/system_rackmount/`, commit
+  `faafb70`). Owns host-resource predicates; advertise → subscribe → poke; evaluates locally so
+  the reading never leaves (Law 6); the central `SchedulerService` + `interval/date/quantity/
+  state` enum are DELETED. Its capstone proof composes every piece above end-to-end.
+- **tickets** → the mutable workflow species stays DISTINCT and DEFERRED — the callback/ticket
+  boundary is now clean in code (a callback is the immutable worker; a ticket is the mutable
+  node), but the ticket state machine still waits on the emit-chokepoint
+  (`CairnCommons/tickets/state-machine-physics.json`). Not built here, by design (not the goof).
