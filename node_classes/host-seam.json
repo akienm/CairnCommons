@@ -1,0 +1,31 @@
+{
+  "class": "host-seam",
+  "role": "node-class-definition",
+  "schema_version": "v0",
+
+  "what": "A change to the HOST — the machine's configuration outside our repo. Yields no code we own and no prose: it yields a machine in a different state. Config files we don't author (~/.claude/settings.json), installed packages, desktop widgets, systemd units, symlinks onto PATH, kernel/port settings, credentials placement. Proved by measuring the host, and re-proved on a horizon because the host can change without anything in git changing.",
+
+  "why": "Akien, 2026-07-22, on installing the usage-widget hook: 'the intentions folder, if it's a built thing but not necessarily in our code base — like setting up something specific in system config — has to have a collection of other intentions that were fulfilled, because that is likely to be something I'd want to transport if I set up elsewhere. Our approach literally allows us to take that one folder out of this repo and rebuild the whole thing.' That is the reason this class exists, and it is a stronger claim than bookkeeping: the intentions folder is meant to be the SEED the system regrows from, and a seed that omits the host changes regrows a system that does not run. Everything a code-seam needs is already frozen in git — the repo IS the artifact. A host-seam's implementation lives somewhere git will never see, so the intention has to carry enough to REPLAY it or the knowledge is lost the moment the machine is. This is inference compilation aimed at provisioning: the reasoning that produced a working box, captured once, so the next box does not re-derive it.",
+
+  "invariant": "replayable + re-verified (Laws 3 + 8). A host-seam that merely DESCRIBES a change is documentation, not a node — it must carry the recipe that reproduces it, and a check that measures whether it is still true.",
+
+  "prove_gate": "proof gate, with a twist — the tester (IOU: hand-run until built) measures the HOST, not a build: run the node's verify command, compare against the claimed state, emit a VALIDATION. Unlike a code-seam this seal is never permanent — see re-verify below.",
+
+  "extra_gates": [
+    "REBUILD gate (the class's whole point) — the node carries an `apply` recipe complete enough that a fresh machine reaches this state from the node ALONE, with nothing else from the repo. The hollow-build test (Law 8): hand the node to a mind standing on a bare box; if it cannot get there, the node is hollow no matter how well it reads.",
+    "RE-VERIFY gate — a host-seam's seal expires. The host can drift with nothing in git changing (an upgrade rewrites a config, a package is removed, someone edits by hand), so the node carries a `verify` command and a horizon, and a stale VALIDATION is a hypothesis again (Law 3). A code-seam is proved once because git freezes it; a host-seam can never be.",
+    "durability gate — same as code-seam: not done until proven AND committed."
+  ],
+
+  "kicks_back_on": "verify red — the host does not match the claim. Two different failures that must not be conflated (Law 7 at a diagnostic surface): the recipe was WRONG (routes back to build) versus the host DRIFTED out from under a correct recipe (routes back to apply, and the drift itself is evidence worth recording — that is how this class learns).",
+
+  "how_does_this_class_learn": "By re-running its verifiers and reading the drift. Every re-verify that comes back red on a previously-green node is a measurement of what the host does NOT hold still, which is precisely the knowledge a provisioning seed needs and the one thing you cannot get by reasoning about it. Silence is not an answer here (CLAUDE.md's standing charter question).",
+
+  "berth": "`intentions-other/` (Akien's name, 2026-07-22) — the home for intentions with no code to sit beside. The partition question 'does this intention have code?' answers NO for a host-seam: there is no directory in cairn/ to be beside, because the implementation is the machine. So its ticket never migrates; it becomes `history` in place. Third leg of the partition: code-seam -> beside its code in cairn/; concept-piece and host-seam -> `intentions-other/`, the latter pointing AT the host.",
+
+  "feeds": "`intentions/` — which is COMPILED from `intentions-other/` PLUS the charters now homed beside the code (Akien, 2026-07-22). This is the outer row of the three-scale projector recursion, and it is what makes the seed claim true: the compiled index is only complete if the homeless intentions have a berth to be compiled FROM. A host-seam that never reaches `intentions-other/` is invisible to the seed, and the box it configured cannot be rebuilt.",
+
+  "members_so_far": ["usage-widget-hook"],
+
+  "provenance": "Coined by CC and named `host-seam` 2026-07-22 (parallel to code-seam: 'seam' is the boundary a proof can grip — here, between Cairn and the machine under it). Demanded, not pre-seeded: the usage-widget hook was built first and had nowhere to berth, which is what surfaced the gap. Akien named the why (the transportable seed). Cast retroactively, which is itself the defect that produced the class — see tickets/usage-widget-hook.json."
+}

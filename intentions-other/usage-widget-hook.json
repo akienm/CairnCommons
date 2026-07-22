@@ -1,0 +1,40 @@
+{
+  "id": "usage-widget-hook",
+  "date": "2026-07-22",
+  "owner": "akiendelllinux_cc_0 (CC) — CC gates writes; Akien ratified by measurement ('verified it's now working', 2026-07-22).",
+
+  "intention": "This machine reports Claude Code usage to a desktop widget without the widget ever calling the API: a Stop/StopFailure hook fetches usage after each response and writes a local cache the widget reads.",
+
+  "why": "The widget polling the API directly gets rate-limited, and the data it wants already exists at a moment the CLI is naturally idle — the end of a response. Fetching there costs nothing extra and makes the cache a byproduct of work already done rather than a separate job that can rot. Underneath: usage is the meter on inference compilation. The whole research claim is that we spend the model less over time (inference_domain meters spent-vs-avoided at the call; this meters the account). A claim about cost that nobody can see at a glance goes unmeasured, and unmeasured is unknown (Law 3).",
+
+  "node_class": "host-seam",
+  "state": "host-seam@v0: THINKME -> TICKETME -> BUILDME -> PROVEME -> LEARNME -> [PROVED]   (PROVED 2026-07-22: script pipe-tested (cache written, 2044 bytes, plan default_claude_max_5x, 12 live usage windows); hook JSON schema-validated on both events via `jq -e`; Akien confirmed the live hook fires. The seal EXPIRES — see horizon.)",
+
+  "gates": "proof gate — measure the host, not a build. REBUILD gate — the `apply` block below must bring a bare machine to this state with nothing else from the repo. RE-VERIFY gate — `verify` below, re-run on the horizon. Durability gate — committed to git.",
+
+  "apply": {
+    "note": "Complete recipe. A mind on a fresh box should need nothing from this repo but this block.",
+    "1_widget": "Install the KDE plasmoid `org.kde.plasma.claudecodeusage` to ~/.local/share/plasma/plasmoids/. It is the CONSUMER only — it reads the cache and never calls the API. Nothing below depends on it; the cache is useful without it.",
+    "2_script": "Install the fetch script to ~/.claude/hooks/update-usage.sh, mode 0755. It reads the OAuth token from ~/.claude/.credentials.json, GETs https://api.anthropic.com/api/oauth/usage with header `anthropic-beta: oauth-2025-04-20`, and writes {usage, planType, updatedAt} to ~/.claude/usage-cache.json. It exits 0 on every failure path and leaves any existing cache untouched, so a red network is silent by design.",
+    "3_patch": "MEASURED DEFECT in the copy the plasmoid ships (hooks/update-usage.sh inside the plasmoid dir): it interpolates $USAGE_RESPONSE directly into a Python string literal, which breaks on quotes and backslashes in the API response. The installed copy must instead `export USAGE_RESPONSE PLAN_TYPE CACHE_FILE` and read them via os.environ inside a quoted heredoc (<< 'PYEOF'). Do NOT re-copy from the plasmoid directory on upgrade without re-applying this.",
+    "4_hook": "Merge into ~/.claude/settings.json (preserving existing keys) a `hooks` object registering BOTH `Stop` and `StopFailure`, each with matcher \"\" and one command hook: {\"type\":\"command\",\"command\":\"$HOME/.claude/hooks/update-usage.sh\",\"timeout\":15}. StopFailure matters — a turn that errors still spent tokens, so skipping it would silently under-report exactly when usage spikes.",
+    "5_reload": "Claude Code's settings watcher only watches directories that held a settings file at session start. If the hook does not fire, open /hooks once or restart the CLI.",
+    "optional": "Add \"async\": true beside each timeout if the ~10s worst-case curl at the end of every response is noticeable. Left synchronous here because that is what the package's own instructions specify and the latency has not been measured as a problem."
+  },
+
+  "verify": {
+    "command": "jq -r .updatedAt ~/.claude/usage-cache.json",
+    "green": "a timestamp newer than the last response you sent",
+    "also": "jq -e '.hooks.Stop, .hooks.StopFailure' ~/.claude/settings.json exits 0, and ~/.claude/hooks/update-usage.sh is executable and contains `os.environ` (the patch, not the shipped interpolation).",
+    "measured_2026-07-22": "cache written at 17:01:30Z on a direct pipe-test; Akien confirmed the registered hook fires on a live turn."
+  },
+
+  "falsifier": "The cache stops tracking reality without anyone noticing. Concretely: `updatedAt` goes stale while sessions continue (hook unregistered by a settings rewrite, script lost on a Claude Code upgrade, token shape changed, the /api/oauth/usage endpoint moved or its beta header retired) — and because the script exits 0 on every failure path, NONE of that is loud. The widget keeps showing the last good numbers. That silence is the real risk of this node, and it is why re-verify is a gate rather than a habit. Second falsifier, for the class-level claim: hand this node to a mind on a bare box; if it cannot reach a working state from the `apply` block alone, the node is hollow.",
+
+  "horizon": "Re-verify on any Claude Code upgrade, any plasmoid upgrade (step 3 regression), and otherwise monthly — first check 2026-08-22. A stale VALIDATION here is a hypothesis, not a fact.",
+
+  "parent": null,
+  "children": [],
+
+  "provenance": "BUILT BEFORE IT WAS INTENTIONED — the defect that produced the class. 2026-07-22: Akien handed over setup instructions, CC installed the hook, and only then did Akien note 'we prolly should have intentioned that first' and, from that, name why such intentions need a berth: they are the ones you carry to a new machine. Cast retroactively. First member of `host-seam`; first record in `intentions-other/`."
+}
