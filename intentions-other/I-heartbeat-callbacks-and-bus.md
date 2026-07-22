@@ -44,6 +44,32 @@ not features added per surface — they are automatic. Physics, not policy (Law 
   heavier process the shim wakes. This is the sleep/wake peer model made physical: a
   device is a process that *wakes to a poke*, not a daemon that spins.
 
+### Why event, not poll — the shrinking-footprint aim (Akien, 2026-07-22)
+
+**Polling costs CPU; events don't.** A process that wakes on a schedule to check
+whether something happened burns cycles on every tick where the answer is *no* — and
+the answer is *no* almost every tick, by construction. An event-driven wake burns cycles
+only when the thing actually happened. So the choice between "scan periodically" and
+"subscribe to the gate that produces the change" is not a style preference — it is the
+difference between a cost that grows with the *clock* and a cost that grows with *real
+events*, and real events are rare relative to the clock.
+
+This traces to a standing aim Akien named explicitly: **an ever-decreasing computational
+footprint.** Cairn should cost *less* to run as it matures, not more — the opposite of a
+system that accretes background daemons and cron ticks until the machine is busy doing
+nothing. Every "poll" we can convert to an "event" moves a cost off the clock and onto
+the events that justify it.
+
+It is also **a why for the ground loop itself**, though the ground loop's charter does
+not phrase it this way: the ground loop is the *one* permitted periodic pulse, and it
+exists precisely so that nothing else has to be. One heartbeat, shared, replaces every
+component's private timer — N polling loops collapse to one, and the one does nothing but
+beat. Concretely, this is why the pre-Cairn cron jobs were deleted (2026-07-22) rather
+than ported: a cron entry is a private polling loop with a private schedule and no owner
+(see `notes/held-inspectors-janitors-filters.json` — the unowned-default that governs a
+record's survival). Functionality like `cleanupPeriodDays` may well be rebuilt — but it
+will hang on a callback fired by a gate, not on a clock that wakes to ask "anything?".
+
 ## Callbacks vs tickets — two species, named for what they are
 
 - **Callback** — *immutable, no workflow.* "Call X when this trigger is true." It
