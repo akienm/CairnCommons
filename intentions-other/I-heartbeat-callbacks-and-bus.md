@@ -60,6 +60,16 @@ system that accretes background daemons and cron ticks until the machine is busy
 nothing. Every "poll" we can convert to an "event" moves a cost off the clock and onto
 the events that justify it.
 
+**Where it traces (Akien, 2026-07-22): telos aims 1 and 5.** It is a *derived
+consequence*, not a seventh aim and not a core value. Aim **1 (demonstrate inference
+compilation)** is the load-bearing parent, because **Law 1 is this same principle stated
+at the inference level** — "the resolver is spent on the novel, not on re-deriving the
+settled" is *don't spend compute twice*. Inference compilation turns re-derivation into
+structure, which *is* reduced compute; event-not-poll is that principle one layer down, at
+runtime instead of at inference. Improving along that axis as the system matures is aim
+**5 (self-improving).** So shrinking-footprint is compilation generalized from inference
+to the running machine — not, primarily, an altruism (aim 6) thing.
+
 It is also **a why for the ground loop itself**, though the ground loop's charter does
 not phrase it this way: the ground loop is the *one* permitted periodic pulse, and it
 exists precisely so that nothing else has to be. One heartbeat, shared, replaces every
