@@ -5,7 +5,7 @@
 awaiting Akien's signature gate** (concept-piece quorum gate — the why goes to the
 commons the moment it is written; the seal is his ratify). Node-class:
 concept-piece (the prose IS the implementation; a code-seam — the diagnostic
-interpreter — instantiates it). Migrates into the intention envelope when that schema
+inspector — instantiates it). Migrates into the intention envelope when that schema
 lands (MAP.md Q6).*
 
 A diagnostic surface — a failure report, a system alarm, a trouble ticket — **delivers
@@ -63,17 +63,20 @@ run — did the loop fold the miss, or let it recur?
   cross-referenced, **not** merged — a distinct store with a distinct key.
 - vs **the diagnostic emission** (`cairn/base/diagnostic.py`) — the emission stays a
   dumb, thin breadcrumb (Law 6: only the pointer crosses); this principle is about
-  what the *interpreter* assembles from the breadcrumbs and logs. The emission is
-  dumb so the report can be smart.
+  what the *inspector* assembles from the breadcrumbs and logs — the FINDINGS. The
+  emission is dumb so the findings can be smart.
 
 **Spawned / related work.**
-- *diagnostic-interpreter* (ticket, code-seam) — the concrete build that instantiates
-  this: the crawler that assembles the complete first-pass report from the emission
-  breadcrumbs + timestamp-indexed logs, **plus** the learning-loop that folds a forced
-  second-run's miss into the next report's completeness for that transition-class. The
-  "report + learning-loop" Akien scoped.
+- *diagnostic-inspector* (ticket, code-seam) — the concrete build that instantiates
+  this: the inspector that reacts to a fired callback and FILTERS the emission
+  breadcrumbs + timestamp-indexed logs into the complete first-pass FINDINGS, **plus**
+  the learning-loop it carries that folds a forced second-run's miss into the next
+  findings' completeness for that transition-class. Its explicit remit (Akien): save CC
+  tokens exploring an issue as the prebuild step does for coding, and get better over
+  time. (Born as *diagnostic-interpreter* / `assemble`; refactored to the
+  inspector/filters/findings shape 2026-07-24.)
 - *`cairn/base/diagnostic.py`* (built) — `DiagnosticBase.emit`, the transition-grade
-  breadcrumb every device inherits; the interpreter crawls on its pointer + microsecond
-  stamp. The docstring already named this interpreter as "the next build."
+  breadcrumb every device inherits; the inspector crawls on its pointer + microsecond
+  stamp. The docstring already named this inspector as "the next build."
 - Kin: `[[diagnostic-logging-method]]` (the how — instrument → interpret → review →
   fix) is the operating procedure this principle is the why for.
