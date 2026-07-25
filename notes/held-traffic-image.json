@@ -1,0 +1,76 @@
+{
+  "id": "held-traffic-image",
+  "title": "The Traffic Image — the harbour master's main view",
+  "status": "HELD DESIGN (not built). Consolidated from a design chat 2026-07-24. Feeds harbor_master CHILD C's charter when web_server opens — child c IS the source the web_server's journey pane renders (the Events-vs-Journeys split). Not yet a code-seam berth; captured so none of it is re-derived (Law 1).",
+  "date": "2026-07-24",
+  "author": "akiendelllinux_cc_0 (CC), consolidating Akien's design (he drove every move below).",
+
+  "the_view": {
+    "name": "the TRAFFIC IMAGE — the real harbour-master term of art (the VTS operations-room view). Chosen over 'movements board' deliberately: 'movements' implies displayed-in-motion; the traffic image is STATE-RIGHT-NOW — every boat, where it is, what's watching it.",
+    "scope": "BROAD (the whole roadstead), not tight. The broad view's payoff is that it surfaces boats that are STUCK — including the SILENTLY stuck, which nothing else flags. That's the boon; a loud failure already shouts, the quiet stall does not.",
+    "audience": "operational. The journey pane of the web_server renders this."
+  },
+
+  "the_gate": {
+    "emergent_not_infrastructure": "A gate is NOT pre-built infrastructure. Its OCCUPANCY is emergent — the sum of in-flight tickets sitting at that transition-class, with many workflows sharing one gate at the same time.",
+    "occupants_vs_staff": "Two layers. OCCUPANTS = the boats (transient, counted). STAFF = the subscriptions (persistent — they stand by with zero traffic; a monitor stays armed over an empty gate). The live gate = occupants measured against staff.",
+    "no_dispatcher": "The harbour master does NOT send for those waiting (pull, not push). A ticket changing state is a POKE; every subscriber to that gate hears it; each subscriber's SHIM reads the file and decides LOCALLY — 'is my boss qualified? do we offer to pick this one up?' (Law 6, evaluated where its data is owned). The offer is a bid, decided at the edge."
+  },
+
+  "the_primitive": "IT IS ALL ONE CALLBACK. A subscription is a callback; monitoring is a callback; a gate-contact firing is a callback. Every indicator on the view is one callback subscribed to the gate — the icon differs ONLY by the VERB it runs when it fires. This is the Law-1 compression at the heart of the model: four indicators, one primitive.",
+
+  "the_four_verbs": {
+    "1_boats_(the_work)": "workflows / tickets in flight. The subject of the gate. They carry MARKERS (see boat_markers).",
+    "2_bid_(the_doers)": "workflow processors, fronted by shims. On the poke, the shim evaluates 'is my boss qualified?' and OFFERS to pick up. Pull, not push.",
+    "3_watch_(the_watchers)": "monitors — gate-monitoring callbacks. The diagnostic_inspector's 'inspect now' callback is one instance. Passive: 'should I record this?'",
+    "4_authorize_(the_gatekeeper)": "clearance — harbor_master CHILD B, owner-or-grant. The actor Akien had folded into 'the gate'; distinguished by its WHY (bidding asks 'can I do this?', watching asks 'should I record this?', authorizing asks 'may this cross at all?' — three different reasons, so genuinely distinct, not a synonym). It turns a processor's OFFER into a PICKUP. Its visible artifact: the OUTSTANDING GRANTS at the gate (delegated authority — 'who besides the owner may clear here'), which is itself just a callback/token."
+  },
+  "the_carry_edge": "NOT a new class — a relationship to DRAW. Once cleared, a processor is CARRYING a specific boat (boat <-> its current crew). This splits the processor indicator into two states: subscribed/eligible (watching) vs actively carrying (working). A watching boss and a working boss look different on the water.",
+
+  "boat_markers": {
+    "principle": "Ordered by HOW MUCH IT NEEDS A HUMAN — the axis that matters at a glance. Marker names are CC coinages (correct freely). 'held/blocked/defer' deliberately avoided (UU baggage); [W] names the party it waits on instead.",
+    "vocabulary": [
+      {"marker": "(none)", "name": "Underway", "means": "cleared and moving — the happy path", "resolves": "nobody; it's fine"},
+      {"marker": "[R]", "name": "Requested", "means": "clearance asked, the gate is deciding", "resolves": "the machine, imminently"},
+      {"marker": "[W]", "name": "Waiting-on", "means": "blocked on an external party — a human answer, another boat's completion", "resolves": "that party"},
+      {"marker": "[F]", "name": "Failed", "means": "the crossing was attempted, the work/proof came back red", "resolves": "a fix + retry"},
+      {"marker": "[X]", "name": "Refused", "means": "clearance denied — not authorized, or the move is illegal", "resolves": "authorization, or making it legal"},
+      {"marker": "[S]", "name": "Stalled", "means": "nothing flagged, but past its gate's expected dwell — the silent stuck", "resolves": "someone has to NOTICE; this view is how"}
+    ],
+    "markers_are_primitive_sublists_are_rendering": "A boat has one condition at a time and the marker rides with it. 'Sublists' = group-by-marker over that same data — DERIVED, not stored (Law 1). That gives calm-when-healthy for free: collapse the underway into a COUNT ('14 underway'), expand only the flagged ('3 need an eye — [F] [S] [S]'). Healthy is a number; stuck is a line you can read."
+  },
+
+  "the_starvation_alarm": {
+    "what_it_is": "Gate-level [S]: a gate with boats and NO qualified subscriber — work nobody can pick up. The structural cousin of a boat's [S]: a boat stalls; a GATE starves. Occupancy without the right staff. Probably the single loudest thing the broad view can earn.",
+    "usually_fine": "Starvation being PRESENT is not the emergency; being unattended and unnoticed is. Pulling a builder offline for repair leaves boats riding at anchor — that's fine, a builder's back in a moment.",
+    "latching_discipline": "The alarm is EDGE-TRIGGERED + LATCHED (the same anti-poll instinct as everything else). It fires ONCE, loud, on the TRANSITION INTO starvation (Law 7, loud at the surface). Then it SHUTS UP — it does not re-shout on every poke while the condition sits (that firehose is the poll we reject). It stays silent until CLEARED; only a NEW edge re-arms it.",
+    "two_kinds_of_quiet": "ACKNOWLEDGED — you know, you pulled the builder, the condition persists but it's owned and expected -> the view drops from loud to a CALM MARKER ('waiting on builder, ack'd'), not to nothing (else an ack'd-forever starvation goes invisible). CLEARED — the builder's back, the queue drains -> the latch RESETS, gone, re-armed. An ack silences; a clear resets; the view must tell them apart.",
+    "known_vs_unexplained": "The alarm can be born PRE-ACKNOWLEDGED when the cause is known: pulling a builder offline WITH A REASON makes the starvation it causes expected -> quiet from the start. The loud one is starvation with NO KNOWN CAUSE — a builder that should be there and isn't (crashed, vanished). Same picture on the water, opposite urgency. Expected absence is quiet; unexplained absence shouts.",
+    "reusable_primitive": "A LATCHING ALARM (fire-once, ack-to-silence, clear-to-reset) is NOT a starvation special-case — a red build or a persistent [X] refusal should ring it the same way. Build it ONCE, ring it from many conditions (Law 1). Minimal core is just the latch (fire -> ack/clear); the known-cause-quiet grows against need.",
+    "the_latch_is_owned": "A small owned fact AT THE GATE: raised-at / ack'd-by / cleared-at. The traffic image READS it, never owns it."
+  },
+
+  "ownership_and_composition": {
+    "the_image_owns_nothing": "The traffic image is a PRESENTATION SURFACE (Law 7): it composes vantages into one coherent picture and READS them; it never becomes a second store. Same relation state.json has to history — a projection, not a source. That's what stops the picture drifting from the machinery it shows.",
+    "two_owners_per_gate": "The image reads TWO owners per gate and composes them: (1) the BOATS' voyages (owned where each boat is) and (2) the GATE'S OWN QUEUE (owned where the gate is). It stores neither."
+  },
+
+  "design_consequences_IOUs": {
+    "note": "The broad view earns its keep by FORCING these facts to acquire owners — a feature, not a bug. Three markers compose from records that already exist ([R], [F], the underway count); these need a small owned fact that isn't fully there yet:",
+    "the_gates_queue_must_become_owned": "Today child b's clearance gate writes NOTHING on a refusal (correctly — an illegal move must never be journaled as if it happened). So [X] refused needs the refusal to leave a trace OWNED BY THE GATE'S QUEUE (requests, refusals, dwell), distinct from the boat's successful-crossing history. Clean split: the boat owns its voyage; the GATE owns its queue.",
+    "S_stalled_computed_on_read": "Derived at RENDER time from history timestamps vs a per-gate expected dwell (or a global threshold). No store, no poller — staleness computed the moment the image renders (event, not clock).",
+    "W_waiting_on_needs_a_fact": "Needs a 'waiting_on' owned somewhere (a question record / a pending decision). Partially exists (CairnCommons/questions), partially a gap.",
+    "the_latching_alarm": "The reusable fire-once/ack/clear primitive above — to be built once."
+  },
+
+  "the_human": "NOT a fourth actor class. Akien is a boss whose shim can always bid, and the escalation target when no automated boss qualifies. A special case of the processor (bid) indicator. (CC's call — revisit if he should be distinct.)",
+
+  "laws_traced": {
+    "Law_1": "one callback primitive under four verbs; sublists derived not stored; the latching alarm built once and rung from many conditions; this whole note exists so the design is not re-derived",
+    "Law_4": "the alarm is edge-triggered physics, not a re-shouting policy; staleness computed on read",
+    "Law_6": "each shim evaluates where its data is owned; the image reads two OWNERS per gate; the latch and the queue are owned AT the gate",
+    "Law_7": "the image is a presentation surface that may collapse to a calm shape; the RECORDS OF TRUTH are the boats' crossings and the gate's queue, never the view; the alarm is loud ONCE at the surface"
+  },
+
+  "next": "Becomes harbor_master CHILD C's charter when web_server opens. Lock in: boats / bid / watch / authorize as four callback-verbs on one primitive + the carry edge + the boat-marker vocabulary + the latching starvation alarm + owns-nothing/two-owners-per-gate. The first real build question: standing up the GATE'S QUEUE as an owned thing (requests/refusals/dwell) so [X] and [S] have a source to compose from."
+}
