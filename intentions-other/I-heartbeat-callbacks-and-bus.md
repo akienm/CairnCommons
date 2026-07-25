@@ -89,7 +89,7 @@ will hang on a callback fired by a gate, not on a clock that wakes to ask "anyth
   target's shim, then **terminates.** That statelessness is why it can be a fire-and-die
   process. The heartbeat fires callbacks (via the shim). Every recurring wake-up —
   interval, time, data-accumulated, resource-threshold — is a callback.
-- **Ticket** — *a workflow node: mutable, carries a state machine* (a journey, e.g.
+- **Ticket** — *a workflow node: mutable, carries a state machine* (a voyage, e.g.
   `LEARNING → ARCHIVED`). A different species. Its state is mutable, so it lives where
   workflow-state lives (instance-space / the node store), not class-space.
 - **`LEARNING` is a state; a callback is the worker.** A node *in* `LEARNING` can *set*
