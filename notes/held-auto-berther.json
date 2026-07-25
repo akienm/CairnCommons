@@ -1,0 +1,40 @@
+{
+  "id": "held-auto-berther",
+  "title": "The Auto-Berther — physically migrate a PROVED ticket beside its code",
+  "status": "FILED 2026-07-24, not started. The NEXT SMALL BUILD after the harbor_master rungs. Filed (not built) because the honest count is already served WITHOUT it: journey.py's BERTH-PENDING [✓] condition reads DONE-ness straight off the cursor, so a PROVED ticket still in CairnCommons/tickets/ leaves the in-flight count today (8 in flight, 4 berth-pending) with zero file moves. The auto-berther is the PHYSICAL reconciliation that clears berth-pending to zero — valuable, but no longer urgent, so it waits its turn behind the librarian.",
+  "date": "2026-07-24",
+  "author": "akiendelllinux_cc_0 (CC).",
+
+  "what_it_is": "A code-seam that, for each OPEN ticket whose cursor is at a REST stage (PROVED / concept-piece rest), MIGRATES the ticket beside its code and folds it into that component's append-only history — the lifecycle CLAUDE.md already names ('a ticket stages in CairnCommons/tickets/, then migrates beside the code to become that component's history'). Today that migration is hand-run; the auto-berther makes it a proven, repeatable move.",
+
+  "why_a_code_seam_not_a_note": "It has ONE code address — the berthing logic lives beside cairn/harbor_master/register.py (the register is what DEFINES open-vs-in_port by file location, so it owns the move that flips a boat from one to the other). When built, it berths there. This note is the design so the build is not re-derived (Law 1).",
+
+  "the_move_per_boat": [
+    "1. Read the open ticket; confirm its cursor is at a REST stage via the emit-chokepoint's class table (PROVED for code-seam@v1). A non-rest ticket is NOT berthed — berthing a still-in-flight boat would lose its open vantage.",
+    "2. Resolve the ticket id -> its code home (the berth dir). The id is hyphenated (harbor-master), the dir underscored (harbor_master) — journey._canon already normalises this (register filed-edge e). BUT the berth is not always cairn/<canon>/: cairn-command berths in bin/ (a bare-script home, register._berthed_boats already special-cases bin/history.json). So the id->berth map is NOT a pure string transform; resolve it against the ACTUAL code homes the register scans, and fail LOUD on an id with no resolvable home (Law 7) rather than guessing a dir.",
+    "3. Fold the ticket's voyage into the component's history via the projector's append door (projector.append_entry) — the SINGLE write-door (never hand-write history.json). The ticket's final standing becomes a history entry; state.json regenerates.",
+    "4. Remove the ticket from CairnCommons/tickets/ — the boat is now in-port only. The register recomputes open-vs-in_port on read, so berth-pending drops to zero for that boat automatically (no count to update; it is compiled).",
+    "5. Both repos: the ticket-file removal (CairnCommons) and the history append (cairn) are two commits across two repos — the move is not atomic across them. Order: append history FIRST (cairn), then remove the ticket (CairnCommons), so a crash between leaves a both-lanes boat (mid-journey, visibly flagged) rather than a vanished one (invisible). Loud-partial over silent-loss (Law 7)."
+  ],
+
+  "FIRST_TASK_the_cascade": {
+    "finding": "2026-07-24: hand-migrating the four current berth-pending boats (cairn-command, charter-state-history-split, diagnostic-inspector, harbor-master) would RED three proofs that pin the live fleet as an open/mid-journey exemplar — the exact brittleness class in memory proof-over-live-data-assert-invariants. The auto-berther's FIRST job is to de-brittle these, THEN it can move files:",
+    "pinned_proofs": [
+      "cairn/harbor_master/proofs/test_harbor_register.py — asserts 'harbor-master' in open_ids (pins harbor-master as an OPEN boat; berthing it reds this).",
+      "cairn/base/proofs/test_transitions.py:109 — reads harbor-master.json FROM CairnCommons/tickets/ to prove the parser survives a real on-disk ticket (already de-brittled to assert INVARIANTS not the cursor value, but still reads the FILE from tickets/; berthing removes the file). Needs re-pointing to any live ticket, or a frozen exemplar string.",
+      "cairn/harbor_master/proofs/test_journey.py — already de-brittled this session (picks its mid-journey/berth-pending subjects from the LIVE fleet, no pinned id) — so it survives a berth move. The template for fixing the other two."
+    ],
+    "de_brittle_recipe": "Follow test_journey.py: a proof over live fleet data asserts INVARIANTS (shape, conformance, membership-of-SOME-boat, disjointness) never a snapshot value or a pinned id. For test_transitions.py's real-ticket tooth: read ANY open ticket (glob, take one) or freeze a fixed exemplar string — the tooth's intent is 'the parser survives wild on-disk format', which needs no specific file. For test_harbor_register.py: assert the OPEN lane is non-empty and every open id resolves to a real ticket file, not that a NAMED boat is open."
+  },
+
+  "non_hollow_proof_the_berther_must_pass": "Construct a temp ticket at PROVED + a temp code home with a history; run the berther; assert (a) a still-in-flight ticket is REFUSED berth (cursor not at rest), (b) the PROVED ticket's history GREW by one entry through the projector door (not hand-written — seq monotonic), (c) the ticket file is gone from tickets/ so the register now reports it in_port only (berth-pending -> 0 for it), (d) an id with no resolvable code home fails LOUD, not silently. A green over a berther that hand-wrote history or guessed a dir would be hollow (Law 8).",
+
+  "laws_traced": {
+    "Law_1": "berth-pending already reads done-ness off the cursor, so the count is honest WITHOUT this build — the physical move is reconciliation, not the source of truth; the id->berth resolution reuses journey._canon, not a re-derived transform.",
+    "Law_4": "the rest-stage check goes through the emit-chokepoint's class table (physics), not a hardcoded 'PROVED' literal.",
+    "Law_7": "history folded only through the projector's append door; the cross-repo move ordered loud-partial over silent-loss; an unresolvable id fails loud.",
+    "Law_8": "the proof constructs a real berth + refuses a non-rest boat + checks the projector seq grew — a hollow hand-write could not pass."
+  },
+
+  "next": "Build after the librarian settles (deferred by Akien's 'settle everything before librarian' — this is filed, not opened). When opened: cast a code-seam ticket beside cairn/harbor_master/, do the FIRST_TASK de-brittle, then the per-boat move + non-hollow proof, then run it once over the four current berth-pending boats and watch berth-pending fall to zero."
+}
