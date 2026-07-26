@@ -1,27 +1,32 @@
 {
   "id": "append-door-has-no-schema-gate",
-  "filed": "2026-07-25",
-  "filed_by": "CC",
-  "found_how": "Caught live, not by inspection: a real gate progression through the append door wrote a record that harbor_master's register could not read, and the failure surfaced only when a downstream proof went red.",
-
-  "_note": "THE FIRST TROUBLE. CairnCommons/troubles/ is named in CLAUDE.md's roots table and did not exist on disk until this was filed. Akien, 2026-07-25: 'a poke into nothing, a message that can't be delivered, these are bugs. nothing should fail silently. everything that can't escalate somewhere else should fail to trouble tickets until we get no more from the system. it's literally telling you and i how to improve it.' This report is written to I-complete-diagnostic-on-first-pass's own standard — every seeded datum present, so no second run is needed to resolve it.",
-
-  "identity": "cairn/charter/projector.py::append_entry — the single write-door for every component's history",
-  "location": "cairn/charter/projector.py:112 (append_entry); surfaced at cairn/harbor_master/proofs/test_harbor_register.py:49",
-  "code": "history = append(read_history(history_path), record); _atomic_write(history_path, history)",
-  "expected": "A record entering a record of truth conforms to the shape that history's readers require — here, a 'standing' field, which every prior record in cairn/diagnostic_inspector/history.json (seq 0-3) carries and which harbor_master's register reads to derive a boat's standing.",
-  "actual": "The door accepted a record carrying 'id'/'what'/'why' and NO 'standing' (seq 4), wrote it to history, and returned a successful state. No error, no warning, no held diagnostic. The malformed record became permanent (Law 7 — history is append-only, so it cannot be edited out).",
-  "fatality": "non-fatal to the door, LOUD downstream — test_harbor_register.py::test_fleet_queries_both_berths_nonempty went red with 'diagnostic_inspector: a boat with no standing — the register did not read its cursor'. The whole 29-proof suite was the detector; nothing at the door itself objected.",
-  "trace": "projector.append_entry(history_path, state_path, record) -> append(history, record) [no validation] -> _atomic_write(history_path) -> project(history) -> _atomic_write(state_path) -> return state [success]. Later: harbor_master.registry reads state.json cursor -> cursor.get('standing') -> None -> assertion failure.",
-
+  "standing": "OPEN",
+  "why": "The single write-door accepts a record no reader can read, silently — so a malformed record of truth becomes permanent and surfaces only as a red in a different component.",
+  "count": 1,
+  "first_seen": "2026-07-25",
+  "last_seen": "2026-07-25",
+  "notified": [
+    "akien"
+  ],
+  "cleared_by": [],
+  "recurred_after_clear": null,
+  "prior_attempts": 0,
+  "occurrences": [
+    {
+      "at": "2026-07-25",
+      "identity": "cairn/charter/projector.py::append_entry — the single write-door for every component's history",
+      "location": "cairn/charter/projector.py:112 (append_entry); surfaced at cairn/harbor_master/proofs/test_harbor_register.py:49",
+      "code": "history = append(read_history(history_path), record); _atomic_write(history_path, history)",
+      "expected": "A record entering a record of truth conforms to the shape that history's readers require — here, a 'standing' field, which every prior record in cairn/diagnostic_inspector/history.json (seq 0-3) carries and which harbor_master's register reads to derive a boat's standing.",
+      "actual": "The door accepted a record carrying 'id'/'what'/'why' and NO 'standing' (seq 4), wrote it to history, and returned a successful state. No error, no warning, no held diagnostic. The malformed record became permanent (Law 7 — history is append-only, so it cannot be edited out).",
+      "fatality": "non-fatal to the door, LOUD downstream — test_harbor_register.py::test_fleet_queries_both_berths_nonempty went red with 'diagnostic_inspector: a boat with no standing — the register did not read its cursor'. The whole 29-proof suite was the detector; nothing at the door itself objected.",
+      "trace": "projector.append_entry(history_path, state_path, record) -> append(history, record) [no validation] -> _atomic_write(history_path) -> project(history) -> _atomic_write(state_path) -> return state [success]. Later: harbor_master.registry reads state.json cursor -> cursor.get('standing') -> None -> assertion failure."
+    }
+  ],
   "the_defect": "The append door is the SINGLE write-door precisely so that a rule can be enforced in one place (Law 4 — a rule that matters is enforced by physics, not policy). It enforces append-only and it enforces the window bound. It enforces NOTHING about the record's shape. So the one gate that could make record-of-truth conformance structural instead lets any dict through, and a bad record is discovered — if ever — by a reader failing much later, in a different component, with a message that describes the symptom rather than the cause.",
-
   "why_it_is_a_trouble_and_not_just_a_bug": "It failed SILENTLY at the point of the fault. Under Akien's rule, a write that cannot be read is exactly the class of thing that must escalate rather than succeed quietly. It also violated Law 7 in the direction that is hardest to undo: the record of truth is permanent, so a silent accept means a permanent malformity, correctable only by appending a correction beside it (which is what was done — cairn/diagnostic_inspector/history.json seq 5).",
-
   "resolution_so_far": "The malformed seq 4 was corrected by APPEND (seq 5, carrying the required 'standing' plus a 'correction_of': 4 pointer), never by edit. The suite is green again. The DOOR is unfixed — that is what this trouble is for.",
-
   "the_fix_when_taken": "A schema gate inside append_entry: the door validates the record against the shape that history's readers require, and REFUSES a non-conforming write loudly rather than accepting it quietly. Open question for the ratify: whether the required shape is universal across all component histories or declared per-component (the charter would be the natural declaring surface). Not decided here — this trouble reports, it does not design.",
-
   "traces_up_to": [
     "Law 4 — until the door enforces shape, conformance is policy, and this is the IOU",
     "Law 7 — a record of truth is permanent; accepting a bad one silently is the costly direction",
@@ -32,5 +37,6 @@
     "CairnCommons/tickets/charter-state-history-split.json — the door's own ticket",
     "cairn/diagnostic_inspector/ — the surface that will report the next one of these"
   ],
-  "standing": "OPEN — reported complete, awaiting Akien's ratify on the fix's scope"
+  "found_how": "Caught live, not by inspection: a real gate progression through the append door wrote a record that harbor_master's register could not read, and the failure surfaced only when a downstream proof went red.",
+  "_note": "MIGRATED 2026-07-25 to the schema TroubleDevice writes (cairn/trouble/). Hand-written first, because the lane had no code yet; the prose standing ('OPEN — reported complete, awaiting ratify') is what caught the device's live() filter reading a near-miss as not-live. Recipient is AKIEN, not cc: the open half is his ratify on the fix's scope, not a build."
 }
