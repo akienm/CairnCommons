@@ -1,9 +1,15 @@
 # I-complete-diagnostic-on-first-pass — the report resolves it on the first pass
 
 *Cast 2026-07-23 by CC via /intent → /sorted, from Akien's decades-proven method (his
-2007 test-automation framework, the UU model, Trouble Tickets). **State: CAST,
-awaiting Akien's signature gate** (concept-piece quorum gate — the why goes to the
-commons the moment it is written; the seal is his ratify). Node-class:
+2007 test-automation framework, the UU model, Trouble Tickets). **State: PROVED —
+sealed 2026-07-25 through the quorum signature gate.** Reviewer (verdict): akien.
+Notary (seal): cc — different hands, refused by physics otherwise. The seal, its
+evidence and its falsifier: `intentions-other/validations/I-complete-diagnostic-on-first-pass.json`.
+It sat unsigned for two days for a purely mechanical reason worth recording: the
+VALIDATION write-door derived a seal's address from a PROOF FILE path, and a
+concept-piece has no proof file — so the gate was never awaiting a signature, it was
+awaiting an ADDRESS (`cairn/tester/quorum.py` closed it, and this is the first
+concept-piece VALIDATION in Cairn). Node-class:
 concept-piece (the prose IS the implementation; a code-seam — the diagnostic
 inspector — instantiates it). Migrates into the intention envelope when that schema
 lands (MAP.md Q6).*
