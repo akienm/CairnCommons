@@ -2,8 +2,8 @@
   "id": "silent-devices-2026-07-27",
   "date": "2026-07-27",
   "found_by": "build_inspector's one-time whole-repo sweep (the only one there should ever be) — filter silent_device, cairn/build_inspector/inspector.py",
-  "standing": "OPEN — five work items, one class. The inspector reds; each component's owner disposes (no-enforcer, gated ownership).",
-  "the_trouble": "Five BaseDevice subclasses inherit emit() and never call it outside proofs: bus, ground_loop, tester, trouble, web_server. MAP.md:434 (2026-07-14): 'Every major state transition and every interface boundary is logged (base reflex, inherited)... no device can opt out.' A device CAN currently opt out by simply not calling — the base gives the capability, nothing makes the crossing use it. The bus is the sharpest instance: it is the boundary the logging standard names FIRST, and it is silent at every crossing.",
+  "standing": "OPEN — five remaining of six (was five: sudo_relay joined when the measure was sharpened; bus DISPOSED 2026-07-27 same day — two gate-contacts, per-crossing, tooth-pinned, netns-sealed, clean under the gate). The inspector reds; each component's owner disposes (no-enforcer, gated ownership).",
+  "the_trouble": "SIX BaseDevice subclasses inherit emit() and never call self.emit() outside proofs: bus, ground_loop, sudo_relay, tester, trouble, web_server. MAP.md:434 (2026-07-14): 'Every major state transition and every interface boundary is logged (base reflex, inherited)... no device can opt out.' A device CAN currently opt out by simply not calling — the base gives the capability, nothing makes the crossing use it. The bus is the sharpest instance: it is the boundary the logging standard names FIRST, and it is silent at every crossing.",
   "why_it_matters": "Law 7 — a silent device fails invisibly (the system_rackmount went-red-silently gap, systemic). Also the exact history: 'i have been resigned to the fact that we wouldn't have such logging until some lever presented itself' (Akien, 2026-07-27) — this ticket is the lever's first pull.",
   "evidence": [
     {
@@ -16,7 +16,8 @@
         ],
         "emit_call_sites_outside_proofs": 0
       },
-      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim.",
+      "disposition": "DISPOSED 2026-07-27: transit_table_ensured (once per instance) + post (per crossing, thin breadcrumb, emitted after the write lands); reads deliberately silent. Proof tooth: test_the_crossings_are_no_longer_silent. Remaining: ground_loop, sudo_relay (owner question: does the audit trail answer for the device surface?), tester, trouble, web_server."
     },
     {
       "filter": "silent_device",
@@ -65,6 +66,17 @@
         "emit_call_sites_outside_proofs": 0
       },
       "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+    },
+    {
+      "filter": "silent_device",
+      "component": "sudo_relay",
+      "finding": "subclasses BaseDevice (inherits emit()) but never calls self.emit() outside proofs",
+      "evidence": {
+        "device_subclasses_measured": "relay.py device subclass",
+        "self_emit_call_sites_outside_proofs": 0,
+        "the_homonym": "relay.py:234 calls a module-level audit function NAMED emit — a genuine audit record, not the DiagnosticBase surface; the original word-scoped measure counted it and this component passed the sweep on it"
+      },
+      "why_it_matters": "Law 7 + MAP.md:434, AND the measuring lesson: the first sweep's measure counted any call of the word 'emit'; sudo_relay passed on a homonym (its module-level audit emit) and harbor_master's transitions.emit chokepoint call would have covered a device there too. The census now checks the receiver (self.emit) — words-kept-meanings-replaced, caught in the instrument itself. Disposition for sudo_relay is the OWNER's: its audit trail is real, deliberate instrumentation — the question is whether its device surface should ALSO breadcrumb its crossings, or whether its charter answers 'it doesn't, because the audit record IS the crossing log' (a valid answer under learning-as-a-pattern; silence is not)."
     }
   ],
   "disposition_note": "NOT fixed in the discovery turn, deliberately: instrumenting a device's crossings means identifying its real gates (which transitions, which boundaries), per component — measured work, not a sed pass. A blanket emit() sprinkled to green the filter would be the hollow build (Law 8). Each becomes its own instrumentation pass; the filter holds the line meanwhile.",
@@ -72,5 +84,6 @@
     "cairn/build_inspector/intention+why.json (filed edge b)",
     "MAP.md:434 two-log-classes design",
     "CairnCommons/notes/held-cc-self-observation.json (the gate-shape survey)"
-  ]
+  ],
+  "measure_note": "2026-07-27, sharpened same day as filed: the original evidence rows carry the field emit_call_sites_outside_proofs (word-scoped, any callee named emit); the census field is now self_emit_call_sites_outside_proofs (receiver-checked). Original rows left as filed — this ticket is a record; the correction is appended, not painted over."
 }
