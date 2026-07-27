@@ -1,0 +1,38 @@
+{
+  "id": "held-cc-self-observation",
+  "standing": "HELD — research done, no node cast. Akien flagged it 'low priority for the moment'; this exists so the answer is not re-derived when it becomes current (Law 1).",
+  "date": "2026-07-26",
+  "asked_by": "Akien, mid-build: '/intent task observer (Claude Code skill) to help us optimize? can we learn anything from it?'",
+
+  "the_answer": "THERE IS NO 'TASK OBSERVER' IN CLAUDE CODE. Not a skill, not a plugin, not a hook, not an SDK feature — researched against the published docs 2026-07-26. So the question is not 'what can we learn from it' but 'what would we build, and out of what'.",
+
+  "what_actually_exists": {
+    "hooks_that_can_gate": "The interesting half. ~31 hook events, and several can REFUSE, not merely watch: PreToolUse (allow/deny/ask/defer, and can rewrite the tool's input), PostToolUse (can replace the tool's output before the model sees it), PostToolBatch (can block the next model call), TaskCreated / TaskCompleted (exit code 2 prevents the create or the completion). These close a feedback loop inside the running session.",
+    "read_only_surfaces": "PostToolUseFailure, SubagentStart / SubagentStop, TeammateIdle — diagnostic only, after the fact.",
+    "telemetry": "OpenTelemetry export (spans, per-step token counts, tool names, subagent chain) behind CLAUDE_CODE_ENABLE_TELEMETRY. After-the-fact by construction: it exports on an interval, so it cannot gate anything.",
+    "task_tools": "TaskCreate/Update/Get/List — readable mid-turn, so the agent can adjust against its own task state.",
+    "one_agent_watching_another_live": "UNVERIFIED / probably absent. Teammates can message, and a lead can read a teammate's transcript after the fact, but no documented real-time tap on another agent's tool calls was found."
+  },
+
+  "why_this_is_worth_a_node_later": "THE GATING HOOKS ARE THE SAME SHAPE CAIRN ALREADY USES. A hook that returns exit code 2 and stops the call is not a supervisor watching and complaining — it is a gate the operation must pass through, which is exactly Cairn's answer to 'who enforces this' (no enforcer; gated ownership — the db_domain pattern, the emit-chokepoint, the projector's single write door). So the host offers physics-shaped primitives, not policy-shaped ones, and a Cairn discipline that today lives as prose in a skill's steps could become a hook that REFUSES. That converts an IOU into enforcement (Law 4) for the class of rules whose subject is CC's own tool use.",
+
+  "candidates_if_it_becomes_current": [
+    "The rules in CLAUDE.md's 'Rules awaiting physics' whose subject is a TOOL CALL rather than a file's content — e.g. 'durable relational state goes through db_domain' is an import-scan today (tester), but a PreToolUse hook could refuse a write that bypasses the door at the moment it is attempted.",
+    "The 'verified on disk before done' correction (memory: verified-on-disk-before-done): a hook on the claim rather than on my habit. TaskCompleted can REFUSE a completion — which is where 'done' could be forced to carry an observation mark instead of being a word I chose.",
+    "Rendering a workflow string through transitions.render() rather than by hand — the /sorted IOU in troubles/workflow-cursor-unreadable-by-the-chokepoint.json. A hook that refuses a ticket write whose `state` does not parse would close it as physics.",
+    "The measured cost of CC's own work, for the cocoon design (memory: cocoon-settle-stages-around-cc): OTEL gives per-step token counts, which is the instrument that would say whether moving a stage upstream actually pays. Today that claim would be unmeasured."
+  ],
+
+  "the_honest_caveat": "All of the above is a READ of published capability, not a measurement. Nothing here has been run. Per Law 3 it is a hypothesis about what the host would allow, and the flag names verify-at-build: hook event names and the exit-code-2 semantics must be confirmed against the installed version before anything is built on them, because this is CC reporting on CC's own toolchain — the least independent witness available. This machine's ~/.claude/settings.json currently configures Stop and StopFailure hooks only.",
+
+  "traces_up_to": [
+    "Law 4 — the reason this is interesting at all: a gating hook is enforcement, a watching hook is policy",
+    "Law 1 — filed so the research is not re-derived when the question becomes current",
+    "Law 3 — labelled a hypothesis, because none of it was measured",
+    "memory: cc-autonomous-primitives-map (2026-07-23) — the same survey, three days earlier; this adds the gating hooks and the absence of a task observer, and supersedes nothing in it"
+  ],
+  "kin": [
+    "CairnCommons/intentions-other/ — where a host-seam berths, which is what a hook is (the machine itself; implementation lives where git cannot see it, so it needs a replayable apply + a re-runnable verify)",
+    "CairnCommons/troubles/workflow-cursor-unreadable-by-the-chokepoint.json — carries the /sorted render IOU, the most hook-shaped of the open rules"
+  ]
+}
