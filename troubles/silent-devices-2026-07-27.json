@@ -1,0 +1,76 @@
+{
+  "id": "silent-devices-2026-07-27",
+  "date": "2026-07-27",
+  "found_by": "build_inspector's one-time whole-repo sweep (the only one there should ever be) — filter silent_device, cairn/build_inspector/inspector.py",
+  "standing": "OPEN — five work items, one class. The inspector reds; each component's owner disposes (no-enforcer, gated ownership).",
+  "the_trouble": "Five BaseDevice subclasses inherit emit() and never call it outside proofs: bus, ground_loop, tester, trouble, web_server. MAP.md:434 (2026-07-14): 'Every major state transition and every interface boundary is logged (base reflex, inherited)... no device can opt out.' A device CAN currently opt out by simply not calling — the base gives the capability, nothing makes the crossing use it. The bus is the sharpest instance: it is the boundary the logging standard names FIRST, and it is silent at every crossing.",
+  "why_it_matters": "Law 7 — a silent device fails invisibly (the system_rackmount went-red-silently gap, systemic). Also the exact history: 'i have been resigned to the fact that we wouldn't have such logging until some lever presented itself' (Akien, 2026-07-27) — this ticket is the lever's first pull.",
+  "evidence": [
+    {
+      "filter": "silent_device",
+      "component": "bus",
+      "finding": "subclasses BaseDevice (inherits emit()) but never calls it outside proofs",
+      "evidence": {
+        "device_subclasses": [
+          "bus.py:BusDevice"
+        ],
+        "emit_call_sites_outside_proofs": 0
+      },
+      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+    },
+    {
+      "filter": "silent_device",
+      "component": "ground_loop",
+      "finding": "subclasses BaseDevice (inherits emit()) but never calls it outside proofs",
+      "evidence": {
+        "device_subclasses": [
+          "loop.py:GroundLoopDevice"
+        ],
+        "emit_call_sites_outside_proofs": 0
+      },
+      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+    },
+    {
+      "filter": "silent_device",
+      "component": "tester",
+      "finding": "subclasses BaseDevice (inherits emit()) but never calls it outside proofs",
+      "evidence": {
+        "device_subclasses": [
+          "device.py:TesterDevice"
+        ],
+        "emit_call_sites_outside_proofs": 0
+      },
+      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+    },
+    {
+      "filter": "silent_device",
+      "component": "trouble",
+      "finding": "subclasses BaseDevice (inherits emit()) but never calls it outside proofs",
+      "evidence": {
+        "device_subclasses": [
+          "trouble.py:TroubleDevice"
+        ],
+        "emit_call_sites_outside_proofs": 0
+      },
+      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+    },
+    {
+      "filter": "silent_device",
+      "component": "web_server",
+      "finding": "subclasses BaseDevice (inherits emit()) but never calls it outside proofs",
+      "evidence": {
+        "device_subclasses": [
+          "server.py:WebServerDevice"
+        ],
+        "emit_call_sites_outside_proofs": 0
+      },
+      "why_it_matters": "Law 7 + MAP.md:434 ('every crossing logged... no device can opt out'): a silent device fails invisibly — the exact gap that motivated DiagnosticBase. This filter is the enforcement half of that 2026-07-14 claim."
+    }
+  ],
+  "disposition_note": "NOT fixed in the discovery turn, deliberately: instrumenting a device's crossings means identifying its real gates (which transitions, which boundaries), per component — measured work, not a sed pass. A blanket emit() sprinkled to green the filter would be the hollow build (Law 8). Each becomes its own instrumentation pass; the filter holds the line meanwhile.",
+  "kin": [
+    "cairn/build_inspector/intention+why.json (filed edge b)",
+    "MAP.md:434 two-log-classes design",
+    "CairnCommons/notes/held-cc-self-observation.json (the gate-shape survey)"
+  ]
+}
