@@ -1,0 +1,53 @@
+{
+  "id": "stage-needs",
+  "schema_version": "v0 — migrates into the intention envelope when MAP.md Q6 lands",
+  "date": "2026-07-26",
+  "owner": "akiendelllinux_cc_0 (CC) gates writes. The shape is Akien's design, 2026-07-26, verbatim sketch preserved below.",
+
+  "intention": "Attach dependencies to the WORKFLOW STAGE that needs them, not to the ticket as a whole — and make the act of LOOKING compile back into the ticket. A stage declares what it needs; whenever anyone checks the world, the finding is stamped onto that need with WHAT, WHEN and HOW MEASURED. Retire the ad-hoc `waits_on` field once its content is migrated.",
+
+  "why": "Two failures measured on 2026-07-26, and they have one fix. FIRST: dependency had no honest representation. `waits_on` is authored by hand on 6 of 10 staged tickets, is in NO node-class schema, is PROSE (voyage.py:75 already says so: 'the ticket's prose waits_on is narrative, not a clean party to render'), is consumed by nothing, and is DROPPED at berthing — zero of 25 berthed charters carry it. So the dependency record is destroyed by the act of finishing. SECOND: the record kept disagreeing with the world — 'awaiting Akien's signature' when there was nowhere to sign; 'no inference host' with ollama serving on :11434 for four days. Akien's shape fixes both: needs are declared per-stage (intrinsic, stable), and the OBSERVATION is compiled in even when nobody picks the ticket up — so going and looking is what keeps the record honest, and the two can no longer drift.",
+
+  "akiens_sketch_verbatim": "'the workflow is the stages, but dependencies can be outside influences. so we can't represent dependencies directly by just saying workflow. each workflow step should list it's dependenices. so BUILD might be gated on BUS DEVICE and EMBEDDINGS GENERATOR... and just be listed like: [ ] BUILD - Needs: - BUS DEVICE - EMBEDDINGS GENERATOR etc. then whenever we look at the state of the things, if there's an update we mark it: [ ] BUILD - Needs: [DONE] BUS DEVICE - EMBEDDINGS GENERATOR — even if we don't pick up the ticket! the fact that we went and looked gets compiled into the ticket.'",
+
+  "traces_to": [
+    "Law 1 — 'the fact that we went and looked gets compiled into the ticket' IS Law 1: the answered question becomes structure, so the next mind reads the measurement instead of repeating it.",
+    "Law 3 — a need's status is a MEASUREMENT with a time and a method, not an assertion. A bare [DONE] is an unmeasured claim wearing a checkmark.",
+    "Law 4 — the shape is enforced by the schema and the write door, not by anyone remembering to update prose.",
+    "Law 7 — a stale mark must be VISIBLE as stale; collapsing 'measured three weeks ago' into 'done' is a record of truth losing information."
+  ],
+
+  "node_class": "code-seam",
+
+  "state": "code-seam@v1: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> LEARNME -> PROVED   (CAST 2026-07-26 via /sorted; cursor at TICKETME — a parent with children, per code-seam@v1 skippable_summons. The inward completeness gate ran and was NOT red: it surfaced three DISTINCTIONS and one horizon question, recorded below. NOTHING BUILT YET.)",
+
+  "gates": {
+    "prove_gate": "proof gate — the tester runs the node's proof and emits a VALIDATION.",
+    "durability_gate": "not done until tested AND durably committed (git)."
+  },
+
+  "falsifier": "A mark lacking WHEN or HOW MEASURED must be REFUSED at the write door — a bare [DONE] cannot be written. Staleness must be QUERYABLE: given a ticket, the system reports the age of each mark, so 'this DONE is 21 days old' is a fact on the surface rather than an invisible assumption. And the shape must carry a REAL case end-to-end: the librarian's BUILD stage needs {inference host, embeddings generator, store design}; the host mark must record today's measurement (ollama :11434, three models, embed 768d, 2026-07-26) and the other two must sit unmarked. A hollow build — a checkbox with no timestamp, or a needs list nothing can query — fails every clause.",
+
+  "horizon": "Re-read when the FIRST ticket is picked up under this shape. The open question the gate surfaced: does a mark ever EXPIRE by itself (a host can go down after being marked DONE), or is age always reported and judged by the reader? Deliberately NOT guessed — no expiry has been measured as needed, and inventing a TTL ahead of evidence is the same error as guessing a chatter-damping width. Filed, not built.",
+
+  "distinctions_recorded": [
+    "PER-STAGE, NOT PER-TICKET — and this is what makes it storable at all. CC argued against a stored `waits_on` on the grounds that ordering is GOAL-RELATIVE (the same ticket sits differently depending on whether we aim at the librarian or elsewhere), so a stored edge freezes one target's answer. That objection is real and it does NOT apply here: 'BUILD needs the bus device' is intrinsic to that stage, true regardless of the goal. The goal-relative part — the ORDER — is still derived at ask time; only the intrinsic need is stored.",
+    "THE MARK IS AN OBSERVATION, NOT A CHECKBOX. {status, when, how measured} — the same three fields a VALIDATION carries, and the same reason a host-seam carries a re-runnable verify and a seal that expires. This shape surfaced TWICE in one session from unrelated directions (here, and as the staleness marker a cached embedding needs), which is evidence it is a primitive in this system rather than a local convenience.",
+    "IT RIDES THE STATE/HISTORY SPLIT THAT ALREADY EXISTS. An observation is append-only truth (history); the current mark is a compiled view (state). So this needs no new storage mechanism — it needs the projector's append door, which as of 2026-07-25 also has a shape gate to refuse a malformed mark. The per-component schema declaration filed on that door is exactly the edge this node pulls."
+  ],
+
+  "parent": null,
+  "children": [
+    "a — THE SHAPE: per-stage needs + the observation mark, in the node-class schema, refused at the door if malformed. Buildable now; b and c wait on it.",
+    "b — THE STALENESS QUERY: given a ticket (or all tickets), report each mark's age and method, so 'what's next?' reads measurements rather than assertions. Waits on a.",
+    "c — MIGRATE AND RETIRE `waits_on`: triage all 6 populated fields — facts about OTHER components move to that component's filed_edges (where inference_domain's host gap already correctly lives); facts about this stage's own readiness become per-stage needs — THEN delete the field. Migrate first, remove second (Akien, 2026-07-26). Waits on a."
+  ],
+
+  "provenance": "Converged 2026-07-26. CC opened by proposing that `waits_on` be schema'd and carried through berthing. Akien refused the shape: 'if waits_on isn't in the schema then it should be gone. the ONLY waits on should be in the workflow on the ticket' — a thing is either unverified at its gate, or nobody has picked it up (a resource constraint, since CC is the only worker). CC concurred and named the reify defect. Akien then found what BOTH positions had missed: 'the workflow is the stages, but dependencies can be outside influences' — so the need attaches per-STAGE, and the observation compiles back in even when the ticket isn't picked up. CC added the staleness requirement: a bare [DONE] recreates the exact defect, since a mark nobody re-measures is read as current.",
+
+  "filed_edges": [
+    "KIN, SEPARATE OWNER — CLEARANCE LEAVES NO TRACE. voyage.py:70: 'the clearance REQUEST must leave a trace owned by the gate's queue (clearance today writes nothing until it grants)'. Same principle as this node — the fact that we went and looked gets recorded — but the surface is harbor_master's and Law 6 says its owner gates it. Akien agreed 2026-07-26 that it needs a fix. Wants its own node under harbor_master, not a child here.",
+    "NO EXPIRY DESIGNED. See horizon. Age is reported; whether a mark ever self-invalidates waits on a measured need.",
+    "WHO MAY MARK is not settled. Today CC is the only worker so the question is moot; it becomes real the moment a second actor can write a mark, and it is an ownership question (Law 6), not a schema one."
+  ]
+}
