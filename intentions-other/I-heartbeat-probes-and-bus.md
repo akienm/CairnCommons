@@ -90,14 +90,28 @@ will hang on a probe fired by a gate, not on a clock that wakes to ask "anything
   process. The heartbeat fires probes (via the shim). Every recurring wake-up —
   interval, time, data-accumulated, resource-threshold — is a probe.
 - **Ticket** — *a workflow node: mutable, carries a state machine* (a voyage, e.g.
-  `LEARNING → ARCHIVED`). A different species. Its state is mutable, so it lives where
-  workflow-state lives (instance-space / the node store), not class-space.
-- **`LEARNING` is a state; a probe is the worker.** A node *in* `LEARNING` can *set*
-  a probe. The state is the condition the node rests in; the probe is the doing.
-  When the work ends (e.g. an expiry trigger fires), the state moves (`→ ARCHIVED`) and
-  the probe is unset. "This node is `LEARNING`" (a state fact) and "this node has set
-  a probe" (a worker it owns) are two separate things — do not mush them into "a
-  mutable ticket."
+  `PROVEME → WATCHME(<object>) → PROVED`). A different species. Its state is mutable,
+  so it lives where workflow-state lives (instance-space / the node store), not
+  class-space.
+- **A node EMITS a probe at a crossing; it does not become one.** (RESHAPED
+  2026-07-30, ticket `watchme-emits-a-probe`. The clause here used to read
+  "**`LEARNING` is a state; a probe is the worker** — a node *in* `LEARNING` can
+  *set* a probe", and `LEARNING` is now dissolved as a node state.) The two-species
+  point it was making SURVIVES INTACT and is in fact strengthened: "this node has
+  emitted a probe" and "this node rests at `PROVED`" are two separate facts about
+  two different species — do not mush them into "a mutable ticket."
+
+  What changed is *when* and *who*. The emission happens at the `WATCHME(<object>)`
+  crossing, and then **the node rests** — it does not sit in a state waiting for its
+  own watcher, because a proved intention's efficacy data can only accumulate after
+  it rests. The probe outlives the crossing that emitted it, which is what makes it
+  a different species rather than a phase of the node.
+
+  **And the probe carries no authority.** When its `enough` condition clears, or its
+  finding lands, it **deposits and pokes** — it never moves the node's state. The
+  back-edge that re-opens a node whose intention did not work is the **owner's act**
+  at the register (Law 6). A worker that could move what it watches would be exactly
+  the ambient authority the ownership law exists to refuse.
 
 Probes are general, not scheduler-specific: even the question-nexus template's loop
 is a probe. One primitive for "call this again / on this trigger," used everywhere.
