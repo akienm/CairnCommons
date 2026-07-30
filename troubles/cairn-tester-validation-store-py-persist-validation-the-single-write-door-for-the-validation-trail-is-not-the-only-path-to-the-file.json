@@ -1,0 +1,30 @@
+{
+  "id": "cairn-tester-validation-store-py-persist-validation-the-single-write-door-for-the-validation-trail-is-not-the-only-path-to-the-file",
+  "standing": "OPEN",
+  "why": "A record of truth declared APPEND-ONLY by its door is a plain JSON file any caller can overwrite. The door enforces append-only and the ratified eight fields; nothing enforces that the door is used. A hand-write destroys a proof's whole seal history silently and permanently (Law 7), and looks exactly like a fresh seal.",
+  "count": 1,
+  "first_seen": "2026-07-30T20:14:16.344941+00:00",
+  "last_seen": "2026-07-30T20:14:16.344941+00:00",
+  "occurrences": [
+    {
+      "at": "2026-07-30T20:14:16.344941+00:00",
+      "identity": "cairn/tester/validation_store.py:79 _atomic_write / :94 persist_validation — declared 'The single write-door' (module docstring line 21) with no physics making it single",
+      "location": "cairn/tester/validation_store.py:94; bypassed from a caller at cairn/ (an ad-hoc sealing script during ticket watchme-emits-a-probe, 2026-07-30)",
+      "code": "v.write_text(json.dumps(rec, indent=2) + '\\n')   # rec is ONE validation dict; the file holds a LIST",
+      "expected": "A VALIDATION APPENDS to the trail beside its proof. persist_validation(rec, proof_path=...) reads the existing trail, appends, atomically writes back — so re-running a proof adds a dated seal and never replaces one (validation_store.py docstring: 'There is no update-in-place and no delete, because a record of truth has neither').",
+      "actual": "The bypassing write replaced the whole list with a single bare dict. cairn/base/validations/test_transitions.json went from a 14-entry trail to one dict; cairn/chart/validations/test_chart_verdict.json from 3 to one. SEVENTEEN SEALS DESTROYED, including every seal from every prior voyage of those two components. No error, no warning: the file was still valid JSON and still named after its proof.",
+      "fatality": "NON-FATAL AND SILENT — recovered only by luck of timing. The damage was uncommitted, so `git checkout HEAD -- <paths>` restored both trails (verified: 14 and 3 entries back). Had it been committed, the trails were gone from the working tree and recoverable only by someone who knew to go looking in history for a loss nothing reported. NOTHING detected it: not the door, not a proof, not the tester. It was caught by a human-style double-take on an unrelated AttributeError ('list object has no attribute get') raised by a re-run loop that expected the OLD shape — i.e. the surviving correct files objected, not the corrupted ones.",
+      "trace": "TesterDevice.run_proof(p, isolation='netns') -> returns the 8-field record, and DOES NOT PERSIST (device.py:145, 'the store is a later stone') -> caller must choose the sink -> caller wrote the file directly instead of calling persist_validation -> _atomic_write never reached -> read_validations never reached -> trail replaced. The gap is exactly at the handoff run_proof deliberately leaves open.",
+      "measured_convention": "57 of 57 files under cairn/*/validations/ are lists — the append-only shape is universal and unbroken across the system, which is why a bare dict is unambiguously corruption and not a second legal shape.",
+      "owning_ticket": "CairnCommons/tickets/charter-state-history-split.json — validation_store.py's own docstring names it (child b). CLAUDE.md 'Rules awaiting physics' already carries the sibling residue for state/history: 'an in-place edit of history itself'. This is the same residue on the third record of truth, now with a measured live occurrence instead of a hypothesis.",
+      "the_fix_when_taken": "Not designed here (this reports, it does not design). The shapes worth weighing: (a) a read-side conformance tooth in the tester's own proofs that reds when any cairn/*/validations/*.json is not a list of eight-field records — cheap, catches it one layer late but LOUDLY, and would have fired here; (b) run_proof persists through the door itself, closing the handoff rather than guarding it, which changes 'the store is a later stone' into a decision; (c) filesystem-level ownership, the expensive answer. (a) is the cheapest thing that would have caught this exact occurrence.",
+      "found_how": "Caught live during ticket watchme-emits-a-probe's sealing step, by the builder who caused it, before commit."
+    }
+  ],
+  "notified": [
+    "cc"
+  ],
+  "cleared_by": [],
+  "recurred_after_clear": null,
+  "prior_attempts": 0
+}
