@@ -1,4 +1,4 @@
-# The heartbeat, the callback, and the bus
+# The heartbeat, the probe, and the bus
 
 *Ratified in conversation with Akien, 2026-07-18 (evening). This is the converged
 runtime architecture for how Cairn devices are driven and how they talk. It sharpens
@@ -7,7 +7,7 @@ and partly supersedes the earlier "operational-driver primitive" + "host/rack" +
 The code shipped 2026-07-18 morning (`ground_loop` `584aa74`, `system_rackmount` `5cb593a`)
 was built to the OLD shape (a generic `run_driver` executor + a central scheduler) — that
 shape was the goof this document corrects. The rework SHIPPED the same evening (commits
-`d27ce1d` bus, `ae2d372` base callback+shim, `a535de0` heartbeat, `faafb70` system device),
+`d27ce1d` bus, `ae2d372` base probe+shim, `a535de0` heartbeat, `faafb70` system device),
 each piece proven under the tester — see "What this changes in code — DONE" at the bottom.*
 
 ## The two universal substrates
@@ -36,7 +36,7 @@ not features added per surface — they are automatic. Physics, not policy (Law 
 - **Each device is its own process.** Isolated, independently crash/restartable, and
   it does **not** run continuously — it sleeps when idle and is woken on demand.
 - **The shim** (`BaseShim`) is always-on, lightweight, one per device. It:
-  1. fires the device's due callbacks on each heartbeat pulse,
+  1. fires the device's due probes on each heartbeat pulse,
   2. **receives** incoming bus messages for its device,
   3. **starts the device** (the heavier process) on demand when a message arrives and
      the device isn't running.
@@ -78,29 +78,29 @@ beat. Concretely, this is why the pre-Cairn cron jobs were deleted (2026-07-22) 
 than ported: a cron entry is a private polling loop with a private schedule and no owner
 (see `notes/held-inspectors-janitors-filters.json` — the unowned-default that governs a
 record's survival). Functionality like `cleanupPeriodDays` may well be rebuilt — but it
-will hang on a callback fired by a gate, not on a clock that wakes to ask "anything?".
+will hang on a probe fired by a gate, not on a clock that wakes to ask "anything?".
 
-## Callbacks vs tickets — two species, named for what they are
+## Probes vs tickets — two species, named for what they are
 
-- **Callback** — *immutable, no workflow.* "Call X when this trigger is true." It
+- **Probe** — *immutable, no workflow.* "Call X when this trigger is true." It
   carries no state of its own. Because it is *declaration*, it lives with the device's
-  **code** (class-space — git, greppable, shareable). A callback firing = **kick off a
+  **code** (class-space — git, greppable, shareable). A probe firing = **kick off a
   separate, short-lived Python process** in its own space that sends a message to the
   target's shim, then **terminates.** That statelessness is why it can be a fire-and-die
-  process. The heartbeat fires callbacks (via the shim). Every recurring wake-up —
-  interval, time, data-accumulated, resource-threshold — is a callback.
+  process. The heartbeat fires probes (via the shim). Every recurring wake-up —
+  interval, time, data-accumulated, resource-threshold — is a probe.
 - **Ticket** — *a workflow node: mutable, carries a state machine* (a voyage, e.g.
   `LEARNING → ARCHIVED`). A different species. Its state is mutable, so it lives where
   workflow-state lives (instance-space / the node store), not class-space.
-- **`LEARNING` is a state; a callback is the worker.** A node *in* `LEARNING` can *set*
-  a callback. The state is the condition the node rests in; the callback is the doing.
+- **`LEARNING` is a state; a probe is the worker.** A node *in* `LEARNING` can *set*
+  a probe. The state is the condition the node rests in; the probe is the doing.
   When the work ends (e.g. an expiry trigger fires), the state moves (`→ ARCHIVED`) and
-  the callback is unset. "This node is `LEARNING`" (a state fact) and "this node has set
-  a callback" (a worker it owns) are two separate things — do not mush them into "a
+  the probe is unset. "This node is `LEARNING`" (a state fact) and "this node has set
+  a probe" (a worker it owns) are two separate things — do not mush them into "a
   mutable ticket."
 
-Callbacks are general, not scheduler-specific: even the question-nexus template's loop
-is a callback. One primitive for "call this again / on this trigger," used everywhere.
+Probes are general, not scheduler-specific: even the question-nexus template's loop
+is a probe. One primitive for "call this again / on this trigger," used everywhere.
 
 ## Triggers — anything that evaluates to true
 
@@ -110,23 +110,23 @@ reification — see the reify-vs-flow catches below). Open examples, not a taxon
 
 - an interval elapsed, or a specific wall-clock time arrived (the "cron" subset)
 - an amount of data accumulated past a threshold (queue depth — this is also how
-  **backpressure** works: a filling channel fires a callback on its reader)
+  **backpressure** works: a filling channel fires a probe on its reader)
 - a resource crossing a line — CPU pegged, memory, disk
 - a state or event entered
 - **a proof going green** — a proof is *precisely* a claim evaluated to true (a green
   VALIDATION), so proof is the exemplar quality-trigger; `PROVEME → PROVED` is a
-  proof-trigger. The tester (Law 8) and the callback system are the same substrate.
+  proof-trigger. The tester (Law 8) and the probe system are the same substrate.
 
 New signal → new predicate, **not a schema change.**
 
-## Where a callback is evaluated — Law 6 for triggers
+## Where a probe is evaluated — Law 6 for triggers
 
-**A callback is evaluated wherever its trigger's data is owned.** So device-local data
+**A probe is evaluated wherever its trigger's data is owned.** So device-local data
 is never exported; only the *wake-up* crosses the bus, never the raw data it tested.
 
-- **Global** callbacks read genuinely shared data (the passage of time / the beat).
+- **Global** probes read genuinely shared data (the passage of time / the beat).
   Evaluated at the heartbeat level.
-- **Device-specific** callbacks read a device's own data (its queue depth, an internal
+- **Device-specific** probes read a device's own data (its queue depth, an internal
   metric). Evaluated *inside* the device; the data stays home.
 
 Consequences: minimal data movement (telemetry never crosses the bus just to be
@@ -136,23 +136,23 @@ tested), and encapsulation by construction.
 
 A caller never needs to know a device's internals (`object.object.method`):
 
-1. A device **advertises a menu** of callbacks it offers — e.g. "I accept a CPU-threshold
-   callback (takes a value)" — as one item in a list of its offerings (part of its
-   Form v0 #2 surface: inspect a device, see what callbacks it offers).
-2. A caller **subscribes**: *"I'll take one of those, value 80, here's my callback
+1. A device **advertises a menu** of probes it offers — e.g. "I accept a CPU-threshold
+   probe (takes a value)" — as one item in a list of its offerings (part of its
+   Form v0 #2 surface: inspect a device, see what probes it offers).
+2. A caller **subscribes**: *"I'll take one of those, value 80, here's my probe
    address."*
-3. The device **resolves its own method internally** and wires it into the callback.
+3. The device **resolves its own method internally** and wires it into the probe.
 4. When the predicate goes true, the device **pokes the caller's address**. The caller
    gets its wake-up and never saw a CPU number.
 
 Owner-gated throughout (Law 6). Advertise / subscribe / poke are all just bus messages.
 
 Worked example: *"alert me at 80% CPU."* CPU is the **system device's** data (it is the
-one that can make the CPU calls). So the CPU-threshold callback lives on the system
+one that can make the CPU calls). So the CPU-threshold probe lives on the system
 device; any device that wants it asks the system device (owner-gated), which evaluates
 locally and pokes the requester when true. This is what "abstracts host services
 device-independently" cashes out to — **`system_rackmount` = the system device: owner
-of host-resource predicates (CPU/memory/disk), serving threshold callbacks on request.**
+of host-resource predicates (CPU/memory/disk), serving threshold probes on request.**
 NOT a central scheduler. (Settles the earlier open A/B question → A.)
 
 ## The bus in detail
@@ -209,10 +209,10 @@ tester, each committed separately:
   rides db_domain (owner `bus`); per-device channels (announce/personal records, info/debug
   diagnostic); record channels refuse to collapse, diagnostic views may (Law 7); every
   envelope carries why + causality (Law 5). Filed: MCP wire-adapter; per-device-owned channels.
-- the **Callback primitive** → BUILT (`cairn/base/callback.py`, commit `ae2d372`). Immutable;
+- the **Probe primitive** → BUILT (`cairn/base/probe.py`, commit `ae2d372`). Immutable;
   a trigger is ANY predicate `(now, context) -> bool`, NOT a named kind (the enum is deleted);
   evaluated where its data is owned (Law 6).
-- `BaseShim` → REWORKED (`cairn/base/shim.py`, `ae2d372`). Gains per-pulse callback-firing
+- `BaseShim` → REWORKED (`cairn/base/shim.py`, `ae2d372`). Gains per-pulse probe-firing
   (`on_pulse`, batch-safe), message receipt + on-demand device start (`deliver`/`_start_device`).
   The long-deferred one-loop primitive is resolved: the heartbeat IS the one loop. Filed: each
   device its own OS process (the shape — start-on-demand — is proven; real spawn grows against need).
@@ -224,7 +224,7 @@ tester, each committed separately:
   `faafb70`). Owns host-resource predicates; advertise → subscribe → poke; evaluates locally so
   the reading never leaves (Law 6); the central `SchedulerService` + `interval/date/quantity/
   state` enum are DELETED. Its capstone proof composes every piece above end-to-end.
-- **tickets** → the mutable workflow species stays DISTINCT and DEFERRED — the callback/ticket
-  boundary is now clean in code (a callback is the immutable worker; a ticket is the mutable
+- **tickets** → the mutable workflow species stays DISTINCT and DEFERRED — the probe/ticket
+  boundary is now clean in code (a probe is the immutable worker; a ticket is the mutable
   node), but the ticket state machine still waits on the emit-chokepoint
   (`CairnCommons/tickets/state-machine-physics.json`). Not built here, by design (not the goof).

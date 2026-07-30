@@ -2,20 +2,46 @@
   "class": "code-seam",
   "role": "node-class-definition",
   "schema_version": "v0",
-
   "what": "A change to running code — an edit at a seam in the implementation. Yields code; proved by exercising that code.",
   "why": "The default, most common node kind: work that compiles to a behavioral change. Distinct from skill (proved by cairnmap recompile) and concept-piece (proved by human review) — a code-seam is proved by the tester running a proof a hollow build couldn't pass. Named 'seam' not 'code' because the unit is the behavior/interface boundary the change lands at, where a proof can grip.",
   "invariant": "proved + feeds-back-to-origin-on-failure (Laws 3 + 8)",
   "workflow_versions": {
     "v1": {
-      "path": ["THINKME", "TICKETME", "BUILDME", "PROVEME", "LEARNME", "PROVED"],
-      "skippable_summons": ["TICKETME"],
+      "path": [
+        "THINKME",
+        "TICKETME",
+        "BUILDME",
+        "PROVEME",
+        "LEARNME",
+        "PROVED"
+      ],
+      "skippable_summons": [
+        "TICKETME"
+      ],
       "why": "The machine-readable transition table the emit-chokepoint (cairn/base/transitions.py) validates a node's workflow string against — turning /sorted's prose 'refuses illegal transitions' into physics (Law 4, state-machine-physics.json). `path` is the versioned canonical sequence a code-seam@v1 string must conform to; a drifted path is refused. `skippable_summons` names the ONE fork the -ME grammar cannot derive: TICKETME is optional (a leaf goes THINKME->BUILDME, a parent goes THINKME->TICKETME; 'waiting on children' is derived, not a stored state). Forward advances or skips only skippable summonses; back-edges re-enter any earlier summons (kick-back). Rests (no -ME: PROVED) and summonses (-ME) are grammar-derived, not stored here. FILED: the LEARNING driver-terminal (a code ticket becomes a driver by editing its tail -> LEARNING) is a workflow migration, a later version; concept-piece/host-seam get their own tables (state-machine-physics children, pending)."
+    },
+    "v2": {
+      "path": [
+        "THINKME",
+        "TICKETME",
+        "BUILDME",
+        "PROVEME",
+        "PROVED"
+      ],
+      "skippable_summons": [
+        "TICKETME"
+      ],
+      "free_summons": [
+        "WATCHME"
+      ],
+      "why": "Minted 2026-07-30 (ticket watchme-emits-a-probe). LEARNME LEAVES THE PATH ENTIRELY and WATCHME is not its replacement in the same seat — the shape changes, which is why this is a NEW VERSION and not a widening of v1 (versions are immutable and version-stamped; migration-by-find-and-replace is the mechanism MAP.md already names). WHAT WAS WRONG WITH v1: LEARNME sat in `path` with only TICKETME skippable, so it was MANDATORY TO CROSS for every node of this class and carried NO GATE — the one summons in the path that was forced and unchecked. Akien's rule is the exact inverse: OPTIONAL TO CARRY, MANDATORY TO SATISFY ONCE CARRIED. Under forced-and-unchecked the crossing got filled with whatever was at hand (on ticket a-node-holds-one-claim, 2026-07-29, it was close-bookkeeping — not efficacy data at all, and the node never dwelled).\n\nHOW THE INVERSION IS SPELLED: WATCHME is a FREE SUMMONS — it may appear ZERO OR MORE TIMES AT ANY POSITION, so it is absent from `path` (the backbone) and declared in `free_summons` instead. Optional to carry = the ticket author puts it in the string or does not. Mandatory to satisfy = once it IS in the string it is NOT in `skippable_summons`, so the chokepoint's forward walk cannot step over it. The two declarations are orthogonal on purpose: `skippable_summons` is the FORK a node takes at runtime, `free_summons` is the SHAPE the ticket authored.\n\nAND IT MUST NAME ITS OBJECT. `WATCHME(what-it-watches)` — a bare WATCHME is refused by _conform, because learning without an object is inert (Akien 2026-07-30): a bare token cannot state what is being learned, so nothing can check it. Forced by structure the way intention+why.json forces the why, never a blank field someone can leave empty.\n\nTHE REST IS UNCHANGED FROM v1 and deliberately so: the backbone, TICKETME as the one skippable fork, the build gate at the PROVEME crossing, the entry gate into BUILDME and the exit gate into PROVED all keep their seats. A node with a WATCHME crosses PROVEME forward INTO its watch (build gate fires there, as before — the gate is on crossing OF the PROVEME summons) and then into PROVED (exit gate fires there, as before). A node with no WATCHME reads exactly like v1 minus LEARNME.\n\nWHY THE NODE EMITS RATHER THAN BECOMES: a proved intention's efficacy data can only accumulate AFTER it rests, so a node that WAITS for it never rests and never gets measured. WATCHME's act is to EMIT A PROBE (cairn/base/probe.py — immutable, trigger/carrier/enough all open predicates); the node then rests at PROVED and the watcher stands. That deletes a state rather than adding one."
     }
   },
   "prove_gate": "proof gate — the tester runs the node's proof and emits a VALIDATION; verdict and seal from the same hand. IOU: the tester isn't built, so proof is hand-run per the node's proofs/PROOF.md, culminating in a measured VALIDATION recorded by hand.",
   "extra_gates": "durability gate — a code-seam is not done until tested AND durably committed (git). Durability-of-stones sits on the emit chokepoint (physics, MAP.md 'Gates, not supervisors'), not a step anyone remembers to run: commit often (commit notes are notes to future selves), push at 'smells like done'. (Akien refinement 2026-07-15 — traces to the founding intention of getting Akien out of running the system.)",
   "kicks_back_on": "red proof (behavior doesn't match the falsifier) → routes back to design/build at the point of creation (CP2).",
-  "members_so_far": ["default-superclaude-to-200k"],
+  "members_so_far": [
+    "default-superclaude-to-200k"
+  ],
   "provenance": "first code-seam, defined 2026-07-15 when the first running-code change was cast — discovered as demanded, not pre-seeded (the slate predicted this). Ratified by Akien (signature gate) 2026-07-15."
 }

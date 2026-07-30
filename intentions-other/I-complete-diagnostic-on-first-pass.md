@@ -74,7 +74,7 @@ run — did the loop fold the miss, or let it recur?
 
 **Spawned / related work.**
 - *diagnostic-inspector* (ticket, code-seam) — the concrete build that instantiates
-  this: the inspector that reacts to a fired callback and FILTERS the emission
+  this: the inspector that reacts to a fired probe and FILTERS the emission
   breadcrumbs + timestamp-indexed logs into the complete first-pass FINDINGS, **plus**
   the learning-loop it carries that folds a forced second-run's miss into the next
   findings' completeness for that transition-class. Its explicit remit (Akien): save CC
