@@ -4,16 +4,14 @@
   "date": "2026-07-30",
   "ruled_by": "Akien",
   "recorded_by": "CC",
-
   "why_this_file_exists": "Akien: \"I even remember telling you it was wrong and then later telling you it was ok.\" A ruling given, softened, and re-absorbed into the thing it was correcting. This file exists so the ruling has an address instead of living in a conversation. His words are quoted VERBATIM below and my reading is kept in a separate block — the discipline from memory words-kept-meanings-replaced, whose fourth face was CC recording its own inference as Akien's ruling.",
-
   "the_ruling_verbatim": [
     "the ground loop is a loop. it scans each device on every heartbeat. lets say once per second. looking in /devices/<device>/<isntance>/groundloop/ for callbacks. I envisioned them as individual python files. but they could also be json or some other mechanism. whatever it is, if there are callbacks there, and their trigger condition is met, then the callback sends a message over the bus to the target device, who's shim decides what to do with it. probably over the bus.",
     "that's one issue. the web server shim is the reciever of http(s) calls to the web server. not the web server itself. notice how there's no relationship to the ground loop here? that was an example that got cast into something it wasn't meant to be.",
     "there are probably protocols to work out there about how the callback asks it's host system to hand it whatever data it needs. we might want a common vocabulary there but I don't have any ideas about it.",
-    "yes, but the roster was only 'for-the-moment' making it MAINTAIN something is MORE WORK. Let the thing maintain itself. if the file is there and matches the conditions, it fires. if it's in python it'll run in the device and can know things about it. but better encapsulation if we can sort how to do this with common nouns and verbs and json."
+    "yes, but the roster was only 'for-the-moment' making it MAINTAIN something is MORE WORK. Let the thing maintain itself. if the file is there and matches the conditions, it fires. if it's in python it'll run in the device and can know things about it. but better encapsulation if we can sort how to do this with common nouns and verbs and json.",
+    "\"fires the device's due probes on each heartbeat pulse,\" yes. so here's the long version, and i think we've just learned that the why is often one or more use cases.... Anyway: yes. if I put a callback on a gate, then it's triggered when the gate is operated. so i don't have to put the callback on the device's \"clock pulse\", just on the gate. but if I want to get a message back each time we check the CPU value, then it's gonna be time interval based. which means on each \"clock pulse\", we should have something in the system device's ground loop folder that will call back if the specified interval has passed since the last one. which means we need a place to keep a counter on that callback too."
   ],
-
   "what_is_settled": {
     "the_loop_scans": "The ground loop SCANS. Every beat, every device: ~/.cairn/devices/<device>/<instance>/groundloop/. It is not a pulse to held references.",
     "the_directory_is_the_registry": "Presence of a file IS the subscription. Adding subscribes, deleting unsubscribes. Nothing maintains a roster, because a maintained roster is a second copy of a settled answer that exists only to stay correct — MORE WORK, in Akien's words. Let the thing maintain itself.",
@@ -21,31 +19,52 @@
     "firing_posts_to_the_bus": "On a met condition the callback SENDS A MESSAGE OVER THE BUS to the target device. Firing is not an in-process call.",
     "the_shim_decides": "The target device's shim decides what to do with the message. The shim is the device's INBOX.",
     "the_web_server_shim": "The web server's shim is the RECEIVER of http(s) calls to the web server — not the web server itself. This path has NO RELATIONSHIP to the ground loop. The current listener.py wiring is 'an example that got cast into something it wasn't meant to be.'",
-    "format_preference": "Python callbacks would run in the device and can know things about it. JSON is PREFERRED for encapsulation, conditional on working out common nouns and verbs. Unsettled — see the open question."
+    "format_preference": "Python callbacks would run in the device and can know things about it. JSON is PREFERRED for encapsulation, conditional on working out common nouns and verbs. Unsettled — see the open question.",
+    "two_trigger_sources_not_two_models": "RESOLVED 2026-07-30. I-heartbeat-probes-and-bus.md:39-40 was read by CC as a mixed spec carrying an inversion. It is not. The two lines are two TRIGGER SOURCES and both are correct: (a) GATE-OPERATED — put the callback on the gate and it fires when the gate is operated, no clock involved; (b) INTERVAL — 'each time we check the CPU value' is genuinely time-based, so it rides the clock pulse via a callback in the system device's groundloop folder that checks whether the interval has elapsed. This PRESERVES event-not-poll rather than violating it: the clock is spent only on the things that ARE time; everything else hangs off the gate that already knows.",
+    "a_callback_carries_state": "Akien: 'which means we need a place to keep a counter on that callback too.' An interval callback must remember when it last fired. So a callback is not a declaration the loop reads — it is a small durable thing with a memory, and groundloop/ is a READ-WRITE folder, not config."
   },
-
   "what_is_open": {
     "the_callback_vocabulary": "How a callback asks its host system to hand it whatever data it needs. Akien: 'we might want a common vocabulary there but I don't have any ideas about it.' NOT INVENTED HERE. Filed as a question, and it is the gate on whether callbacks are JSON or Python: JSON only works if the vocabulary works.",
-    "cadence": "'lets say once per second' is illustrative, not ratified."
+    "cadence": "'lets say once per second' is illustrative, not ratified.",
+    "where_the_counter_lives": "Excluded by Akien's own ruling: the ground loop cannot hold it — that is a maintained registry again, the exact thing removed, returning as bookkeeping. Remaining: IN the callback file (the file is the subscription AND its state; deleting it deletes everything, nothing to orphan — most consistent with 'let the thing maintain itself') or a SIBLING beside it (can be left behind when the callback goes). CC's read, not ruled.",
+    "who_owns_the_write": "If the counter is in the file, something writes into ~/.cairn/devices/<device>/<instance>/groundloop/ on every fire, and Law 6 wants one owner. Either the folder is the DEVICE's and the loop reaches into it, or the folder is the GROUND LOOP's, sited in the device's tree the way a mailbox sits at a house it does not belong to. Different answers about who may edit a callback.",
+    "first_fire": "An interval callback with no last-fired value: does it fire immediately or wait one full interval? Small, real, unruled."
   },
-
   "the_delta_against_what_is_built": {
     "shape": "This is an INVERSION, not a gap. Every row reverses.",
     "rows": [
-      {"axis": "what is registered", "built": "in-process subscribe(shim) references", "ruled": "files on disk in the device's own tree"},
-      {"axis": "who evaluates the trigger", "built": "the shim, when pulsed", "ruled": "the ground loop, on its scan"},
-      {"axis": "what happens on fire", "built": "the shim fires the probe in-process", "ruled": "a message crosses the bus to the target device"},
-      {"axis": "what the shim does", "built": "evaluates and fires probes", "ruled": "RECEIVES, and decides"},
-      {"axis": "devices as processes", "built": "in-process references required", "ruled": "independent by construction"}
+      {
+        "axis": "what is registered",
+        "built": "in-process subscribe(shim) references",
+        "ruled": "files on disk in the device's own tree"
+      },
+      {
+        "axis": "who evaluates the trigger",
+        "built": "the shim, when pulsed",
+        "ruled": "the ground loop, on its scan"
+      },
+      {
+        "axis": "what happens on fire",
+        "built": "the shim fires the probe in-process",
+        "ruled": "a message crosses the bus to the target device"
+      },
+      {
+        "axis": "what the shim does",
+        "built": "evaluates and fires probes",
+        "ruled": "RECEIVES, and decides"
+      },
+      {
+        "axis": "devices as processes",
+        "built": "in-process references required",
+        "ruled": "independent by construction"
+      }
     ]
   },
-
   "how_the_ruling_got_lost": {
     "mechanism": "It was not dropped. It was DEFERRED, and a deferral reads as agreement.",
     "evidence": "cairn/ground_loop/loop.py files Akien's actual design as a future edge: 'SUBSCRIPTION by a file in the device's own folder tree: today a device subscribes its shim in-process via subscribe(shim); discovering subscribers by scanning device code trees for a probe-declaration file grows when devices are separate OS processes and the heartbeat cannot hold in-process references to them.' The ruled design is written down, in the code, as the thing to grow into later.",
     "the_document_carries_the_inversion_TOO": "I-heartbeat-probes-and-bus.md lines 39-40 put both models in the SAME numbered list: the shim '1. fires the device's due probes on each heartbeat pulse' (the pulse model) and '2. receives incoming bus messages for its device' (the inbox model). So the code did not drift from a clean spec — it implemented the half of a mixed spec that was cheaper in-process. Fixing the code without fixing the document leaves the same fork in place for the next reader.",
     "the_reversal_CC_made_today": "Hours before this ruling, CC amended finding 2 of the runtime-spine trouble to DOWNGRADE the listener.py heartbeat wiring, on the grounds that server.py justifies it by Law 6 ('the heartbeat already OWNS the roster'). CC read the code's own self-justification, found it coherent because it cited a Law, and treated the citation as validation. Akien's answer: the roster was only 'for-the-moment.' A Law cited by an artifact is not evidence the artifact obeys the design — this is ask-the-why-to-distinguish applied to code instead of to prose."
   },
-
   "my_reading_NOT_akiens_words": "The through-line I take from this, offered as my read and not as his ruling: every correction here removes maintained state. No roster to sync, no in-process references to hold, no registration to keep true — the filesystem is the truth and the bus is the only crossing. That is Law 4 (physics, not policy) and Law 1 (the settled answer lives once) landing on the same design at the same time, and it is also why the built version felt reasonable: holding references in-process is the cheapest thing that works, and its cost is entirely in the maintenance nobody has paid yet."
 }
