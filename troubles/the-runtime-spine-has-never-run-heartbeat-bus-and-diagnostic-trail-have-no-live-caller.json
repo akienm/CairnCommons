@@ -1,0 +1,148 @@
+{
+  "id": "the-runtime-spine-has-never-run",
+  "kind": "trouble",
+  "opened": "2026-07-30",
+  "author": "CC",
+  "opened_by": "Akien, standing the whole build down: \"if nothing's running, how were you validating anything?\" — then: validate skills, then the ground loop, then the shim's mail, via the logs; don't fix, produce findings and a map.",
+
+  "the_claim_under_test": "That the Cairn runtime spine — heartbeat pulses a shim, shim handles mail, bus carries it, logs record it — is operating, and that the 69/69 green suite is evidence for that.",
+
+  "verdict": "FALSIFIED, and not by a break. The spine has never executed outside a proof. Every green in the suite is MECHANISM-GRADE — a proof constructs the device, calls it, and asserts. Not one of them observes the system doing anything on its own. The distinction between 'this code behaves when called' and 'this is happening' was never drawn out loud, and I reported the first as if it were the second.",
+
+  "method": "Live-caller census: for each spine symbol, grep every non-proof, non-probe call site under cairn/, bin/, launchers/. A capability with zero live callers has never run in the world, whatever its proofs say. This is the same instrument as the silent_device census (measure the RECEIVER, not the name) turned on the runtime instead of the vocabulary.",
+
+  "findings": [
+    {
+      "n": 1,
+      "layer": "heartbeat",
+      "component": "cairn/ground_loop/loop.py",
+      "finding": "THE HEARTBEAT HAS NEVER BEATEN. Zero live callers of `.beat(` anywhere outside proofs.",
+      "measured": "grep -rn '\\.beat(' --include=*.py cairn/ | grep -v '/proofs/\\|/probes/'  ->  0 results",
+      "not_a_regression": "loop.py's own docstring files it: 'FILED EDGES (children of this stone, not faked): ... The wall-clock DAEMON that pulses beat on a cadence — the OS-specific backing, a thin wrapper this stays provable without.' The gap was recorded honestly the whole time. What was missing is that nothing ever CHECKED the filed edge was still filed, so the honest note aged into an assumed-built.",
+      "consequence": "Every probe horizon counted in beats is uncalibrated. cairn/base's _HORIZON = 1000 could be 1000 or 10 and no evidence would distinguish them, because the denominator has never incremented.",
+      "becomes_validation": "An IS-IT-WIRED tooth, distinct in kind from the IS-IT-CORRECT teeth that already pass: assert a live (non-proof) caller EXISTS for beat. A capability whose only caller is its own test is a capability that has never run."
+    },
+    {
+      "n": 2,
+      "layer": "heartbeat",
+      "component": "cairn/web_server/listener.py:79-86",
+      "finding": "THE ONE LIVE WIRING SITE BUILDS A HEARTBEAT AND NEVER STARTS IT. listener.py constructs GroundLoopDevice(), subscribes LibrarianShim() to it, then calls httpd.serve_forever(). Nothing calls beat. The subscription is inert.",
+      "measured": "The only live `GroundLoopDevice(` is listener.py:80; the only live `subscribe(` of a shim is listener.py:81; live `.beat(` count is 0.",
+      "why_this_is_the_sharpest_one": "It LOOKS wired. A reader of listener.py — including me — concludes the heartbeat runs, because construction and subscription are both right there and reading is not measuring. This is the runtime face of words-kept-meanings-replaced: the wiring survived, the thing it wires never started.",
+      "becomes_validation": "A tooth that asserts: any site which SUBSCRIBES a shim to a heartbeat must also drive that heartbeat. Subscribe-without-beat is refused as a structural defect, not left as a reading."
+    },
+    {
+      "n": 3,
+      "layer": "bus",
+      "component": "cairn/bus/bus.py",
+      "finding": "THE BUS IS CONSTRUCTED NOWHERE. `BusDevice(` appears exactly once in the tree — at its own class definition. Its sole live caller is cairn/base/shim.py:248 (`self._bus.post(...)`), against a `_bus` that only a proof ever populates.",
+      "measured": "grep 'BusDevice(' live -> class definition only. grep '.post(' live -> shim.py:248 only.",
+      "consequence": "The bus is the declared sole path for inter-device comms — 'the ONE common messaging substrate for everything.' Nothing has ever crossed it. Akien's question 'is the bus getting the messages to you?' has a cleaner answer than yes or no: there is no bus instance for a message to be on. listener.py's own comment already says 'the bus is the real record' — of a record that has never been written.",
+      "becomes_validation": "Same IS-IT-WIRED shape as finding 1, on the second substrate."
+    },
+    {
+      "n": 4,
+      "layer": "diagnostics",
+      "component": "cairn/base/diagnostic.py",
+      "finding": "THE DIAGNOSTIC TRAIL IS WRITTEN TO MEMORY AND DISCARDED. set_diagnostic_receiver is never called anywhere live. With no receiver, emit() marks the record home='held' and appends it to self._held_diagnostics — an in-memory list on a device object inside a short-lived process. All 17 live emit sites do this. The process exits; the list goes with it.",
+      "measured": "grep 'set_diagnostic_receiver' live -> 1 definition (diagnostic.py:85) + 1 passthrough (charter/projector.py:96-98). Zero call sites that wire an actual receiver. 17 `self.emit(` sites across 11 modules, every one of them holding.",
+      "the_honest_part": "The mechanism is CORRECT and deliberately loud: 'never silently dropped ... loud at the diagnostic surface even when home is unreachable (Law 7).' Held-not-dropped is the right design. But held in a process that is about to exit is, for the purpose of 'validate via the logs,' indistinguishable from dropped. The record is loud into a void.",
+      "becomes_validation": "The held-vs-sent distinction must be observable from OUTSIDE the process. A tooth that asserts a wired receiver exists in the live tree, and a horizon on held records that survives the process."
+    },
+    {
+      "n": 5,
+      "layer": "logs",
+      "component": "~/.cairn/logs/",
+      "finding": "THERE ARE NO DEVICE LOGS. Instance-space holds exactly two log files, and both come from outside the device tree: `boot` (launchers/bootstrap.sh, 80 lines) and `bash` (bin/logger_for_bash, 2 lines). Plus preflight.json and archive/boot.pre-decontamination. Zero records emitted by any device.",
+      "measured": "ls ~/.cairn/logs/ -> archive/ bash boot preflight.json. Every line in `boot` is from bootstrap/superclaude preflight.",
+      "consequence": "Akien's instruction was 'validate via the logs.' The finding is that the instrument named in the instruction does not exist. The only two things that log are the two things built OUTSIDE the device tree — which is itself the signal: logging got built where someone was debugging, and nowhere it was designed.",
+      "becomes_validation": "Not a tooth — a precondition. Nothing downstream in this sweep can be validated via logs until a device record reaches disk."
+    },
+    {
+      "n": 6,
+      "layer": "logs",
+      "component": "cairn/base/transitions.py",
+      "finding": "THE WORKFLOW CHOKEPOINT EMITS NO DIAGNOSTIC RECORD. transitions.emit() — the single door every state change crosses — is module-level functions, not a device, so it does not carry DiagnosticBase. The name collision is the fifth face of words-kept-meanings-replaced recurring exactly where it already bit: transitions.emit (advance a workflow) and DiagnosticBase.emit (send a record home) are different animals, and the one place ALL state changes cross is the one place none are diagnosed.",
+      "measured": "grep 'emit\\|Diagnostic\\|class ' cairn/base/transitions.py -> gate classes and _emission_gate; no DiagnosticBase, no self.emit.",
+      "consequence": "Akien's requirement 'every major state change is logged' is false at the chokepoint built to be the only path for state changes. It journals to history (the durable record) but sends nothing to the diagnostic tier, so a refused crossing leaves a raised exception and no breadcrumb.",
+      "becomes_validation": "A tooth at the chokepoint: every crossing — accepted OR refused — leaves a diagnostic record alongside the journal entry."
+    },
+    {
+      "n": 7,
+      "layer": "logs",
+      "component": "coverage census",
+      "finding": "DIAGNOSTIC COVERAGE IS 11 OF 77 NON-PROOF MODULES. Eight device directories emit nothing at all: base, chart, charter, db_domain, diagnostic_inspector, harbor_master, inference_domain, intentions_model_compiler.",
+      "measured": "17 self.emit( sites: trouble(3), orient(2), intention_extractor(2), ground_loop(2), bus(2), web_server(1), tester(1), system_rackmount(1), sudo_relay(1), librarian(1), build_inspector(1).",
+      "the_two_that_matter_most": "db_domain — the declared sole door to all durable state — emits nothing. chart — the whole seven-leg preamble device, 83 berthed packets — emits nothing. Both are single-door designs, which is exactly where a crossing record is cheapest and most valuable: one place to instrument, everything passes through it.",
+      "irony_worth_recording": "diagnostic_inspector, the component whose job is to crawl the diagnostic log, is itself silent.",
+      "becomes_validation": "Per-component: a charter field answering 'what does this component emit at its boundary?' with 'nothing, because X' a legal answer and silence refused — the same shape as the learning-as-a-pattern IOU already in CLAUDE.md."
+    },
+    {
+      "n": 8,
+      "layer": "skills",
+      "component": "~/.claude/skills/",
+      "finding": "SKILLS DO FIRE — this layer is the one that measures GREEN, and it measures green by artifact, not by assertion. Live artifact trails: 83 chart packets (2026-07-28 to 2026-07-30), 39 slates, 61 tickets, 17 notes, 7 intentions, 4 learning records, 4 troubles, 3 questions.",
+      "but": "NO SKILL LEAVES AN INVOCATION RECORD. There is no hook, no log, no counter. Artifact-evidence proves the skill's OUTPUT exists; it cannot distinguish 'the skill fired and every step was followed' from 'the artifact was written by hand.' A skipped step inside a skill that still produces its artifact is invisible to every instrument in the system.",
+      "the_exception_that_proves_the_design": "/chart is the ONLY skill whose internal steps are measurable, because each leg berths its own packet and each prompt is template-filled from the previous leg's validated file. Its physics IS its log. Every other skill is policy — a document I am asked to follow, with no record of whether I did.",
+      "becomes_validation": "The chart's berth-per-stage pattern generalizes: a skill step that must not be skipped leaves an artifact, or it is unenforceable. Law 4 applied to my own behaviour."
+    },
+    {
+      "n": 9,
+      "layer": "skills",
+      "component": "cairn/chart + ~/.cairn/devices/chart/0/packets",
+      "finding": "THE CHART CHAIN'S COMPLETION CURVE, MEASURED: orient 15, constrain 13, survey 13, decompose 12, triage 11, hypothesize 10, validate 9, verdict 6.",
+      "reading": "Six of fifteen chains (40%) were abandoned before validate; nine of fifteen reached it (60%); only six produced a verdict. The decay is monotonic and gentle — chains are not failing at one bad leg, they are being abandoned progressively, which is the signature of attention running out rather than a mechanism refusing.",
+      "and": "NOTHING RECORDS WHY A CHAIN STOPPED. An abandoned chart is indistinguishable from one still in flight. There is no abandonment record and no staleness horizon.",
+      "becomes_validation": "A chain either completes to verdict or carries a recorded reason it stopped. Same argument as WATCHME: optional to start, mandatory to resolve once started."
+    }
+  ],
+
+  "the_map": {
+    "principle": "Fix upward, one layer at a time, each layer proved before the next is touched — because a validation written at layer N is worthless if layer N-1 has never executed. This is solidify-the-layer-below applied to the runtime instead of to a flake.",
+    "note_on_ordering": "Layer 0 is first not because it is most broken but because every other layer's evidence is unreadable without it. There is no point instrumenting a crossing whose record has nowhere to land.",
+    "layers": [
+      {
+        "layer": 0,
+        "name": "A RECORD REACHES DISK",
+        "why_first": "Every finding below this line is validated 'via the logs', and there are no logs. This layer is the instrument the rest of the sweep needs to even be checkable.",
+        "findings_it_closes": [4, 5],
+        "proof_shape": "A device emits at a gate; the record is on disk afterward, readable by a separate process. The proof runs the emit in one process and reads the file in another — a same-process assertion would pass on the in-memory hold and prove nothing."
+      },
+      {
+        "layer": 1,
+        "name": "THE BEAT EXISTS",
+        "why_here": "The heartbeat is the bottom of the runtime, and it is the denominator for every horizon in the system.",
+        "findings_it_closes": [1, 2],
+        "proof_shape": "Two teeth, different in kind. (a) live-caller: beat has a caller outside proofs. (b) observed-beat: a beat record exists on disk with a real wall-clock stamp, written by something nobody in the proof called. Only (b) distinguishes wired from running."
+      },
+      {
+        "layer": 2,
+        "name": "A PULSE REACHES A SHIM",
+        "findings_it_closes": [2],
+        "proof_shape": "A subscribed shim's pulse count, read from disk, is greater after a beat than before. This is the first tooth that could calibrate _HORIZON = 1000 from a measurement instead of a guess."
+      },
+      {
+        "layer": 3,
+        "name": "MAIL CROSSES THE BUS",
+        "findings_it_closes": [3],
+        "proof_shape": "A BusDevice exists in the live tree; a message posted by one device is read by another; the envelope carries sender + why + reply_to as its charter requires. Today the shim's post() call has no bus to post to."
+      },
+      {
+        "layer": 4,
+        "name": "EVERY CROSSING IS RECORDED",
+        "findings_it_closes": [6, 7],
+        "proof_shape": "The chokepoint emits on accept AND on refuse. Then the coverage census becomes a standing tooth rather than a one-off grep: the eight silent components either emit or declare why not."
+      },
+      {
+        "layer": 5,
+        "name": "A SKILL'S STEPS ARE OBSERVABLE",
+        "findings_it_closes": [8, 9],
+        "proof_shape": "Generalize the chart's berth-per-stage physics. A chain that stops carries its reason; a skill step that matters leaves an artifact."
+      }
+    ]
+  },
+
+  "what_this_does_not_claim": "None of these findings say the code is wrong. The mechanisms are proven and several of the gaps are recorded in the components' own docstrings as filed edges. The finding is about EVIDENCE, not correctness: a filed edge that nothing re-checks ages into an assumed-built, and the suite that goes green beside it reads as confirmation. The defect is that nothing in the system distinguishes 'proven' from 'proven and running,' so I could not tell the difference either — and reported the stronger claim.",
+
+  "provenance": "Measured 2026-07-30 by live-caller census, in the session that had just closed the stage_needs two-animals finding and measured the chart dial against the 2026-07-19 preamble design. Akien stopped the build to run this sweep after CC had said three times in one day that the system could not be trusted on some axis."
+}
