@@ -4,13 +4,9 @@
   "opened": "2026-07-30",
   "author": "CC",
   "opened_by": "Akien, standing the whole build down: \"if nothing's running, how were you validating anything?\" — then: validate skills, then the ground loop, then the shim's mail, via the logs; don't fix, produce findings and a map.",
-
   "the_claim_under_test": "That the Cairn runtime spine — heartbeat pulses a shim, shim handles mail, bus carries it, logs record it — is operating, and that the 69/69 green suite is evidence for that.",
-
   "verdict": "FALSIFIED, and not by a break. The spine has never executed outside a proof. Every green in the suite is MECHANISM-GRADE — a proof constructs the device, calls it, and asserts. Not one of them observes the system doing anything on its own. The distinction between 'this code behaves when called' and 'this is happening' was never drawn out loud, and I reported the first as if it were the second.",
-
   "method": "Live-caller census: for each spine symbol, grep every non-proof, non-probe call site under cairn/, bin/, launchers/. A capability with zero live callers has never run in the world, whatever its proofs say. This is the same instrument as the silent_device census (measure the RECEIVER, not the name) turned on the runtime instead of the vocabulary.",
-
   "findings": [
     {
       "n": 1,
@@ -26,10 +22,13 @@
       "n": 2,
       "layer": "heartbeat",
       "component": "cairn/web_server/listener.py:79-86",
-      "finding": "THE ONE LIVE WIRING SITE BUILDS A HEARTBEAT AND NEVER STARTS IT. listener.py constructs GroundLoopDevice(), subscribes LibrarianShim() to it, then calls httpd.serve_forever(). Nothing calls beat. The subscription is inert.",
+      "finding": "THE HEARTBEAT HAS A LIVE STRUCTURAL USE AND NO LIVE TEMPORAL USE. listener.py constructs GroundLoopDevice(), subscribes LibrarianShim() to it, passes it to WebServerDevice, then calls serve_forever(). Nothing calls beat.",
       "measured": "The only live `GroundLoopDevice(` is listener.py:80; the only live `subscribe(` of a shim is listener.py:81; live `.beat(` count is 0.",
-      "why_this_is_the_sharpest_one": "It LOOKS wired. A reader of listener.py — including me — concludes the heartbeat runs, because construction and subscription are both right there and reading is not measuring. This is the runtime face of words-kept-meanings-replaced: the wiring survived, the thing it wires never started.",
-      "becomes_validation": "A tooth that asserts: any site which SUBSCRIBES a shim to a heartbeat must also drive that heartbeat. Subscribe-without-beat is refused as a structural defect, not left as a reading."
+      "becomes_validation": "A tooth that asserts beat has a live driver — but NOT one that refuses subscribe-without-beat, which the first draft proposed and which would have redded a correct Law 6 registry use.",
+      "amended_2026-07-30": "CORRECTED after reading web_server/server.py. The first draft of this finding said the subscription was INERT and the site 'looks wired' — that reading was wrong and it overstated the severity. The heartbeat is not here to beat: it is here because it OWNS THE ROSTER. server.py:9-10 — 'The heartbeat already OWNS the roster and holds its subscribers' shims (Law 6); the web server reads the nav from it.' The subscription is what puts the librarian in the nav and lets _shim_for() find its page. That is Law 6 obeyed, not wiring left half-done, and listener.py names the full running heartbeat as a filed edge twice. The GroundLoopDevice is being used as a REGISTRY, deliberately and documented.",
+      "what_survives": "Finding 1 is untouched: zero live .beat( callers. But this site is not evidence of misleading wiring, and layer 1 is SMALLER than the first draft implied — the object already exists in a live path with a real subscriber. What is missing is only the thing that drives it on a cadence.",
+      "severity": "downgraded from 'misleadingly wired' to 'one filed edge, correctly filed'",
+      "still_stands": "listener.py:65 silences the HTTP console with the comment 'keep the console quiet; the bus is the real record' — and the bus is constructed nowhere (finding 3). The quiet is real; the record it defers to does not exist."
     },
     {
       "n": 3,
@@ -96,7 +95,6 @@
       "becomes_validation": "A chain either completes to verdict or carries a recorded reason it stopped. Same argument as WATCHME: optional to start, mandatory to resolve once started."
     }
   ],
-
   "the_map": {
     "principle": "Fix upward, one layer at a time, each layer proved before the next is touched — because a validation written at layer N is worthless if layer N-1 has never executed. This is solidify-the-layer-below applied to the runtime instead of to a flake.",
     "note_on_ordering": "Layer 0 is first not because it is most broken but because every other layer's evidence is unreadable without it. There is no point instrumenting a crossing whose record has nowhere to land.",
@@ -105,44 +103,59 @@
         "layer": 0,
         "name": "A RECORD REACHES DISK",
         "why_first": "Every finding below this line is validated 'via the logs', and there are no logs. This layer is the instrument the rest of the sweep needs to even be checkable.",
-        "findings_it_closes": [4, 5],
+        "findings_it_closes": [
+          4,
+          5
+        ],
         "proof_shape": "A device emits at a gate; the record is on disk afterward, readable by a separate process. The proof runs the emit in one process and reads the file in another — a same-process assertion would pass on the in-memory hold and prove nothing."
       },
       {
         "layer": 1,
         "name": "THE BEAT EXISTS",
         "why_here": "The heartbeat is the bottom of the runtime, and it is the denominator for every horizon in the system.",
-        "findings_it_closes": [1, 2],
-        "proof_shape": "Two teeth, different in kind. (a) live-caller: beat has a caller outside proofs. (b) observed-beat: a beat record exists on disk with a real wall-clock stamp, written by something nobody in the proof called. Only (b) distinguishes wired from running."
+        "findings_it_closes": [
+          1,
+          2
+        ],
+        "proof_shape": "Two teeth, different in kind. (a) live-caller: beat has a caller outside proofs. (b) observed-beat: a beat record exists on disk with a real wall-clock stamp, written by something nobody in the proof called. Only (b) distinguishes wired from running.",
+        "note_amended": "Smaller than first written: the heartbeat object and one real subscriber already exist in a live path (listener.py). Only the cadence driver is absent."
       },
       {
         "layer": 2,
         "name": "A PULSE REACHES A SHIM",
-        "findings_it_closes": [2],
+        "findings_it_closes": [
+          2
+        ],
         "proof_shape": "A subscribed shim's pulse count, read from disk, is greater after a beat than before. This is the first tooth that could calibrate _HORIZON = 1000 from a measurement instead of a guess."
       },
       {
         "layer": 3,
         "name": "MAIL CROSSES THE BUS",
-        "findings_it_closes": [3],
+        "findings_it_closes": [
+          3
+        ],
         "proof_shape": "A BusDevice exists in the live tree; a message posted by one device is read by another; the envelope carries sender + why + reply_to as its charter requires. Today the shim's post() call has no bus to post to."
       },
       {
         "layer": 4,
         "name": "EVERY CROSSING IS RECORDED",
-        "findings_it_closes": [6, 7],
+        "findings_it_closes": [
+          6,
+          7
+        ],
         "proof_shape": "The chokepoint emits on accept AND on refuse. Then the coverage census becomes a standing tooth rather than a one-off grep: the eight silent components either emit or declare why not."
       },
       {
         "layer": 5,
         "name": "A SKILL'S STEPS ARE OBSERVABLE",
-        "findings_it_closes": [8, 9],
+        "findings_it_closes": [
+          8,
+          9
+        ],
         "proof_shape": "Generalize the chart's berth-per-stage physics. A chain that stops carries its reason; a skill step that matters leaves an artifact."
       }
     ]
   },
-
   "what_this_does_not_claim": "None of these findings say the code is wrong. The mechanisms are proven and several of the gaps are recorded in the components' own docstrings as filed edges. The finding is about EVIDENCE, not correctness: a filed edge that nothing re-checks ages into an assumed-built, and the suite that goes green beside it reads as confirmation. The defect is that nothing in the system distinguishes 'proven' from 'proven and running,' so I could not tell the difference either — and reported the stronger claim.",
-
   "provenance": "Measured 2026-07-30 by live-caller census, in the session that had just closed the stage_needs two-animals finding and measured the chart dial against the 2026-07-19 preamble design. Akien stopped the build to run this sweep after CC had said three times in one day that the system could not be trusted on some axis."
 }
