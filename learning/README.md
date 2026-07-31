@@ -75,8 +75,11 @@ tester), but the v0 shape must not preclude them:
 **Multi-layer recall** (the system's memory hierarchy, checked cheapest-first —
 escalate only on a miss or ambiguity):
 
-- **L1 / fast — the slate.** Already built. Most-important-things-present; the
-  `/loadslate` read.
+- **L1 / fast — the slate.** Already built, and since 2026-07-31 it is the only
+  tier that recalls itself: `bin/cmd/slate` is fired by a SessionStart hook, so L1
+  is injected before the first prompt rather than fetched on a miss. Worth holding
+  as the pattern for the tiers below — a recall you have to remember to perform is
+  a recall that will be skipped exactly when the session is busiest.
 - **L2 / warm — a rolling short-term summary,** kept current over ~a week. The *one
   new tier*, and precisely what the sleep pass **produces**: consolidation
   materializes as L2.
