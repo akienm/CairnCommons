@@ -1,0 +1,20 @@
+{
+  "id": "ground-loop-writes-its-own-liveness",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [BUILDME] -> PROVEME -> PROVED",
+  "cast": "2026-07-30",
+  "cast_by": "/sorted",
+  "parent": "ground-loop-is-discoverable-without-scanning",
+  "intent": "On each pass the ground loop writes a record in its own device space (~/.cairn/devices/ground_loop/<instance>/) carrying: when it last ran, its state, and its pid. The write is part of the pass, not a separate concern.",
+  "why": "The foundation the other three children read. It is also the first device record ever to reach disk in Cairn — the runtime-spine sweep measured ZERO. That makes it layer 0 of that sweep's map and this ticket at the same time: a scan-and-post loop that finds nothing produces no output, so without this record 'ran and found nothing' and 'never ran' are the same observation from outside.",
+  "falsifier": "The record's last-run does not advance while the loop runs, or advances while it does not. And: the record must survive being read mid-write (a reader must never see a torn record) — atomic write, same discipline as the projector's append door.",
+  "stage_needs": {
+    "BUILDME": [
+      {
+        "need": "the ground loop rebuilt to Akien's 2026-07-30 ruling (scans each device's ~/.cairn/devices/<device>/<instance>/groundloop/ each beat and posts to the bus on a met trigger). Akien: 'once this is done, the very next intention is...' — this whole family sits downstream of that. decisions/2026-07-30-the-ground-loop-scans-disk-and-posts-to-the-bus.json",
+        "marks": []
+      }
+    ]
+  },
+  "watchme": "none, because its falsifier is mechanical and a proof settles it — advance the loop, read the file from a SEPARATE process, assert the stamp moved. The question that needs time (what staleness threshold is honest) belongs to the parent, which carries the watch."
+}

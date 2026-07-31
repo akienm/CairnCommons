@@ -1,0 +1,48 @@
+{
+  "id": "ground-loop-is-discoverable-without-scanning",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME(liveness-read) -> PROVED",
+  "cast": "2026-07-30",
+  "cast_by": "/sorted",
+  "author": "CC",
+  "origin": "Akien",
+  "intent_verbatim": "superclaude is one of the entry points that will start the ground loop but only if it's not already running. I also propose that the ground loop has a file it touches on each pass. can be in it's device space in .cairn. that shows us it's last run without scanning for the process. if we were really smart we'd put it's state in there too... and then when the web server displays the ground loop state in it's device, it's process ID would be present. process id as part of the base shim device status pane too.",
+  "intent": "The one resident process in Cairn reports its own liveness, so nothing has to go looking for it. The loop writes a record on each pass — last-run, state, pid — in its own device space. Every consumer (a start-guard, a status pane, a human) READS that record instead of scanning the process table. Liveness stops being a host question and becomes an owned fact (Law 6).",
+  "why": "Three things collapse into one mechanism. (a) 'start it only if it isn't running' needs a liveness answer; (b) 'show me the ground loop's state' needs the same answer; (c) the NO DAEMONS law's actual WHY — UU grew daemons willy-nilly and shutting them down was unreliable — is served by exactly this: the one sanctioned resident process becomes accountable and discoverable by construction. The touch-file does not weaken NO DAEMONS, it is what makes the single permitted exception honest.",
+  "children": [
+    "ground-loop-writes-its-own-liveness",
+    "an-entry-point-starts-the-loop-only-once",
+    "the-ground-loop-pane-shows-its-state",
+    "a-shim-status-pane-carries-a-pid"
+  ],
+  "falsifier": "A liveness read disagrees with reality, in EITHER direction: (1) the record says LIVE and no loop is running (a stale record after an unclean death — the start-guard then refuses to start and the system is silently dead); (2) the record says DEAD and a loop IS running (two entry points each start one, and every callback fires twice). Direction (2) is the expensive one and is the reason presence-of-file cannot be the test.",
+  "horizon": "Readable within one session for direction (2) — race it deliberately. Direction (1) needs a real unclean death, which is why it carries a WATCHME rather than a proof alone: a proof can SIMULATE a stale record, but only time tells us what threshold is honest.",
+  "watchme": {
+    "object": "liveness-read",
+    "trigger": "every time a consumer reads the liveness record to answer 'is the loop running' — the start-guard, a status pane, a human. Record what the record SAID and what was actually true.",
+    "enough": "after it has seen at least one UNCLEAN death (a kill -9 leaving a stale record) and one clean shutdown. Two samples of the same kind is one sample.",
+    "carrier": "a verdict artifact against this ticket's falsifier",
+    "nexus": "the ground loop's own nexus — the staleness threshold is what it teaches",
+    "consumer": "whoever sets the staleness threshold. THIS IS THE WATCH'S WHOLE POINT: the threshold starts as a guessed number of beats and the watch is what turns it into a measured one. A guess that never gets measured is the defect Law 3 names.",
+    "probe": "cairn/ground_loop/probes/liveness_read.py",
+    "berth_note": "Not yet on disk, and that is correct at TICKETME — armed_error() measures the berth at the WATCHME CROSSING, not at casting. Berthed with what it watches (the ground loop), per convention: <component>/probes/<object>.py. It must declare module-level PROBE with a `carry` and an `enough`, or the crossing refuses."
+  },
+  "stage_needs": {
+    "BUILDME": [
+      {
+        "need": "the ground loop rebuilt to Akien's 2026-07-30 ruling (scans each device's ~/.cairn/devices/<device>/<instance>/groundloop/ each beat and posts to the bus on a met trigger). Akien: 'once this is done, the very next intention is...' — this whole family sits downstream of that. decisions/2026-07-30-the-ground-loop-scans-disk-and-posts-to-the-bus.json",
+        "marks": []
+      }
+    ]
+  },
+  "gate_findings": {
+    "assumption_1": "The ground loop is a RESIDENT PROCESS. Checked against NO DAEMONS and it is a distinction, not a collision: I-heartbeat-probes-and-bus.md already names the ground loop as 'the one permitted periodic pulse, and it exists precisely so that nothing else has to be.'",
+    "assumption_2_FALSE_AS_STATED": "'A file that is touched tells us the loop is running.' It does not — a crashed loop leaves the file behind. Akien's own design supplies the fix without connecting it: the record carries LAST RUN, so liveness is 'touched within N beats', not 'file exists'. Connecting those two halves is this ticket's real content.",
+    "missing_1_the_staleness_rule": "How old is dead? A threshold in beats — and it is the FIRST genuine use of the beat as a denominator, which the runtime-spine sweep found was never incremented. Needs a number and a why. Named here so the build cannot invent one silently.",
+    "missing_2_the_race": "Two entry points reading 'not running' at the same moment both start a loop. Read-then-act is not atomic; the claim must be (O_EXCL create, or equivalent). Carried by the child that owns the guard.",
+    "falsifiable": "yes — stated above, both directions, with a horizon.",
+    "collides": "Checked four ways, no collision. NO DAEMONS: distinction (above). reaching-for-daemons-is-drift: a per-pass touch is the loop recording itself, not a poller; a reader that POLLED the file would be the drift, and every reader here is event-driven (a browser request, a launch). Law 6: the ground loop owns the file, in its own device space. system_rackmount owns host-resource predicates — and this design never asks the host anything, which sidesteps that ownership question rather than crossing it.",
+    "verdict": "CAST. The two missing points are specifiable implementation decisions, not open design, so they are named on the ticket rather than routed back. If Akien reads the staleness threshold as a design question, this reverts to a red and the parent goes back to THINKME.",
+    "missing_3_the_skill_template_is_short_a_field": "MEASURED while casting this: /sorted's watchme template lists six fields (object, trigger, enough, carrier, nexus, consumer) but cairn/base/watchme_spec.py — built TODAY under ticket watchme-emits-a-probe — requires a seventh, `probe`, naming the berth the emission gate resolves ARMED from. A ticket cast straight from the skill text refuses at the crossing. The physics is right and the skill text is stale; that is the good direction of drift (Law 4), but it is drift. IOU: update ~/.claude/skills/sorted/SKILL.md. Not done in this act — it is a different owner's artifact and gets its own small ticket rather than a drive-by edit."
+  }
+}
