@@ -4,7 +4,7 @@
 2007 test-automation framework, the UU model, Trouble Tickets). **State: PROVED —
 sealed 2026-07-25 through the quorum signature gate.** Reviewer (verdict): akien.
 Notary (seal): cc — different hands, refused by physics otherwise. The seal, its
-evidence and its falsifier: `intentions-other/validations/I-complete-diagnostic-on-first-pass.json`.
+evidence and its falsifier: `intentions-not-beside-code/validations/I-complete-diagnostic-on-first-pass.json`.
 It sat unsigned for two days for a purely mechanical reason worth recording: the
 VALIDATION write-door derived a seal's address from a PROOF FILE path, and a
 concept-piece has no proof file — so the gate was never awaiting a signature, it was
