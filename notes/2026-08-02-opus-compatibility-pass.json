@@ -1,0 +1,102 @@
+{
+  "id": "2026-08-02-opus-compatibility-pass",
+  "date": "2026-08-02",
+  "author": "CC (Fable), Sunday-evening pass at Akien's request; two read-only sweep agents + inline cold-start audit",
+  "record_kind": "AUDIT REPORT — findings ranked, nothing changed, no tickets cast. Input for the detailed check-in Akien named for later this week. Every file:line below was read this pass; every 'lived symptom' is the projected Opus experience, labeled as CC's read where unmeasured.",
+  "relates_to": "learning-block-engine-track (the deep fix), challenge-fires-at-intent, nothing-rides-loose (in-house prior art cited below)",
+
+  "the_question": "Akien 2026-08-02 ~2025h: 'would it be worth a pass to have you make sure EVERYTHING is opus compatible?' The operating definition, from his own lived symptom ('as soon as we switch from fable to opus, we start spiralling down. I CANNOT keep track of all those details'): the system is Opus-compatible wherever state lives in files and doors refuse completely; Opus-hostile wherever a step still rides on the model holding details in its head or judging quality no door checks.",
+
+  "verdict_in_one_paragraph": "The system is MOSTLY Opus-compatible at its boundaries, and the newest doors are the best ones — the pattern is already converging on the right shape (the emit chokepoint, recordverdict, and skill_block.fire are the reference implementations; all three are recent). The hostility is concentrated in exactly three places: (1) the berth-to-berth handoff has no request-identity physics — the single highest-consequence silent-corruption path; (2) the seven chart validate_* gates are an older copied first-failure cascade whose docstrings falsely claim one-pass completeness; (3) three skills have no door at all (/sorted, /challenge, /saveslate) — their whole discipline is prose. The deeper issue — doors check shape while quality rides on the model — is not a defect to ticket: it is the learning-block engine track's own thesis, and the pass mostly confirms that track is aimed at the right target.",
+
+  "standing_load_measured": "Session-open context: CLAUDE.md 6,168 B + MEMORY.md 18,205 B + newest slate ~2,900 B + session-open hook ~11,000 B ≈ 38 KB ≈ ~10k tokens. Comfortable for Opus; the load is NOT the spiral risk. (MEMORY.md at 18 KB was already self-flagged in the lap-and-shrink slate as 'content pretending to be an index' — still true, still the smallest of these problems.)",
+
+  "findings_ranked": [
+    {
+      "rank": 1,
+      "finding": "The berth handoff has no request-identity physics — the one silent-corruption path",
+      "lived_symptom": "After a compact, an Opus session opens ~/.cairn/devices/chart/0/packets/ — a flat directory with 17+ berths per stage from many requests — and must EYEBALL the right one; /sail step 0 says 'deepest link first' and gives no command. Pick a stale validate berth and the whole voyage sails green under another request's chain: every door passes, wrong build, and nothing ever says so.",
+      "evidence": "orient.py:149 ticket_claim_error — the ticket field is OPTIONAL and only checked to name an on-file ticket; build_inspector/inspector.py:1367 buildme_rides_the_intent accepts ANY berth with skill=='intent'; the chart chain re-reads (depth N) validate LINK integrity, never request identity; chart/verdict.py:418 latest_claiming_artifact(ticket) already does the deterministic lookup and NO skill mentions it.",
+      "proposed_fix": "Two halves, one ticket: (a) a resolver verb — 'the deepest berth claiming ticket X' — surfaced in /sail step 0 and in every /chart hand-forward as the recovery command (the function half-exists); (b) identity on the link: the gates assert a *_ref berth carries the same ticket as the packet claiming it. Converts nine conversation-carried handoffs into physics in one stroke.",
+      "disposition": "ticket owed — untracked today"
+    },
+    {
+      "rank": 2,
+      "finding": "Seven chart validate_* gates whack-a-mole; their docstrings claim the opposite",
+      "lived_symptom": "Opus fires write_survey, fixes the one lack the refusal named, fires again, and meets a NEW refusal — three to five round trips per stage, seven stages deep; every extra round trip is a turn for a spiralling model to wander in. orient.py even raises INSIDE a field loop (three empty strings = three trips). Meanwhile all six copied docstrings say 'Refusals are loud and complete on first pass' — a false claim standing in code.",
+      "evidence": "orient.py:188-229 (8 tiers, 2 in-loop); constrain.py:123-173, survey.py:147-185, decompose.py:126-168, triage.py:126-168, hypothesize.py:131-175, validate.py:135-177 (~10 sequential raise points each). The composed-judge layer at the BOTTOM of each is already one-pass (e.g. constrain.py:173-176) — only the hand-written shape layer above it cascades.",
+      "proposed_fix": "Convert all seven to accumulate-then-raise. The reference pattern is already proven in-house twice: learning_block.py:184-203 (check_input walks the whole contract) and verdict.py:259-289 (unanswered() accumulates everything). One shape, seven doors closed at once. Fold in finding 7's message fixes on the same voyage.",
+      "disposition": "ticket owed — untracked today"
+    },
+    {
+      "rank": 3,
+      "finding": "/sorted has zero doors, and 'none, because <X>' is the cheapest hollow pass in the system",
+      "lived_symptom": "A pressed Opus session writes watchme: 'none, because <one plausible sentence>' and every downstream gate stays green forever — the mandatory efficacy question becomes a one-sentence formality. And if the context dies mid-/sorted, NOTHING on disk holds the partial cast: type, gates, watchme spec, children all lived only in the transcript. The skill's own charter admits it: 'casting has no chokepoint (filing a ticket is writing a file).'",
+      "evidence": "sorted/SKILL.md L18-66: the completeness check is four prose questions self-answered in conversation; the 'challenge GATE' heading names a gate that is four bullets; gate-binding is hand-transcription from node_classes/ with no cast-time comparison; the escape hatches at sorted:63-65, intent:100-102, sail:95-97 are checked only non-blank.",
+      "proposed_fix": "Give /sorted a door through skill_block — the machinery was BUILT for this (the /intent door is the precedent; its contract is read live from its own charter). The completeness answers, the class, the bound gates, and the watchme spec become packet fields a door refuses incomplete. A partial cast then survives as a refused packet on disk instead of vanishing with the context.",
+      "disposition": "ticket owed — untracked today. CC's read: this is the highest-VALUE fix of the pass (rank 1 is highest-risk); /sorted is the pivot that binds all downstream physics."
+    },
+    {
+      "rank": 4,
+      "finding": "/challenge is 100% prose — no command, no artifact, no destination for what it catches",
+      "lived_symptom": "'Log what the pass caught' names no store; /sorted cannot tell a real challenge from narration, so a hollow pass is indistinguishable from a hard one by construction. The prior-art question — the most expensive search in the skill — has no floor, no counsel walk, and gets answered 'no prior art' from memory.",
+      "evidence": "challenge/SKILL.md — zero commands in 52 lines. IN-HOUSE PRIOR ART: ticket challenge-fires-at-intent is CAST (2026-07-26, cursor at BUILDME) and already carries the measured why ('the skill whose five questions include PRIOR ART? has never once asked it').",
+      "proposed_fix": "Build the cast ticket; when it builds, route the firing through skill_block so the five answers become a refusable packet with a berth (same move as rank 3, same machinery). No new ticket needed — the existing one grows one clause.",
+      "disposition": "already cast — challenge-fires-at-intent at BUILDME; sequencing is Akien's"
+    },
+    {
+      "rank": 5,
+      "finding": "/saveslate: the most authoritative artifact in the system is written by unassisted wide synthesis",
+      "lived_symptom": "The slate is injected into EVERY future session by the SessionStart hook — authoritative by construction. But it is synthesized from the transcript with no instrument prescribed: the model that has already lost track of details writes a confident slate, and the next session inherits the loss as ground truth. Blast radius: every session, forever.",
+      "evidence": "saveslate/SKILL.md — zero commands; no validator on write (only bin/cmd/slate READS); the three-key contract, the length cost (~2,700 tokens), and 'my read vs ratified' are all unenforced prose.",
+      "proposed_fix": "Two cheap floors that work today: (a) the skill prescribes reading instruments BEFORE writing — git log since session start, the ticket cursors touched, the berth listing — so the slate compiles from the world, not the head; (b) a write-side validator (three keys, length ceiling, refuses extra keys since nothing reads them). The read half is already a program; the write half should be too.",
+      "disposition": "ticket owed — untracked today"
+    },
+    {
+      "rank": 6,
+      "finding": "Session open does not compile findings standing at the recordverdict gate",
+      "lived_symptom": "HAPPENED TODAY, not projected: the compact banner scrolled finding 3dc4845f18dd's id off Akien's terminal, and the only reason both findings survived into today's session was that yesterday's slate author happened to hand-write them into open_threads — head-carried state one level up. The hook compiles troubles, the lap, and the slate; the gate's standing findings it does not.",
+      "evidence": "This session's hook output (troubles + lap + slate, no findings section) vs cairn/learning_block/__main__.py:79-89 — the bare-command listing already renders exactly what the hook should print.",
+      "proposed_fix": "bin/cmd/slate grows one section: run the same standing-findings listing and print count + ids + the answer form. The rendering code exists; the change is small but bin/cmd/slate is proven (64/64), so it rides a ticket.",
+      "disposition": "ticket owed — untracked today"
+    },
+    {
+      "rank": 7,
+      "finding": "Refusals that name the defect but not the remedy; one message asserts completeness it does not deliver",
+      "lived_symptom": "Handed a stale constrain_ref, Opus learns the file is gone — and not that stage 2 must re-fire; the doctrinal sentence ('never from the conversation') occupies the slot where the remediation command should be. And any caller that prints a DoorRefused gets field NAMES only — learning_block.py:56-58 drops the whys from str(exc) while the message says 'all named on this first pass'. The skill's bare python -c invocations mean what Opus actually sees is a traceback plus str(exc).",
+      "evidence": "chart floor raise sites across six files (constrain.py:60-68 … validate.py:76-96); learning_block.py:56-58; chart/SKILL.md:97-98,168-169.",
+      "proposed_fix": "Ride the rank-2 ticket: floors name the producing command in the refusal; DoorRefused.__str__ renders field: why.",
+      "disposition": "folds into rank 2's ticket"
+    },
+    {
+      "rank": 8,
+      "finding": "Doors check shape; quality rides the model alone — and this is the engine track's thesis, not a new defect",
+      "lived_symptom": "A thin survey (one holding, one absence with a plausible 'measure' string) passes both judges — and /sail then treats those holdings/absences as the build's hard vocabulary, silently licensing a rebuild of what already exists. Self-labeled provenance (floor|tree|claude) and free-float confidence feed the dial the whole intention is measured by; a weaker model mislabeling corrupts the system's self-measurement invisibly. /sail's 'run twice' and 'invariants not snapshots' are counted by nobody.",
+      "evidence": "The seven /chart ceiling steps; sail/SKILL.md steps 3, 5, 6 (the verdict door checks that evidence EXISTS, not that it supports the outcome).",
+      "proposed_fix": "NOT a ticket — this is exactly what learning blocks are for: floors rise as traces accumulate, and the model tier needed falls. The pass's contribution is a ranking of which ceilings want floors first. CC's read: survey's ceiling first (it is the one whose hollow pass licenses downstream waste), provenance/confidence second (they corrupt measurement itself).",
+      "disposition": "feeds the engine track's sequencing at the check-in"
+    },
+    {
+      "rank": 9,
+      "finding": "Cross-cutting residue: ~24 prose obligations in 'Stay honest' blocks (9 of 9 skills); the chart curtain is an IOU by its own heading",
+      "lived_symptom": "Every skill's final discipline lives in unenforced prose — which is fine as residue (CLAUDE.md's own convention) but only if each names its owed enforcement. The curtain is the honest model: the heading says 'an IOU held as discipline until it is physics'. Most of the other 23 don't say what physics would retire them.",
+      "evidence": "challenge:48, commit:38, intent:109, note:31, sail:145, saveslate:43, sorted:114, moreabout:56, chart:541.",
+      "proposed_fix": "No action now; as ranks 1-5 build, each retires its lines. Re-census after.",
+      "disposition": "residue — re-measure after the above ship"
+    }
+  ],
+
+  "already_opus_safe_do_not_rederive": [
+    "The emit chokepoint (base/transitions.py) — exemplary: every gate accumulates ALL findings, names the next command (write_verdict, /sorted, ticket=<id> syntax, the exempt roster), and states 'Nothing was journaled'. The entry gate deliberately runs BOTH buildme gates so fixing one doesn't earn a second refusal.",
+    "cairn recordverdict — best door in the repo: one-pass lacks, usage embedded in the refusal, and the unmatched/ambiguous refusals DUMP the pending findings so the operator copies an id instead of remembering one. (Today's banner incident was recovered through exactly this.)",
+    "skill_block.fire — one-pass by construction (check_input walks the whole contract; empty collections count as lacks); the contract is readable live. The reference implementation for ranks 2-4.",
+    "The cairn dispatcher — unknown command prints the full roster from disk.",
+    "/moreabout — walk and training signal fused in one command so the unflattering datum cannot be skipped; no state carried at all.",
+    "/commit — fully mechanical; its durability gate is already cast as nothing-rides-loose (TICKETME).",
+    "/chart's per-step structure — 28 mechanical steps, 7 true doors, one narrow question per stage: the shape is right; only the door internals (rank 2) and the handoff (rank 1) lag.",
+    "Standing context load ~38 KB — not a spiral risk.",
+    "validate_verdict's coverage half — unanswered() accumulates every unanswered criterion and undispositioned hypothesis with its instrument named."
+  ],
+
+  "what_this_pass_did_not_do": "No code changed, no ticket cast, no skill edited — the chart/sail machinery gates those changes and the sequencing is Akien's at the check-in. The two sweep agents read only. The five owed tickets (ranks 1, 2, 3, 5, 6) enter through /sorted when chosen, not from this note."
+}
