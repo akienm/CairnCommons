@@ -144,56 +144,41 @@ reification — see the reify-vs-flow catches below). Open examples, not a taxon
 
 New signal → new predicate, **not a schema change.**
 
-## Where a probe is evaluated — at the shim of the device that cares
+## Where a probe is evaluated — Law 6 for triggers
 
-*CORRECTED 2026-08-04 by the shim-routes-everything ruling. This section used to read
-"a probe is evaluated wherever its trigger's **data** is owned," and that is what put
-one device's predicate inside another device.*
-
-**A probe is evaluated at the shim of the device whose predicate it is** — the device
-that chose the line and has the reason for caring. A probe reads what it needs to read;
-the reading's owner is a *source*, not a host for the predicate.
+**A probe is evaluated wherever its trigger's data is owned.** So device-local data
+is never exported; only the *wake-up* crosses the bus, never the raw data it tested.
 
 - **Global** probes read genuinely shared data (the passage of time / the beat).
   Evaluated at the heartbeat level.
-- **Everything else** is somebody's probe, and it fires at that somebody's shim.
+- **Device-specific** probes read a device's own data (its queue depth, an internal
+  metric). Evaluated *inside* the device; the data stays home.
 
-Consequence: **one** firing path in the whole system. A device never has to ask whether
-its watch runs here or over there — it runs here, always, because its shim is the thing
-that fires its probes.
+Consequences: minimal data movement (telemetry never crosses the bus just to be
+tested), and encapsulation by construction.
 
-## The shim is the device's router — for everything, not just messages
+## Advertise → subscribe → poke (the registration protocol)
 
-*RULED 2026-08-04 by Akien (`CairnCommons/decisions/2026-08-04-the-shim-routes-everything.json`),
-replacing the advertise → subscribe → poke protocol this section used to describe.*
+A caller never needs to know a device's internals (`object.object.method`):
 
-**Each device owns its own everything as far as possible — that is encapsulation.** And
-the piece that already stands between a device and the world is its **shim**: it fronts
-the bus for the one device it knows. So the shim is not a message pipe that happens to
-also fire probes. **The shim is the device's router, for everything it has to route** —
-mail, predicates, and whatever else turns out to need routing. It can sort on a
-predicate precisely because it is the one thing that knows both the bus and the device.
+1. A device **advertises a menu** of probes it offers — e.g. "I accept a CPU-threshold
+   probe (takes a value)" — as one item in a list of its offerings (part of its
+   Form v0 #2 surface: inspect a device, see what probes it offers).
+2. A caller **subscribes**: *"I'll take one of those, value 80, here's my probe
+   address."*
+3. The device **resolves its own method internally** and wires it into the probe.
+4. When the predicate goes true, the device **pokes the caller's address**. The caller
+   gets its wake-up and never saw a CPU number.
 
-What this **deletes**: a device does **not** register its predicate inside a foreign
-device. There is no menu to advertise, no subscription table to hold, no
-resolve-my-own-method indirection. A device that cares about a line declares a `Probe`
-with that line in its trigger, and **its own shim fires it** — the mechanism every shim
-already has (`probes()` → `on_pulse` → poke). One mechanism, not two.
+Owner-gated throughout (Law 6). Advertise / subscribe / poke are all just bus messages.
 
-Worked example, restated: *"alert me at 80% CPU."* The device that wants the alert owns
-that predicate — it is **its** line, chosen for **its** reason, and it belongs where the
-reason is. It declares the probe; its shim evaluates it on the beat. The **host** is
-still one thing with one owner, so `system_rackmount` still owns the *reading* (it is
-the one that makes the host calls, and the OS-specific backing swaps behind it). But
-owning the reading is all it owns: it is a **sampler**, not a broker for other devices'
-predicates.
-
-**What died with the protocol, said plainly.** The old shape claimed Law 6 for "the raw
-reading never leaves the device." That was never Law 6 — Law 6 gates **writes**. The
-reading-never-leaves clause was an extra invention wearing the law's name, and it bought
-a registration protocol, a subscription table, and a second firing path, all to avoid a
-number crossing a function call. The encapsulation it was reaching for is real; the
-place to get it is the device's own shim.
+Worked example: *"alert me at 80% CPU."* CPU is the **system device's** data (it is the
+one that can make the CPU calls). So the CPU-threshold probe lives on the system
+device; any device that wants it asks the system device (owner-gated), which evaluates
+locally and pokes the requester when true. This is what "abstracts host services
+device-independently" cashes out to — **`system_rackmount` = the system device: owner
+of host-resource predicates (CPU/memory/disk), serving threshold probes on request.**
+NOT a central scheduler. (Settles the earlier open A/B question → A.)
 
 ## The bus in detail
 
@@ -240,17 +225,6 @@ CC (I) froze Cairn-fluid categories three times; Akien caught each at n=1:
 
 The tell: I turn examples/metaphors into frozen taxonomies. The fix flows them apart.
 
-**A fourth, caught 2026-08-04 — host service = subscription broker.** Different tell,
-worth its own entry. From the true premise *"the host has one owner"* I built a
-**registration protocol** — advertise, subscribe, resolve-internally — so that other
-devices could keep their predicates in `system_rackmount`. Akien's catch: *"each device
-should own its own everything as much as possible, that's encapsulation."* The premise
-was fine; the leap from *one owner of the reading* to *one holder of everyone's
-predicates* was not, and it cost a second firing path parallel to the one every shim
-already has. **Tell: when I own a piece of shared data, I reach for a protocol around it
-rather than a plain source others can read.** A broker is what a taxonomy looks like when
-it is made of runtime instead of types — the same freezing reflex, one layer down.
-
 ## What this changes in code — DONE (reworked + proven 2026-07-18 evening)
 
 The rework shipped the night the model converged, each piece proven bare AND under the
@@ -275,11 +249,6 @@ tester, each committed separately:
   `faafb70`). Owns host-resource predicates; advertise → subscribe → poke; evaluates locally so
   the reading never leaves (Law 6); the central `SchedulerService` + `interval/date/quantity/
   state` enum are DELETED. Its capstone proof composes every piece above end-to-end.
-  **SUPERSEDED IN SPEC 2026-08-04 and therefore RED until the code catches up** (Law 9): the
-  shim-routes-everything ruling deletes advertise/subscribe/poke and leaves this device owning
-  the *reading* only. The predicate goes home to the device that cares, fired by its own shim.
-  The code still ships the broker — that is the red, and it is named here rather than left to
-  be discovered by the next reader of a charter that no longer describes the design.
 - **tickets** → the mutable workflow species stays DISTINCT and DEFERRED — the probe/ticket
   boundary is now clean in code (a probe is the immutable worker; a ticket is the mutable
   node), but the ticket state machine still waits on the emit-chokepoint
