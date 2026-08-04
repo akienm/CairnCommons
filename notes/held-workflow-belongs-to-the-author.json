@@ -29,7 +29,10 @@
     "what_a_gate_checks": "ONE question, in Akien's words: 'can i pass? do you have the pass that matches the pass you're supposed to have?' Yes -> through. No -> SEND BACK TO AUTHOR. A gate never adjudicates the path; there is nothing to conform to. 'The gates themselves only see the boats that meet their criteria.'",
     "who_owns_the_criteria": "THE GATE owns the criteria; the TICKET owns the pass it presents. CC's read, resolved by Law 6 rather than referred to Akien: a boat that declares its own sufficiency is not passing a gate, it is self-certifying. The ticket names WHERE its pass is; the gate goes and checks the pass is real and green. Declaring is not certifying.",
     "ticket_vs_task": "TERMINAL STATE, and that is ALL — same machinery, same author-declared graph, two destinations. A TICKET's terminal is IN THE CODE. A TASK's terminal is done, with the artifact disappearing in 30 days along with expired logs.",
-    "failure_posture": "ACCOMMODATE AND FLAG, not refuse-on-drift. The system does its best to service whatever graph the author drew, and flags back to the AUTHOR what it could not do. This inverts today's posture, where an unrecognized shape is refused as drifted."
+    "failure_posture": "ACCOMMODATE AND FLAG, not refuse-on-drift. The system does its best to service whatever graph the author drew, and flags back to the AUTHOR what it could not do. This inverts today's posture, where an unrecognized shape is refused as drifted.",
+    "no_gate_does_work": "Akien, 2026-08-03 pass 5: 'so my idea was the build inspector was part of the build skill (sail)'. THE GATE NEVER DOES THE WORK — it reads the receipt. Today emit() reaches into the component at the crossing's own address and RUNS build_inspector at crossing time; that reach IS the managing Akien named ('you had checks in the components... managing, rather than letting the things self manage'). Under his idea the work happens where the work happens: /sail builds and /sail inspects, then presents the pass. This generalizes to every gate with no exception, which is how it is known to be the pattern and not a fix for one gate — /chart produces the charted-course pass, whatever arms a probe produces that one. A gate matches, always.",
+    "the_pass_already_exists": "A VALIDATION IS THE PASS — not invented, found in-house (borrow-patterns: check in-house first). cairn/tester/validation_store.py::persist_validation is a single APPEND-ONLY write-door that refuses anything but the ratified eight fields (claim, caller, date, method, verdict, evidence, +2) and stores the record BESIDE what it seals. verdict: 'green'. build_inspector already writes them (cairn/build_inspector/validations/*.json). The gate was not failing to have a pass — it was re-doing the work instead of reading the one already on disk.",
+    "a_pass_can_go_stale": "CC's read, resolved rather than handed back: a green validation from three weeks and forty commits ago is not a current pass. Also already-solved in-house — CLAUDE.md gives a host-seam an EXPIRING seal precisely because 'the host drifts with nothing in git changing'. Same rule applied uniformly: the pass names WHAT it sealed and WHEN, and the gate checks the sealed thing has not moved since. Not a new mechanism; the existing one, everywhere."
   },
 
   "the_reconciliation_that_keeps_law_8": "Accommodate-and-flag opens a hole on its face: if the author composes the route, an author can compose a route around every gate, and 'accommodate' would mean the system watches it happen. Akien's own terminal-state ruling closes it. THE ROUTE IS THE AUTHOR'S; THE TERMINAL STATES ARE THE SYSTEM'S. Swirl however you like — a ticket's terminal is IN THE CODE, and landing in the codebase is exactly where the pass is checked. The author cannot compose past it because the author does not own the destination. So a cast-time flag ('nothing in this workflow will check X') is an honest report the author owns, not silent permission. CC's read, not ruled.",
@@ -48,9 +51,28 @@
     "emit_migrated / migrate_to_v2 — v1->v2 migration doors. With no versions there is nothing to migrate between. NOTE: this also dissolves the open trouble a-boat-resting-in-a-dissolved-state-has-no-door-out, whose whole subject is a boat stuck between versions."
   ],
 
+  "what_dies_under_no_gate_does_work": [
+    "transitions._build_gate — the chokepoint's reach into a component address to RUN build_inspector at crossing time. The inspector moves into /sail (the build skill), where the building happens; the gate reads the validation /sail persisted.",
+    "the LAZY IMPORT of build_inspector inside transitions.py — it exists ONLY because the chokepoint summons the inspector, and the module header calls out the boot-order care it needed. No reach, no import, no boot-order care.",
+    "the whole PROVEME special case in emit(), and by the same argument the BUILDME / PROVED / WATCHME special cases: five named states the chokepoint had to know about become zero.",
+    "_EXEMPT_ROSTER — an exemption mechanism built ahead of any entry (measured 2026-08-03: EMPTY, and the only one in the file). A gate that reads a receipt has nothing to exempt; a boat either carries a current pass or it does not."
+  ],
+
+  "measured_before_the_cut": {
+    "at": "2026-08-03",
+    "file": "cairn/base/transitions.py",
+    "lines": 845,
+    "if_elif": 39,
+    "raise_sites": 21,
+    "bespoke_gate_exception_classes": 5,
+    "exempt_rosters": "1, EMPTY",
+    "why_recorded": "Law 3 — the claim 'this simplifies everything' is a hypothesis until the after-number exists. This is the before-number, so the rebuild can be judged rather than felt."
+  },
+
   "what_survives": [
     "The -ME grammar (a state ending in -ME is a SUMMONS, demanding a peer; else a rest) — classless, derivable, and orthogonal to who composed the graph.",
-    "The five gate IMPLEMENTATIONS (build, entry, exit, emission, plus the deposit enqueue). Their CHECKS are good and stay; what changes is their SHAPE — five hand-written if-blocks in emit(), each with its own bespoke exempt roster, become one table lookup with one refusal shape. The bespoke-exemption-per-gate pattern is where intentions-model-compiler slipped through with no watch and nothing objected.",
+    "The five gates' CRITERIA — what each one requires — but NOT their work. The work moves to whoever owns it (build_inspector into /sail, per Akien pass 5). What is left at the chokepoint is one table lookup and one refusal shape. The bespoke-exemption-per-gate pattern is where intentions-model-compiler slipped through with no watch and nothing objected.",
+    "cairn/tester/validation_store.py — untouched. It was already the pass door; it simply gains readers.",
     "load_class_def — an unknown class is still refused (Law 8: an unknown class has no physics).",
     "The append door and everything downstream of the journal (Law 7 untouched)."
   ],
