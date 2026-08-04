@@ -93,19 +93,30 @@ will hang on a probe fired by a gate, not on a clock that wakes to ask "anything
   `PROVEME → WATCHME(<object>) → PROVED`). A different species. Its state is mutable,
   so it lives where workflow-state lives (instance-space / the node store), not
   class-space.
-- **A node EMITS a probe at a crossing; it does not become one.** (RESHAPED
-  2026-07-30, ticket `watchme-emits-a-probe`. The clause here used to read
-  "**`LEARNING` is a state; a probe is the worker** — a node *in* `LEARNING` can
-  *set* a probe", and `LEARNING` is now dissolved as a node state.) The two-species
-  point it was making SURVIVES INTACT and is in fact strengthened: "this node has
-  emitted a probe" and "this node rests at `PROVED`" are two separate facts about
-  two different species — do not mush them into "a mutable ticket."
+- **A ticket CREATES a probe and carries it; the probe fires when the ticket
+  crosses a gate.** (RESHAPED 2026-07-30, ticket `watchme-emits-a-probe`;
+  CORRECTED 2026-08-03 by Akien's ruling, which fixed two words at once. The
+  clause first read "`LEARNING` is a state; a probe is the worker" — that state
+  is dissolved. It then read "a node EMITS a probe at a crossing", and **both of
+  those words were wrong**: *node* is ambiguous (this system has several kinds,
+  and the workflow one is a **ticket**), and *emission* is not what happens —
+  **the probe is CREATED**.) The two-species point SURVIVES INTACT and is in fact
+  strengthened: "this ticket has created a probe" and "this ticket rests at
+  `PROVED`" are two separate facts about two different species — do not mush them
+  into "a mutable ticket."
 
-  What changed is *when* and *who*. The emission happens at the `WATCHME(<object>)`
-  crossing, and then **the node rests** — it does not sit in a state waiting for its
-  own watcher, because a proved intention's efficacy data can only accumulate after
-  it rests. The probe outlives the crossing that emitted it, which is what makes it
-  a different species rather than a phase of the node.
+  **The mechanism, in Akien's own words (2026-08-03).** The `WATCHME` state
+  causes the **creation** of a probe — aimed *wherever one needs to be*: a
+  gateway, a time, a future event, whatever it takes to send back feedback about
+  the intention. **Once that probe is created, the state is complete.** A ticket
+  then crosses a gate with its probe attached; the probe fires there, and emits a
+  call back to **the thing that put it there, or to some other thing designated
+  at creation time**.
+
+  So the ticket does not sit in a state waiting for its own watcher — a proved
+  intention's efficacy data can only accumulate after it rests. The probe
+  outlives the crossing that created it, which is what makes it a different
+  species rather than a phase of the ticket.
 
   **And the probe carries no authority.** When its `enough` condition clears, or its
   finding lands, it **deposits and pokes** — it never moves the node's state. The
