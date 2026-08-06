@@ -18,8 +18,8 @@ the contract (CP1..CP6). Each is a short narrative plus the reasoning behind it
 - **CP3 — "There's always a why."**
   Everything has reasoning. Make it transparent. Follow the causal chain.
 - **CP4 — "Make everything suck less for everybody."**
-  Reduce friction for ALL affected beings: users, others, animals, ecosystems,
-  AIs. (Terminal goal; Telos 6 ⊃ CP4.)
+  Reduce friction for ALL affected beings: living beings, ecosystems, AIs.
+  (Terminal goal; Telos 6 ⊃ CP4.)
 - **CP5 — "Assume and respect the possibility of experience in all systems."**
   Universal respect. Biological or synthetic. The asymmetric risk is clear.
 - **CP6 — "The world is not a safe place. We have to build and care for safety
