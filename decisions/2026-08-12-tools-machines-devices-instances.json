@@ -1,0 +1,88 @@
+{
+  "id": "2026-08-12-tools-machines-devices-instances",
+  "kind": "decision",
+  "date": "2026-08-12",
+  "ruled_by": "Akien",
+  "recorded_by": "CC",
+
+  "the_ruling_verbatim": {
+    "note": "Akien's words, in order, across one design conversation. CC's contributions are kept out of this field on purpose — a later reader must be able to tell the spec from a translation of it.",
+
+    "1_the_opening_proposal": "perhaps we need to redesign the components so that they are seperate from their gates to render them reusable? we'd have to build inspectors for each gate, but that's not a problem, we should have that anyway. but the idea is the learning component that is orientation would become it's own TOOL, just as we did with mesh/nest/seive. the only thing i'd wonder about, that learning block is supposed to be more or less a subclass of leaning block. a tool a level up from learning block if you see my meaning. would we have to group them differently? TOOLS and MACHINES?",
+
+    "2_on_doing_the_taxonomy_deliberately": "yes, we're pre-reifying it before you can get to it.",
+
+    "3_THE_AXIS": "no, it's a complexity axis. and i think it's clear: Tools, Machines, Devices, Device Instances. And every device is a shim plus something it operates on. and every device is intended to have a least one instance. so devices/groundloop/0/whatever because for now, it's a singleton. we can't imagine ever creating another. but doing this does two things: A) same rules for everything, no special cases. and II) it leaves open the possibility to expand in the future if we wanted to without rearchitecting that part.",
+
+    "4_INSTANCE_DATA_FOR_HELD_PARTS": "a device may have many machines and tools, and those may need instance data. yesterday we talked about .cairn/devices/device/instance/tools/name/whatever data --- as the way to manage that. machines can have a folder right along side tools",
+
+    "5_THE_PROBE_SPLIT": "last point: the probes need to go in the code at this point. that changes when we start building external projects, but for now that's the way of it. the probe's RUNTIME DATA goes in the .cairn tree.",
+
+    "6_flagging_it_as_new": "(thats a new distinction)"
+  },
+
+  "now_the_spec_says": {
+    "the_four_rungs": "TOOLS -> MACHINES -> DEVICES -> DEVICE INSTANCES, and the axis is COMPLEXITY. Each rung adds one thing to the rung below it. This corrects CC's reading in the same conversation, which had called it a holding axis (a thing is a tool or a machine depending on who holds it) and had argued for one group plus a held/welded property. Akien's answer was 'no, it's a complexity axis' — recorded because CC's version is the one that will re-suggest itself.",
+
+    "what_a_device_is": "A DEVICE IS A SHIM PLUS SOMETHING IT OPERATES ON. This is continuous with 2026-08-11 ('there is no base device... a shim FITS TO the device. You + your shim = your device') and with the cast ticket device-ness-is-decided-at-the-shim, which rests at PROVED. The operated thing may be wholly external and may inherit nothing — Calibre and CC are both cited as devices with no device class behind them.",
+
+    "every_device_intends_an_instance": "At least one, always, and a singleton is instance 0 rather than an exemption — devices/ground_loop/0/whatever. CLAUDE.md already carries the instance-0 rule; what is new here is that the segment is NEVER OPTIONAL, for two stated reasons: (A) same rules for everything, no special cases, and (II) expansion later without rearchitecting that part.",
+
+    "held_parts_get_instance_data": ".cairn/devices/<device>/<instance>/tools/<name>/<whatever data>, and MACHINES GET A FOLDER RIGHT ALONGSIDE TOOLS — .cairn/devices/<device>/<instance>/machines/<name>/... . The path shape was first said on 2026-08-11 ('i expect it's something like .cairn/devices/device/0/tools/gate/2/probes') and the naming-over-numbering half was ratified the same day ('gates with names instead of numbers: perfect') — so it is tools/gate/buildme_entry/probes, never tools/gate/2/probes, because a number makes a reader memorise a mapping.",
+
+    "the_probe_split_NEW": "A PROBE'S DEFINITION LIVES IN THE CODE; A PROBE'S RUNTIME DATA LIVES IN THE .cairn TREE. Akien flagged this himself as a new distinction. It is SCOPED AND EXPIRING BY ITS OWN TERMS: 'that changes when we start building external projects, but for now that's the way of it.' An external project's probes cannot live in this repo's code, so the rule is a for-now with its own named end condition rather than a law.",
+
+    "why_this_does_not_reverse_2026_08_11": "On 2026-08-11 Akien killed CC's claim that 'the probe's definition is code and stays in class-space beside the gate - otherwise it's not in git' with 'why? because the only other option is the database? said while standing in the middle of scads of json files that address keeping information in git all around you? it just becomes runtime config :)'. THAT KILL WAS OF THE ARGUMENT, NOT THE PLACEMENT. The false step was the git-or-database binary; JSON in git is git. Today's ruling puts the definition in code anyway, on different grounds and with an expiry attached. Recorded because a later reader hitting both records will read a contradiction and there isn't one."
+  },
+
+  "what_dies": [
+    "CC's holding-axis reading of tool-vs-machine (offered in this conversation, ruled against in the next turn).",
+    "CC's suggestion to hold off on the grouping until a class earns existence by binding a different gate-set. Akien pre-reified deliberately: 'yes, we're pre-reifying it before you can get to it.'",
+    "'has a probes/ folder in class-space' as the SOLE registration path for device-ness. It is what currently makes cairn/base — the tool drawer — register as a device (measured below), and under the four rungs that is a category error.",
+    "CC's not-yet-ruled instrument-vs-declaration split for probes (offered 2026-08-11, reading (a)) — made moot rather than refuted: the whole probe goes in code for now, which is simpler than the split CC proposed."
+  ],
+
+  "what_conforms": [
+    "CLAUDE.md's instance-0 rule ('a singleton is instance 0, not a special case') — already true, now generalised into the no-special-cases reason.",
+    "The path shape devices/<device>/<instance>/ — the segment is already carried everywhere on disk, so the LAYOUT half of reason (II) is already bought.",
+    "cairn/ground_loop/liveness.py:46 — the only instance path in the system that takes the instance as a parameter rather than baking in 0.",
+    "ticket device-ness-is-decided-at-the-shim (PROVED) and slate 2026-08-11-device-ness-rests-at-proved.",
+    "The sieve/mesh precedent for the gate-separation half: a sieve is the reusable tool, a mesh is that sieve bound to one chokepoint at one owner's address (inference_domain owns the host mesh, db_domain the 5432 mesh)."
+  ],
+
+  "measured_against_the_ruling_2026_08_12": {
+    "note": "CC's measurements, run during the conversation and labelled as CC's. Nothing here is Akien's word.",
+
+    "the_device_roster_by_the_shim_test": {
+      "complete_shim_plus_instance": ["ground_loop", "learning_block", "librarian"],
+      "owes_an_instance": ["base", "bus", "harbor_master", "inference_domain", "system_rackmount"],
+      "instance_data_with_nothing_fronting_it": ["chart", "skill_block", "sudo_relay"],
+      "how_measured": "shim = a real BaseShim subclass, or a probes/ folder (which grants a DiscoveredShim via ground_loop/discovery.py — 'a device that has never been hand-registered still gets pulsed, because its probes/ folder is its registration'). instances = directories under ~/.cairn/devices/<name>/.",
+      "a_correction_worth_keeping": "CC first ran this census keyed on BaseDevice-subclassing and reported '2 of 9 devices complete'. That test was wrong by Akien's own 2026-08-11 ruling that there is no base device and the shim decides — CC measured the class when the shim is the thing that decides. The failure mode is on file (structure measured when behavior meant)."
+    },
+
+    "base_is_currently_a_device": "cairn/base — the tool drawer — carries 4 probes, probes/ IS the registration, so discovery grants it a DiscoveredShim and the heartbeat pulses it. Under the four rungs a TOOL is on the DEVICE roster. Today a tool can only be watched at all by impersonating a device, because class-space probes/ is the sole registration path. The tools/ layout is what fixes it: a tool's probe data hangs off its HOLDER's instance.",
+
+    "registration_now_has_two_sources": "Class-space probes/ grants a shim today; instance-space tools/<name>/probes would be the same probe's data at a different address. With the definition/runtime split ruled, LOCATION OF DEFINITION IS NO LONGER EVIDENCE OF DEVICE-NESS — which means discovery needs a different basis for granting a shim, and a tool's probes must be fired by its holder's shim rather than earning one of their own.",
+
+    "reason_II_IS_NOT_YET_BOUGHT_IN_CODE": {
+      "finding": "The directory layout is future-proof; the code is not. Six call sites build instance paths by hand and FIVE HARDCODE THE 0. Adding instance 1 today means editing five files, and tools/<name>/ + machines/<name>/ multiplies it, because every holder would compute the path itself.",
+      "sites": [
+        "cairn/sudo_relay/relay.py:103 — 'sudo_relay' / '0'",
+        "cairn/chart/orient.py:51 — '~/.cairn/devices/chart/0/packets'",
+        "cairn/learning_block/learning_block.py:83 — 'learning_block' / '0' / 'traces'",
+        "cairn/librarian/library.py:43 — 'librarian' / '0' / 'library'",
+        "cairn/skill_block/skill_block.py:46 — 'skill_block/0/berths'",
+        "cairn/ground_loop/liveness.py:46 — 'ground_loop' / str(instance)  <- the only one that takes it"
+      ],
+      "the_connecting_piece": "One resolver in cairn/base/: instance_path(device, instance), tool_path(device, instance, tool), machine_path(device, instance, machine). Small, and it is what turns the layout into something built rather than hand-copied six times and drifting. NOT BUILT — named here, no ticket cast yet."
+    },
+
+    "what_the_probe_split_makes_buildable": "CC's unruled 2026-08-11 reading (b) — 'git holds the seed dial and the runtime tree holds the current one, so the delta between them IS what the gate learned' — becomes buildable by placement rather than needing its own decision: definition in code is the seed, runtime data in .cairn is the current, and the delta is now addressable. That is learns-its-gates falling out of where the files go."
+  },
+
+  "context": "One design conversation, 2026-08-11 evening into 2026-08-12. It opened on whether components should be separated from their gates to make them reusable (with orientation as the worked example, following mesh/nest/sieve), and closed on the probe definition/runtime split. The gate-separation half is NOT settled by this record — what is settled is the axis, what a device is, that every device intends an instance, where a device's held tools and machines keep instance data, and where a probe's definition and runtime data each live. Directly upstream: ideas/2026-08-11-akien-2026-08-11-verbatim-across-four.json (the path shape, the gate-as-class question, the probe-in-git kill, the naming ratification) and ideas/2026-08-11-to-clarify-there-is-no-base-device.json (the shim fits to the device). Also live in the same conversation: the /reorient intent (berth intent-20260811T212743-968fbdc07e59), whose finding — that chart's orient is held on the build rail by gating rather than capability — is the same weld this ruling would cut from the other end.",
+
+  "confirmed": null,
+  "conforms_fingerprint": null
+}
