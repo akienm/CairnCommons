@@ -125,7 +125,7 @@ change a spec; everything else derives from here. Two worked examples from
 on out should be that shape or have a good reason not to."* Already half-built —
 CLAUDE.md carries the IOU ("Every component's charter answers 'how does this
 component learn?' — 'it doesn't, because X' is a valid answer; silence is not"),
-and the **named exemption as physics** shipped 2026-08-01 in `cairn/skill_block/`
+and the **named exemption as physics** shipped 2026-08-01 in `cairn/machines/skill_block/`
 (`"none, because <why>"` passes; a blank reds *as an exemption*, not as a bad
 path). The mechanism exists; the IOU is uncashed at the charter schema.
 

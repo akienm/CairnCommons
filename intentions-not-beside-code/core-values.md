@@ -4,7 +4,7 @@
 2026-07-14. Provenance: carried-over-intact — the core values are the one part of
 the predecessor that was never the problem (MAP.md Law 2). Ratified by Akien as
 Cairn's values, not re-derived. Canonical source of the WORDS lives here; the
-enforced form is the `core_values.py` graft in `cairn/base/` with its pin test.
+enforced form is the `core_values.py` graft in `cairn/tools/base/` with its pin test.
 Migrates into the intention envelope when that schema lands (MAP.md Q6).*
 
 The six values every device and every shim carries structurally. Order is part of

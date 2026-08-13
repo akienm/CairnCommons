@@ -24,30 +24,30 @@ instrument. Do not improvise beyond the berths.
 - Code repo: `/home/akien/dev/src/cairn` — run everything from here with
   `PYTHONPATH=$PWD`. Knowledge repo: `/home/akien/dev/src/CairnCommons`.
 - `git pull` both repos before starting. Work on main. Push when done.
-- Your voyage journals at the parent component `cairn/build_inspector/`
+- Your voyage journals at the parent component `cairn/machines/build_inspector/`
   (history.json + state.json there), carrying your ticket:
   ```
   PYTHONPATH=$PWD python3 -c "
-  from cairn.base.transitions import emit
+  from cairn.tools.base.transitions import emit
   import json
-  cur = json.load(open('cairn/build_inspector/state.json'))['workflow']
-  print(emit(cur, 'BUILDME', history_path='cairn/build_inspector/history.json',
-             state_path='cairn/build_inspector/state.json',
+  cur = json.load(open('cairn/machines/build_inspector/state.json'))['workflow']
+  print(emit(cur, 'BUILDME', history_path='cairn/machines/build_inspector/history.json',
+             state_path='cairn/machines/build_inspector/state.json',
              ticket='a-voyage-names-its-ticket', note='<why this crossing>'))"
   ```
   (Same idiom for PROVEME, LEARNME. NEVER hand-edit history.json/state.json.)
 - Seal proofs:
   ```
   PYTHONPATH=$PWD python3 -c "
-  from cairn.tester.device import TesterDevice
-  from cairn.tester.validation_store import persist_validation
+  from cairn.devices.tester.device import TesterDevice
+  from cairn.devices.tester.validation_store import persist_validation
   t = TesterDevice()
   for i in range(2):
-      rec = t.run_proof('cairn/base/proofs/test_transitions.py',
+      rec = t.run_proof('cairn/tools/base/proofs/test_transitions.py',
                         caller='ticket a-voyage-names-its-ticket', isolation='netns')
       print(rec['verdict'], rec['evidence']['seal']['verdict'])
       assert rec['verdict']=='green' and rec['evidence']['seal']['verdict']=='sealed'
-  persist_validation(rec, proof_path='cairn/base/proofs/test_transitions.py')"
+  persist_validation(rec, proof_path='cairn/tools/base/proofs/test_transitions.py')"
   ```
 
 ## IMPORTANT — this stone HOLDS ITS CLOSE
@@ -59,7 +59,7 @@ sibling runs after you. The orchestrator (Fable session) will close your stone.
 Your report is the handoff.
 
 ## What you build (the berths hold the full design; summary only)
-One helper in `cairn/base/transitions.py` replacing the two opt-in
+One helper in `cairn/tools/base/transitions.py` replacing the two opt-in
 `isinstance(_ticket, str) and (_TICKETS / ...).exists()` checks (entry ~411-415,
 exit ~421-425): a forward crossing into BUILDME or PROVED must name a cast
 ticket or raise a FOURTH sibling refusal exception (distinct wording: unnamed →
@@ -87,7 +87,7 @@ before/after.
   Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01Dsdby9vruqwUkmTroRtqk8
   ```
-- Verify "done" by instrument: `PYTHONPATH=$PWD python3 -m cairn.orient.orient git`
+- Verify "done" by instrument: `PYTHONPATH=$PWD python3 -m cairn.tools.orient.orient git`
   (expect only your intended dirt before commit; 0 dirty / 0 ahead after push).
 
 ## Your final report must carry

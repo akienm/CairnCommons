@@ -23,19 +23,19 @@ instrument. Do not improvise beyond the berths.
   (two sibling stones landed at the chokepoint before you: every forward
   BUILDME/PROVED crossing must name its cast ticket, and an exit-gate-clean
   PROVED crossing auto-enqueues its verdict for tree deposit). Work on main.
-- Your voyage journals at the parent component `cairn/base/` (history.json +
+- Your voyage journals at the parent component `cairn/tools/base/` (history.json +
   state.json), carrying your ticket:
   ```
   PYTHONPATH=$PWD python3 -c "
-  from cairn.base.transitions import emit
+  from cairn.tools.base.transitions import emit
   import json
-  cur = json.load(open('cairn/base/state.json'))['workflow']
-  print(emit(cur, 'BUILDME', history_path='cairn/base/history.json',
-             state_path='cairn/base/state.json',
+  cur = json.load(open('cairn/tools/base/state.json'))['workflow']
+  print(emit(cur, 'BUILDME', history_path='cairn/tools/base/history.json',
+             state_path='cairn/tools/base/state.json',
              ticket='skills-ride-the-chokepoint', note='<why this crossing>'))"
   ```
   (Same for PROVEME, LEARNME, PROVED. NEVER hand-edit history/state. If
-  cairn/base has no state.json yet, report that instead of inventing one.)
+  cairn/tools/base has no state.json yet, report that instead of inventing one.)
 - Seal proofs twice + persist_validation — same pattern as every stone
   (TesterDevice().run_proof(path, caller='ticket skills-ride-the-chokepoint',
   isolation='netns'); assert green+sealed; persist_validation last).
@@ -52,7 +52,7 @@ In triage's order:
    prove_gate, members_so_far intact). ZERO changes to transitions.py — if any
    code edit seems needed, STOP and report (the registry-is-the-door claim
    would be false; that's a finding).
-2. **The teeth** — extend `cairn/base/proofs/test_transitions.py`: a skill@v1
+2. **The teeth** — extend `cairn/tools/base/proofs/test_transitions.py`: a skill@v1
    string validates and journals a crossing at a fixture skill address; a
    drifted skill path refuses; an unknown class still refuses; the entry gate
    fires identically on a skill-class voyage naming a cast ticket; every
@@ -68,11 +68,11 @@ In triage's order:
    claims this ticket, so it stands.
 4. **Records settle** — retire sail charter edge (d) in
    `skills/sail/intention+why.json`; both charter deltas (node_classes/skill.json
-   + sail charter) poke `cairn/intentions_model_compiler/recompile_gate.sh` in
+   + sail charter) poke `cairn/tools/intentions_model_compiler/recompile_gate.sh` in
    the same act; ticket cursor → [PROVED] with distinctions; sail step 6
    (answer the chart: run the validate berth's two criteria by their named
-   instruments, `cairn.chart.verdict.write_verdict`); cross PROVED; step-8
-   deposits (`python3 -m cairn.chart.live learn <berth>` per berth); commit +
+   instruments, `cairn.machines.chart.verdict.write_verdict`); cross PROVED; step-8
+   deposits (`python3 -m cairn.machines.chart.live learn <berth>` per berth); commit +
    push both repos.
 
 ## Rules that override any habit you have
@@ -87,7 +87,7 @@ In triage's order:
   Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01Dsdby9vruqwUkmTroRtqk8
   ```
-- Verify done by instrument: `PYTHONPATH=$PWD python3 -m cairn.orient.orient git`
+- Verify done by instrument: `PYTHONPATH=$PWD python3 -m cairn.tools.orient.orient git`
   → 0 dirty / 0 ahead both repos.
 
 ## Your final report must carry

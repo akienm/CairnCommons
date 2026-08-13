@@ -23,27 +23,27 @@ instrument. Do not improvise beyond the berths.
 - `git pull` both repos before starting (a sibling stone landed a jurisdiction
   tightening at the chokepoint just before you — every forward BUILDME/PROVED
   crossing must name its cast ticket; yours does). Work on main. Push when done.
-- Your voyage journals at the parent component `cairn/chart/` (history.json +
+- Your voyage journals at the parent component `cairn/machines/chart/` (history.json +
   state.json), carrying your ticket:
   ```
   PYTHONPATH=$PWD python3 -c "
-  from cairn.base.transitions import emit
+  from cairn.tools.base.transitions import emit
   import json
-  cur = json.load(open('cairn/chart/state.json'))['workflow']
-  print(emit(cur, 'BUILDME', history_path='cairn/chart/history.json',
-             state_path='cairn/chart/state.json',
+  cur = json.load(open('cairn/machines/chart/state.json'))['workflow']
+  print(emit(cur, 'BUILDME', history_path='cairn/machines/chart/history.json',
+             state_path='cairn/machines/chart/state.json',
              ticket='the-deposit-rides-the-read', note='<why this crossing>'))"
   ```
   (Same idiom for PROVEME, LEARNME, PROVED. NEVER hand-edit history/state.)
 - Seal proofs (each of the four files, twice, then persist):
   ```
   PYTHONPATH=$PWD python3 -c "
-  from cairn.tester.device import TesterDevice
-  from cairn.tester.validation_store import persist_validation
+  from cairn.devices.tester.device import TesterDevice
+  from cairn.devices.tester.validation_store import persist_validation
   t = TesterDevice()
-  for p in ['cairn/base/proofs/test_transitions.py',
-            'cairn/chart/proofs/test_chart_verdict.py',
-            'cairn/build_inspector/proofs/test_inspector_nexus.py']:
+  for p in ['cairn/tools/base/proofs/test_transitions.py',
+            'cairn/machines/chart/proofs/test_chart_verdict.py',
+            'cairn/machines/build_inspector/proofs/test_inspector_nexus.py']:
       for i in range(2):
           rec = t.run_proof(p, caller='ticket the-deposit-rides-the-read', isolation='netns')
           print(rec['verdict'], rec['evidence']['seal']['verdict'], p)
@@ -53,39 +53,39 @@ instrument. Do not improvise beyond the berths.
 
 ## What you build (the berths hold the full design; summary only)
 Deposit-as-physics, in triage's order:
-1. **Ledger section in `cairn/chart/verdict.py`** (stays tree-free: stdlib +
-   cairn.chart.orient ONLY): `enqueue_verdict(ticket)` appends an enqueued
+1. **Ledger section in `cairn/machines/chart/verdict.py`** (stays tree-free: stdlib +
+   cairn.machines.chart.orient ONLY): `enqueue_verdict(ticket)` appends an enqueued
    record to an append-only JSONL ledger in `~/.cairn/devices/chart/0/`
    (berth path + ticket + stamp) after locating the latest claiming verdict
    artifact via a `claiming_artifacts`-style locator FACTORED HERE — then
-   refactor `cairn/build_inspector/inspector.py`'s exit check to compose that
+   refactor `cairn/machines/build_inspector/inspector.py`'s exit check to compose that
    locator by import (ONE latest-claimer rule; kill its private twin glob).
    `pending()` derives enqueued-minus-deposited by read. `mark_deposited(berth,
    node_id)` appends the second record kind. NOTHING mutates existing lines.
-2. **Enqueue seam in `cairn/base/transitions.py`**: the exit-gate-clean
+2. **Enqueue seam in `cairn/tools/base/transitions.py`**: the exit-gate-clean
    forward-into-PROVED branch lazy-imports and calls the enqueue. Key on the
    ARTIFACT existing, never on the clean note (an unclaimed gated-and-clean
    crossing has a clean note but NO artifact and must enqueue nothing).
    Refusals and back-edges enqueue nothing. File-only writes (netns-safe).
-3. **Drain in `cairn/chart/live.py`**: both door verbs (counsel + learn) drain
+3. **Drain in `cairn/machines/chart/live.py`**: both door verbs (counsel + learn) drain
    pending entries through the existing `deposit_verdict` before serving;
    failed deposit → entry stands pending + named loudly in output, verb still
    serves; deposited berths skip (idempotence via the deposited record).
-4. **Teeth**: extend `cairn/base/proofs/test_transitions.py` (its `_exit_world`
-   fixture) and `cairn/chart/proofs/test_chart_verdict.py` (its scratch-nexus-
+4. **Teeth**: extend `cairn/tools/base/proofs/test_transitions.py` (its `_exit_world`
+   fixture) and `cairn/machines/chart/proofs/test_chart_verdict.py` (its scratch-nexus-
    table pattern — the LIVE hypothesize tree is never a fixture) per the
    hypothesize berth; re-verify the nexus pin covers the grown verdict.py.
 5. **Live fire + records**: your own stone's close IS the live fire — your
    PROVED crossing must enqueue your real verdict artifact, and your step-8
-   deposits (`python3 -m cairn.chart.live learn <berth>`) drain it. Verify the
+   deposits (`python3 -m cairn.machines.chart.live learn <berth>`) drain it. Verify the
    ledger shows it enqueued-then-deposited. Then: ticket cursor → [PROVED] with
-   distinctions; charter deltas (`cairn/chart/intention+why.json` + retire edge
-   (l) in `cairn/build_inspector/intention+why.json`) and in the SAME act run
-   `cairn/intentions_model_compiler/recompile_gate.sh`; commit + push.
+   distinctions; charter deltas (`cairn/machines/chart/intention+why.json` + retire edge
+   (l) in `cairn/machines/build_inspector/intention+why.json`) and in the SAME act run
+   `cairn/tools/intentions_model_compiler/recompile_gate.sh`; commit + push.
 
 Sail step 6 (answer the chart): run the validate berth's three criteria by
 their named instruments, then write the verdict artifact with
-`cairn.chart.verdict.write_verdict` (claims verbatim from the berths, evidence
+`cairn.machines.chart.verdict.write_verdict` (claims verbatim from the berths, evidence
 from real runs — narration refuses at the gate), then cross PROVED.
 
 ## Rules that override any habit you have
@@ -101,7 +101,7 @@ from real runs — narration refuses at the gate), then cross PROVED.
   Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01Dsdby9vruqwUkmTroRtqk8
   ```
-- Verify done by instrument: `PYTHONPATH=$PWD python3 -m cairn.orient.orient git`
+- Verify done by instrument: `PYTHONPATH=$PWD python3 -m cairn.tools.orient.orient git`
   → 0 dirty / 0 ahead in both repos at your close.
 
 ## Your final report must carry

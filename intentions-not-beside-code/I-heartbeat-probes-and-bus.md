@@ -230,22 +230,22 @@ The tell: I turn examples/metaphors into frozen taxonomies. The fix flows them a
 The rework shipped the night the model converged, each piece proven bare AND under the
 tester, each committed separately:
 
-- the **bus** → BUILT (`cairn/bus/`, commit `d27ce1d`). The sole comms path; durable transit
+- the **bus** → BUILT (`cairn/devices/bus/`, commit `d27ce1d`). The sole comms path; durable transit
   rides db_domain (owner `bus`); per-device channels (announce/personal records, info/debug
   diagnostic); record channels refuse to collapse, diagnostic views may (Law 7); every
   envelope carries why + causality (Law 5). Filed: MCP wire-adapter; per-device-owned channels.
-- the **Probe primitive** → BUILT (`cairn/base/probe.py`, commit `ae2d372`). Immutable;
+- the **Probe primitive** → BUILT (`cairn/tools/base/probe.py`, commit `ae2d372`). Immutable;
   a trigger is ANY predicate `(now, context) -> bool`, NOT a named kind (the enum is deleted);
   evaluated where its data is owned (Law 6).
-- `BaseShim` → REWORKED (`cairn/base/shim.py`, `ae2d372`). Gains per-pulse probe-firing
+- `BaseShim` → REWORKED (`cairn/tools/base/shim.py`, `ae2d372`). Gains per-pulse probe-firing
   (`on_pulse`, batch-safe), message receipt + on-demand device start (`deliver`/`_start_device`).
   The long-deferred one-loop primitive is resolved: the heartbeat IS the one loop. Filed: each
   device its own OS process (the shape — start-on-demand — is proven; real spawn grows against need).
-- `ground_loop` → STRIPPED to the heartbeat (`cairn/ground_loop/loop.py`, commit `a535de0`).
+- `ground_loop` → STRIPPED to the heartbeat (`cairn/devices/ground_loop/loop.py`, commit `a535de0`).
   `beat(now, context)` pulses subscribed shims; no `run_driver`, no resolve, no write. The
   method-registry + collect fixtures + executor proof were RETIRED (the proven-space registry
   returns with the emit-chokepoint when a real consumer pulls it).
-- `system_rackmount` → REWORKED to the *system device* (`cairn/system_rackmount/`, commit
+- `system_rackmount` → REWORKED to the *system device* (`cairn/devices/system_rackmount/`, commit
   `faafb70`). Owns host-resource predicates; advertise → subscribe → poke; evaluates locally so
   the reading never leaves (Law 6); the central `SchedulerService` + `interval/date/quantity/
   state` enum are DELETED. Its capstone proof composes every piece above end-to-end.

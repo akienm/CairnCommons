@@ -11,17 +11,17 @@
     {
       "n": 1,
       "layer": "heartbeat",
-      "component": "cairn/ground_loop/loop.py",
+      "component": "cairn/devices/ground_loop/loop.py",
       "finding": "THE HEARTBEAT HAS NEVER BEATEN. Zero live callers of `.beat(` anywhere outside proofs.",
       "measured": "grep -rn '\\.beat(' --include=*.py cairn/ | grep -v '/proofs/\\|/probes/'  ->  0 results",
       "not_a_regression": "loop.py's own docstring files it: 'FILED EDGES (children of this stone, not faked): ... The wall-clock DAEMON that pulses beat on a cadence — the OS-specific backing, a thin wrapper this stays provable without.' The gap was recorded honestly the whole time. What was missing is that nothing ever CHECKED the filed edge was still filed, so the honest note aged into an assumed-built.",
-      "consequence": "Every probe horizon counted in beats is uncalibrated. cairn/base's _HORIZON = 1000 could be 1000 or 10 and no evidence would distinguish them, because the denominator has never incremented.",
+      "consequence": "Every probe horizon counted in beats is uncalibrated. cairn/tools/base's _HORIZON = 1000 could be 1000 or 10 and no evidence would distinguish them, because the denominator has never incremented.",
       "becomes_validation": "An IS-IT-WIRED tooth, distinct in kind from the IS-IT-CORRECT teeth that already pass: assert a live (non-proof) caller EXISTS for beat. A capability whose only caller is its own test is a capability that has never run."
     },
     {
       "n": 2,
       "layer": "heartbeat",
-      "component": "cairn/web_server/listener.py:79-86",
+      "component": "cairn/devices/web_server/listener.py:79-86",
       "finding": "THE HEARTBEAT HAS A LIVE STRUCTURAL USE AND NO LIVE TEMPORAL USE. listener.py constructs GroundLoopDevice(), subscribes LibrarianShim() to it, passes it to WebServerDevice, then calls serve_forever(). Nothing calls beat.",
       "measured": "The only live `GroundLoopDevice(` is listener.py:80; the only live `subscribe(` of a shim is listener.py:81; live `.beat(` count is 0.",
       "becomes_validation": "A tooth that asserts beat has a live driver — but NOT one that refuses subscribe-without-beat, which the first draft proposed and which would have redded a correct Law 6 registry use.",
@@ -35,8 +35,8 @@
     {
       "n": 3,
       "layer": "bus",
-      "component": "cairn/bus/bus.py",
-      "finding": "THE BUS IS CONSTRUCTED NOWHERE. `BusDevice(` appears exactly once in the tree — at its own class definition. Its sole live caller is cairn/base/shim.py:248 (`self._bus.post(...)`), against a `_bus` that only a proof ever populates.",
+      "component": "cairn/devices/bus/bus.py",
+      "finding": "THE BUS IS CONSTRUCTED NOWHERE. `BusDevice(` appears exactly once in the tree — at its own class definition. Its sole live caller is cairn/tools/base/shim.py:248 (`self._bus.post(...)`), against a `_bus` that only a proof ever populates.",
       "measured": "grep 'BusDevice(' live -> class definition only. grep '.post(' live -> shim.py:248 only.",
       "consequence": "The bus is the declared sole path for inter-device comms — 'the ONE common messaging substrate for everything.' Nothing has ever crossed it. Akien's question 'is the bus getting the messages to you?' has a cleaner answer than yes or no: there is no bus instance for a message to be on. listener.py's own comment already says 'the bus is the real record' — of a record that has never been written.",
       "becomes_validation": "Same IS-IT-WIRED shape as finding 1, on the second substrate."
@@ -44,12 +44,12 @@
     {
       "n": 4,
       "layer": "diagnostics",
-      "component": "cairn/base/diagnostic.py",
+      "component": "cairn/tools/base/diagnostic.py",
       "finding": "THE DIAGNOSTIC TRAIL IS WRITTEN TO MEMORY AND DISCARDED. set_diagnostic_receiver is never called anywhere live. With no receiver, emit() marks the record home='held' and appends it to self._held_diagnostics — an in-memory list on a device object inside a short-lived process. All 17 live emit sites do this. The process exits; the list goes with it.",
       "measured": "grep 'set_diagnostic_receiver' live -> 1 definition (diagnostic.py:85) + 1 passthrough (charter/projector.py:96-98). Zero call sites that wire an actual receiver. 17 `self.emit(` sites across 11 modules, every one of them holding.",
       "the_honest_part": "The mechanism is CORRECT and deliberately loud: 'never silently dropped ... loud at the diagnostic surface even when home is unreachable (Law 7).' Held-not-dropped is the right design. But held in a process that is about to exit is, for the purpose of 'validate via the logs,' indistinguishable from dropped. The record is loud into a void.",
       "becomes_validation": "The held-vs-sent distinction must be observable from OUTSIDE the process. A tooth that asserts a wired receiver exists in the live tree, and a horizon on held records that survives the process.",
-      "closed_2026-08-12": "CLOSED by ticket a-record-reaches-disk. set_diagnostic_receiver now has a LIVE caller — two, in fact: cairn/ground_loop/__main__.py constructs a BreadcrumbLog (cairn/diagnostic_inspector/log.py) for the resident GroundLoopDevice and a second one for the BusDevice beside it, before the first beat. Both were wired rather than one: closing the loop and leaving the bus held would have closed half the finding in the same three lines. RE-MEASURED at the build: the census had grown from 17 emit sites to 22, every one of them still holding, and the two `def receive_diagnostic` implementations in class-space (base/shim.py and the Inspector's Mailbox) were both in-memory. MEASURED AFTER: a fresh loop started with no other action wrote 13 records to its own trail and 18 to the bus's, every one stamped home='sent' — the first 'sent' in the system's history. The horizon this finding asked for (held records surviving the process) is answered by the file itself, not by a counter."
+      "closed_2026-08-12": "CLOSED by ticket a-record-reaches-disk. set_diagnostic_receiver now has a LIVE caller — two, in fact: cairn/devices/ground_loop/__main__.py constructs a BreadcrumbLog (cairn/machines/diagnostic_inspector/log.py) for the resident GroundLoopDevice and a second one for the BusDevice beside it, before the first beat. Both were wired rather than one: closing the loop and leaving the bus held would have closed half the finding in the same three lines. RE-MEASURED at the build: the census had grown from 17 emit sites to 22, every one of them still holding, and the two `def receive_diagnostic` implementations in class-space (base/shim.py and the Inspector's Mailbox) were both in-memory. MEASURED AFTER: a fresh loop started with no other action wrote 13 records to its own trail and 18 to the bus's, every one stamped home='sent' — the first 'sent' in the system's history. The horizon this finding asked for (held records surviving the process) is answered by the file itself, not by a counter."
     },
     {
       "n": 5,
@@ -59,14 +59,14 @@
       "measured": "ls ~/.cairn/logs/ -> archive/ bash boot preflight.json. Every line in `boot` is from bootstrap/superclaude preflight.",
       "consequence": "Akien's instruction was 'validate via the logs.' The finding is that the instrument named in the instruction does not exist. The only two things that log are the two things built OUTSIDE the device tree — which is itself the signal: logging got built where someone was debugging, and nowhere it was designed.",
       "becomes_validation": "Not a tooth — a precondition. Nothing downstream in this sweep can be validated via logs until a device record reaches disk.",
-      "closed_2026-08-12": "CLOSED by ticket a-record-reaches-disk, and the ADDRESS MOVED — recorded here rather than silently contradicted. This finding looked in ~/.cairn/logs/ because that is where it looked, and named it as the component. Akien ruled the address question on 2026-08-12 (recorded verbatim in cairn/base/address.py), after this trouble was written, and his test is OWNERSHIP rather than depth: a file answering 'what is true of this machine' lives at the top of ~/.cairn/; a file answering 'what is true of this device' lives under devices/<name>/<instance>/. A device's own breadcrumb trail is that device's state, so it lands at ~/.cairn/devices/<device>/0/diagnostics.jsonl — one per owning device instance, which also makes Law 6 hold for the FILE and not merely for the code. The finding's SUBSTANCE was exactly right and is what closed: a device record now reaches disk, so the precondition it named for the rest of this sweep is satisfied. Verified by the ticket's own falsifier run verbatim — start the system, do nothing else, read the file from a separate shell."
+      "closed_2026-08-12": "CLOSED by ticket a-record-reaches-disk, and the ADDRESS MOVED — recorded here rather than silently contradicted. This finding looked in ~/.cairn/logs/ because that is where it looked, and named it as the component. Akien ruled the address question on 2026-08-12 (recorded verbatim in cairn/tools/base/address.py), after this trouble was written, and his test is OWNERSHIP rather than depth: a file answering 'what is true of this machine' lives at the top of ~/.cairn/; a file answering 'what is true of this device' lives under devices/<name>/<instance>/. A device's own breadcrumb trail is that device's state, so it lands at ~/.cairn/devices/<device>/0/diagnostics.jsonl — one per owning device instance, which also makes Law 6 hold for the FILE and not merely for the code. The finding's SUBSTANCE was exactly right and is what closed: a device record now reaches disk, so the precondition it named for the rest of this sweep is satisfied. Verified by the ticket's own falsifier run verbatim — start the system, do nothing else, read the file from a separate shell."
     },
     {
       "n": 6,
       "layer": "logs",
-      "component": "cairn/base/transitions.py",
+      "component": "cairn/tools/base/transitions.py",
       "finding": "THE WORKFLOW CHOKEPOINT EMITS NO DIAGNOSTIC RECORD. transitions.emit() — the single door every state change crosses — is module-level functions, not a device, so it does not carry DiagnosticBase. The name collision is the fifth face of words-kept-meanings-replaced recurring exactly where it already bit: transitions.emit (advance a workflow) and DiagnosticBase.emit (send a record home) are different animals, and the one place ALL state changes cross is the one place none are diagnosed.",
-      "measured": "grep 'emit\\|Diagnostic\\|class ' cairn/base/transitions.py -> gate classes and _emission_gate; no DiagnosticBase, no self.emit.",
+      "measured": "grep 'emit\\|Diagnostic\\|class ' cairn/tools/base/transitions.py -> gate classes and _emission_gate; no DiagnosticBase, no self.emit.",
       "consequence": "Akien's requirement 'every major state change is logged' is false at the chokepoint built to be the only path for state changes. It journals to history (the durable record) but sends nothing to the diagnostic tier, so a refused crossing leaves a raised exception and no breadcrumb.",
       "becomes_validation": "A tooth at the chokepoint: every crossing — accepted OR refused — leaves a diagnostic record alongside the journal entry."
     },
@@ -92,7 +92,7 @@
     {
       "n": 9,
       "layer": "skills",
-      "component": "cairn/chart + ~/.cairn/devices/chart/0/packets",
+      "component": "cairn/machines/chart + ~/.cairn/devices/chart/0/packets",
       "finding": "THE CHART CHAIN'S COMPLETION CURVE, MEASURED: orient 15, constrain 13, survey 13, decompose 12, triage 11, hypothesize 10, validate 9, verdict 6.",
       "reading": "Six of fifteen chains (40%) were abandoned before validate; nine of fifteen reached it (60%); only six produced a verdict. The decay is monotonic and gentle — chains are not failing at one bad leg, they are being abandoned progressively, which is the signature of attention running out rather than a mechanism refusing.",
       "and": "NOTHING RECORDS WHY A CHAIN STOPPED. An abandoned chart is indistinguishable from one still in flight. There is no abandonment record and no staleness horizon.",
@@ -101,7 +101,7 @@
     {
       "n": 10,
       "layer": "heartbeat / DESIGN",
-      "component": "cairn/ground_loop + cairn/base/shim + I-heartbeat-probes-and-bus.md",
+      "component": "cairn/devices/ground_loop + cairn/tools/base/shim + I-heartbeat-probes-and-bus.md",
       "finding": "THE GROUND LOOP IS BUILT INSIDE-OUT. Akien's ruling 2026-07-30: the loop SCANS each device's ~/.cairn/devices/<device>/<instance>/groundloop/ every beat; a callback whose trigger is met POSTS TO THE BUS; the target shim decides. Built today: in-process subscribe(shim), the shim evaluates on pulse, firing is an in-process call. Every axis reverses.",
       "not_a_gap_an_inversion": "Five axes, all reversed — see the decision file's delta table.",
       "how_it_happened": "Not dropped, DEFERRED. loop.py files the ruled design as a growth edge: 'discovering subscribers by scanning device code trees for a probe-declaration file grows when devices are separate OS processes.' A deferral reads as agreement, which is how 'that's wrong' became 'that's ok' between two conversations.",

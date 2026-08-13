@@ -8,7 +8,7 @@ evidence and its falsifier: `intentions-not-beside-code/validations/I-complete-d
 It sat unsigned for two days for a purely mechanical reason worth recording: the
 VALIDATION write-door derived a seal's address from a PROOF FILE path, and a
 concept-piece has no proof file — so the gate was never awaiting a signature, it was
-awaiting an ADDRESS (`cairn/tester/quorum.py` closed it, and this is the first
+awaiting an ADDRESS (`cairn/devices/tester/quorum.py` closed it, and this is the first
 concept-piece VALIDATION in Cairn). Node-class:
 concept-piece (the prose IS the implementation; a code-seam — the diagnostic
 inspector — instantiates it). Migrates into the intention envelope when that schema
@@ -67,7 +67,7 @@ run — did the loop fold the miss, or let it recur?
   carry* for a transition-class. Both are `learns-its-gates` instances with different
   endpoints (what the component is, what its gates are, what counts as evidence). Kin,
   cross-referenced, **not** merged — a distinct store with a distinct key.
-- vs **the diagnostic emission** (`cairn/base/diagnostic.py`) — the emission stays a
+- vs **the diagnostic emission** (`cairn/tools/base/diagnostic.py`) — the emission stays a
   dumb, thin breadcrumb (Law 6: only the pointer crosses); this principle is about
   what the *inspector* assembles from the breadcrumbs and logs — the FINDINGS. The
   emission is dumb so the findings can be smart.
@@ -81,7 +81,7 @@ run — did the loop fold the miss, or let it recur?
   tokens exploring an issue as the prebuild step does for coding, and get better over
   time. (Born as *diagnostic-interpreter* / `assemble`; refactored to the
   inspector/filters/findings shape 2026-07-24.)
-- *`cairn/base/diagnostic.py`* (built) — `DiagnosticBase.emit`, the transition-grade
+- *`cairn/tools/base/diagnostic.py`* (built) — `DiagnosticBase.emit`, the transition-grade
   breadcrumb every device inherits; the inspector crawls on its pointer + microsecond
   stamp. The docstring already named this inspector as "the next build."
 - Kin: `[[diagnostic-logging-method]]` (the how — instrument → interpret → review →

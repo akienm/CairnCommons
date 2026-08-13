@@ -32,9 +32,9 @@ berth door and again at promotion — one implementation, two mouths, identity-p
 ## The evening: orient's brick gets its first correction
 
 During the constrain build, one proof red fired that had fired once before, the same
-day: an import-allowlist tooth refused `from cairn.chart import constrain` because it
-recorded the *spelling* (the AST prefix `cairn.chart`) rather than the *capability*
-(the module actually entering, `cairn.chart.constrain` — identical either way Python
+day: an import-allowlist tooth refused `from cairn.machines.chart import constrain` because it
+recorded the *spelling* (the AST prefix `cairn.machines.chart`) rather than the *capability*
+(the module actually entering, `cairn.machines.chart.constrain` — identical either way Python
 spells it). The fix applied both times was a respelling: treating the symptom.
 
 Akien asked: **"how do we address this?"** — and that question was the learning event.

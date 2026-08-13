@@ -26,7 +26,7 @@ gates judge your work by instrument. Do not improvise beyond the berths.
   CODE-SEAM, so your voyage's workflow string is your ticket's own:
   ```
   PYTHONPATH=$PWD python3 -c "
-  from cairn.base.transitions import emit
+  from cairn.tools.base.transitions import emit
   print(emit('code-seam@v1: [THINKME] -> TICKETME -> BUILDME -> PROVEME -> LEARNME -> PROVED',
              'BUILDME', history_path='skills/sail/history.json',
              state_path='skills/sail/state.json',
@@ -45,7 +45,7 @@ text, plus teeth:
 - act ORDER by relative position, never printed step numbers: BUILDME journal
   before build; answer-the-chart act before the PROVED crossing; seal follows
   PROVEME;
-- gate names resolve by REAL import from cairn.base.transitions: BuildGateRed,
+- gate names resolve by REAL import from cairn.tools.base.transitions: BuildGateRed,
   EntryGateRed, ExitGateRed;
 - mutation teeth: run the same checkers over mutated copies of the TEXT (a
   reordered version, a dropped refusal clause, an orphaned gate name) and
@@ -59,11 +59,11 @@ refuses the skills/ path: do NOT modify the tester — report it; the
 double-green stands as the honest seal state (the constrain berth pre-settled
 this disposition).
 Records: retire edge (b) in `skills/sail/intention+why.json` (mark it LANDED,
-name your ticket) and poke `cairn/intentions_model_compiler/recompile_gate.sh`
+name your ticket) and poke `cairn/tools/intentions_model_compiler/recompile_gate.sh`
 in the same act; ticket cursor → [PROVED] with distinctions; sail step 6
 (answer the validate berth's two criteria by their named instruments, write
-the verdict artifact via `cairn.chart.verdict.write_verdict`); cross PROVED;
-step-8 deposits (`python3 -m cairn.chart.live learn <berth>` for each of your
+the verdict artifact via `cairn.machines.chart.verdict.write_verdict`); cross PROVED;
+step-8 deposits (`python3 -m cairn.machines.chart.live learn <berth>` for each of your
 seven berths); commit + push both repos.
 
 ## Rules that override any habit you have
@@ -79,7 +79,7 @@ seven berths); commit + push both repos.
   Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
   Claude-Session: https://claude.ai/code/session_01Dsdby9vruqwUkmTroRtqk8
   ```
-- Verify done by instrument: `PYTHONPATH=$PWD python3 -m cairn.orient.orient git`
+- Verify done by instrument: `PYTHONPATH=$PWD python3 -m cairn.tools.orient.orient git`
   → 0 dirty / 0 ahead both repos.
 
 ## Your final report must carry
