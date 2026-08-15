@@ -72,3 +72,37 @@ at the system's front door. Worth finding what the compiler is inlining.
 `the-runtime-spine-has-never-run` (off-template standing "?");
 `workflow-cursor-unreadable-by-the-chokepoint` (open on Akien's two design
 questions, code halves fixed).
+
+## Outcomes — appended after the RULED cleanup, same day
+
+Akien ruled the cleanup in one line ("yes, we need to clear all of those.
+RULED."), recorded as ruling
+`2026-08-15-the-review-findings-are-cleared-and-cited` (which supersedes
+`2026-08-15-the-review-findings-are-cleared-not-held` — the first packet
+listed the two append-only trouble records as conformers, artifacts whose
+change preceded intake by design and must never change again, so its verify
+could never go green; a misfiled packet's remedy is supersession, not an edit).
+
+- **Finding 1 — CLEARED.** Ground loop restarted (pid 897888 → 3592949),
+  beats from 1, no new staleness occurrences, crowding_out probe imports.
+  Trouble `ground-loop-is-older-than-the-code-it-judges` cleared through
+  `TroubleDevice.clear()`. Who owns the NEXT restart is now question
+  `open-who-owns-the-ground-loops-restart`.
+- **Finding 2 — CLEARED.** `ground-loop-device-constrain` re-cleared through
+  the device door; the reader wants the bare enum and now has it. The
+  hand-written prose clear stays below it in the record, per Law 7.
+- **Finding 3 — PARTLY DISSOLVED, REMAINDER CLEARED.** The "8 of 22 uncited"
+  census was taken with the wrong instrument: grep for id strings, when
+  supersession stamps the SUCCESSOR and never touches the retired packet. The
+  gate's own ledger (`cairn ruling list`) reads 48 rulings, 0 red, 15 properly
+  retired, 165 checks proved. The door's ledger outranks a census taken from
+  outside it. What was real: four voyage questions absent from `questions/` —
+  three filed (`open-does-orients-unchartered-proved-voyage-owe-its-chain`,
+  `open-must-a-check-source-identify-not-merely-resolve`,
+  `open-who-owns-the-ground-loops-restart`), the fourth already on file as
+  `open-does-promotion-judge-every-chart-or-the-promoting-one`. All surface at
+  the hook.
+- **Finding 4 — CLEARED.** The banner's bulk was 121 gate findings rendered
+  whole. `bin/cmd/slate` now caps the lane: newest 8 in full, older rows
+  id-only (every id still answerable by `cairn recordverdict`; the block's own
+  record stays whole). 207,737 → 42,098 bytes, proof green twice.
