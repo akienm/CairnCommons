@@ -23,23 +23,30 @@ intent ("we'll need to automate this gating process") already lives in ticket
 
 ---
 
-## Part 1 — the 17 that need you (read each finding's own bullets before answering: `cairn recordverdict <id>` alone won't show it, but the id is answerable directly and the bullets live in the block's record)
+> **UPDATE, same day:** Akien's authority ruling
+> (`2026-08-15-measurement-trumps-approval-and-the-head-trumps-artifacts`:
+> measurement > his head > every artifact, his commits included) drained two of
+> the 17 — **355143331fff** (his commits ARE subject to the corrosion predicate;
+> artifacts below his head) and **8d47765deb56** (the two-tense ruling's
+> `confirmed: true` is on disk — measurement-settled, no marker owed) — both
+> recorded through `recordverdict` with his verbatim words. **15 remain.** The
+> same ruling means Part 3's runtime-spine clear stands on its measurement and
+> needs no ratification; only the residue ticket-or-drop call is still yours.
+
+## Part 1 — the 15 that need you (read each finding's own bullets before answering: `cairn recordverdict <id>` alone won't show it, but the id is answerable directly and the bullets live in the block's record)
 
 ### One-word closes (cheap, do these first)
 
-- **8d47765deb56** (2026-08-15) — the two-tense ruling
-  (`2026-08-15-an-artifact-is-present-tense-or-past-tense-never-both-rescoped`)
-  is SETTLED by measurement but your `RULED` marker was never spoken. One word
-  from you closes both this finding and the ruling packet.
 - **d4896172aa8c** — minor pane flag; approve or drop.
+- ~~8d47765deb56~~ — drained by the authority ruling (see update above).
 
 ### Genuine design questions parked on you
 
 - **d830a3f80723** — `mint_grant`: should capability grants stay flat, or nest?
 - **3fa4f993e4b8** — does an **at-rest** component's absent journal red at all,
   or only a voyage's? (Bears on the state/history drift check's scope.)
-- **355143331fff** — are **your own commits** subject to the corrosion predicate,
-  or is a ruling-by-commit a legitimate act the predicate must recognize?
+- ~~355143331fff~~ — drained by the authority ruling: your commits are
+  artifacts below your head, so the predicate applies to them like any other.
 - **394d1cb8c2fa** — orient vs constrain carry different survival rules under one
   dial number; which is authoritative?
 - **cd4f046cd7d5** — the trouble-closing CLI door is still owed (clears currently
@@ -52,8 +59,10 @@ intent ("we'll need to automate this gating process") already lives in ticket
 
 - **b8e4233e9073** — the concept-piece verdict was parked explicitly on your
   review; the first concept-piece voyage has since closed whole (2026-08-15).
-- **a66cbfa44fa5** — CC marked a BUILDME need "DONE" on its own authority; the
-  finding exists so you can ratify or reverse that.
+- **a66cbfa44fa5** — two of its bullets are measurement-settled (live-fired
+  singleton start; SIGKILL tooth) and stand on that. What queues is the FLAG
+  bullet: CC marked BUILDME need 2 "DONE" as *a read of the record* — an
+  interpretation, not a measurement, so it's yours under the authority ruling.
 
 ### Confessions worth your eyes (approve = acknowledged)
 
@@ -131,7 +140,8 @@ lost by deferring one.
    findings 6 (chokepoint posts no breadcrumb) and 7 (emit-coverage census) were
    never ticketed; findings 8 and 9 are largely overtaken (skill_block berths
    every door firing; chart entry/exit gates). **Your call: ticket 6/7, or drop
-   them.** Your review of this paragraph is the ratification of the clear.
+   them.** Under the authority ruling the clear itself stands on its
+   measurement and needs no ratification; only the 6/7 call is yours.
 
 3. **Compiler charter `gated_by: ["CC"]`** — added mid-crossing 2026-08-15 under
    refusal pressure, derived from owner per base's rule, **ratification never
