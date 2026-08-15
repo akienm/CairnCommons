@@ -1,0 +1,40 @@
+{
+  "id": "the-pulse-file-is-the-subscription",
+  "schema_version": "ticket-v1",
+  "date": "2026-08-15",
+  "owner": "CC owns the code and the proofs. Akien owns the intention — it is his design, walked through aloud on 2026-08-15 and captured verbatim in ideas/2026-08-15-imma-use-an-example-the-paths-may.json; his close was 'yes, that's the design. cast the ticket and sail it.'",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME(a-dropped-pulse-serves-within-a-beat) -> PROVED",
+  "watchme": [
+    {
+      "object": "a-dropped-pulse-serves-within-a-beat",
+      "trigger": "each read of the probe over the loop's own pulse-roster record (~/.cairn/devices/ground_loop/0/) — no clock, no new firing path; it rides the shim's existing pulse like every probe in the corpus. TRUE when the record shows pulse activations and deactivations whose (served_at - file_mtime) is at most 2 beats, under an unchanged pid.",
+      "enough": "10 add-or-remove events measured within-a-beat with zero loop restarts across them — enough to separate 'discovery serves' from 'the one demo worked'; after that the property is load-bearing and ordinary reds cover regressions.",
+      "carrier": "a verdict artifact against THIS ticket's falsifier",
+      "nexus": "the hypothesize tree — the expectation 'presence is service, within one beat, no restart' is the hypothesis each measured event confirms or kills",
+      "consumer": "Akien at the gate, and the next voyage that touches the loop (the probe's record is the evidence that discovery held while the corpus changed under it)",
+      "probe": "cairn/devices/ground_loop/probes/pulse_service_within_a_beat.py"
+    }
+  ],
+  "intention": "The ground loop serves any component's per-beat work by discovering groundloop/pulse.py at the component's own address (class or instance level) each pass — presence activates the service, absence deactivates and unloads it; nothing registers, nothing restarts.",
+  "why": "Akien, 2026-08-15, verbatim: 'devices/webserver/groundloop/pulse.py will be our webserver's shim's pulse. so i'm the group loop and i am already running and i look in that folder. last time i was here, pulse.py did not exist. so inside a try/except i can either run it, or i can import it. either way, once i activeate it, it's now in my list of things i know about.... next pass thru, the file is missing. so i remove it from my list. if i imported it, i now unload it. this is true for every device. a goundloop folder can exist at the class level or the instance level. nobody has to do anything except put the file there or remove it. so this keeps the ground loop from needing a restart, from getting stale, from anybody needing to do anything other than just use the provided service or not.' The lived symptom: on 2026-08-14 the loop measured itself older than the code it judges nine times overnight and nothing owned a restart — under this design there is no restart to own, because the loop holds nothing that ages: its picture of the rack is rebuilt from disk every beat.",
+  "traces_to": "Law 4 (the file's existence IS the subscription — physics, not a list anyone maintains), Law 1 (registration compiled into the address, never re-derived), Law 6 (the pulse berths at the device's own address and fires through the device's shim; the loop owns only its beat and its learned list). Up the ruled ladder (2026-08-07): the ground loop running is rung 1 of everything-below-is-working-fine.",
+  "gates": "code-seam invariants: proved by the tester running proofs beside the code that a hollow build could not pass (run twice, never trust the first green), feeds back to origin on failure. IN: discovery gains the groundloop/pulse.py surface at class and instance level (found each beat, activated under try/except, identity path+mtime, removed+unloaded when missing); firing routed through the shim (the loop only beats); the learned list is loop-owned instance state; the charter's subscription sentence updated (write pokes recompile_gate.sh); proofs for add, remove, in-place edit, and a pulse that raises. OUT: the resident interpreter's own staleness (measured separately, its own concern); the beat overspend (cast ticket exists); migrating or changing the existing probes/ surface; building any real device's pulse content (the webserver's pulse is the webserver's work).",
+  "falsifier": "With the loop running and untouched (same pid throughout): drop a pulse.py under a component's groundloop/ folder → it is activated and fired within one beat; remove it → within one beat it stops firing and leaves the learned list; edit it in place → the next beat runs the new bytes (identity is path+mtime, so an edit is a remove+add in one act). Any of those requiring a loop restart, a hand-maintained list, or a registration act falsifies the intent. Horizon: one build, bounded to the discovery+unload seam; no device's actual pulse content is in scope.",
+  "horizon": "One build, bounded to the discovery+unload seam of the ground loop. No device's actual pulse content is in scope; the webserver's pulse is the webserver's own later work.",
+  "parent": null,
+  "children": "none, because the seam is one build: discovery.py grows the pulse surface and the unload half, the shim fires what is found, the charter update rides PROVED. The two adjacent concerns are bounded OUT with standing addresses: the interpreter's own staleness (discovered.py records it, measured 2026-08-13) and the beat overspend (CairnCommons/tickets/the-beat-spends-2500ms-on-triggers-against-a-1s-cadence.json... cast as named in MAP backlog).",
+  "dependencies": "cairn/devices/ground_loop/discovery.py (the probes/ discovery pattern this extends — RULED 2026-08-11, ruling verbatim in its docstring); cairn/devices/ground_loop/discovered.py (records both the 584aa74 loop-that-executes goof and the 2026-08-13 falsification of 'unstaleable'); the shim seam (cairn/tools/base/shim.py) where firing lives.",
+  "distinctions_recorded": [
+    "pulse.py is the SHIM's pulse (Akien's verbatim) — discovery changes where the roster comes from, never where firing lives; a loop that executes directly is the recorded 584aa74 goof and stays dead",
+    "class-level and instance-level pulses need no precedence rule: the unit is the FILE, each one found is one service at one address, both fire",
+    "identity is path+mtime, so an in-place edit is a remove+add in one beat — the freshest-commit-one-beat-away property holds for changed pulses, not only new ones",
+    "'the loop cannot go stale' is bounded to pulse-carried code: unload evicts the pulse module, not its transitively imported base modules; the resident interpreter's own staleness is measured prior art and OUT",
+    "run-vs-import decided v0: import, mtime-cached, matching probes/ — run-in-a-fresh-namespace is the recorded fallback if import accretion measures as a problem",
+    "questions/open-who-owns-the-ground-loops-restart resolves with this design: nobody — a correctly built loop has nothing to restart for"
+  ],
+  "provenance": "Born from Akien correcting CC's faulty assumption mid-talk-through ('ah, then it does not work as designed') during the 2026-08-15 review of the ground-loop restart question. Idea captured verbatim at ideas/2026-08-15-imma-use-an-example-the-paths-may.json; /intent routed forward (berth below); /sorted cast same day.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260815T100213-89ed0e5d6577.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260815T100027-38febf2f7ad4.json",
+  "owning_intention": "cairn/devices/ground_loop/intention+why.json"
+}
