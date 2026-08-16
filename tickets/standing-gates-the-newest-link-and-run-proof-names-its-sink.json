@@ -1,0 +1,47 @@
+{
+  "id": "standing-gates-the-newest-link-and-run-proof-names-its-sink",
+  "date": "2026-08-16",
+  "owner": "cairn/devices/tester",
+  "node_class": "code-seam",
+  "priority": "P1",
+  "from_trouble": "cairn-tester-validation-store-py-persist-validation-the-single-write-door-for-the-validation-trail-is-not-the-only-path-to-the-file",
+
+  "intention": "Point the seal gate at the question it is actually asked, and give the seal one named sink. standing() asks 'is this proof's code proven RIGHT NOW?' — a question answered entirely by the newest seal: green, its link verifying, its fingerprint matching. It currently refuses on the integrity of the ENTIRE trail, so a stale entry about code that has since moved poisons an answer that does not concern it. And run_proof still returns a record without persisting it, so every caller must remember the door — which is how seven entries came to be written around it.",
+
+  "why": "The prior fix (validation-store-door-is-the-only-path, cleared 2026-08-05) did not hold: six trails carry seven unlinked entries dated 2026-08-07 and 2026-08-08, and the trouble stands re-raised at prior_attempts 1. The two halves of this ticket answer the two halves of that failure. THE GENERATOR: run_proof's own docstring says it 'does not persist it (the store is a later stone)' — the store stopped being a later stone on 2026-08-05 and the handoff never closed. `cairn test` makes the gap concrete: it runs proofs, prints greens, and lands nothing, so the only way to make a seal durable is by hand. That is not a lapse of attention, it is the affordance the tool offers. THE READER: the trail-wide gate is a reasoned overshoot, not a response to any measured tamper — the prior ticket's `learned` records that its draft tolerated an unlinked PREFIX, that the proof killed that tolerance, and that 'the fix was to remove the clause rather than narrow it'. Removing was correct about the prefix rule and landed one stop past the right rule. Akien, 2026-08-16, on what a validation IS: 'evidence once we've completed something is irrelevant and tends to cause confusion once the point the evidence is centered around is resolved. we don't need to keep history. we need to keep THIS WORKED LAST TIME I TRIED IT ON yyymmddhhmmssuuuu which is what validations are.' And on the shape of the miss, which is the general one: 'a while back you threw an error because a seive was checking for a file, but the error wasn't that the file wasn't there it was that it didn't have the field. the seive needed to be repointed at the thing it actually needed, not the higher order thing.'",
+
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME(the-door-is-the-only-path-in-practice) -> PROVED (cast at /sorted 2026-08-16 — the casting IS the TICKETME crossing)",
+
+  "gates": "proof beside the code, sealed under the tester at isolation='netns'; the emit chokepoint validates each crossing and its exit gate demands a complete, passing verdict artifact against the claiming validate berth before PROVED",
+
+  "intent_berth": "none, because this ticket entered at TICKET, not at INTENT — ruling 2026-08-02-three-entry-points-and-structural-refiled: a bug goes straight to TICKET. Its thinking artifact is the trouble record named in from_trouble, which carries the defect, the measurement and the fix-when-taken.",
+
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260816T121025-3671bac26679.json",
+
+  "falsifier": "Four clauses, each a tooth a hollow build could not pass: (1) a hand-written record — no link, or a link copied from another entry — passes standing() as the newest seal; (2) an in-place edit of an OLDER entry does not break the newest link and standing() still returns proven (the clause that would show the narrowing went too far); (3) run_proof can be called without naming a sink, i.e. a seal can still be silently produced and dropped; (4) a validation trail exists in the corpus whose newest entry carries no verifying link and no proof tooth reds.",
+
+  "horizon": "at the next tester change, and whenever a new caller of run_proof or of the validation trail is added. Re-declared deliberately from the prior ticket, whose fix did not hold on exactly this horizon.",
+
+  "watchme": {
+    "object": "the-door-is-the-only-path-in-practice",
+    "probe": "cairn/devices/tester/probes/the_door_is_the_only_path_in_practice.py",
+    "trigger": "every pulse reaching the tester's shim — the probe globs every **/validations/*.json in class-space (files only: no device, no bus, no network), counts entries dated after this fix lands, and fires when >= 20 such entries exist AND one or more carries no trail_link",
+    "enough": "cleared when >= 20 post-fix entries exist AND every one carries a link. The floor sits on BOTH clauses deliberately: a clear with no sample floor retires before it can fire, the asymmetry that made does_optional_mean_never_carried clear at n=1 on its own first pulse.",
+    "carrier": "a verdict artifact against this ticket's falsifier, carrying the count of post-fix entries, the count and addresses of any unlinked ones, and the callers that wrote them",
+    "nexus": "hypothesize",
+    "consumer": "cairn/devices/tester — the self-route the tester's charter already records, because persist_validation is the hand that mints a link and it lives at that address"
+  },
+
+  "proof": "cairn/devices/tester/proofs/test_validation_store.py and cairn/devices/tester/proofs/test_tester.py — to be filled with the tooth roster and seal at PROVEME",
+
+  "distinctions_recorded": [
+    "THE NARROWING IS NOT THE KILLED TOLERANCE, BY THAT RULE'S OWN TEST. The prior ticket's general shape is 'a tolerance is a forger's costume whenever the forger can produce the thing being tolerated.' It killed a tolerance of an unlinked leading PREFIX — and a forger can produce an unlinked prefix, since a total overwrite is one, which is why it fell. What is tolerated here is unlinked entries sitting BENEATH a newest link that verifies, and the forger cannot produce the required half: a link that hashes the current prefix comes only from the store's own _link_for, at which point calling the door is cheaper than forging. The rule and this narrowing agree.",
+    "THE DIAGNOSTIC IS NOT THE GATE, AND BOTH ARE KEPT. inspect_trail retains all three lanes and keeps checking the whole trail — it localizes a tamper to its earliest entry, which is what a census tooth should print and what complete-diagnostic-on-first-pass wants. Only standing()'s GATING question narrows. The instrument stays as sharp as it is; the gate stops answering a wider question than it was asked.",
+    "THE OLD-ENTRY-TAMPER CASE IS COVERED BY THE MERKLE PROPERTY, NOT BY THE TRAIL WALK. test_an_EDIT_to_an_older_entry_breaks_the_newest_link asserts breaks on entry 0 AND entry 1 — entry 1 being the newest — so the top link already catches it. The tooth's docstring claims the tamper is 'invisible to a newest entry reader'; that describes a reader of the newest RECORD's content, which is not what standing() will do.",
+    "WHAT WHOLE-TRAIL GATING ACTUALLY BOUGHT, stated so the loss is deliberate: localization of the earliest tamper point (kept — it moves to inspect_trail and the census tooth), and refusal on unlinked OLD entries (dropped on purpose — that is the class Akien ruled irrelevant once the point the evidence centred on is resolved).",
+    "THE QUARANTINE DESIGN IS WITHDRAWN AND WHY IT WAS WRONG BEYOND BEING UNNECESSARY. It would have written a ruling-shaped record into the trail permanently — a thing existing only because Akien signed it — at the moment the standing aim is to remove him from the process. 'I HAVE TO BE PART OF THE PROCESS. And we're trying slowly to remove me from the process' (Akien, 2026-08-16). The repointed gate needs no ruling at all, and that is a property of the fix worth naming, not a side effect.",
+    "standing()'s PRINTED REMEDY IS FALSE FOR THIS CLASS. It says 'Recover the trail from git and re-run the proof'; measured across every commit of test_host.json, entry 1 arrived unlinked at its first commit and carries no link at any commit. The sentence was written for the destroy-the-history attack and inherited by the never-came-through-the-door case. It is corrected as part of this ticket."
+  ],
+
+  "learned": null
+}
