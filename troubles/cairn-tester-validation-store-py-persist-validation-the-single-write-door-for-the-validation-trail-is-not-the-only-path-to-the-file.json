@@ -1,51 +1,93 @@
 {
   "id": "cairn-tester-validation-store-py-persist-validation-the-single-write-door-for-the-validation-trail-is-not-the-only-path-to-the-file",
-  "standing": "CLEARED",
-  "why": "A record of truth declared APPEND-ONLY by its door is a plain JSON file any caller can overwrite. The door enforces append-only and the ratified eight fields; nothing enforces that the door is used. A hand-write destroys a proof's whole seal history silently and permanently (Law 7), and looks exactly like a fresh seal.",
+  "standing": "OPEN",
+  "why": "THE FIX DID NOT HOLD. This trouble was cleared 2026-08-05 (cairn e87c386, ticket validation-store-door-is-the-only-path) with three physics layers. On 2026-08-07 and 2026-08-08 — two and three days after that clear — two voyages wrote SIX validation trails around the door anyway. Seven entries across six trails carry no trail_link, and persist_validation is the only hand that mints one. The chain (layer 2) recorded the evidence and is the only layer that worked; nothing READ it, so the breach sat undetected for eight days and surfaced only incidentally, when harbor_master.clearance consulted one of those trails during an unrelated crossing on 2026-08-15.",
   "count": 1,
-  "first_seen": "2026-07-30T20:14:16.344941+00:00",
-  "last_seen": "2026-07-30T20:14:16.344941+00:00",
+  "first_seen": "2026-08-16T03:13:14.176560+00:00",
+  "last_seen": "2026-08-16T03:13:14.176560+00:00",
   "occurrences": [
     {
-      "at": "2026-07-30T20:14:16.344941+00:00",
-      "identity": "cairn/devices/tester/validation_store.py:79 _atomic_write / :94 persist_validation — declared 'The single write-door' (module docstring line 21) with no physics making it single",
-      "location": "cairn/devices/tester/validation_store.py:94; bypassed from a caller at cairn/ (an ad-hoc sealing script during ticket watchme-emits-a-probe, 2026-07-30)",
-      "code": "v.write_text(json.dumps(rec, indent=2) + '\\n')   # rec is ONE validation dict; the file holds a LIST",
-      "expected": "A VALIDATION APPENDS to the trail beside its proof. persist_validation(rec, proof_path=...) reads the existing trail, appends, atomically writes back — so re-running a proof adds a dated seal and never replaces one (validation_store.py docstring: 'There is no update-in-place and no delete, because a record of truth has neither').",
-      "actual": "The bypassing write replaced the whole list with a single bare dict. cairn/tools/base/validations/test_transitions.json went from a 14-entry trail to one dict; cairn/machines/chart/validations/test_chart_verdict.json from 3 to one. SEVENTEEN SEALS DESTROYED, including every seal from every prior voyage of those two components. No error, no warning: the file was still valid JSON and still named after its proof.",
-      "fatality": "NON-FATAL AND SILENT — recovered only by luck of timing. The damage was uncommitted, so `git checkout HEAD -- <paths>` restored both trails (verified: 14 and 3 entries back). Had it been committed, the trails were gone from the working tree and recoverable only by someone who knew to go looking in history for a loss nothing reported. NOTHING detected it: not the door, not a proof, not the tester. It was caught by a human-style double-take on an unrelated AttributeError ('list object has no attribute get') raised by a re-run loop that expected the OLD shape — i.e. the surviving correct files objected, not the corrupted ones.",
-      "trace": "TesterDevice.run_proof(p, isolation='netns') -> returns the 8-field record, and DOES NOT PERSIST (device.py:145, 'the store is a later stone') -> caller must choose the sink -> caller wrote the file directly instead of calling persist_validation -> _atomic_write never reached -> read_validations never reached -> trail replaced. The gap is exactly at the handoff run_proof deliberately leaves open.",
-      "measured_convention": "57 of 57 files under cairn/*/validations/ are lists — the append-only shape is universal and unbroken across the system, which is why a bare dict is unambiguously corruption and not a second legal shape.",
-      "owning_ticket": "CairnCommons/tickets/charter-state-history-split.json — validation_store.py's own docstring names it (child b). CLAUDE.md 'Rules awaiting physics' already carries the sibling residue for state/history: 'an in-place edit of history itself'. This is the same residue on the third record of truth, now with a measured live occurrence instead of a hypothesis.",
-      "the_fix_when_taken": "Not designed here (this reports, it does not design). The shapes worth weighing: (a) a read-side conformance tooth in the tester's own proofs that reds when any cairn/*/validations/*.json is not a list of eight-field records — cheap, catches it one layer late but LOUDLY, and would have fired here; (b) run_proof persists through the door itself, closing the handoff rather than guarding it, which changes 'the store is a later stone' into a decision; (c) filesystem-level ownership, the expensive answer. (a) is the cheapest thing that would have caught this exact occurrence.",
-      "found_how": "Caught live during ticket watchme-emits-a-probe's sealing step, by the builder who caused it, before commit."
+      "at": "2026-08-16T03:13:14.176560+00:00",
+      "identity": "cairn/devices/tester/validation_store.py:persist_validation — declared 'the single write-door' and re-declared single by three physics layers on 2026-08-05; seven entries written around it on 2026-08-07 and 2026-08-08",
+      "location": "cairn/devices/tester/validation_store.py:persist_validation (the door); the bypassing writes landed in six validations/*.json trails",
+      "expected": "Every VALIDATION reaches its trail through persist_validation, which mints a trail_link — sha256 over the whole trail beneath it plus the record — so a trail that did not come through the door is detectable. verify_trail returns no complaints; harbor_master.clearance.standing() reads a verdict out of it.",
+      "actual": "verify_trail complains on 6 of 90 trails on disk. Seven entries carry no trail_link. standing() therefore refuses the WHOLE trail (no prehistory clause, by design), so the clearance gate refuses any crossing that rests on them.",
+      "the_seven_entries": [
+        {
+          "trail": "cairn/tools/base/validations/test_nest.json",
+          "index": 0,
+          "date": "2026-08-07T15:06:18",
+          "caller": "sail:banding-berths-at-the-general-level",
+          "trail_file_born": "047d633 2026-08-07 (this entry is entry 0 of a file created in that same commit)"
+        },
+        {
+          "trail": "cairn/tools/base/validations/test_nest.json",
+          "index": 1,
+          "date": "2026-08-07T15:06:19",
+          "caller": "sail:banding-berths-at-the-general-level",
+          "trail_file_born": "047d633 2026-08-07"
+        },
+        {
+          "trail": "cairn/devices/inference_domain/validations/test_host.json",
+          "index": 1,
+          "date": "2026-08-08T17:16:50",
+          "caller": "ticket the-inference-proxy-is-a-rules-stack",
+          "trail_file_born": "7e7d828 2026-07-26 (APPEND onto an existing 0444 trail)"
+        },
+        {
+          "trail": "cairn/devices/inference_domain/validations/test_inference_domain.json",
+          "index": 1,
+          "date": "2026-08-08T17:16:50",
+          "caller": "ticket the-inference-proxy-is-a-rules-stack",
+          "trail_file_born": "41feefe 2026-07-29 (APPEND onto an existing 0444 trail)"
+        },
+        {
+          "trail": "cairn/devices/inference_domain/validations/test_route.json",
+          "index": 0,
+          "date": "2026-08-08T17:16:50",
+          "caller": "ticket the-inference-proxy-is-a-rules-stack",
+          "trail_file_born": "e886434 2026-08-08 (entry 0 of a file created in that same commit)"
+        },
+        {
+          "trail": "cairn/devices/inference_domain/validations/test_watch_probe.json",
+          "index": 0,
+          "date": "2026-08-08T17:16:51",
+          "caller": "ticket the-inference-proxy-is-a-rules-stack",
+          "trail_file_born": "e886434 2026-08-08 (entry 0 of a file created in that same commit)"
+        },
+        {
+          "trail": "cairn/machines/build_inspector/validations/test_inspector.json",
+          "index": 19,
+          "date": "2026-08-08T17:17:56",
+          "caller": "ticket the-inference-proxy-is-a-rules-stack (sole_path_holds joins the roster)",
+          "trail_file_born": "30bfaab 2026-07-27 (APPEND onto an existing 0444 trail, 20th entry)"
+        }
+      ],
+      "what_wrote_them": "run_proof's output, written to the file by a hand that was not the door. Measured from shape: every one of the seven carries EXACTLY the ratified eight fields and exactly run_proof's evidence keys (returncode, stdout_tail, stderr_tail, seal, source_fingerprint) — the door's minted trail_link is the only thing missing. Five of the seven landed inside 66 seconds (17:16:50 -> 17:17:56), i.e. one loop over five proofs.",
+      "why_each_layer_missed_it": {
+        "layer_1_mode_bit": "TWO INDEPENDENT HOLES. (a) It cannot protect a file that does not yet exist: 3 of the 7 entries are entry 0 of a trail file created in the same commit, so there was no 0444 to defeat. (b) For the other 4 — appends onto existing 0444 trails — the mode bit stops only a naive open(path,'w'). Any writer that replaces the inode by rename walks past it, and that is the DOOR'S OWN technique: the clearing note says so in its own words, 'The door still writes because os.replace needs the DIRECTORY, not the file.' A hand imitating the door's method inherits the door's exemption.",
+        "layer_2_chain": "WORKED — and is the only layer that did. It recorded the absence faithfully and refused to let a verdict be read out of the trail. But nothing reads the chain corpus-wide, so the record sat unread for 8 days; it took an unrelated crossing consulting ONE trail to surface it. Detection was incidental, not designed.",
+        "layer_3_corpus_scan": "Censuses every MODULE for a write aimed at a validations/ address. An ad-hoc throwaway script is not a module in the corpus, so it is invisible to the scan. Note the ORIGINAL occurrence (2026-07-30) was also 'an ad-hoc sealing script' — the same shape, and the layer built afterward does not cover it."
+      },
+      "the_report_named_the_closing_fix_and_the_guarding_one_was_taken": "This trouble's own the_fix_when_taken listed option (b): 'run_proof persists through the door itself, closing the handoff rather than guarding it.' The 2026-08-05 fix guarded the handoff instead of closing it, and run_proof's docstring still reads 'does not persist it (the store is a later stone)'. The recurrence came through exactly that unclosed handoff — the caller must still choose the sink, and twice now a caller chose the file.",
+      "recoverability": "NOTHING TO RECOVER. Measured per entry with git log --follow: each of the seven arrived unlinked at its first commit and carries no trail_link at any commit. The clearing note's stated recovery path ('git is the recovery path, and the chain is what tells you to use it') does not reach this class: it recovers a DESTROYED trail, and nothing here was destroyed — these entries were never linked in the first place.",
+      "second_finding_riding_this_one": "adopt_chain CANNOT TELL THIS FROM PREHISTORY. Its docstring is emphatic that it is 'not a repair tool and deliberately not usable as one', but its guard refuses only an entry whose EXISTING link fails to verify. A MISSING link passes straight through, so pointing adopt_chain at any of these six trails would silently mint links over a post-door bypass and erase the evidence — precisely the outcome the docstring says it exists to prevent. The distinguisher between 'unadopted prehistory' and 'written around the door' is the DATE (adoption ran 2026-08-05; these are 08-07 and 08-08) and nothing in the function reads it. A date floor would close it.",
+      "mode_bit_census_expected_not_new": "89 of 90 trails on disk are 0444; cairn/tools/base/validations/test_nest.json is 0664. This is ALREADY PREDICTED by the clearing note — 'git carries only the exec bit, so a fresh clone lands these files at 0644 and the mode-bit layer is absent until the door next appends' — so it is expected residue rather than a new hole. Recorded here so the next reader does not re-derive it, and left untouched deliberately: chmod by hand would be a hand applying physics.",
+      "consequence_now": "harbor_master.clearance refuses the PROVED crossing of ticket inference-domain-chat-verb (Unproven: the seal trail 'DID NOT COME WHOLE THROUGH persist_validation — 1 break'). The gate is working correctly; the voyage is built, proved twice, sealed under netns, live-fired and verdicted, and it waits here rather than crossing onto a trail that cannot attest.",
+      "what_was_done_and_not_done": "DONE: today's netns seal of test_host.py was re-run and persisted THROUGH the door (2026-08-15T21:11:27, green, seal sealed, fingerprint c73335a7…, trail_link f814281525c9) — it had been cut this morning and never berthed, which is its own small instance of the same handoff. NOT DONE: nothing was adopted, edited, chmod'd or repaired. The seven entries stand as written. Per CLAUDE.md a deterministic red is fixed or it carries a ruling from Akien, never a paragraph — and the honest fix here is not available to CC, because every route to green runs through erasing the evidence.",
+      "the_fix_when_taken": "Not designed here (this reports, it does not design). Weighing, cheapest first: (a) a corpus-wide chain census as a standing tooth or probe, so a break is found in minutes rather than 8 days and by design rather than incidentally — this is the layer that was missing, since layer 2 detected everything and told nobody; (b) a date floor on adopt_chain so it refuses an entry newer than the adoption itself, closing the second finding; (c) run_proof persists through the door itself, which is the option this trouble named in 2026-07-30 and which was not taken — it closes the handoff instead of guarding it, and both occurrences came through that handoff. (a) and (b) are cheap and independent; (c) is the one that ends the class.",
+      "found_how": "harbor_master.clearance.Unproven refused the PROVED crossing of ticket inference-domain-chat-verb on 2026-08-15. The gate named one break in one trail; the corpus census that found the other five was run because one bypass three days after a fix is a coincidence and five in 66 seconds is a writer."
     }
   ],
   "notified": [
     "cc"
   ],
-  "cleared_by": [
-    {
-      "by": "cc",
-      "at": "2026-08-05T22:25:26.391812+00:00",
-      "what_changed": "cairn e87c386, ticket validation-store-door-is-the-only-path. The declared single write-door is now the only path by physics, in three layers, each answering a different failure mode. (1) MODE BIT: _atomic_write drops a written trail to 0444, so the exact bypass recorded in this ticket — v.write_text(json.dumps(rec)) from an ad-hoc script — now raises PermissionError at the open() instead of destroying 17 seals silently. The door still writes because os.replace needs the DIRECTORY, not the file. (2) CHAIN: every record carries a trail_link minted by persist_validation and by nothing else (a caller-supplied link is refused), a sha256 over the whole trail beneath it plus the record itself; standing() verifies before reading any verdict and refuses the whole trail on a break, so harbor_master clears no crossing on a trail written around the door. This is what answers the sentence at the heart of this ticket — a hand-write no longer looks exactly like a fresh seal. (3) CORPUS SCAN: a proof tooth censuses every module for a write aimed at a validations/ address, so a second writer reds on arrival rather than after it has run. The 73 pre-existing trails were adopted (220 entries linked, all verify); adoption refuses to re-link a tampered trail. WHAT IS STILL TRUE AND IS NOT CLAIMED FIXED: the bytes remain writable to a caller running as the same uid, nothing here can un-destroy a trail (git is the recovery path, and the chain is what tells you to use it), and git carries only the exec bit — so a fresh clone lands these files at 0644 and the mode-bit layer is absent until the door next appends. The chain is the half that survives a clone. Proven: cairn/devices/tester/proofs/test_validation_store.py 9/9 (6 new teeth, including both halves of the ticket falsifier — the naive write cannot land bytes, and the forced write cannot pass for a seal), test_quorum 9/9, corpus at 86 proofs · 85 green · 1 red over four consecutive runs.",
-      "at_count": 1
-    }
-  ],
-  "recurred_after_clear": null,
-  "prior_attempts": 0,
-  "drained_to": {
-    "tickets": [
-      "validation-store-door-is-the-only-path"
-    ],
-    "at": "2026-08-02",
-    "ruling": "2026-08-02-three-entry-points-and-structural-refiled",
-    "why": "troubles/ is a pre-ticket inbox, not a parallel place work lives; a trouble that never becomes a ticket is a bug with no workflow. This record STAYS — it is the account of the live symptom; the ticket is what moves through the gates. Standing does not change here: the trouble clears when the work does."
-  },
-  "resolution": {
+  "cleared_by": [],
+  "recurred_after_clear": {
     "by": "cc",
     "at": "2026-08-05T22:25:26.391812+00:00",
     "what_changed": "cairn e87c386, ticket validation-store-door-is-the-only-path. The declared single write-door is now the only path by physics, in three layers, each answering a different failure mode. (1) MODE BIT: _atomic_write drops a written trail to 0444, so the exact bypass recorded in this ticket — v.write_text(json.dumps(rec)) from an ad-hoc script — now raises PermissionError at the open() instead of destroying 17 seals silently. The door still writes because os.replace needs the DIRECTORY, not the file. (2) CHAIN: every record carries a trail_link minted by persist_validation and by nothing else (a caller-supplied link is refused), a sha256 over the whole trail beneath it plus the record itself; standing() verifies before reading any verdict and refuses the whole trail on a break, so harbor_master clears no crossing on a trail written around the door. This is what answers the sentence at the heart of this ticket — a hand-write no longer looks exactly like a fresh seal. (3) CORPUS SCAN: a proof tooth censuses every module for a write aimed at a validations/ address, so a second writer reds on arrival rather than after it has run. The 73 pre-existing trails were adopted (220 entries linked, all verify); adoption refuses to re-link a tampered trail. WHAT IS STILL TRUE AND IS NOT CLAIMED FIXED: the bytes remain writable to a caller running as the same uid, nothing here can un-destroy a trail (git is the recovery path, and the chain is what tells you to use it), and git carries only the exec bit — so a fresh clone lands these files at 0644 and the mode-bit layer is absent until the door next appends. The chain is the half that survives a clone. Proven: cairn/devices/tester/proofs/test_validation_store.py 9/9 (6 new teeth, including both halves of the ticket falsifier — the naive write cannot land bytes, and the forced write cannot pass for a seal), test_quorum 9/9, corpus at 86 proofs · 85 green · 1 red over four consecutive runs.",
     "at_count": 1
-  }
+  },
+  "prior_attempts": 1
 }
