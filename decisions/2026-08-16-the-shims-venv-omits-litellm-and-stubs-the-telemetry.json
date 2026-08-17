@@ -1,0 +1,24 @@
+{
+  "id": "2026-08-16-the-shims-venv-omits-litellm-and-stubs-the-telemetry",
+  "kind": "ruling",
+  "date": "2026-08-16",
+  "ruled_by": "Akien",
+  "recorded_by": "CC",
+  "the_ruling_verbatim": [
+    "Install, and leave litellm OUT",
+    "Stub them at sys.modules like litellm"
+  ],
+  "now_the_spec_says": "aider_shim's venv holds the measured import-time set MINUS litellm, and the shim pre-empts sys.modules for three names, not one: litellm, posthog, mixpanel. Absence, not a flag, is what stops each — so a failed interception raises ImportError instead of dialing out.",
+  "what_dies": [],
+  "the_reason_that_dies": "No file dies. What dies is a reflex that was the cheap pick on the table: install the full upstream requirement set and rely on aider's own --analytics-disable flag and its opt-in gate. That is a disposition living in the foreign program's code, re-decided by every upgrade of it and invisible to us when it changes. The ruling replaces it with a construction we own. The lesson generalises past this device: when a hazard's mitigation can be either 'their flag is set the way we hope' or 'the package is not on disk', the second is the one that survives an upgrade nobody watched.",
+  "what_conforms": [
+    "cairn/cairn/devices/aider_shim/intention+why.json",
+    "cairn/cairn/devices/aider_shim/interceptor.py"
+  ],
+  "context": "THE OMISSION CONVERTS THE FENCE FROM AN INTERCEPTION INTO A PHYSICS. With litellm absent from the venv, the one way the interception could be bypassed — a failure of install ordering — raises ImportError at aider's first exception construction rather than quietly loading a real provider client. The fence stops depending on our code running first and starts depending on a package not being there (Law 4). This is legal only because it is MEASURED: an AST closure over aider's import graph (60 aider modules, 24 third-party roots) put litellm in the lazy-only set beside bs4, httpx, jsonschema, llama_index, networkx and playwright — aider never imports it at startup, and LazyLiteLLM exists precisely because upstream wanted that. The telemetry stub is the same mechanism on the same kind of hazard: posthog and mixpanel load at aider IMPORT time via aider/analytics.py, so holding aider in-process puts two telemetry clients in a Cairn process; stubbed, they cannot transmit because they do not exist. RULED at the piece the build deliberately stopped in front of. The triage berth had ordered the runnable aider FOURTH — after the interceptor and after the money-fence — because every ordering that installs a runnable agentic program before the fence exists opens a window in which the thing that wants to dial providers is present and the thing that would refuse it is a plan. The build honoured that order, committed pieces 2 and 3 proved (12 mutants injected, 12 killed), and escalated rather than proceeding under an assumption: it is the only piece that changes the box rather than the repo. Both answers came back stronger than the options ranked first, and that is the pattern worth keeping — the recommended option in each pair was the one matching upstream's expectations, and he took the one that removed the dependency instead.",
+  "confirmed": false,
+  "conforms_fingerprint": {
+    "cairn/cairn/devices/aider_shim/intention+why.json": "c178f45d69975e04ca3be3b27c65bac559b89aac53d8d942c82672e4ba594750",
+    "cairn/cairn/devices/aider_shim/interceptor.py": "04a76a9e6cb1d78a86a20c2799fe81c4df546b377e477b4d4f4eddd5fbaf35ff"
+  }
+}
