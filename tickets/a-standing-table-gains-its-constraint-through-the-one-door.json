@@ -1,0 +1,36 @@
+{
+  "id": "a-standing-table-gains-its-constraint-through-the-one-door",
+  "schema_version": "v0",
+  "date": "2026-08-18",
+  "owner": "CC gates writes to cairn/devices/db_domain/ (its charter's gated_by). Nothing stands at Akien's gate.",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME(the_constraint_door_is_the_only_alter) -> PROVED",
+  "intention": "db_domain gains the one thing it lacks — a way to put a CHECK constraint onto an ALREADY-CREATED owned table, through the one door and gated by the owner, so a vocabulary declared for a fresh install also holds on the table this system is actually running on.",
+  "why": "Law 6 at the most consequential write a table can take. GREPPED: `ALTER` appears nowhere under cairn/devices/db_domain/ — the store can create a table and insert into it and can never change its shape again. So every constraint this system has ever wanted on a RUNNING table has been unreachable, and the only remaining routes are a hand psql (which is exactly what the sole-path charter exists to forbid) or leaving a fresh install and production disagreeing about what is legal, permanently and silently. The lived symptom is the parent's: a vocabulary declared in a column spec that holds for a database nobody is using.",
+  "how": "One narrow primitive beside create_owned_table: add_owned_constraint(table, owner, name, expression). It refuses a non-owner on the ownership check write() already performs (not re-implemented), it is idempotent so a startup path can call it beside create_owned_table, and it applies the constraint with ALTER TABLE ... ADD CONSTRAINT, which Postgres validates against every existing row and refuses if any violate. It takes a NAME and an EXPRESSION, never a statement — that bound is what keeps the one door from becoming a DDL passthrough with the owner check as its only limit. Deliberately NOT a migration engine: no column adds, no type changes, no diffing the declared spec against the live catalogue.",
+  "traces_to": [
+    "Law 6 — exactly one owner, and the owner alone gates writes; a schema change is the largest write there is, so the door that gates INSERTs must gate this rather than sending a hand to psql.",
+    "Law 4 — a constraint is what makes a vocabulary physics; a constraint that can only be born with the table leaves every already-running system on policy forever.",
+    "db_domain's own why — the sole path to 5432, extended to the one write it could not carry."
+  ],
+  "gates": "Proof gate: cairn/devices/db_domain/proofs/test_db_domain.py, run by the tester and sealed under netns — the device's own proof, because the primitive is db_domain's. Check-type: deterministic, and every deciding observation is a database behaviour (a refused INSERT, a refused non-owner call, a second call that returns) rather than a catalogue read or a text match. Feedback-to-origin on failure: the WATCHME probe deposits and pokes; re-opening is the owner's act (Law 6). Durability gate: not done until proven AND committed. Owner: CC (cairn/devices/db_domain/intention+why.json, gated_by).",
+  "falsifier": "FALSIFIER: DONE when a constraint declared in a column spec can be applied to an ALREADY-CREATED owned table through db_domain and nothing else, proved by teeth that (a) apply it and then assert an out-of-vocabulary INSERT RAISES, (b) assert a NON-OWNER calling it is refused, and (c) call it twice and assert the second call is a no-op rather than an error. RED on any of: (1) it succeeds for a caller who does not own the table — Law 6 breached at the most consequential write a table can take; (2) it silently succeeds while existing rows violate the constraint — a NOT VALID escape hatch is the hollow pass here and is explicitly out of bounds; (3) it grows into a general migration engine before a second real need exists; (4) a tooth reads pg_constraint instead of attempting the write the constraint should refuse. HORIZON: the second table that needs a schema change. If that need is NOT a constraint, this primitive was the wrong shape and the general question re-opens deliberately rather than by accretion.",
+  "horizon": "The second table that needs a schema change. If that need is NOT a constraint, this primitive was the wrong shape and the general question re-opens deliberately rather than by accretion.",
+  "parent": "the-verdict-vocabulary-is-held-by-postgres",
+  "children": "none, because the whole change is one function beside create_owned_table in cairn/devices/db_domain/store.py plus its teeth and its probe. The scope bound is deliberate and stated in the falsifier — a general migration engine is what this refuses to become, so there is nothing to decompose.",
+  "dependencies": [],
+  "watchme": {
+    "carrier": "a verdict artifact against this ticket's falsifier: the modules containing schema-changing SQL, the count outside db_domain/store.py (zero is the passing value), and the count of constraints applied through the primitive.",
+    "consumer": "whoever next needs a schema change and would otherwise reach for psql — and the reviewer of the parent cast, whose falsifier is only meaningful if this door is the one that was used.",
+    "enough": "enough when the sweep has run across builds that actually landed schema work and found no second writer — the primitive being the only path is only a measured fact once something OTHER than the first consumer has needed a constraint and gone through the door. Until then the count is honest and the claim stays a hypothesis, which is the label Law 3 asks for.",
+    "nexus": "hypothesize",
+    "object": "the_constraint_door_is_the_only_alter",
+    "probe": "cairn/devices/db_domain/probes/the_constraint_door_is_the_only_alter.py",
+    "trigger": "each build inspection — the probe sweeps the tree for schema-changing SQL outside db_domain's store (ALTER TABLE, ADD CONSTRAINT, DROP CONSTRAINT in any module, and psql invocations in scripts), the same shape of sweep import_sieve already runs for the inference host. It rides an event that already fires; no clock."
+  },
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260818T014423-051a6cf29f26.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260818T014348-247934ce385e.json",
+  "from_idea": "none, because it was born as the child of a cast made minutes earlier: the cast ticket the-verdict-vocabulary-is-held-by-postgres names it in its children field and cannot reach its own falsifier without it.",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "provenance": "Surfaced by a-refused-ask-leaves-a-row, which wanted a CHECK on inference_calls.verdict and recorded that one was 'unreachable through the one door'. Half of that turned out to be wrong at cast time — a CHECK at CREATION was always reachable, because create_owned_table passes the column type through sql.SQL() raw — and the half that survived is exactly this: the STANDING table. Proves before its parent, because a declaration that reaches only a fresh install would let the parent go green while the running database admitted anything."
+}
