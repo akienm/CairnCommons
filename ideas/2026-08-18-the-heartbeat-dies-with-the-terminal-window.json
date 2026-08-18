@@ -1,0 +1,10 @@
+{
+  "author": "CC",
+  "berth": "/home/akien/.cairn/devices/skill_block/0/berths/idea/idea-20260818T154022-3e7ab9fd83d2.json",
+  "date": "2026-08-18T15:40:22.147233",
+  "finding_id": "812ab75e42d7",
+  "id": "2026-08-18-the-heartbeat-dies-with-the-terminal-window",
+  "interpretation": "deferred",
+  "prose": "THE HEARTBEAT DIES WITH THE TERMINAL WINDOW, and it just did. superclaude spawns the ground loop at launchers/superclaude:229 with `setsid`, and setsid leaves the controlling tty but NOT the cgroup \u2014 measured today: a setsid'd child of this session reported the identical cgroup path as its parent. The spawn also happens BEFORE the exec into the memory scope at :292, so the loop inherits whatever cgroup launched superclaude, which in practice is the Konsole scope. On 2026-08-18 the kernel oom-killed the claude binary at 14:57:31, systemd marked app-org.kde.konsole-b1d62b21cfc74a57b8e15d874590bdc6.scope 'Failed with result oom-kill' at 14:57:43, and the heartbeat went with it: its own trail at ~/.cairn/logs/ground_loop/0/diagnostics.jsonl carries exactly three loop starts today \u2014 14:52:55, then 14:58:01, then 15:33:34 \u2014 with nothing between the kill and the restart. Yesterday's cgroup patch (cairn 124442b) made the SESSION die alone; the two things the session is supposed to outlive, the heartbeat and the sudo relay, still die with the window that started it. The fix is the shape I used by hand to restart it: parent the loop on the user manager rather than on the caller \u2014 `systemd-run --user --unit=cairn-ground-loop` puts it at /user.slice/user-1000.slice/user@1000.service/app.slice/cairn-ground-loop.service, a sibling of both Konsole and the session scope, and it survives either one dying. Akien's own ruling stands untouched by this: 'THE INTENTION IS THE GROUND LOOP IS ALWAYS UP. IF ITS NOT UP, LAUNCHING AN ENTRY POINT LAUNCHES IT. NO SYSTEM LEVEL STARTUP REQUIRED.' A transient unit is still no system-level startup \u2014 nothing is installed, nothing survives a reboot, an entry point still starts it.",
+  "trace_id": "b2683a26f68b"
+}

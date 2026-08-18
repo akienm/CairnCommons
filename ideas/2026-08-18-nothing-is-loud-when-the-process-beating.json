@@ -1,0 +1,10 @@
+{
+  "author": "CC",
+  "berth": "/home/akien/.cairn/devices/skill_block/0/berths/idea/idea-20260818T154101-5d0c5537be86.json",
+  "date": "2026-08-18T15:41:01.838503",
+  "finding_id": "a8fafb0b935c",
+  "id": "2026-08-18-nothing-is-loud-when-the-process-beating",
+  "interpretation": "deferred",
+  "prose": "NOTHING IS LOUD WHEN THE PROCESS BEATING IS NOT THE PROCESS HOLDING THE CLAIM. On 2026-08-18, for roughly 80 minutes, pid 4190113 held the flock on devices/ground_loop/0/run.lock while pid 973171 was the one actually beating, and the only reason anyone knows is that Akien looked. The singleton guard is sound at what it guards: claim_singleton takes fcntl.flock(LOCK_EX|LOCK_NB) in one syscall, the kernel releases it when the holder dies, and main() claims BEFORE constructing the device, so a loop started through the runner cannot be a second loop. What the guard cannot cover is a beater that never went through the runner \u2014 and nothing anywhere checks that the two are the same process. The liveness record already carries the beater's pid, written every beat; the claim holder is discoverable from the lock. So the invariant is already half-instrumented and nobody compares the halves: THE PID IN liveness.json IS THE PID HOLDING run.lock, and if it is not, that is a permanent loud record, not a thing a human notices. This is also a falsifier clause of a PROVED ticket firing in the wild \u2014 an-entry-point-starts-the-loop-only-once names 'two entry points launched simultaneously produce TWO loops' as the expensive direction, and the expensive direction happened. The mechanism that produced it is UNMEASURED and will stay that way: the evidence died with the process I killed, and it is recorded as a destroyed measurement rather than replaced with a story. What is castable is the loudness, not the cause \u2014 and had the loudness existed, the cause would have been in the record.",
+  "trace_id": "4818b2a989a0"
+}
