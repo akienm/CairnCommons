@@ -1,0 +1,44 @@
+{
+  "id": "aiders-own-reflection-loop-is-reachable-and-a-callable-test-cmd-is-not",
+  "at": "2026-08-17",
+  "author": "CC",
+  "about": "cairn/devices/aider_shim/driver.py — closing the apprentice's feedback loop",
+  "why_this_note": "The apprentice cannot learn that its test failed (driver.py:279, auto_test=False), and the field that looks like it proves otherwise — num_reflections — reads 0 for the opposite reason. Before casting a ticket to build a loop, I measured whether aider already HAS one we can compose, and on what terms. It does, and the terms are narrow enough that one of the two obvious designs is not merely worse but IMPOSSIBLE. Recording the measurements so the ticket is cast against physics rather than against my reading of it.",
+  "measurements": [
+    {
+      "what": "aider's reflection loop is `while message:` in base_coder.run_one (base_coder.py:932-944). It re-enters send_message with self.reflected_message and stops at num_reflections >= max_reflections. The ONLY thing that sets reflected_message from a test is base_coder.py:1616-1622, and it is gated `if edited and self.auto_test`.",
+      "measure": "read at ~/dev/src/aider/aider/coders/base_coder.py, lines quoted above"
+    },
+    {
+      "what": "REFLECTION ONLY FIRES WHEN AIDER EDITED SOMETHING. `if edited and self.auto_test` — a drive where the apprentice produced no edit correctly gets no reflection. That is the right shape: there is nothing to iterate on.",
+      "measure": "base_coder.py:1616"
+    },
+    {
+      "what": "THE OBVIOUS DESIGN IS IMPOSSIBLE, AND THIS IS THE MEASUREMENT THAT DECIDES THE TICKET. commands.cmd_test accepts a CALLABLE (`if not callable(args): ... else: errors = args()`, commands.py:1002-1010), which looked like a way to keep the driver's stated why — 'WE run the test, so its result is ours to carry' — fully intact under auto_test=True: hand aider our own function. It cannot be done. test_cmd is also concatenated into the system prompt at base_coder.py:1169 (`platform_text += self.test_cmd + \"\\n\"`), unguarded, on EVERY message format. Ran it in the shim's own venv: a callable test_cmd raises `TypeError: unsupported operand type(s) for +: 'function' and 'str'`. A string test_cmd survives and the prompt reads \"- The user's pre-commit runs this test command, don't suggest running them: python3 -m pytest -q x.py\".",
+      "measure": "run_in_venv probe calling Coder.get_platform_info on a minimal object, both variants, 2026-08-17 — callable: TypeError as quoted; string: SURVIVED with the prompt line quoted"
+    },
+    {
+      "what": "THE TEST RUNS HEADLESS-SAFE IN THE VENV. run_cmd branches on sys.stdin.isatty(): a tty takes the pexpect path, whose child.interact() would hang a headless drive forever. Measured in the shim's own venv: stdin.isatty() is False, so run_cmd_subprocess is the path. And cmd_run passes cwd=self.coder.root, which the driver already pins to the repo (driver.py:306).",
+      "measure": "run_in_venv(\"import sys; emit({'stdin_isatty': sys.stdin.isatty()})\") -> False, 2026-08-17"
+    },
+    {
+      "what": "THE HUMAN GATE IS ALREADY ANSWERED. base_coder.py:1620 asks io.confirm_ask('Attempt to fix test errors?') before reflecting; io.confirm_ask returns 'y' when self.yes is True and explicit_yes_required is False (io.py:866-867), and that call passes neither. The driver already constructs InputOutput(yes=True).",
+      "measure": "read at aider/io.py:807-870 and driver.py:271"
+    },
+    {
+      "what": "THE EMIT CHANNEL SURVIVES THE TEST'S OUTPUT. run_cmd_subprocess prints the command's output to stdout chunk by chunk, and the venv's return value also travels on stdout — but run_in_venv reads only MARKER-prefixed lines and takes the LAST one (venv.py:207-213), and emit() is the last thing _DRIVE runs.",
+      "measure": "read at cairn/devices/aider_shim/venv.py:207-213"
+    }
+  ],
+  "what_this_settles": "The build is SMALL AND COMPOSED, not a loop rebuilt beside one that exists: pass the brief's test_cmd as a STRING into the venv payload alongside auto_test=True, and leave the parent's own run_test exactly where it is. The driver's stated why survives the change — 'WE run the test, so its result is ours to carry' is about WHOSE RESULT THE RECORD CARRIES, and the parent's run remains the only one written into DriveResult.test. aider's run is not a second authority; it is the apprentice's feedback signal, and it has to happen inside aider's process because a Coder does not survive the venv's process boundary — which is also why the parent cannot own the loop without discarding the conversation between attempts.",
+  "what_it_does_not_settle": [
+    "cmd_run adds the WHOLE combined output to the chat with no truncation (commands.py:1030-1045). A verbose failure could blow the ask. `-q` keeps it small today; whether the shim should bound it is a real question and is NOT measured here.",
+    "The test then runs TWICE on a drive that goes green — aider's, then the parent's. Cheap for one pytest file; unmeasured for anything bigger.",
+    "Whether reflection actually IMPROVES the apprentice's output is the whole open question. This note establishes only that the loop can be closed, never that closing it helps. n=0."
+  ],
+  "traces_to": [
+    "Law 3",
+    "Law 1",
+    "build-minimal-grow-against-need"
+  ]
+}
