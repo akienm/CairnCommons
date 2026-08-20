@@ -1,15 +1,31 @@
 {
   "id": "scheduled-llm-gate-inspection",
-  "schema_version": "v0",
+  "schema_version": "ticket-v1",
   "date": "2026-08-19",
   "owner": "CC",
   "node_class": "code-seam",
-  "state": "code-seam@v2: [THINKME] -> TICKETME -> BUILDME -> PROVEME -> WATCHME(gate-parameters-adjust-from-feedback) -> PROVED",
+  "state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(gate-parameters-adjust-from-feedback) -> PROVED",
   "cast": "2026-08-19",
   "cast_by": "CC",
   "from_idea": "Akien 2026-08-19, resolving open-a-saturated-match-rate-cannot-show-efficacy: sieves measure deterministically, LLM periodic review of feedback adjusts the parameters",
-  "intent": "Scheduled probes fire LLM prompts to Hex for periodic inspection of gate feedback. The sieve stays deterministic Python; what changes is what it is calibrated against. The LLM reviews accumulated feedback and proposes parameter adjustments.",
+  "intention": "Scheduled probes fire LLM prompts to Hex for periodic inspection of gate feedback. The sieve stays deterministic Python; what changes is what it is calibrated against. The LLM reviews accumulated feedback and proposes parameter adjustments.",
   "why": "A sieve that measures at 100% match rate cannot show efficacy — it agrees with everything. The feedback the sieve collects is where efficacy hides, but nobody reads it. Hex reviewing the feedback on a schedule closes the loop: the sieve measures, the feedback accumulates, the LLM reads the feedback, the parameters adjust, the sieve measures differently.",
+  "traces_to": [
+    "Law 4 — a gate whose parameters never adjust from evidence is policy wearing physics' clothes. The adjustment loop is what makes it physics.",
+    "learns-its-gates founding intention — the system learns its gates from evidence; a hand-set constant in a gate is a learned value stranded in a human's head.",
+    "sieves-measure-not-judge — the sieve stays deterministic Python; the LLM reviews feedback PERIODICALLY, never in the measurement path.",
+    "Law 1 — Hex reading accumulated feedback is compiling the observation once; a human re-reading the same feedback each session is re-deriving."
+  ],
+  "gates": "THREE things must work: (1) a gate collects feedback in a shape Hex can read — structured JSON, not prose, carrying the sieve's input, its output, and the gate owner's disposition if any; (2) a scheduled probe fires an LLM prompt to Hex with the accumulated feedback and receives a proposed parameter adjustment; (3) the adjustment lands THROUGH the gate's own door (Law 6 — the gate owner approves or rejects). The gate owner is the component, not the LLM — Hex proposes, the gate's physics accepts or refuses.",
+  "falsifier": "RED if: (1) the LLM is in the measurement path — a sieve that calls an LLM to DECIDE is not deterministic and violates sieves-measure-not-judge; (2) the adjustment bypasses the gate owner's approval — the gate's own door is the only write path (Law 6); (3) the schedule is a polling loop or a daemon rather than a probe fired by an event that already fires (shrinking-footprint: event not poll); (4) the feedback shape is not parseable by a local LLM — Hex is the M1 Studio box, not CC, and the feedback must be structured enough for a smaller model to read; (5) a parameter adjustment that makes the sieve WORSE has no rollback path — the adjustment must be reversible by the same door it entered through.",
+  "horizon": "After the feedback tool's route is built (cairn/tools/feedback) and at least one gate collects structured feedback. There is no point adjusting parameters nobody collects yet. The feedback tool is upstream; this ticket is the CONSUMER of what it produces.",
+  "parent": "",
+  "children": [],
+  "dependencies": [
+    "cairn/tools/feedback — the tool that owns the feedback route and the shape of a declared route. This ticket consumes what it produces.",
+    "inference_domain — the sole path to Hex (the M1 Studio inference box). The LLM prompt goes through this domain and no other.",
+    "A gate that already collects data in a structured shape — at least one sieve must be producing feedback records before this can fire against real data."
+  ],
   "sub_tickets_owed": [
     "a gate collects feedback in a shape the LLM can read",
     "a scheduled probe fires an LLM prompt to Hex with accumulated feedback",
@@ -19,6 +35,16 @@
   "distinctions_recorded": [
     "The sieve is DETERMINISTIC PYTHON ONLY. The LLM is in the parameter-adjustment loop, never in the measurement path.",
     "This is the learns-its-gates founding intention made concrete for one gate shape.",
-    "Hex is the inference target (the M1 Studio box), not CC. CC is too expensive for periodic review."
+    "Hex is the inference target (the M1 Studio box), not CC. CC is too expensive for periodic review.",
+    "The schedule fires from a probe — an event that already fires (the heartbeat, or a feedback-count threshold) — never a new timer or daemon."
+  ],
+  "chart_notes": {
+    "orient": "The feedback accumulates beside the gate that produces it, in structured JSON. The prompt to Hex carries the accumulated records and the current parameter values. inference_domain is the sole path to Hex.",
+    "constrain": "OUT: the LLM in the measurement path (the sieve stays deterministic Python); a new daemon or timer (the probe fires from an existing event); CC as the reviewer (Hex is cheaper and local). IN: the adjustment loop, the feedback shape, the gate owner's approval door.",
+    "validate": "A parameter adjustment proposed by Hex and accepted by the gate owner changes the sieve's output on the same input. The before/after is measurable: same input, different disposition, and the feedback that motivated the change is named in the adjustment record."
+  },
+  "filed_edges": [
+    "The same feedback-review pattern applies to EVERY gate with parameters, not just sieves. This ticket builds it for one shape; the pattern transfers on the shape of the gate, not the identity of the sieve.",
+    "The adjustment record is itself a measurement (Law 10) and belongs in the gate's own history — not in a separate store."
   ]
 }
