@@ -12,20 +12,29 @@
     "Law 6 — everything has exactly one owner and the owner gates writes. db_domain is where owner-gated writes happen; state outside it has no gate.",
     "The founding measurement — UU's 40 direct psycopg2.connect calls, the origin of the one-path decision."
   ],
-  "gates": "A check — likely a build_inspector sieve — that can identify components keeping durable relational state outside db_domain. The mechanism and the definition of 'relational state that belongs in db_domain' are design work for BUILDME.",
-  "falsifier": "RED if: (1) a component stores relational data outside db_domain and the check does not fire; (2) the check fires on flat-file state that is not relational (validation_store's git-JSON beside the code is deliberately outside db_domain — ruling in tickets/charter-state-history-split); (3) the check is implemented as another import scan rather than a data-path check, which would make it a duplicate of import_sieve rather than its complement.",
+  "how": {
+    "mechanism": "A build_inspector sieve plus an import_sieve sole_path rule. TWO FACES of the same rule, because the two evasion paths are different shapes.",
+    "import_face": "An import_sieve sole_path rule for sqlite3 — the same shape as the existing psycopg2 rule. If any module outside db_domain imports sqlite3, it is keeping relational state outside the one door. This is the SIMPLEST check and catches the most obvious evasion. Other database drivers (shelve, dbm, tinydb) can be added to the same rule as the corpus grows.",
+    "charter_face": "A build_inspector sieve that reads each component's charter (intention+why.json) for a 'durable_state' declaration — WHERE does this component keep its durable state? The sieve reds a component that declares durable state outside db_domain, and reds a component that HAS durable state (detected by the import face or by manual declaration) but does NOT declare it in its charter. This is the DATA-PATH check: it asks about the data, not about the driver.",
+    "the_boundary_with_import_sieve": "import_sieve checks DRIVERS (who imports psycopg2, sqlite3). This sieve checks DECLARATION (does the charter say where durable state lives, and does it go through db_domain). The two are complementary: a component that imports sqlite3 is caught by import_sieve; a component that writes structured state to a flat file is caught by the charter sieve. Neither alone is sufficient.",
+    "what_counts_as_relational": "Akien's to settle if the charter sieve fires on something he considers fine where it is. The settled counter-example: validation_store's git-JSON beside the code (ruling in charter-state-history-split) is NOT relational state — it is build-provenance frozen at PROVED. The test: does it need owner-gated writes (Law 6), does it need indexes, does it need JOINs? If yes, it is relational and belongs in db_domain. If no, it is flat-file state and is fine where it is."
+  },
+  "gates": "Two checks: (1) an import_sieve sole_path rule for sqlite3 and other non-psycopg2 database drivers, same shape as existing rules; (2) a build_inspector sieve that reads charter durable_state declarations and reds undeclared or non-db_domain state. Proof teeth: (1) a fixture importing sqlite3 outside db_domain reds; (2) a fixture with a charter declaring durable_state: 'db_domain' passes; (3) a fixture with a charter declaring durable_state: 'local_file' reds; (4) a fixture with durable state and no charter declaration reds; (5) validation_store's git-JSON is not redded — the settled counter-example.",
+  "falsifier": "RED if: (1) a component stores relational data outside db_domain and the check does not fire; (2) the check fires on flat-file state that is not relational (validation_store's git-JSON beside the code is deliberately outside db_domain — ruling in tickets/charter-state-history-split); (3) the check is implemented as another import scan rather than a data-path check, which would make it a duplicate of import_sieve rather than its complement; (4) the charter declaration is a fillable field with no check — 'durable_state: db_domain' written as prose with nothing verifying it is true.",
   "horizon": "After import_sieve is solid (it is — PROVED). Not urgent: no known component currently violates this outside the librarian, which was just fixed. The check is insurance against future drift.",
   "parent": "",
   "children": [],
   "dependencies": [
     "import_sieve (PROVED) — the import half of sole-path, already physics.",
-    "The definition of what counts as 'relational state that belongs in db_domain' vs 'a flat file that is fine where it is'. validation_store's git-JSON is the settled counter-example — ruling in charter-state-history-split."
+    "build_inspector — where the charter sieve lives.",
+    "The definition of what counts as 'relational state that belongs in db_domain' vs 'a flat file that is fine where it is'. validation_store's git-JSON is the settled counter-example — ruling in charter-state-history-split. The full boundary is Akien's to settle."
   ],
   "distinctions_recorded": [
     "IMPORT vs DATA: import_sieve checks who imports a driver. This checks where data lives. A component using sqlite3 or writing structured state to a flat file is invisible to import_sieve.",
-    "NOT A DUPLICATE OF IMPORT_SIEVE: the two checks share a WHY (sole path to durable state) but watch different objects. import_sieve watches code; this watches data."
+    "NOT A DUPLICATE OF IMPORT_SIEVE: the two checks share a WHY (sole path to durable state) but watch different objects. import_sieve watches code; this watches data declarations.",
+    "DRIVER vs DECLARATION: the sqlite3 import rule is the driver face (simple, mechanical). The charter declaration sieve is the data face (richer, asks about the component's own claim). Both are needed because the evasion paths are different shapes."
   ],
-  "provenance": "Born as an IOU in CLAUDE.md's 'Rules awaiting physics' section. Ticketed 2026-08-21 to retire the 'ticket owed' marker.",
+  "provenance": "Born as an IOU in CLAUDE.md's 'Rules awaiting physics' section. Ticketed 2026-08-21. Design filled 2026-08-21.",
   "watchme": "none at cast — the watch design belongs to the build",
   "owning_intention": "cairn/devices/db_domain/intention+why.json"
 }

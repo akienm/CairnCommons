@@ -11,19 +11,27 @@
     "Law 3 — nothing is known until measured. A turn-shape scan that cannot distinguish these two is measuring something, but not what it claims.",
     "Law 1 — a false positive from a retrospective caveat forces re-derivation of whether the concern is real."
   ],
-  "gates": "turnscan distinguishes concerns about work in flight from caveats in retrospectives. The distinguishing signal and the mechanism are design work for BUILDME.",
-  "falsifier": "RED if: (1) a concern about work in flight is classified as a retrospective caveat; (2) a retrospective caveat is classified as an active concern; (3) the distinguisher is purely linguistic (keyword matching) rather than structural — the same words mean different things in different positions.",
+  "how": {
+    "mechanism": "STRUCTURAL, NOT LINGUISTIC — turnscan's own docstring already says so (line 57-61): 'The host also offers prompt-type hooks (an LLM adjudicates the condition), which is where this goes when the floor's residue is measured and found to matter.' The code floor's answer is POSITION IN THE TURN plus TOOL-CALL CONTEXT from the hook payload.",
+    "position_signal": "The hook payload carries last_assistant_message — the WHOLE end_turn message. A concern followed by a forward proposal AFTER the last tool call in the message is mid-build (work in flight). A concern followed by a forward proposal BEFORE any tool calls, or in a message with NO tool calls that reads as a summary, is retrospective. The discriminator: does the message contain tool_use blocks AFTER the concern? If yes, the concern was raised mid-work. If no, the concern was raised in a closing summary.",
+    "implementation": "scan() gains an optional `tool_positions` argument — a list of character offsets where tool_use blocks appeared in the original message. The hook mode already receives the full message JSON; it can extract tool_use block positions before stripping to text. If concern_at < max(tool_positions), the concern is mid-build. If concern_at > max(tool_positions) or no tool_use blocks exist, the concern is in a closing summary and the finding is downgraded to 'retrospective_caveat' rather than a red.",
+    "the_floor_stays_the_floor": "This is still the code floor. A positional heuristic will have edge cases — a mid-build concern that happens to come after the last tool call in one message but before the first in the next. The ceiling (LLM adjudication via prompt-type hook) is where those edges go, and turnscan's docstring already names that path. This ticket sharpens the floor; it does not replace it."
+  },
+  "gates": "turnscan's scan() distinguishes mid-build concerns from retrospective caveats using tool_use block positions as the structural signal. Proof teeth: (1) a fixture with a concern BEFORE tool_use blocks, followed by a forward proposal AFTER them, reds as mid-build; (2) a fixture with a concern AFTER the last tool_use block (closing summary) is downgraded to retrospective_caveat; (3) a fixture with no tool_use blocks and a concern+forward pattern is classified as retrospective_caveat if the message reads as summary; (4) existing corpus re-measurement — the 7 reds from 466 turns are re-scored and false positives from retrospective caveats are expected to clear.",
+  "falsifier": "RED if: (1) a concern about work in flight is classified as a retrospective caveat; (2) a retrospective caveat is classified as an active concern; (3) the distinguisher is purely linguistic (keyword matching) rather than structural — the same words mean different things in different positions; (4) the existing 466-turn corpus re-measurement shows NO change in red count — the signal does not grip.",
   "horizon": "Not urgent. turnscan is operational; this is an accuracy improvement, not a missing capability.",
   "parent": "",
   "children": [],
   "dependencies": [
     "turnscan (bin/cmd/turnscan) — the existing tool this improves.",
-    "The definition of 'work in flight' vs 'retrospective' — Akien's to settle if the structural signals are ambiguous."
+    "The hook payload format — must carry tool_use block positions or the raw content blocks to extract them from.",
+    "The definition of 'work in flight' vs 'retrospective' — structurally: presence of tool_use blocks after the concern. Akien's to settle if the structural signals are ambiguous in practice."
   ],
   "distinctions_recorded": [
-    "SAME WORDS, DIFFERENT MEANING: 'this might break under load' in a build plan is a concern. 'This might break under load' in a closing summary is a caveat. The words are identical; the context is the signal."
+    "SAME WORDS, DIFFERENT MEANING: 'this might break under load' in a build plan is a concern. 'This might break under load' in a closing summary is a caveat. The words are identical; the context is the signal.",
+    "POSITION IS THE CODE FLOOR'S ANSWER. Tool_use blocks are structural landmarks the code can see without understanding language. A concern before the last tool call is mid-work; a concern after all tool calls is closing-summary."
   ],
-  "provenance": "Born as an IOU in CLAUDE.md's Residues section under 'turn-shape (bin/cmd/turnscan)'. Ticketed 2026-08-21 to retire the 'ticket owed' marker.",
+  "provenance": "Born as an IOU in CLAUDE.md's Residues section under 'turn-shape (bin/cmd/turnscan)'. Ticketed 2026-08-21. Design filled 2026-08-21.",
   "watchme": "none at cast",
   "owning_intention": "bin/intention+why.json"
 }
