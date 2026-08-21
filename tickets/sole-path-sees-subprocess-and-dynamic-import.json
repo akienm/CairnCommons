@@ -1,0 +1,31 @@
+{
+  "id": "sole-path-sees-subprocess-and-dynamic-import",
+  "schema_version": "ticket-v1",
+  "date": "2026-08-21",
+  "owner": "CC owns the check extension. Akien owns nothing here — this is a known enforcement gap with a known shape.",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME -> PROVED",
+  "intention": "import_sieve enforces sole-path to the inference host and to port 5432 by scanning imports. Two mechanisms evade it: (1) a subprocess that dials the inference host or the database directly — it imports nothing, it runs a process; (2) a dynamic import (importlib, __import__) that is invisible to the AST walk. This ticket extends the sole-path enforcement to cover both.",
+  "why": "CLAUDE.md's Residues section, under 'sole path to the inference host and to 5432': the rule IS physics (import_sieve shakes it), but the physics has two holes. A subprocess dials and imports nothing. A dynamic import is invisible. Either one could re-create the scattered-connections problem db_domain and inference_domain were built to solve, and import_sieve would wave it through.",
+  "traces_to": [
+    "Law 4 — the enforcement has holes; the holes are tracked debt.",
+    "import_sieve's own charter — the sieve already shakes the import door; these are the edges it cannot reach.",
+    "inference_domain and db_domain — sole-path holders whose physics is incomplete without this."
+  ],
+  "gates": "import_sieve (or a companion check) catches subprocess calls that could reach the inference host or 5432, and catches dynamic imports (importlib.import_module, __import__) of the guarded modules. The mechanism is design work for BUILDME — AST patterns for subprocess + importlib are straightforward; the question is whether they belong in import_sieve or beside it.",
+  "falsifier": "RED if: (1) a subprocess.run(['psql', ...]) or subprocess.Popen(['curl', 'http://inference-host/...']) passes the check; (2) importlib.import_module('psycopg2') passes the check; (3) the check produces false positives on subprocess calls that do NOT reach the guarded targets — a subprocess running 'git log' is not a sole-path violation; (4) the check is a separate sieve that can be removed without import_sieve noticing — the gap should close, not move.",
+  "horizon": "Low urgency — no known component currently uses either evasion. The check is insurance against future drift, not a fix for a live problem.",
+  "parent": "",
+  "children": [],
+  "dependencies": [
+    "import_sieve (PROVED) — the existing enforcement this extends.",
+    "The list of guarded targets: psycopg2, httpx (inference host), and whatever else import_sieve currently watches."
+  ],
+  "distinctions_recorded": [
+    "SUBPROCESS IS NOT AN IMPORT. A process that shells out to psql or curls the inference host bypasses import_sieve entirely — different mechanism, same violation.",
+    "DYNAMIC IMPORT IS NOT A STATIC IMPORT. importlib.import_module('psycopg2') does the same thing as 'import psycopg2' but the AST walk that reads 'import X' and 'from X import Y' cannot see it."
+  ],
+  "provenance": "Born as an IOU in CLAUDE.md's Residues section. The gap was identified when import_sieve was built and stated as a known limitation. Ticketed 2026-08-21 to retire the 'ticket owed' marker.",
+  "watchme": "none at cast",
+  "owning_intention": "cairn/tools/import_sieve/intention+why.json"
+}

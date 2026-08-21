@@ -1,0 +1,31 @@
+{
+  "id": "state-and-history-door-catches-in-place-edits",
+  "schema_version": "ticket-v1",
+  "date": "2026-08-21",
+  "owner": "CC owns the enforcement. Akien owns nothing here — the append door and PROVEME drift check are already physics; this is the residue they cannot reach.",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME -> PROVED",
+  "intention": "state/history files have an append door and a PROVEME drift check. Three things evade them: (1) an in-place edit of history itself — rewriting a past entry rather than appending; (2) at-rest components between voyages, whose state and history are not actively watched; (3) nothing notices history that has stopped being under way (Law 5's new bound — overlaps with history-reach-feeds-a-migration). This ticket closes the enforcement gaps so the append-only property and the under-way bound are physics, not policy.",
+  "why": "The append door makes history append-only by routing new entries through a single writer. But the door does not prevent a direct file edit — 'echo > history.json' is invisible to the door. The PROVEME drift check catches unauthorized changes at crossing time, but a component at rest (between voyages) is never crossed, so its files can be edited with nothing noticing until the next voyage begins. And Law 5's new bound adds a third gap: even if the files are untouched, history that should have migrated to the commons but hasn't is still violating the working-surface promise.",
+  "traces_to": [
+    "Law 5 — history of a thing under way belongs beside it; history past that berths in the commons.",
+    "Law 4 — append-only is a rule that matters; the door enforces it for appends but not for edits.",
+    "Law 7 — errors are loud and permanent in records of truth; an in-place edit of history silently changes a record of truth."
+  ],
+  "gates": "The append-only property is enforced against in-place edits (likely a git-hook or a build_inspector sieve comparing history.json against its last committed state). At-rest components' state/history files are watched for unauthorized changes. The mechanism is design work for BUILDME.",
+  "falsifier": "RED if: (1) an in-place edit of a history.json entry passes undetected; (2) an at-rest component's state.json is modified between voyages with nothing noticing; (3) the check only fires at crossing time — at-rest is the gap, and a check that requires a crossing to fire does not close it; (4) the overlap with history-reach-feeds-a-migration is unresolved — the two tickets name the same Law 5 gap from different angles and must either share a mechanism or declare their boundary.",
+  "horizon": "Shares a build surface with history-reach-feeds-a-migration. The in-place-edit check (git-based) is likely simpler and could land first.",
+  "parent": "",
+  "children": [],
+  "dependencies": [
+    "The existing append door (state/history writer) — the enforcement this extends.",
+    "history-reach-feeds-a-migration — overlapping ticket for Law 5's new bound; the two need a shared boundary."
+  ],
+  "distinctions_recorded": [
+    "APPEND DOOR vs IN-PLACE EDIT: the door routes NEW entries. It says nothing about old entries being rewritten. These are different write operations and need different enforcement.",
+    "AT-REST vs CROSSING: the PROVEME drift check fires at crossing time. A component that never crosses is never checked. The gap is temporal, not logical."
+  ],
+  "provenance": "Born as an IOU in CLAUDE.md's Residues section under 'state/history (append door + PROVEME drift check)'. Ticketed 2026-08-21 to retire the 'ticket owed' marker.",
+  "watchme": "none at cast",
+  "owning_intention": "CairnCommons/intentions-not-beside-code/telos.md"
+}

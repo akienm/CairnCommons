@@ -1,0 +1,31 @@
+{
+  "id": "relational-state-goes-through-the-one-door",
+  "schema_version": "ticket-v1",
+  "date": "2026-08-21",
+  "owner": "CC owns the check. Akien owns the line between 'relational state that belongs in db_domain' and 'a flat file that is fine where it is' — the definition of relational is what makes this check grip or chafe.",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME -> PROVED",
+  "intention": "Nothing yet reds a component that keeps durable relational state somewhere other than through db_domain's store primitives. import_sieve seals the IMPORT door — no module outside db_domain may import psycopg2 — but 'where data lives' is not 'who imports a driver'. A component could store relational data in SQLite, in a flat JSON file that should be a table, or in any other substrate that is not db_domain, and nothing would notice. This ticket adds the check that makes the sole-path rule cover the DATA, not only the DRIVER.",
+  "why": "THE FOUNDING MEASUREMENT (CLAUDE.md): UnseenUniversity had 40 live files calling psycopg2.connect directly while the db proxy existed. The db_domain decision in February 2026 was born from that — one path to durable state so every fix (indexes, connection handling, ownership) is paid once. import_sieve closed the import half. But import_sieve is a proxy for the real rule: durable relational state goes through db_domain. A component that stores relational data in SQLite imports sqlite3, not psycopg2, and import_sieve would wave it through. The lived symptom is the same one that birthed db_domain: scattered state that each needs its own fix.",
+  "traces_to": [
+    "Law 4 — a rule that matters is enforced by physics. 'Relational state goes through db_domain' is prose in CLAUDE.md's Rules awaiting physics section; this is the physics.",
+    "Law 6 — everything has exactly one owner and the owner gates writes. db_domain is where owner-gated writes happen; state outside it has no gate.",
+    "The founding measurement — UU's 40 direct psycopg2.connect calls, the origin of the one-path decision."
+  ],
+  "gates": "A check — likely a build_inspector sieve — that can identify components keeping durable relational state outside db_domain. The mechanism and the definition of 'relational state that belongs in db_domain' are design work for BUILDME.",
+  "falsifier": "RED if: (1) a component stores relational data outside db_domain and the check does not fire; (2) the check fires on flat-file state that is not relational (validation_store's git-JSON beside the code is deliberately outside db_domain — ruling in tickets/charter-state-history-split); (3) the check is implemented as another import scan rather than a data-path check, which would make it a duplicate of import_sieve rather than its complement.",
+  "horizon": "After import_sieve is solid (it is — PROVED). Not urgent: no known component currently violates this outside the librarian, which was just fixed. The check is insurance against future drift.",
+  "parent": "",
+  "children": [],
+  "dependencies": [
+    "import_sieve (PROVED) — the import half of sole-path, already physics.",
+    "The definition of what counts as 'relational state that belongs in db_domain' vs 'a flat file that is fine where it is'. validation_store's git-JSON is the settled counter-example — ruling in charter-state-history-split."
+  ],
+  "distinctions_recorded": [
+    "IMPORT vs DATA: import_sieve checks who imports a driver. This checks where data lives. A component using sqlite3 or writing structured state to a flat file is invisible to import_sieve.",
+    "NOT A DUPLICATE OF IMPORT_SIEVE: the two checks share a WHY (sole path to durable state) but watch different objects. import_sieve watches code; this watches data."
+  ],
+  "provenance": "Born as an IOU in CLAUDE.md's 'Rules awaiting physics' section. Ticketed 2026-08-21 to retire the 'ticket owed' marker.",
+  "watchme": "none at cast — the watch design belongs to the build",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json"
+}
