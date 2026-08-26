@@ -2,6 +2,7 @@
   "id": "a-stale-loop-restarts-itself",
   "what": "The ground loop detects its own code drift (staleness.diagnostics already does this) and RESPONDS by exiting cleanly, so the launcher respawns a fresh process. Two command flags in instance-space control the behavior: COMMAND_EXIT.flag (clean shutdown on any beat) and COMMAND_DO_NOT_RESTART.flag (suppress the drift-triggered exit during development). The flags architecture: a permanent menu in <instance>/flags/ (ls to see what is available) and active signals as zero-byte COPIES in <instance>/ground_loop/ (the signal folder, same shape every device has). Touch to signal, rm to clear. The menu never empties because the signal is a copy, not a move.",
   "why": "The trouble ground-loop-is-older-than-the-code-it-judges has count=207, firing every ~9s since 2026-08-18. The DETECTION is PROVED (staleness-is-about-this-process-not-about-disk); the RESPONSE does not exist. The loop names its own staleness and blames nobody else, correctly \u2014 but it keeps running stale, accumulating trouble records, and holding modules that no longer match their files. This ticket is the response: the condition becomes transient because a stale loop restarts.",
+  "node_class": "code-seam",
   "owning_intention": "cairn/devices/ground_loop/intention+why.json",
   "parent": null,
   "children": "none, because the mechanism is three stat calls per beat (source mtime, two flag files) and one conditional exit \u2014 leaf-sized, no decomposition needed",
@@ -25,5 +26,14 @@
     "probe": "cairn/devices/ground_loop/probes/a_stale_loop_restarts_itself.py"
   },
   "intent_berth": "none, because no /intent firing was recorded \u2014 backfilled by ticket inspector 2026-08-26",
-  "chart_claim": "none, because no chart chain was run \u2014 backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run."
+  "chart_claim": "none, because no chart chain was run \u2014 backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run.",
+  "gates": {
+    "proof_gate": "tester",
+    "durability_gate": "git commit"
+  },
+  "traces_to": [
+    "Law 7 \u2014 errors are loud at diagnostic surfaces: a stale loop firing 207 times is an error that was loud but not acted on",
+    "Law 4 \u2014 a rule that matters is enforced by physics: auto-restart is physics, not a policy to remember"
+  ],
+  "intention": "A stale ground loop restarts itself rather than firing indefinitely against code newer than its own process."
 }
