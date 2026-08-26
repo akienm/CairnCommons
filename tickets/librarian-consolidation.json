@@ -16,7 +16,15 @@
   "how": {
     "trigger": "The PROMOTION EVENT \u2014 LibrarianDevice.emit('resolve', ..., promoted=N) where N > 0. Promotion means independent crossings corroborated a node past PROMOTION_THRESHOLD, so it is the natural 'enough evidence to synthesize' signal. The consolidation fires as a post-resolution callback, not a daemon. A session-close event is a secondary trigger for deposited-but-unresolved clusters (nodes landed but no promotion happened).",
     "mechanism": "On trigger: (1) walk the promoted node's neighbors (existing neighbors() call, k=10) to find the cluster. (2) Filter to nodes at standing 'earned' or 'hypothesis' with attestations \u2014 the synthesis should draw on nodes that have independent reach, not unattested fragments. (3) Call inference (resolve with kind='generate') with a consolidation prompt: the cluster's contents, asking for ONE higher-level statement that subsumes them. (4) Deposit the synthesized statement as a new node via deposit() with provenance type 'consolidated'. (5) Link the consolidated node to each source node via link() \u2014 the derivation is traceable.",
-    "provenance_shape": {"source": "consolidated", "source_nodes": ["node_id_1", "node_id_2"], "trigger": "promotion", "question": "the promoted node's birth question"},
+    "provenance_shape": {
+      "source": "consolidated",
+      "source_nodes": [
+        "node_id_1",
+        "node_id_2"
+      ],
+      "trigger": "promotion",
+      "question": "the promoted node's birth question"
+    },
     "recursive_gate": "A consolidated node is born 'hypothesis' like everything else. It can itself be consolidated (a higher-level synthesis of syntheses), but only after it independently earns standing through the tenure loop \u2014 same PROMOTION_THRESHOLD, same DECAY_HORIZON. Ungated recursion is the rot path (MemBench degradation); the tenure loop IS the gate. The falsifier (4) pins this: a consolidation of consolidated nodes without earned standing is refused.",
     "integration_point": "In loop.py's _tenure_on_resolution(), after the promoted list is computed. If promoted is non-empty, call a consolidate() function that runs the mechanism above. The consolidation deposit fires LibrarianDevice.emit('deposit') normally \u2014 the system sees it as another crossing, not a special event. The consolidation's own nodes enter the tenure loop and are subject to the same decay, corroboration, and refutation as any other node.",
     "cost_bound": "One inference call per promotion event (bounded: promotions are rare \u2014 PROMOTION_THRESHOLD=2 distinct crossings). The neighbor walk is a read, not inference. The synthesis prompt is one generate call. A promotion event that triggers consolidation on N nodes costs O(1) inference + O(N) deposit writes."
@@ -28,6 +36,9 @@
     "inference_domain \u2014 the resolve seam for the generate call.",
     "link() in trees.py \u2014 the derivation traceability mechanism, already built."
   ],
-  "watchme": "none, because cast before the watchme spec — consolidation's efficacy (does the synthesis get retrieved?) is answered by the librarian's own retrieval proofs",
-  "out_of_bounds": "Warm set and time-aware retrieval (ticket #4). Proactive notification and contradiction (tickets #1, #2 \u2014 those land first). Any consolidation that runs outside the tenure loop's physics."
+  "watchme": "none, because cast before the watchme spec \u2014 consolidation's efficacy (does the synthesis get retrieved?) is answered by the librarian's own retrieval proofs",
+  "out_of_bounds": "Warm set and time-aware retrieval (ticket #4). Proactive notification and contradiction (tickets #1, #2 \u2014 those land first). Any consolidation that runs outside the tenure loop's physics.",
+  "sorted_berth": "none, because cast by hand with no /sorted firing \u2014 backfilled by ticket inspector 2026-08-26",
+  "intent_berth": "none, because no /intent firing was recorded \u2014 backfilled by ticket inspector 2026-08-26",
+  "chart_claim": "none, because no chart chain was run \u2014 backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run."
 }
