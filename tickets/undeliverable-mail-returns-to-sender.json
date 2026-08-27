@@ -2,25 +2,38 @@
   "id": "undeliverable-mail-returns-to-sender",
   "schema_version": "v0",
   "date": "2026-08-26",
-  "state": "code-seam@v2: [THINKME] -> TICKETME -> BUILDME -> PROVEME -> PROVED",
+  "state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> WATCHME(does-the-bounce-blame-the-right-party) -> PROVED",
   "node_class": "code-seam",
-  "intention": "(stub \u2014 derived from parent every-device-has-a-presence; needs /intent)",
-  "why": "child of every-device-has-a-presence: the parent's decomposition references this ticket",
-  "falsifier": "(to be defined at /intent)",
+  "intention": "When a shim receives a bus message it has no handler for, it bounces it back to the sender. The sender's handle_bounce (BaseShim fallback) raises a trouble ticket. Devices that have grown capacity to deal with returned mail override handle_bounce.",
+  "why": "The sender owns the decision about what to do with returned mail, not the receiver or the bus (Law 6). A sender with capacity to handle bounces should be able to use that capacity. The base class fallback is the safety net, not the ceiling.",
+  "falsifier": "Send a bus message to a device with no handler for that verb. The message bounces to sender. The sender's handle_bounce fires and a trouble ticket appears. Then override handle_bounce on a test device — the override fires instead of the default trouble raise.",
   "parent": "every-device-has-a-presence",
+  "from_idea": "2026-08-11-undeliverable-mail-raises-trouble",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260827T172205-6455f3dfcd01.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260827T172246-f169aee2ddfb.json",
   "children": [],
   "gates": {
     "proof_gate": "tester",
     "durability_gate": "git commit"
   },
+  "gates_bound": {
+    "entry": "intent_berth, sorted_berth, chart_claim (at BUILDME)",
+    "build": "BaseShim gains handle_bounce (fallback: raise trouble), deliver() bounces instead of raising, bounce envelope carries is_bounce guard",
+    "proof": "bounce fires on unknown verb, trouble ticket raised by default handle_bounce, override handle_bounce suppresses trouble",
+    "exit": "verdict against falsifier"
+  },
   "traces_to": [
-    "Law 3 (nothing is known until measured \u2014 the chat window IS the measurement surface)",
-    "Law 4 (presence carried by BaseShim is physics, presence each device remembers to implement is policy)",
-    "Law 6 (the shim is the device's persistent front and process-manager \u2014 'all of this is shim code stuff except the actual query processing' is an ownership ruling)",
-    "Law 7 (never-booted and offline are loud honest answers; a silent nothing is the violation; a bounce rides a RECORD channel so it never collapses)",
-    "Telos 2 (Cairn has a USER)."
+    "Law 7 (errors are loud at diagnostic surfaces and permanent in records of truth)",
+    "Law 6 (the sender owns the decision about what to do with returned mail)"
   ],
-  "sorted_berth": "none, because stub created for dangling child reference \u2014 needs /intent then /sorted",
-  "intent_berth": "none, because stub \u2014 needs /intent",
-  "watchme": "none, because stub ticket at THINKME \u2014 watchme to be specified at /sorted"
+  "watchme": {
+    "object": "does-the-bounce-blame-the-right-party",
+    "trigger": "when a bus message is sent to a device with no handler",
+    "enough": "3 bounces observed in live operation with correct sender attribution",
+    "carrier": "a verdict artifact against this ticket's falsifier",
+    "nexus": "hypothesize",
+    "consumer": "the trouble device and the operator inbox",
+    "probe": "cairn/tools/base/probes/bounce_returns_to_sender.py"
+  },
+  "owning_intention": "cairn/tools/base/intention+why.json"
 }
