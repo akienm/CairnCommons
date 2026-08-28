@@ -1,38 +1,39 @@
 {
-  "id": "sole-path-sees-subprocess-and-dynamic-import",
-  "schema_version": "ticket-v1",
-  "date": "2026-08-21",
-  "owner": "CC owns the check extension. Akien owns nothing here \u2014 this is a known enforcement gap with a known shape.",
-  "node_class": "code-seam",
-  "state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED] (proved 2026-08-26: 32/32 green, sealed under netns isolation, clearance by CC onto cairn/tools/import_sieve/proofs/test_import_sieve.py; commit 8b0f056)",
-  "intention": "import_sieve enforces sole-path to the inference host and to port 5432 by scanning imports. Two mechanisms evade it: (1) a subprocess that dials the inference host or the database directly \u2014 it imports nothing, it runs a process; (2) a dynamic import (importlib, __import__) that is invisible to the AST walk. This ticket extends the sole-path enforcement to cover both.",
-  "why": "CLAUDE.md's Residues section, under 'sole path to the inference host and to 5432': the rule IS physics (import_sieve shakes it), but the physics has two holes. A subprocess dials and imports nothing. A dynamic import is invisible. Either one could re-create the scattered-connections problem db_domain and inference_domain were built to solve, and import_sieve would wave it through.",
-  "traces_to": [
-    "Law 4 \u2014 the enforcement has holes; the holes are tracked debt.",
-    "import_sieve's own charter \u2014 the sieve already shakes the import door; these are the edges it cannot reach. Its header says so: 'WHAT THIS DOES NOT SEE: a subprocess, a dynamic import.'",
-    "inference_domain and db_domain \u2014 sole-path holders whose physics is incomplete without this."
-  ],
-  "how": {
-    "mechanism": "TWO NEW CHECKS inside import_sieve/sieve.py, using the same AST walk that already exists. Both extend catches() with new rule kinds rather than adding a companion module \u2014 falsifier (4) demands they cannot be removed without import_sieve noticing.",
-    "dynamic_import": "New rule kind 'dynamic_import' in catches(). AST pattern: ast.Call where func resolves to importlib.import_module or builtins.__import__ \u2014 both are IMPORT STATEMENTS wearing a function-call costume and the AST distinguishes them by their func. The check reds ANY dynamic import of a guarded module (psycopg2, httpx, etc.), same target list as the existing sole_path rules. A dynamic import of an unguarded module is not a sole-path violation and passes. The binding dict from _alias_modules already resolves 'import importlib; importlib.import_module(...)' to the real name.",
-    "subprocess": "New rule kind 'subprocess_dial' in catches(). AST pattern: ast.Call where func resolves to subprocess.run / subprocess.Popen / subprocess.call / subprocess.check_output / subprocess.check_call. The check examines the FIRST POSITIONAL ARG: if it is a list literal (ast.List) or a string literal (ast.Constant), scan its elements for guarded target names \u2014 'psql', 'curl' followed by a URL containing the inference host, etc. A COMPUTED argument (a variable, an f-string) is flagged as OPAQUE rather than passed or failed \u2014 it cannot be cleared and it cannot be convicted, and the finding says so. A subprocess running 'git log' or 'python3 -m pytest' is not a sole-path violation. The guarded subprocess targets are DATA beside the guarded import targets: {'binaries': ['psql', 'pg_dump', 'pg_restore'], 'url_fragments': ['11434', 'api/generate', 'api/chat', 'api/tags']}.",
-    "where_it_lives": "Both checks live in import_sieve/sieve.py as new branches in catches(). The import_graph already parses every file; the subprocess check reads the SAME ast.parse tree, so no second walk. The sieve's own header gets updated to remove 'subprocess' and 'dynamic import' from the 'WHAT THIS DOES NOT SEE' list."
-  },
-  "gates": "import_sieve catches() gains two new rule kinds. Proof teeth: (1) a fixture with importlib.import_module('psycopg2') reds; (2) a fixture with subprocess.run(['psql', ...]) reds; (3) a fixture with subprocess.run(['git', 'log']) passes; (4) a fixture with importlib.import_module('json') passes; (5) a fixture with a computed subprocess argument is flagged OPAQUE; (6) the existing sole_path/forbidden/unreachable rules are untouched \u2014 same teeth, same results.",
-  "falsifier": "RED if: (1) a subprocess.run(['psql', ...]) or subprocess.Popen(['curl', 'http://inference-host/...']) passes the check; (2) importlib.import_module('psycopg2') passes the check; (3) the check produces false positives on subprocess calls that do NOT reach the guarded targets \u2014 a subprocess running 'git log' is not a sole-path violation; (4) the check is a separate sieve that can be removed without import_sieve noticing \u2014 the gap should close, not move; (5) a computed subprocess argument is silently passed rather than flagged as opaque.",
-  "horizon": "Low urgency \u2014 no known component currently uses either evasion. The check is insurance against future drift, not a fix for a live problem.",
-  "parent": "",
-  "children": [],
-  "dependencies": [
-    "import_sieve (PROVED) \u2014 the existing enforcement this extends.",
-    "The list of guarded targets: psycopg2, httpx (inference host), and whatever else import_sieve currently watches \u2014 already declared as data in the existing sole_path rules."
-  ],
-  "distinctions_recorded": [
-    "SUBPROCESS IS NOT AN IMPORT. A process that shells out to psql or curls the inference host bypasses import_sieve entirely \u2014 different mechanism, same violation.",
-    "DYNAMIC IMPORT IS NOT A STATIC IMPORT. importlib.import_module('psycopg2') does the same thing as 'import psycopg2' but the AST walk that reads 'import X' and 'from X import Y' cannot see it.",
-    "OPAQUE IS NOT PASS. A subprocess whose arguments are computed (variables, f-strings) cannot be cleared or convicted from the AST alone. The finding names the opacity; silence would be a false green."
-  ],
-  "provenance": "Born as an IOU in CLAUDE.md's Residues section. The gap was identified when import_sieve was built and stated as a known limitation (sieve.py line 32-34). Ticketed 2026-08-21 to retire the 'ticket owed' marker. Design filled 2026-08-21.",
-  "watchme": "none, because cast before the watchme spec \u2014 import_sieve's proofs are the efficacy measure",
-  "owning_intention": "cairn/tools/import_sieve/intention+why.json"
+    "id": "sole-path-sees-subprocess-and-dynamic-import",
+    "schema_version": "ticket-v1",
+    "date": "2026-08-21",
+    "owner": "CC owns the check extension. Akien owns nothing here — this is a known enforcement gap with a known shape.",
+    "node_class": "code-seam",
+    "state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED] (proved 2026-08-26: 32/32 green, sealed under netns isolation, clearance by CC onto cairn/tools/import_sieve/proofs/test_import_sieve.py; commit 8b0f056)",
+    "intention": "import_sieve enforces sole-path to the inference host and to port 5432 by scanning imports. Two mechanisms evade it: (1) a subprocess that dials the inference host or the database directly — it imports nothing, it runs a process; (2) a dynamic import (importlib, __import__) that is invisible to the AST walk. This ticket extends the sole-path enforcement to cover both.",
+    "why": "CLAUDE.md's Residues section, under 'sole path to the inference host and to 5432': the rule IS physics (import_sieve shakes it), but the physics has two holes. A subprocess dials and imports nothing. A dynamic import is invisible. Either one could re-create the scattered-connections problem db_domain and inference_domain were built to solve, and import_sieve would wave it through.",
+    "traces_to": [
+        "Law 4 — the enforcement has holes; the holes are tracked debt.",
+        "import_sieve's own charter — the sieve already shakes the import door; these are the edges it cannot reach. Its header says so: 'WHAT THIS DOES NOT SEE: a subprocess, a dynamic import.'",
+        "inference_domain and db_domain — sole-path holders whose physics is incomplete without this."
+    ],
+    "how": {
+        "mechanism": "TWO NEW CHECKS inside import_sieve/sieve.py, using the same AST walk that already exists. Both extend catches() with new rule kinds rather than adding a companion module — falsifier (4) demands they cannot be removed without import_sieve noticing.",
+        "dynamic_import": "New rule kind 'dynamic_import' in catches(). AST pattern: ast.Call where func resolves to importlib.import_module or builtins.__import__ — both are IMPORT STATEMENTS wearing a function-call costume and the AST distinguishes them by their func. The check reds ANY dynamic import of a guarded module (psycopg2, httpx, etc.), same target list as the existing sole_path rules. A dynamic import of an unguarded module is not a sole-path violation and passes. The binding dict from _alias_modules already resolves 'import importlib; importlib.import_module(...)' to the real name.",
+        "subprocess": "New rule kind 'subprocess_dial' in catches(). AST pattern: ast.Call where func resolves to subprocess.run / subprocess.Popen / subprocess.call / subprocess.check_output / subprocess.check_call. The check examines the FIRST POSITIONAL ARG: if it is a list literal (ast.List) or a string literal (ast.Constant), scan its elements for guarded target names — 'psql', 'curl' followed by a URL containing the inference host, etc. A COMPUTED argument (a variable, an f-string) is flagged as OPAQUE rather than passed or failed — it cannot be cleared and it cannot be convicted, and the finding says so. A subprocess running 'git log' or 'python3 -m pytest' is not a sole-path violation. The guarded subprocess targets are DATA beside the guarded import targets: {'binaries': ['psql', 'pg_dump', 'pg_restore'], 'url_fragments': ['11434', 'api/generate', 'api/chat', 'api/tags']}.",
+        "where_it_lives": "Both checks live in import_sieve/sieve.py as new branches in catches(). The import_graph already parses every file; the subprocess check reads the SAME ast.parse tree, so no second walk. The sieve's own header gets updated to remove 'subprocess' and 'dynamic import' from the 'WHAT THIS DOES NOT SEE' list."
+    },
+    "gates": "import_sieve catches() gains two new rule kinds. Proof teeth: (1) a fixture with importlib.import_module('psycopg2') reds; (2) a fixture with subprocess.run(['psql', ...]) reds; (3) a fixture with subprocess.run(['git', 'log']) passes; (4) a fixture with importlib.import_module('json') passes; (5) a fixture with a computed subprocess argument is flagged OPAQUE; (6) the existing sole_path/forbidden/unreachable rules are untouched — same teeth, same results.",
+    "falsifier": "RED if: (1) a subprocess.run(['psql', ...]) or subprocess.Popen(['curl', 'http://inference-host/...']) passes the check; (2) importlib.import_module('psycopg2') passes the check; (3) the check produces false positives on subprocess calls that do NOT reach the guarded targets — a subprocess running 'git log' is not a sole-path violation; (4) the check is a separate sieve that can be removed without import_sieve noticing — the gap should close, not move; (5) a computed subprocess argument is silently passed rather than flagged as opaque.",
+    "horizon": "Low urgency — no known component currently uses either evasion. The check is insurance against future drift, not a fix for a live problem.",
+    "parent": "",
+    "children": [],
+    "dependencies": [
+        "import_sieve (PROVED) — the existing enforcement this extends.",
+        "The list of guarded targets: psycopg2, httpx (inference host), and whatever else import_sieve currently watches — already declared as data in the existing sole_path rules."
+    ],
+    "distinctions_recorded": [
+        "SUBPROCESS IS NOT AN IMPORT. A process that shells out to psql or curls the inference host bypasses import_sieve entirely — different mechanism, same violation.",
+        "DYNAMIC IMPORT IS NOT A STATIC IMPORT. importlib.import_module('psycopg2') does the same thing as 'import psycopg2' but the AST walk that reads 'import X' and 'from X import Y' cannot see it.",
+        "OPAQUE IS NOT PASS. A subprocess whose arguments are computed (variables, f-strings) cannot be cleared or convicted from the AST alone. The finding names the opacity; silence would be a false green."
+    ],
+    "provenance": "Born as an IOU in CLAUDE.md's Residues section. The gap was identified when import_sieve was built and stated as a known limitation (sieve.py line 32-34). Ticketed 2026-08-21 to retire the 'ticket owed' marker. Design filled 2026-08-21.",
+    "watchme": "none, because cast before the watchme spec — import_sieve's proofs are the efficacy measure",
+    "owning_intention": "cairn/tools/import_sieve/intention+why.json",
+    "chart_claim": "verdict-20260828T061949-196eb6b53296.json"
 }
