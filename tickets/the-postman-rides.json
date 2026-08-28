@@ -4,8 +4,8 @@
   "date": "2026-08-11",
   "owner": "CC (the build); Akien (the directive that shaped it and the scope that bounded it)",
   "intention": "The bus delivers: an envelope posted to a device is handed to that device's shim and a receipt is written, so that posting mail and mail arriving stop being the same observation.",
-  "why": "Measured 2026-08-11: BaseShim.deliver — the method that hands an envelope to a device and wakes it — had stood with ZERO CALLERS since the day it was written. post wrote durable envelopes, read returned them whole, and nothing on earth drained an inbox. From the sender's side that is indistinguishable from a working bus: the post succeeds, the row lands, the read shows it sitting there. Three envelopes were in transit when this was found, the oldest addressed to a device that has never once looked. This ticket is the second half of the ground-loop discovery work: the loop discovered its devices and pulsed them, and the mail still went nowhere.",
-  "traces_to": "Law 7 (a message that cannot be delivered must not fail silently — the trouble lane's founding example in Akien's own 2026-07-25 words); Law 6 (the owner of the traffic delivers it: the postman is the BUS's own shim, never the heartbeat, because handing an envelope to its addressee is ROUTING and the ground_loop does not route); Law 1 (the roster the heartbeat already publishes is reused rather than a second registry minted, so nothing new can go stale).",
+  "why": "Measured 2026-08-11: BaseShim.deliver \u2014 the method that hands an envelope to a device and wakes it \u2014 had stood with ZERO CALLERS since the day it was written. post wrote durable envelopes, read returned them whole, and nothing on earth drained an inbox. From the sender's side that is indistinguishable from a working bus: the post succeeds, the row lands, the read shows it sitting there. Three envelopes were in transit when this was found, the oldest addressed to a device that has never once looked. This ticket is the second half of the ground-loop discovery work: the loop discovered its devices and pulsed them, and the mail still went nowhere.",
+  "traces_to": "Law 7 (a message that cannot be delivered must not fail silently \u2014 the trouble lane's founding example in Akien's own 2026-07-25 words); Law 6 (the owner of the traffic delivers it: the postman is the BUS's own shim, never the heartbeat, because handing an envelope to its addressee is ROUTING and the ground_loop does not route); Law 1 (the roster the heartbeat already publishes is reused rather than a second registry minted, so nothing new can go stale).",
   "node_class": "code-seam",
   "state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
   "state_note": "RECORDED AFTER THE FACT, 2026-08-11. This voyage did not cross the emit chokepoint: it was built at Akien's explicit direction ahead of the process ('MAKE IT LOOK LIKE THAT. YOU CAN TICKET AFTER'), so no crossing was journaled, no chart chain claims it, and no verdict artifact gated its close. What IS true is measured and listed under receipts. The honest reading: BUILT and PROVED, out of band.",
@@ -13,42 +13,43 @@
   "sorted_berth": "none, because this ticket is a retroactive record filed after the build, per the same directive; the successor node mail-arrives-and-what-cannot-marks-itself carries /home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260811T113016-dc9556fcde33.json",
   "from_idea": "none, because it was born from a measurement rather than a captured idea: the zero-callers finding on BaseShim.deliver during the 2026-08-11 discovery work, recorded in this file's `why`.",
   "gates": {
-    "prove_gate": "SATISFIED, and sealed by the tester rather than narrated — see receipts.validations. The seal ran under netns isolation and reports seal=sealed, so the green is not an unconfirmable seal laundered into a pass.",
+    "prove_gate": "SATISFIED, and sealed by the tester rather than narrated \u2014 see receipts.validations. The seal ran under netns isolation and reports seal=sealed, so the green is not an unconfirmable seal laundered into a pass.",
     "feeds_back_on_failure": "exercised for real: the discovery proof KILLED this build's own bench gate before it shipped (see receipts.what_the_proof_killed)",
-    "extra_gates": "durability — committed as f9774d2 and pushed",
+    "extra_gates": "durability \u2014 committed as f9774d2 and pushed",
     "not_satisfied": "The chart chain, the BUILDME/PROVEME/PROVED crossings, and the verdict artifact. Named here rather than papered over: this node cannot honestly claim PROVED, because PROVED is a crossing a gate performs and no gate performed it."
   },
-  "watchme": "none, because the successor node mail-arrives-and-what-cannot-marks-itself carries the watch that would test this one's efficacy: WATCHME(does-the-mail-lane-get-worked), probe berth cairn/tools/orient/probes/does_the_mail_lane_get_worked.py. Whether delivery actually causes mail to arrive is precisely what that node's census measures — a second watch here would be two instruments on one question.",
+  "watchme": "none, because the successor node mail-arrives-and-what-cannot-marks-itself carries the watch that would test this one's efficacy: WATCHME(does-the-mail-lane-get-worked), probe berth cairn/tools/orient/probes/does_the_mail_lane_get_worked.py. Whether delivery actually causes mail to arrive is precisely what that node's census measures \u2014 a second watch here would be two instruments on one question.",
   "falsifier": "RED on any of: an envelope handed to a device without a receipt being written afterward; a receipt written for an envelope a raising receiver never took; a shim with no device silently returning None from deliver instead of refusing; the drain issuing more than one query per beat regardless of roster size; or a single undeliverable envelope stopping the heartbeat.",
-  "horizon": "closed at the build, 2026-08-11 — the standing questions moved to the successor node",
+  "horizon": "closed at the build, 2026-08-11 \u2014 the standing questions moved to the successor node",
   "parent": null,
   "children": [],
   "receipts": {
-    "commit": "f9774d2 — the postman rides: mail is delivered, and the receipt is the proof",
+    "commit": "f9774d2 \u2014 the postman rides: mail is delivered, and the receipt is the proof",
     "code": [
-      "cairn/devices/bus/shim.py — BusShim, the postman: drains the transit table on each pulse and hands each envelope to the shim of its addressee, reached through the heartbeat's published shim_for",
-      "cairn/devices/bus/bus.py — undelivered() as ONE anti-join per beat for the whole system (a per-device sweep would be a query per device per second, a poll wearing a heartbeat's clothes); record_delivery() writing an append-only receipt into a sibling <table>_delivery",
-      "cairn/tools/base/shim.py — deliver() made loud: it used to return None for a shim with no device and None again for a device with no receive, and with a postman standing there a quiet None reads as a successful delivery",
-      "cairn/devices/ground_loop/__main__.py — the postman hand-subscribed to the resident loop"
+      "cairn/devices/bus/shim.py \u2014 BusShim, the postman: drains the transit table on each pulse and hands each envelope to the shim of its addressee, reached through the heartbeat's published shim_for",
+      "cairn/devices/bus/bus.py \u2014 undelivered() as ONE anti-join per beat for the whole system (a per-device sweep would be a query per device per second, a poll wearing a heartbeat's clothes); record_delivery() writing an append-only receipt into a sibling <table>_delivery",
+      "cairn/tools/base/shim.py \u2014 deliver() made loud: it used to return None for a shim with no device and None again for a device with no receive, and with a postman standing there a quiet None reads as a successful delivery",
+      "cairn/devices/ground_loop/__main__.py \u2014 the postman hand-subscribed to the resident loop"
     ],
     "validations": [
-      "cairn/devices/bus/validations/test_delivery.json — green, seal=sealed (netns), 10 teeth",
-      "cairn/devices/ground_loop/validations/test_discovery.json — green, seal=sealed (netns), 12 teeth"
+      "cairn/devices/bus/validations/test_delivery.json \u2014 green, seal=sealed (netns), 10 teeth",
+      "cairn/devices/ground_loop/validations/test_discovery.json \u2014 green, seal=sealed (netns), 12 teeth"
     ],
     "proofs_run_green_twice": "ground_loop 21, discovery 12, bus 6, delivery 10, shim 7 = 56 teeth; the five librarian proofs green beside them",
     "live_fire": "2026-08-11 against the real bus: the first drain reported 2x no_shim ('dave') and 1x no_receiver (harbor_master), and the resident loop was restarted to pick up the postman (pid 3887729, 'bus' first on the roster). Every finding it reported was true.",
-    "what_the_proof_killed": "The bench gate this same session shipped with. _refresh_bench stat'd the trouble DIRECTORY's mtime, but trouble._write rewrites the ticket file IN PLACE — no temp, no rename — so a clear never moves that mtime and a benched device would have stayed benched forever while every surface reported a healthy beat. Replaced by an entry fingerprint (name, mtime, size per .json), and pinned by a tooth that asserts the directory mtime is UNCHANGED across the clear so the tooth cannot pass by accident.",
+    "what_the_proof_killed": "The bench gate this same session shipped with. _refresh_bench stat'd the trouble DIRECTORY's mtime, but trouble._write rewrites the ticket file IN PLACE \u2014 no temp, no rename \u2014 so a clear never moves that mtime and a benched device would have stayed benched forever while every surface reported a healthy beat. Replaced by an entry fingerprint (name, mtime, size per .json), and pinned by a tooth that asserts the directory mtime is UNCHANGED across the clear so the tooth cannot pass by accident.",
     "design_decisions_worth_keeping": [
-      "The deliverer is the bus's own shim, not the heartbeat: ground_loop 'does NOT execute, resolve, schedule, ROUTE, or write' — that clause is the 584aa74 goof's headstone, and handing an envelope to its addressee is routing.",
+      "The deliverer is the bus's own shim, not the heartbeat: ground_loop 'does NOT execute, resolve, schedule, ROUTE, or write' \u2014 that clause is the 584aa74 goof's headstone, and handing an envelope to its addressee is routing.",
       "Delivery is an append-only receipt in a sibling table, never a column on the envelope: a RECORD channel may not be rewritten (Law 7), and create_owned_table is CREATE TABLE IF NOT EXISTS so a new column would need a migration.",
-      "The receipt is written AFTER the device takes the envelope, so a raising receiver leaves the mail in the inbox. At-least-once is the right side to fail on — losing a record of truth is worse than delivering twice.",
+      "The receipt is written AFTER the device takes the envelope, so a raising receiver leaves the mail in the inbox. At-least-once is the right side to fail on \u2014 losing a record of truth is worse than delivering twice.",
       "Findings are deduped per envelope (_reported), because undeliverable mail stays undeliverable: without it, one stuck envelope reports the identical finding once a second forever.",
-      "The bus emits, not the shim: emit is DiagnosticBase's (devices), and a shim RECEIVES breadcrumbs rather than sending them — which is also the right ownership, since the stuck message is the bus's fact."
+      "The bus emits, not the shim: emit is DiagnosticBase's (devices), and a shim RECEIVES breadcrumbs rather than sending them \u2014 which is also the right ownership, since the stuck message is the bus's fact."
     ],
-    "filed_edge": "The drain is asked on a cadence because the beat is what exists today. The event-shaped answer is the store telling the postman a row landed (Postgres LISTEN/NOTIFY through db_domain's gate), turning one query per second into zero queries until there is mail. It waits on real volume and on db_domain growing a listen face — its owner's call, not the bus's."
+    "filed_edge": "The drain is asked on a cadence because the beat is what exists today. The event-shaped answer is the store telling the postman a row landed (Postgres LISTEN/NOTIFY through db_domain's gate), turning one query per second into zero queries until there is mail. It waits on real volume and on db_domain growing a listen face \u2014 its owner's call, not the bus's."
   },
   "provenance": {
     "directive": "Akien 2026-08-11, on the ground loop: 'THE INTENTION IS THE GROUND LOOP IS ALWAYS UP... ON EACH PASS THE GROUND LOOP POLLS A FOLDER FOR EACH DEVICE AND IF THERE IS CODE THERE THE GROUND LOOP RUNS IT'; on scope: 'MAKE IT LOOK LIKE THAT. YOU CAN TICKET AFTER. IF YOU HAVE TO CHANGE ANY OTHER SYSTEMS, TALK TO ME ABOUT IT'; on the bus buildout: 'then we have to build all that out too.'",
-    "why_this_ticket_is_retroactive": "Akien directed the build ahead of the process and said so explicitly. Recording it now with receipts is honest; reconstructing a chart chain that never happened would be writing the voyage from the code — reading intent backwards, which is the failure mode this system is built against."
-  }
+    "why_this_ticket_is_retroactive": "Akien directed the build ahead of the process and said so explicitly. Recording it now with receipts is honest; reconstructing a chart chain that never happened would be writing the voyage from the code \u2014 reading intent backwards, which is the failure mode this system is built against."
+  },
+  "chart_claim": "chart chain complete: verdict-20260828T061341-87427ac8bccf.json"
 }
