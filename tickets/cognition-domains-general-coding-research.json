@@ -4,7 +4,7 @@
   "date": "2026-08-26",
   "owner": "CC gates writes \u2014 design ticket, no single code address yet (spanning).",
   "node_class": "concept-piece",
-  "state": "concept-piece@v1: THINKME -> [TICKETME] -> PROVED",
+  "state": "concept-piece@v1: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
   "intention": "Cognition domains: machines that sit above inference_domain and below devices, carrying escalation strategies and agentic loops. Three foreseeable: GENERAL (baseline LLM capabilities any device can use), CODING (specialized for code work, aider-like devices), RESEARCH (specialized for research, librarian graduates to this). Custom per-device domains based on a common one are allowed as experiments.",
   "why": "A device needs LLM smarts at different levels \u2014 the cairn device might use limited general-domain chat for support questions, while the aider shim needs a full coding domain with its own escalation. Without domains, every device reinvents its own escalation strategy. With them, the strategy is composed from a machine and the device can mix domains (general for help-desk, custom for core work) in the same device.",
   "how": "A domain is a MACHINE in the complexity axis (tools + glue). The glue IS the escalation strategy \u2014 that is what differentiates domains, not the models they call. Domains are COMPOSED by devices, not inherited from \u2014 composition lets a device mix domains, inheritance forces a choice. The inference proxy already works this way (domain.resolve() is a call, not a class hierarchy). Each domain naturally owns its question list \u2014 connects to question-tree-embeddings-generator via the (question, owner) tuple design. Progression: a device starts on the general domain and graduates to a specialized one as it matures (librarian: general \u2192 research). The escalation and agentic loops can live in the domain OR the device \u2014 the domain is the default location, the device overrides when it needs custom behavior.",
@@ -29,6 +29,21 @@
     "(5) Custom per-device domains (experiments) are based on a common one.",
     "(6) Progression: start general, graduate to specialized as the consumer matures."
   ],
+  "definition": {
+    "what": "A cognition domain is a MACHINE in the complexity axis (tools + glue) that sits above inference_domain and below devices, carrying an escalation strategy and agentic loop. The glue IS the escalation strategy — that is what differentiates domains, not the models they call.",
+    "composition_not_inheritance": "Domains are COMPOSED by devices, not inherited from. Composition lets a device mix domains (general for help-desk, custom for core work) in the same device. Inheritance forces a choice; composition allows a device to use a domain for limited things without becoming LLM-heavy.",
+    "the_three_foreseeable_domains": [
+      "GENERAL — baseline LLM capabilities any device can use. The default domain for a device that does not need specialization. A device starts here and graduates when it matures.",
+      "CODING — specialized for code work. The aider shim's natural domain, carrying its own escalation strategy (the aider's tool loop, code review, test-fix cycles).",
+      "RESEARCH — specialized for research work. The librarian graduates to this from general as it matures. Carries its own question-answering escalation and information-gathering loops."
+    ],
+    "custom_domains": "Custom per-device domains based on a common one are allowed as experiments. A custom domain overrides the common one's escalation strategy, inheriting everything else. This is composition, not subclassing — the custom domain calls the common one's tools.",
+    "escalation_location": "Escalation and agentic loops can live in the domain OR the device — the domain is the default location, the device overrides when it needs custom behavior. The domain is where escalation lives unless the device has a reason to own it.",
+    "question_ownership": "Each domain naturally owns its question list — connects to question-tree-embeddings-generator via the (question, owner) tuple design. A domain's questions are the questions that domain knows how to escalate.",
+    "progression": "A device starts on the general domain and graduates to a specialized one as it matures. The librarian's path: general → research. The aider shim: general → coding. Graduation is a measurable event, not a configuration switch.",
+    "inference_proxy_pattern": "The inference proxy already works this way: domain.resolve() is a call, not a class hierarchy. The domain pattern generalizes what inference_domain already does.",
+    "the_test": "A domain is correct when: (1) it can be composed by any device without requiring the device to be LLM-heavy; (2) its escalation strategy can be overridden by a custom domain based on it; (3) its question list is expressible as (question, owner) tuples; (4) it does not force a device into a choice between domains — mixing is the normal case."
+  },
   "gates": {
     "proof_gate": "quorum signature gate"
   }
