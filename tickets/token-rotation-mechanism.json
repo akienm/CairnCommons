@@ -1,0 +1,30 @@
+{
+  "id": "token-rotation-mechanism",
+  "schema_version": "v0",
+  "date": "2026-08-28",
+  "from_idea": "2026-08-06-the-sleep-trigger-captured-across-three-turns",
+  "owner": "devices/cairn",
+  "node_class": "code-seam",
+  "entry_door": "INTENT — child of sleep-cycle-token, the rotation mechanism half of the token-rotation protocol",
+  "intention": "A token posted on the cairn device's announce feed rotates through every device in alpha order — each device's probe fires, runs its sleep cycle or forwards, and the rotation completes back to start.",
+  "why": "One token rotation replaces N independent sleep daemons — the same move the ground loop made for heartbeats. Serial by design because of measured OOM history (n=3) and because we don't yet know which sleep cycles are independent. The probe pattern is the mechanism: a three-line custom probe (match, decide, forward) is a valid implementation; no shim overhead, no bus routing, no LLM needed (Akien, 2026-08-24).",
+  "traces_to": [
+    "Telos aim 5 (self-improving) — the rotation gives each device its maintenance window",
+    "Law 4 — the token on the bus is physics: a device's probe fires because a message arrived, not a schedule",
+    "Shrinking-footprint derivation — one token rotation vs N independent daemons"
+  ],
+  "state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260828T175939-f9ef6b6df82d.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260828T181301-cb0b08b0a6d0.json",
+  "owning_intention": "none, because the cairn device (devices/cairn/) is not built yet — the charter lands at cairn/devices/cairn/intention+why.json when the device is built",
+  "parent": "sleep-cycle-token",
+  "watchme": "none, because the parent ticket sleep-cycle-token (CairnCommons/tickets/sleep-cycle-token.json) carries WATCHME(sleep-rotation-completes) which covers the full end-to-end rotation. This child's proof gate exercises the mechanism in isolation.",
+  "falsifier": "DONE when a token can be posted, received by at least one device, forwarded through the roster, and return to the cairn device with at least one real sleep cycle executed. WRONG INTENT if the rotation mechanism is the wrong shape — e.g., devices need to sleep concurrently, or the bus is the wrong transport.",
+  "horizon": "first complete rotation is the first measurement",
+  "gates": {
+    "proof_gate": "tester — a token posted on the announce feed rotates through at least one device and returns, proved by teeth a hollow build could not pass",
+    "durability_gate": "git commit"
+  },
+  "dependencies": "The cairn device (devices/cairn/) must be built with announce-feed capability. The bus (built and proven). The ground loop roster for alpha ordering (built and proven). The probe pattern at tools/base/probe.py (built and proven).",
+  "how": "The cairn device posts a sleep-cycle token on its announce feed. Each device has a three-line probe that matches the token, checks whether it is that device's turn in alpha order (from the ground loop's roster), runs its sleep cycle if it is, and forwards the token to the next device. The last device forwards back to the cairn device, completing the rotation."
+}
