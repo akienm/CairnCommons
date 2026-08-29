@@ -54,8 +54,22 @@ The cairn device is a **device** — a top-level thing that is its own process
 and goes in the rack. Its held machines and tools nest under it at
 `devices/cairn/0/` in both roots.
 
+## Held machines
+
+The cairn device holds three machines at `devices/cairn/machines/`:
+
+- **ground_loop** — the heartbeat: a wall-clock-driven loop that beats the roster
+  and writes its own liveness record.
+- **bus** — the message bus: mail-based inter-device communication.
+- **harbor_master** — the clearance gate: ownership verification, grants, and
+  voyage lifecycle for the emit chokepoint.
+
+These were absorbed from independent device directories (ticket
+`cairn-device-absorbs-foundational-infrastructure`, 2026-08-29). They are
+foundational infrastructure — they serve every device but own no independent
+process of their own, which is the machine rung, not the device rung.
+
 ## What this does NOT own
 
 - Host-level concerns (packages, OS, the laptop) — `system_rackmount`
-- The heartbeat — `ground_loop`
 - Individual device state — each device owns its own (Law 6)
