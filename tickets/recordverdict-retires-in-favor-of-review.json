@@ -1,0 +1,41 @@
+{
+  "id": "recordverdict-retires-in-favor-of-review",
+  "schema_version": "ticket-v1",
+  "date": "2026-08-29",
+  "owner": "CC owns the retirement mechanics. Akien owns the design decision that corrections-as-training-data replaces approve/disprove.",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "intention": "Retire `cairn recordverdict` — the approve/disprove adjudication model is replaced by `cairn review`, where corrections carry the training data as words, not a binary signal.",
+  "why": "Akien, 2026-08-28: 'recordverdict will become obsolete. the approve/disprove adjudication is the old way. now we do artifact approvals — things just are clear or they go back to design with why it got booted back. even on approvals, i can't just approve or disapprove, i have to spell out the whys. the training data is the corrections themselves, not a binary signal.'",
+  "traces_to": [
+    "Law 1 — a binary signal (approve/disprove) forces re-derivation of WHY something was approved or disproved; the correction itself IS the training data.",
+    "CP3 — a binary signal strips the why, making it unfalsifiable; words carry the falsifiable content."
+  ],
+  "how": {
+    "cli_retirement": "Mark bin/cmd/recordverdict with a retirement note pointing at cairn review as the successor. The command stays on disk (established pattern from chart and ground-loop retirements).",
+    "ticket_retirement": "Add a retirement field to tickets/recordverdict-cli-door.json naming cairn review as the successor, the date, and Akien's reason. The PROVED state is preserved.",
+    "primitive_scope": "The learning_block.record_verdict primitive is NOT retired by this ticket. The skilldial still reads its match_rate (approvals/disproves ratio). The CLI retires now; the primitive retires when the dial migrates to a new signal source. Two retirements, sequenced."
+  },
+  "gates": "code-seam invariant: proved + feeds-back-on-failure. PROVE GATE: the command carries a retirement note, cairn review is named as successor, no gate reads approve/disprove for crossing decisions. FEEDS BACK: a red names what still depends on the binary signal.",
+  "falsifier": "DONE when recordverdict is marked retired with cairn review named as successor, and no live workflow depends on the approve/disprove binary for gate passage. WRONG INTENT if the retirement breaks the dial (it shouldn't — the CLI retires, the primitive stays), or if cairn review's corrections don't carry the training data Akien described.",
+  "horizon": "Small — the retirement is a file edit (retirement field on the ticket, retirement note on the command), not a code change.",
+  "parent": "",
+  "children": [],
+  "dependencies": [
+    "bin/cmd/recordverdict — the command being retired.",
+    "bin/cmd/review — the successor, already built and operational.",
+    "cairn/machines/learning_block/learning_block.py — the primitive that stays; only the CLI retires."
+  ],
+  "distinctions_recorded": [
+    "CLI RETIRES, PRIMITIVE STAYS: cairn recordverdict (the CLI face) retires. learning_block.record_verdict (the primitive) stays until the dial migrates. Two retirements, sequenced.",
+    "BINARY SIGNAL vs CORRECTIONS-AS-DATA: recordverdict captured approve/disprove + verbatim — the binary was the signal, words were metadata. cairn review captures words as the signal. The inversion is the design shift.",
+    "RETIREMENT IS LIFECYCLE, NOT FAILURE: recordverdict-cli-door (PROVED) was correct when built. The design moved on. The proof was valid; the need changed."
+  ],
+  "provenance": "Born from idea 2026-08-28-recordverdict-will-become-obsolete-the-approve-d (Akien: 'the approve/disprove adjudication is the old way'). Ticketed 2026-08-29.",
+  "watchme": "none — the retirement is a one-time state change. cairn review's efficacy is monitored by the skill_block's dial (skilldial.py). The proof at bin/proofs/test_cairn_command.py covers the command.",
+  "owning_intention": "bin/intention+why.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260829T014501-e9a49f4d3465.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260829T014312-bb051a0e1246.json",
+  "from_idea": "2026-08-28-recordverdict-will-become-obsolete-the-approve-d",
+  "chart_claim": "none — chart chain not yet run; BUILDME entry gate is where this is answered"
+}
