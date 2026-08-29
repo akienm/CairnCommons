@@ -1,0 +1,42 @@
+{
+  "id": "trouble-tickets-location-is-liveness",
+  "schema_version": "ticket-v1",
+  "date": "2026-08-29",
+  "owner": "CC owns the mechanism. Akien owns the design choice of whether cleared troubles go to the 30-day artifact archive or a longer-lived quiet store.",
+  "node_class": "code-seam",
+  "state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "intention": "Trouble tickets adopt location-as-liveness (live in CairnCommons/troubles/, cleared move to artifact archive) and a unified workflow model shared with development tickets (same schema, same inspector, same gate, same field names).",
+  "why": "CC checked the wrong field (cleared instead of standing) when compiling the inbox — two separate state models meant guessing which vocabulary applied. Location-as-liveness dissolves the guess: a trouble file present in CairnCommons/troubles/ is live; its absence means cleared. No field to misread.",
+  "traces_to": [
+    "Law 4 — a rule that matters is enforced by physics; location-as-liveness makes 'is this trouble live?' a directory listing rather than a field to interpret correctly.",
+    "Law 7 — errors are loud and permanent in records of truth; the cleared trouble is kept (git history + archive), never destroyed, but is no longer on the live surface.",
+    "Law 1 — a unified workflow model means CC does not re-derive which vocabulary applies to each ticket type."
+  ],
+  "how": {
+    "location_as_liveness": "On clear, the trouble file moves from CairnCommons/troubles/ to ~/.cairn/logs/cairn/0/artifact_archive/trouble_tickets/ and ages out on the 30-day cycle. The live() filter becomes a directory listing — if the file is in CairnCommons/troubles/, it is live. The git history of the file's last committed state in CairnCommons/troubles/ is the permanent record.",
+    "unified_model": "Trouble tickets adopt the same state/workflow fields as development tickets — state with cursor notation, node_class, schema_version. Whether this means trouble tickets literally use code-seam@v2 or a new trouble node class with a simpler path (OPEN→CLEARED) is a chart-chain question. Akien said 'same schema, same inspector, same gate, same field names' — the interface is shared; the path may differ.",
+    "archive_mechanism": "The archive path needs a cleanup mechanism for the 30-day cycle. Whether this reuses an existing artifact archive cleanup or needs a new one is a survey question."
+  },
+  "gates": "code-seam invariant: proved + feeds-back-on-failure. PROVE GATE: clearing moves the file and live() returns only directory contents; a cleared trouble is absent from CairnCommons/troubles/ and present in the archive; a live trouble is present in CairnCommons/troubles/. FEEDS BACK: a red names which invariant broke.",
+  "falsifier": "DONE when (1) clearing a trouble moves the file out of CairnCommons/troubles/ into the artifact archive, and live() is a directory listing with no field checks, and (2) trouble tickets carry the same state/workflow fields as development tickets and the same inspector can read both. WRONG INTENT if git history is lost, if the unified model forces inapplicable fields, or if the archive loses identity.",
+  "horizon": "Moderate — touches the trouble device's clear() method, the live() filter, and adds archive-on-clear logic plus unified schema fields.",
+  "parent": "",
+  "children": [],
+  "dependencies": [
+    "cairn/devices/trouble/ — the existing trouble device this modifies.",
+    "CairnCommons/troubles/ — the existing store.",
+    "The artifact archive cleanup mechanism — needs to exist or be built for the 30-day cycle."
+  ],
+  "distinctions_recorded": [
+    "LOCATION IS LIVENESS: a file in CairnCommons/troubles/ is live; its absence means cleared. No field, no vocabulary, no guess.",
+    "GIT HISTORY IS THE PERMANENT RECORD: the move across roots (CairnCommons → ~/.cairn) means the file leaves git. But git keeps the file's last committed state in CairnCommons/troubles/ forever. The archive is operational visibility; git is the record of truth.",
+    "SAME SCHEMA, NOT NECESSARILY SAME PATH: Akien said 'same inspector, same gate, same field names' — the interface is unified. Whether the workflow PATH is shared (code-seam@v2) or trouble-specific (OPEN→CLEARED) is a design question for the chart chain."
+  ],
+  "provenance": "Born from idea 2026-08-27-trouble-tickets-need-two-fixes-1-live (Akien: 'trouble tickets need two fixes'). Ticketed 2026-08-29.",
+  "watchme": "none — the founding failure (CC checking the wrong field) is dissolved by physics once live() is a directory listing. The proof at cairn/devices/trouble/proofs/test_trouble.py covers the functional claim.",
+  "owning_intention": "cairn/devices/trouble/intention+why.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260829T014051-4dfcf37d11cf.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260829T013925-2b733afb93dd.json",
+  "from_idea": "2026-08-27-trouble-tickets-need-two-fixes-1-live",
+  "chart_claim": "none — chart chain not yet run; BUILDME entry gate is where this is answered"
+}
