@@ -2,31 +2,31 @@
   "id": "state-and-history-door-catches-in-place-edits",
   "schema_version": "ticket-v1",
   "date": "2026-08-21",
-  "owner": "CC owns the enforcement. Akien owns nothing here \u2014 the append door and PROVEME drift check are already physics; this is the residue they cannot reach.",
+  "owner": "CC owns the enforcement. Akien owns nothing here — the append door and PROVEME drift check are already physics; this is the residue they cannot reach.",
   "node_class": "code-seam",
-  "state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> PROVED",
-  "intention": "state/history files have an append door and a PROVEME drift check. Three things evade them: (1) an in-place edit of history itself \u2014 rewriting a past entry rather than appending; (2) at-rest components between voyages, whose state and history are not actively watched; (3) nothing notices history that has stopped being under way (Law 5's new bound \u2014 overlaps with history-reach-feeds-a-migration). This ticket closes the enforcement gaps so the append-only property and the under-way bound are physics, not policy.",
-  "why": "The append door makes history append-only by routing new entries through a single writer. But the door does not prevent a direct file edit \u2014 'echo > history.json' is invisible to the door. The PROVEME drift check catches unauthorized changes at crossing time, but a component at rest (between voyages) is never crossed, so its files can be edited with nothing noticing until the next voyage begins. And Law 5's new bound adds a third gap: even if the files are untouched, history that should have migrated to the commons but hasn't is still violating the working-surface promise.",
+  "state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
+  "intention": "state/history files have an append door and a PROVEME drift check. Three things evade them: (1) an in-place edit of history itself — rewriting a past entry rather than appending; (2) at-rest components between voyages, whose state and history are not actively watched; (3) nothing notices history that has stopped being under way (Law 5's new bound — overlaps with history-reach-feeds-a-migration). This ticket closes the enforcement gaps so the append-only property and the under-way bound are physics, not policy.",
+  "why": "The append door makes history append-only by routing new entries through a single writer. But the door does not prevent a direct file edit — 'echo > history.json' is invisible to the door. The PROVEME drift check catches unauthorized changes at crossing time, but a component at rest (between voyages) is never crossed, so its files can be edited with nothing noticing until the next voyage begins. And Law 5's new bound adds a third gap: even if the files are untouched, history that should have migrated to the commons but hasn't is still violating the working-surface promise.",
   "traces_to": [
-    "Law 5 \u2014 history of a thing under way belongs beside it; history past that berths in the commons.",
-    "Law 4 \u2014 append-only is a rule that matters; the door enforces it for appends but not for edits.",
-    "Law 7 \u2014 errors are loud and permanent in records of truth; an in-place edit of history silently changes a record of truth."
+    "Law 5 — history of a thing under way belongs beside it; history past that berths in the commons.",
+    "Law 4 — append-only is a rule that matters; the door enforces it for appends but not for edits.",
+    "Law 7 — errors are loud and permanent in records of truth; an in-place edit of history silently changes a record of truth."
   ],
   "how": {
-    "in_place_edit_check": "A build_inspector sieve. For each history.json and state.json in the tree: load the file, load the LAST COMMITTED version via `git show HEAD:<path>`, and compare. The committed version is the ground truth \u2014 the append door writes and commits in one act. If an entry in the committed version is ABSENT or CHANGED in the working copy, that is an in-place edit. If the working copy has entries the committed version does not, that is an uncommitted append \u2014 a different finding (the append door should have committed it). The sieve shakes at every PROVEME crossing via build_inspector, AND at the ground_loop beat (gap 2 below).",
-    "at_rest_watch": "The SAME sieve, but fired at the ground_loop beat rather than only at crossings. The beat already walks every shim; adding a git-diff check on state.json and history.json beside each charter is one more predicate per component, and it fires whether the component is mid-voyage or at rest. The cost is one `git show` per file per beat \u2014 bounded by the number of components with state/history files (currently 33 history.json). A component at rest whose files are silently edited gets flagged at the next beat, not at the next voyage.",
-    "law_5_boundary_with_history_reach": "This ticket owns gaps (1) and (2) \u2014 in-place edits and at-rest watch. Gap (3) \u2014 history that should have migrated to commons but hasn't \u2014 belongs to history-reach-feeds-a-migration. The boundary: this ticket checks whether files were TAMPERED WITH; that ticket checks whether files SHOULD STILL BE HERE. The two can share a sieve that runs both checks, but the findings are distinct and the migrations are distinct."
+    "in_place_edit_check": "A build_inspector sieve. For each history.json and state.json in the tree: load the file, load the LAST COMMITTED version via `git show HEAD:<path>`, and compare. The committed version is the ground truth — the append door writes and commits in one act. If an entry in the committed version is ABSENT or CHANGED in the working copy, that is an in-place edit. If the working copy has entries the committed version does not, that is an uncommitted append — a different finding (the append door should have committed it). The sieve shakes at every PROVEME crossing via build_inspector, AND at the ground_loop beat (gap 2 below).",
+    "at_rest_watch": "The SAME sieve, but fired at the ground_loop beat rather than only at crossings. The beat already walks every shim; adding a git-diff check on state.json and history.json beside each charter is one more predicate per component, and it fires whether the component is mid-voyage or at rest. The cost is one `git show` per file per beat — bounded by the number of components with state/history files (currently 33 history.json). A component at rest whose files are silently edited gets flagged at the next beat, not at the next voyage.",
+    "law_5_boundary_with_history_reach": "This ticket owns gaps (1) and (2) — in-place edits and at-rest watch. Gap (3) — history that should have migrated to commons but hasn't — belongs to history-reach-feeds-a-migration. The boundary: this ticket checks whether files were TAMPERED WITH; that ticket checks whether files SHOULD STILL BE HERE. The two can share a sieve that runs both checks, but the findings are distinct and the migrations are distinct."
   },
   "gates": "A build_inspector sieve that detects in-place edits of state.json and history.json by comparing working copy against last committed version. The same sieve also fires at the ground_loop beat to catch edits to at-rest components between voyages. Proof teeth: (1) a fixture history.json with a modified past entry reds; (2) a fixture history.json with a new appended entry that was not committed flags as uncommitted-append; (3) an untouched history.json passes; (4) the check fires at the beat, not only at crossings.",
-  "falsifier": "RED if: (1) an in-place edit of a history.json entry passes undetected; (2) an at-rest component's state.json is modified between voyages with nothing noticing; (3) the check only fires at crossing time \u2014 at-rest is the gap, and a check that requires a crossing to fire does not close it; (4) the overlap with history-reach-feeds-a-migration is unresolved \u2014 the boundary is drawn above: tampered-with vs should-still-be-here.",
+  "falsifier": "RED if: (1) an in-place edit of a history.json entry passes undetected; (2) an at-rest component's state.json is modified between voyages with nothing noticing; (3) the check only fires at crossing time — at-rest is the gap, and a check that requires a crossing to fire does not close it; (4) the overlap with history-reach-feeds-a-migration is unresolved — the boundary is drawn above: tampered-with vs should-still-be-here.",
   "horizon": "Shares a build surface with history-reach-feeds-a-migration. The in-place-edit check (git-based) is simpler and lands first.",
   "parent": "",
   "children": [],
   "dependencies": [
-    "The existing append door (cairn/tools/base/transitions.py) \u2014 the enforcement this extends.",
-    "build_inspector \u2014 where the sieve lives.",
-    "ground_loop \u2014 where the at-rest beat fires.",
-    "history-reach-feeds-a-migration \u2014 the companion ticket for Law 5's gap (3); boundary drawn in how.law_5_boundary_with_history_reach."
+    "The existing append door (cairn/tools/base/transitions.py) — the enforcement this extends.",
+    "build_inspector — where the sieve lives.",
+    "ground_loop — where the at-rest beat fires.",
+    "history-reach-feeds-a-migration — the companion ticket for Law 5's gap (3); boundary drawn in how.law_5_boundary_with_history_reach."
   ],
   "distinctions_recorded": [
     "APPEND DOOR vs IN-PLACE EDIT: the door routes NEW entries. It says nothing about old entries being rewritten. These are different write operations and need different enforcement.",
@@ -34,9 +34,9 @@
     "TAMPERED-WITH vs SHOULD-STILL-BE-HERE: this ticket's question and history-reach-feeds-a-migration's question. Both read the same files; they ask different things about them."
   ],
   "provenance": "Born as an IOU in CLAUDE.md's Residues section under 'state/history (append door + PROVEME drift check)'. Ticketed 2026-08-21. Design filled 2026-08-21.",
-  "watchme": "none, because cast before the watchme spec \u2014 the append door's drift check proofs are the efficacy measure",
+  "watchme": "none, because cast before the watchme spec — the append door's drift check proofs are the efficacy measure",
   "owning_intention": "CairnCommons/intentions-not-beside-code/telos.md",
-  "sorted_berth": "none, because cast by hand with no /sorted firing \u2014 backfilled by ticket inspector 2026-08-26",
-  "intent_berth": "none, because no /intent firing was recorded \u2014 backfilled by ticket inspector 2026-08-26",
-  "chart_claim": "none, because no chart chain was run \u2014 backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run."
+  "sorted_berth": "none, because cast by hand with no /sorted firing — backfilled by ticket inspector 2026-08-26",
+  "intent_berth": "none, because no /intent firing was recorded — backfilled by ticket inspector 2026-08-26",
+  "chart_claim": "validate-20260829T192416-6b0b41af36ba.json — full 7-stage chain 2026-08-29, verdict-20260829T193120-d12e83f45e68.json 3/3 criteria pass, 3/3 hypotheses confirmed"
 }
