@@ -1,0 +1,79 @@
+{
+  "id": "72e8e3509287",
+  "title": "the-web-server-graduates-to-starlette",
+  "date": "2026-08-19",
+  "owner": "CC",
+  "owning_intention": "",
+  "intention": "Replace the stdlib http.server web_server with Starlette + uvicorn. The graft source is TheIgors/lab/claudecode/utility_closet_server.py \u2014 already built, already proven. The graduation brings async, WebSocket fan-out, and static file serving.",
+  "why": "The trouble panel (and every future dynamic pane) needs client-side interaction and server push. The stdlib web_server is synchronous and cannot do either. This is not a new dependency decision \u2014 the framework was chosen in February and built in TheIgors.",
+  "traces_to": [
+    "Law 8 \u2014 nothing enters proven-space without a proof a hollow build couldn't pass. The graft from TheIgors is bytes crossing from a sibling project; the graft ticket and proof are owed.",
+    "Law 4 \u2014 the framework was CHOSEN in February and confirmed by Akien; this is enforcement of that ruling, not a new decision.",
+    "one-web-server-surfaces-in-the-shim \u2014 ONE web server; a device gets a declared PANE, never its own route/port/server. This replaces, it does not add."
+  ],
+  "falsifier": {
+    "proves_green": "The stdlib http.server is replaced by Starlette + uvicorn. THREE things must hold: (1) existing pane URLs render identically \u2014 no regression on current surfaces; (2) WebSocket connection establishes and can receive a server push \u2014 the capability the current server lacks; (3) the listener is Starlette's ASGI app run by uvicorn, not custom socket code \u2014 the device logic (routing in server.py, rendering in render.py) stays where it is and does not leak into the transport.",
+    "proves_red": "RED if: (1) a second web server appears \u2014 the one-web-server rule is the standing constraint; (2) device logic (routing, rendering) leaks into the transport layer \u2014 server.py and render.py are the logic, Starlette is the transport; (3) existing pane URLs break \u2014 a regression is a red, not a tolerable transition cost; (4) the graft introduces dependencies not already in TheIgors' utility_closet_server.py without justification; (5) the graft enters without a graft ticket and proof (Law 8 \u2014 bytes are a graft with a ticket and proof, ideas are free and cited in the charter's entry).",
+    "horizon": "Before the-cairn-device-owns-the-trouble-panel \u2014 that ticket depends on this one for WebSocket capability. No blockers for this build; the graft source exists on disk and the framework is confirmed."
+  },
+  "children": [],
+  "linked_ideas": [
+    "Akien 2026-08-19: framework question on the trouble panel; Starlette confirmed as the ruled framework (CC's recommendation Feb 2026, Akien confirmed same session)"
+  ],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "This is a GRAFT from a sibling project, not a greenfield framework selection. The graft ticket and proof are owed (Law 8)."
+    },
+    {
+      "q": "distinctions",
+      "a": "The shape (route -> fetch device DATA -> render) is already proven in the current web_server. What changes is the transport and the ability to push updates."
+    },
+    {
+      "q": "distinctions",
+      "a": "ONE web server \u2014 the rule holds. This replaces the current one, it does not add a second."
+    },
+    {
+      "q": "distinctions",
+      "a": "The listener (the socket binding) stays thin \u2014 Starlette's ASGI is the new listener, uvicorn is the runner. The device logic (routing, rendering) stays in server.py and render.py."
+    }
+  ],
+  "constraints": [],
+  "how": "Replace stdlib http.server with Starlette + uvicorn. Graft source: TheIgors/lab/claudecode/utility_closet_server.py (already built + tested). One graft, one proof, one VALIDATION.",
+  "links": [],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> WATCHME(web-server-serves-dynamic-panes) -> PROVED",
+  "watchme": {
+    "object": "web-server-serves-dynamic-panes",
+    "trigger": "a pane is requested via HTTP and the server renders it dynamically",
+    "enough": "three dynamic pane renders under real traffic, each returning correct content for the requesting device's current state",
+    "carrier": "the request/response pair including the pane content and the device state it was rendered from",
+    "nexus": "hypothesize",
+    "consumer": "Akien \u2014 dynamic panes are the web server's reason for existing beyond static file serving",
+    "probe": "cairn/devices/librarian/probes/web_server_serves_dynamic_panes.py"
+  },
+  "deposits": {},
+  "sorted_berth": "none, because cast by hand with no /sorted firing \u2014 backfilled by ticket inspector 2026-08-26",
+  "intent_berth": "none, because no /intent firing was recorded \u2014 backfilled by ticket inspector 2026-08-26",
+  "chart_claim": "none, because no chart chain was run \u2014 backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run.",
+  "schema_version": "ticket-v1",
+  "cast": "2026-08-19",
+  "cast_by": "CC",
+  "dependencies": [
+    "TheIgors/lab/claudecode/utility_closet_server.py \u2014 the graft source. Already built, already proven in TheIgors. Must exist on disk.",
+    "cairn/cairn/devices/web_server/ \u2014 the current web_server being replaced. Its server.py (routing) and render.py (rendering) stay; its listener changes.",
+    "starlette and uvicorn packages \u2014 pip install. Both are already on disk from TheIgors' work."
+  ],
+  "intention_berth": "CairnCommons/intentions-not-beside-code/I-the-cairn-device.md (child b)",
+  "graft_source": "TheIgors/lab/claudecode/utility_closet_server.py (Starlette + uvicorn, WebSocket hub, static file serving)",
+  "chart_notes": {
+    "orient": "The graft source is TheIgors/lab/claudecode/utility_closet_server.py. The current web_server is at cairn/cairn/devices/web_server/ \u2014 server.py has routing, render.py has rendering, __init__.py has the listener. The pane declaration shape is already built; what changes is only the transport.",
+    "constrain": "OUT: new routes or endpoints (this replaces the transport, not the routing); new dependencies beyond starlette/uvicorn; touching device logic in server.py or render.py beyond the interface change. IN: the ASGI app, uvicorn as runner, WebSocket hub from the graft, static file serving.",
+    "validate": "Every existing pane URL renders identically before and after (screenshot comparison or content hash). A WebSocket connection to the server establishes and receives at least one push. uvicorn serves the ASGI app and the process is the same single web server process."
+  },
+  "filed_edges": [
+    "The graft ticket is owed (Law 8) \u2014 bytes crossing from a sibling project need a ticket and proof. Check IN-HOUSE first: starlette and uvicorn are already installed.",
+    "The web_server ticket (CairnCommons/tickets/web-server.json) is at PROVEME with deferred children; this migration is a sibling, not a child of that ticket."
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "id": "151682f1f942",
+  "title": "ruling-intake-ensures-packets-are-opened",
+  "date": "2026-08-21",
+  "owner": "CC owns the mechanism. Akien owns nothing here",
+  "owning_intention": "cairn/machines/ruling/intention+why.json",
+  "intention": "The ruling intake door (cairn ruling) has a gap: nothing makes CC open a ruling packet. The hook sees packets that exist in CairnCommons/decisions/, but a ruling never recorded as a packet is invisible \u2014 the hook cannot see what is not there. This ticket ensures that the path from 'Akien rules on something in conversation' to 'the ruling is a packet in decisions/' has no silent gap where the ruling can be lost.",
+  "why": "MEASURED 2026-08-14: bypassing 'cairn ruling open' hid three real defects, including a packet authoring its own sign-off. The ruling intake is the path from Akien's spoken ruling to a durable record. If CC does not open a packet \u2014 because it forgot, because it rationalized that the ruling was minor, because it decided the door was for Akien's act and recording is different \u2014 the ruling is lost. A lost ruling is worse than a missing one: it was given, it was heard, and it was not recorded, so a future mind will not know to look for it and will re-derive what was already settled (Law 1).",
+  "traces_to": [
+    "Law 1 \u2014 a ruling not recorded is an answered question that becomes re-derivation.",
+    "Law 7 \u2014 errors are loud and permanent in records of truth. A ruling that was given but not recorded is a silent error in the record.",
+    "Memory: records-go-through-their-door \u2014 CC's measured failure mode of hand-writing into stores that have an intake door."
+  ],
+  "falsifier": {
+    "proves_green": "A Stop hook that scans session transcripts for ruling markers in user messages with no corresponding packet in decisions/. Proof teeth: (1) a fixture session with a ruling marker and no packet fires; (2) a fixture session with a ruling marker AND a packet opened after it passes; (3) a fixture session with 'that holds' in casual agreement (no ruling context) passes \u2014 the pairing check prevents false positives; (4) the hook cannot be disabled by CC forgetting to do something.",
+    "proves_red": "RED if: (1) Akien gives a ruling in conversation and no packet is created, with nothing noticing; (2) the mechanism requires CC to voluntarily trigger it \u2014 that is the gap this ticket exists to close; (3) the mechanism fires so often on non-rulings that its output stops being read \u2014 measured as more than a third of firings being false positives over the first 30; (4) the mechanism only checks for packets that exist \u2014 the gap is about packets that do NOT exist.",
+    "horizon": "Behind a-constraint-that-stopped-constraining-carries-a-ruling, which uses packets as its substrate. A ruling intake that doesn't ensure packets exist weakens the corrosion detector."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "SEEING vs OPENING: the hook sees packets that exist. This ticket is about packets that should exist and don't. The hook cannot close this gap \u2014 it works on what is there."
+    },
+    {
+      "q": "distinctions",
+      "a": "RECORDING vs ACTING: CC's failure mode (memory: records-go-through-their-door) is rationalizing that the door is for Akien's act and recording is different. The fix must not depend on CC voluntarily using the door \u2014 that is the exact gap."
+    },
+    {
+      "q": "distinctions",
+      "a": "MARKER ALONE vs MARKER+ABSENCE: the signal is the pairing \u2014 a ruling marker with no packet following. Firing on the marker alone would red every session where Akien says 'that holds' in casual agreement."
+    }
+  ],
+  "constraints": [],
+  "how": {
+    "mechanism": "A STOP HOOK that scans the session transcript for ruling-shaped exchanges that have no corresponding packet. The same seat turnscan already occupies \u2014 Stop hooks fire every turn, unconditionally, and cannot be forgotten. This is mechanism (a) from the original gates field: a session-end check. NOT mechanism (b) \u2014 a prompt/hook that fires when ruling language is detected \u2014 because ruling language without a ruling is noise, and the signal is the PAIRING: ruling language in Akien's message, no packet opened in the same session.",
+    "detection": "Scan the user messages in the current session for ruling markers: 'ruled', 'i rule', 'my ruling', 'the ruling is', 'let me state this clearly as', 'that's a law', 'that holds' (when in response to a proposed principle). These are the same markers cairn/machines/ruling/ruling.py already uses for the RULED confirmation mark. When a ruling marker is found in a user message, check whether `cairn ruling open` was called later in the session (by scanning assistant tool_use blocks for the ruling CLI invocation, or by checking whether a new packet appeared in CairnCommons/decisions/ with a timestamp after the ruling marker). If no packet exists: emit a systemMessage naming the user message and the missing packet.",
+    "false_positive_bound": "The markers are AKIEN'S OWN VOCABULARY for rulings \u2014 they are already calibrated by ruling.py's ruled_marks(). The check fires on pairing (marker + no packet), not on the marker alone, so 'that holds' in a casual agreement does not fire unless no packet follows. The falsifier (3) bounds the noise: if more than a third of firings are false positives, the markers need tightening.",
+    "does_not_depend_on_cc": "The hook fires at Stop, which is unconditional. CC cannot forget to trigger it because CC does not trigger it \u2014 the harness does. This satisfies falsifier (2): the mechanism does not require CC to voluntarily use the door."
+  },
+  "links": [],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
+  "watchme": "none, because cast before the watchme spec \u2014 the ruling door's own packet-intake proof is the efficacy measure",
+  "deposits": {},
+  "sorted_berth": "none, because cast by hand with no /sorted firing \u2014 backfilled by ticket inspector 2026-08-26",
+  "intent_berth": "none, because this node entered at TICKET \u2014 a bug or measured defect (decisions/2026-08-02-three-entry-points-and-structural-refiled)",
+  "chart_claim": "validate-20260829T183053-cc2b2085820b.json \u2014 full 7-stage chain 2026-08-29, verdict-20260829T183953-0b78f8cdcbe2.json \u2014 4/4 criteria pass, 6/6 hypotheses confirmed",
+  "schema_version": "ticket-v1",
+  "dependencies": [
+    "cairn ruling (the existing door) \u2014 the mechanism this complements.",
+    "CairnCommons/decisions/ \u2014 where packets live.",
+    "ruling.py's ruled_marks() \u2014 the vocabulary for detecting ruling language, already calibrated.",
+    "a-constraint-that-stopped-constraining-carries-a-ruling \u2014 the corrosion detector that consumes packets.",
+    "The Stop hook seat \u2014 proven by turnscan as workable and unconditional."
+  ]
+}

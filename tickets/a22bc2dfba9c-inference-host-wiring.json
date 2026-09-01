@@ -1,0 +1,127 @@
+{
+  "id": "a22bc2dfba9c",
+  "title": "inference-host-wiring",
+  "date": "2026-07-26",
+  "owner": "akiendelllinux_cc_0 (CC) gates writes. inference_domain owns the seam being filled (Law 6).",
+  "owning_intention": "",
+  "intention": "Wire inference_domain's `resolver` seam to the real local inference host, so the compile-once path actually reaches a model \u2014 and so `yield_report()` produces REAL numbers instead of measuring a stub.",
+  "why": "MEASURED 2026-07-26. inference_domain sits on the build order as DONE and the librarian is planned on top of it. Its own filed edge (b) says: 'THE HOST CLIENT is injected (the `resolver` seam) and not yet wired to a real host \u2014 it will live HERE and nowhere else.' The record was honest at the component and wrong at the plan. Worse: a working host has been running on this box the entire time and nothing in Cairn knew \u2014 `ollama serve` (pid 2136) up since 2026-07-22, listening on :11434, with qwen2.5:7b, llama3.2:1b and nomic-embed-text. Both endpoints measured working on 2026-07-26 (embeddings returned 768 dimensions; generation responded). Nothing in the tree references port 11434, ollama, or that endpoint. THE SECOND WHY IS THE BIGGER ONE: `yield_report()` measures tokens SPENT on misses against tokens AVOIDED by hits. That is the instrument for telos aim 1 \u2014 the measured curve of resolver-calls declining as the corpus grows. Akien's most showcaseable claim (a prebuild step saving ~90% of tokens, independently reimplemented at his workplace and running daily) has no recorded measurement inside Cairn. This node is what turns that instrument on.",
+  "traces_to": [
+    "telos aim 1 \u2014 demonstrate inference compilation. Unmeasurable until the meter reads a real host.",
+    "Law 3 \u2014 nothing is known until measured. The cache's yield is currently a hypothesis measured against a stub.",
+    "Law 6 \u2014 the host client lives in inference_domain and nowhere else; this node fills that seam and adds no second path.",
+    "Law 8 \u2014 the sole-path tooth (a tester import-scan that reds any other module opening the host) is inference_domain's own filed edge (b), and this node is what makes that tooth worth growing."
+  ],
+  "falsifier": {
+    "proves_green": {
+      "prove_gate": "proof gate \u2014 the tester runs the proof and emits a VALIDATION.",
+      "durability_gate": "tested AND durably committed."
+    },
+    "proves_red": "Against the REAL host: (1) a first request resolves and returns an answer; (2) an IDENTICAL second request is a HIT and the resolver is NEVER called \u2014 asserted by instrumenting the resolver, not inferred from timing; (3) `yield_report()` shows tokens AVOIDED strictly greater than zero, and the avoided/spent numbers reconcile against the two calls. That is the compile-once claim proved end to end rather than asserted. A hollow build fails (2) \u2014 returning a cached-looking answer while still calling the host is exactly the failure this must catch. Additionally the host's ABSENCE must be a declared, loud failure, not a crash: the box can be rebooted, the service can be down, and 'inference host unreachable' is a legitimate measured state (Law 7).",
+    "horizon": "The yield number is meaningless until real traffic runs through it. Re-read once the librarian or the reading work has driven a few hundred requests \u2014 before then the curve has too few points to say anything, and quoting it early would be the same error as quoting an unmeasured 90%."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "THE HOST IS NOT HEX. `hex` does not resolve, is not in /etc/hosts, and is not on the ARP table \u2014 the M1 remains a plan. What exists is ollama on THIS box. That is fine and it is the point of the seam: build and prove against localhost now, and Hex later becomes a HOST SWAP behind the same seam. The librarian therefore does NOT wait on acquiring or wiring an M1, which is a materially different dependency picture from the one held-librarian assumed."
+    },
+    {
+      "q": "distinctions",
+      "a": "EMBEDDINGS ARE A DIFFERENT CALL SHAPE AND ARE NOT IN SCOPE HERE. inference_domain does completion-shaped caching; nomic-embed-text is an embedding endpoint. Both live on the same host, but wiring the completion resolver does not give the system embeddings, and pretending otherwise would repeat the done-but-not-connected defect this node exists to close. Whether Cairn wants a pretrained embedder AT ALL is Akien's open call \u2014 his objection stands ('every call is an inference call', so the curve never bends), with the word graph as the real answer and an off-the-shelf embedder at most a bootstrap that must carry a written exit condition."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE OLDER EMBEDDINGS ENDPOINT CANNOT BE METERED. /api/embeddings returns ONLY the vector \u2014 no prompt_eval_count, no eval_count. Measured 2026-07-26, and it changed the build: resolving through it would have produced a working resolver whose every cost was 0, and yield_report \u2014 the instrument for the whole Telos 1 claim \u2014 would have reported a flawlessly consistent 0-spent/0-avoided. The shape right, the content hollow, and nothing red (Law 8). host.py uses /api/embed and RAISES HostUnmetered rather than defaulting a missing counter to 0: an unmetered answer is not cheaper than no answer, it is a lie about the thesis."
+    },
+    {
+      "q": "distinctions",
+      "a": "A FALSIFIER MADE MACHINE-CHECKABLE. Charter edge (c) carries a falsifier for T1.4 without evaluating it. A time horizon on a temperature-0 completion is theatre \u2014 nothing rots as the clock moves \u2014 so horizon is '' and the falsifier is 'model_digest(<model>) == <sha>', answerable by one /api/tags read. The edge stays open, but closing it is now a comparison rather than a design problem. Sampling is pinned to temperature 0 for the same reason: caching a nondeterministic call silently changes what the cache MEANS."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE FIRST LIVE ROW CAUGHT WHAT 16 GREEN TEETH DID NOT. The run was green and the row it wrote said 'model_digest(nomic-embed-text) == <unread at resolve time>': the host tags the model 'nomic-embed-text:latest', the caller names it 'nomic-embed-text', and the dict lookup missed. So the falsifier degraded silently for the MOST COMMON way to name a model. Visible only by reading the record the run actually wrote (Law 3 \u2014 the proof attested the shape, only the live row showed the content was empty). Fixed, and the fixture now carries the ':latest' the host really reports, because a tidied fixture would have kept the proof green through the bug."
+    },
+    {
+      "q": "distinctions",
+      "a": "SOLE-PATH IS NOW RE-CHECKED, AND THE CHECK TESTS CAPABILITY NOT MENTION. Charter edge (b) said 'sole by construction' \u2014 a claim about the present that nothing re-ran. A tooth now scans the tree on every proof run. Written as a grep for ':11434' it flagged base/needs.py, where the string sits in a docstring, an error-message example and a test fixture: prose ABOUT a measurement, unable to open a socket. A check that cannot tell a door from a description of one gets trained away by its own noise \u2014 and would still miss a module that reads the endpoint from config. So it asks which modules can DIAL: outbound imports by full dotted name. Exactly one does. web_server/daemon.py imports http.server, which LISTENS and cannot reach anything \u2014 that distinction is the tooth's, not an exemption."
+    }
+  ],
+  "constraints": [],
+  "how": "",
+  "links": [],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]   (cursor at PROVED 2026-07-26. Leaf, complete. Two filed edges are Akien's to rule on; neither gates this node.)",
+  "watchme": null,
+  "deposits": {},
+  "sorted_berth": "",
+  "intent_berth": "",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260828T065433-29f3477831c1.json",
+    "verdict_berth": "/home/akien/.cairn/devices/chart/0/packets/verdict-20260828T065433-599979fee12f.json",
+    "chain_complete": true,
+    "filled_by": "CC 2026-08-28"
+  },
+  "schema_version": "v0",
+  "dependencies": "BUILDME needs a reachable host \u2014 MEASURED PRESENT 2026-07-26 (ollama :11434, up since 2026-07-22, both endpoints responding). That measurement is exactly the kind of mark stage-needs will carry; recorded here in prose until that shape is built.",
+  "filed_edges": [
+    "THE SOLE-PATH TOOTH \u2014 a tester import-scan reddening any module but this one that opens the host \u2014 is inference_domain's filed edge (b) and stays filed. Sole by construction today.",
+    "SEMANTIC CANONICALIZATION (edge a) is untouched: canonicalize is structural (sorted-key JSON) and does not collapse paraphrases. Real traffic through a real host is what will show how much that costs, which is the evidence that edge has been waiting for.",
+    "(RULED BY AKIEN 2026-07-27 \u2014 CLOSED, THEN CC'S WRITE-UP CORRECTED BY HIM THE SAME DAY.) His words: 'all requests go by graph trees, word or fact, and escalate on graph failure to a node depositing call that validates by resubmitting the same request.' The host is NEVER in the answer path: on a graph miss it supplies NODES, they are deposited, and the ORIGINAL REQUEST IS RESUBMITTED \u2014 the graph resolving it is the validation. CC's option (a) was wrong. TWO CORRECTIONS TO CC'S FIRST WRITE-UP OF THIS EDGE, both recorded in notes/held-librarian.json: the phrase 'the graph type is a coordinate, not a class' was CC's inference recorded as Akien's ruling (fabricated attribution, the exact failure that note already documents); and CC dropped the resubmit-validates clause, which is the half that closes the loop. THE LIVE CONSEQUENCE FOR THIS COMPONENT (CC's read, unmeasured): the resubmit path can LIVELOCK against this node's cache \u2014 same request canonicalizes to the same key, hits, and returns the nodes that just failed to resolve, while yield_report() counts each turn as tokens AVOIDED. A backfill call is not cacheable on the request alone; the key or falsifier must carry the graph state it failed against. Filed against this node, not built, and it supersedes CC's earlier 'a cache hit on backfill is a defect signal' \u2014 it is a trap the meter reports as a saving.",
+    "(FILED) yield_report() raises psycopg2 UndefinedTable when the cache table has never been created, rather than reporting an empty meter. Found this run \u2014 the real inference_calls table had never existed outside a proof's ephemeral run. Loud is right (Law 7), but the diagnosis points at SQL instead of at 'no traffic yet'. Left alone rather than changed unasked; it is a diagnostic-surface polish, not a defect in the meter."
+  ],
+  "stage_needs": {
+    "BUILDME": [
+      {
+        "need": "an inference host reachable through inference_domain's resolver seam",
+        "marks": [
+          {
+            "need": "an inference host reachable through inference_domain's resolver seam",
+            "status": "DONE",
+            "when": "2026-07-26",
+            "how_measured": "curl http://localhost:11434/api/tags -> qwen2.5:7b, llama3.2:1b, nomic-embed-text; POST /api/embeddings returned a 768-dim vector. Host up since 2026-07-22; nothing in Cairn references port 11434 yet.",
+            "at": "2026-07-26T19:39:43",
+            "seq": 0
+          },
+          {
+            "need": "an inference host reachable through inference_domain's resolver seam",
+            "status": "DONE",
+            "when": "2026-07-26",
+            "how_measured": "WIRED AND MEASURED END TO END, not just reachable. cairn/devices/inference_domain/host.py is the resolver; 5 resolves through domain.resolve() touched the host TWICE (instrumented count, not inferred from timing); yield_report() went 0/0 -> spent 84, avoided 159 real tokens, reconciling exactly (generate 75 x2 hits + embed 9 x1 = 159). A SECOND PROCESS then made 5 resolves with ZERO host touches (avoided 243 more), so compile-once survives process death. Supersedes seq 0, which measured /api/embeddings \u2014 that endpoint reports NO token counters, so resolving through it would have metered every call at 0 and left yield_report testifying to a saving nobody measured. /api/embed is the door. VALIDATION green under a MEASURED netns seal at cairn/devices/inference_domain/validations/test_host.json (17 teeth, hermetic).",
+            "at": "2026-07-26T19:57:40",
+            "seq": 1
+          }
+        ]
+      },
+      {
+        "need": "an embeddings generator \u2014 the trained word graph the resolver walks",
+        "marks": [
+          {
+            "need": "an embeddings generator \u2014 the trained word graph the resolver walks",
+            "status": "MISSING",
+            "when": "2026-07-26",
+            "how_measured": "psql -l then a wg_*/clan table count in each of the 6 databases on this box (agent-datacenter-0001, cairn, postgres, template0/1, unseen_university): 0 everywhere. Trainer + 166 extracted books survive, so rebuilding is a COMPUTE job, not a redesign.",
+            "at": "2026-07-26T19:39:43",
+            "seq": 0
+          }
+        ]
+      },
+      {
+        "need": "the memory store shape (tickets/memory-shape.json) \u2014 where a cached answer lands",
+        "marks": [
+          {
+            "need": "the memory store shape (tickets/memory-shape.json) \u2014 where a cached answer lands",
+            "status": "MISSING",
+            "when": "2026-07-26",
+            "how_measured": "Still open: three of memory-shape's four questions are unanswered and are Akien's (the bound, the shear vs inbound cross-tree links, edges stored/derived/both). MIS-DECLARED AS A BUILDME DEPENDENCY, which is the finding: a cached answer lands in db_domain's own append-only inference_calls table, provisioned this run for the first time ever, and the memory-shape store is where the LIBRARIAN's graph trees land, not where inference answers land. Measured by building the whole stage to green with this need unresolved. The need is real for the librarian and does not belong on this node's BUILDME.",
+            "at": "2026-07-26T19:57:40",
+            "seq": 0
+          }
+        ]
+      }
+    ]
+  },
+  "migrated_from": "code-seam@v1 \u2014 the dissolved fifth summons stripped by sweep 2026-08-03 (Akien's ruling: the words should have been scrubbed when the version was minted). The dead token is deliberately not reprinted here; tickets/watchme-emits-a-probe is its one record."
+}

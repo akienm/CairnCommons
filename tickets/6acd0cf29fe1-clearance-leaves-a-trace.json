@@ -1,0 +1,69 @@
+{
+  "id": "6acd0cf29fe1",
+  "title": "clearance-leaves-a-trace",
+  "date": "2026-07-26",
+  "owner": "harbor_master owns the clearance gate and its queue (Law 6). CC gates writes to this ticket.",
+  "owning_intention": "cairn/devices/cairn/machines/harbor_master/intention+why.json",
+  "intention": "A clearance REQUEST and a clearance REFUSAL must each leave a trace owned by the gate's queue. Today the gate writes nothing until it GRANTS, so an attempt that was refused leaves no record that it happened.",
+  "why": "voyage.py:70 already states it as an IOU: 'the clearance REQUEST must leave a trace owned by the gate's queue (clearance today writes nothing until it grants)'. It became load-bearing on 2026-07-26 when Akien settled how dependencies work: a node is either unverified at its gate or unpicked-up, and the ATTEMPT is the measurement. That model is cheaper and more honest than a stored guess about blocking \u2014 but only if a failed attempt is RECORDED. Otherwise the same wall gets walked into twice, which is Law 1's defect precisely: re-deriving a settled answer. Akien, shown this: 'Agree. needs a fix.'",
+  "traces_to": [
+    "Law 1 \u2014 an attempt that leaves no trace guarantees the next mind repeats it.",
+    "Law 7 \u2014 errors are loud at diagnostic surfaces and permanent in records of truth. A refusal is an error-class outcome that is currently silent everywhere.",
+    "Law 6 \u2014 the queue is the gate's own; the trace belongs to harbor_master and is written through its door, not by callers.",
+    "Law 3 \u2014 a refusal is a MEASUREMENT of what the gate would not permit, and measurements are the thing this system keeps."
+  ],
+  "falsifier": {
+    "proves_green": {
+      "prove_gate": "proof gate \u2014 the tester runs the proof and emits a VALIDATION.",
+      "durability_gate": "tested AND durably committed."
+    },
+    "proves_red": "A REFUSED clearance must leave a durable record carrying who asked, for what transition, when, and the refusal REASON \u2014 and that record must be readable afterwards. A grant must be distinguishable from a refusal in the record. A hollow build passes by logging only grants (the present behaviour) or by writing a refusal with no reason, which is loud without being useful.",
+    "horizon": "Re-read once a refusal has actually been raised in normal work. The volume question \u2014 whether a repeatedly-refused request should DAMP the way the trouble lane does (first raise notifies, subsequent raises increment a count and notify nobody) \u2014 waits on seeing whether refusals repeat in practice. Not guessed.  UPDATE 2026-08-10: one real refusal now exists (Unproven, on this ticket's own PROVED crossing) \u2014 a data point, not a rate. It argues for the actor-and-code side rather than the boat: a stale fingerprint clears the moment the proof is re-run, which is exactly the 'refused once then moving' case a naive [X] would pin."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "KIN TO stage-needs, NOT A CHILD OF IT. Both express one principle \u2014 the fact that we went and looked gets compiled in \u2014 but they sit on different surfaces with different owners. stage-needs records what a STAGE needs and what we measured about the world; this records what the GATE was asked and what it answered. Law 6 says harbor_master gates its own queue, so this is its own node."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE WRITER GOES AT THE FRAME, NOT THE RAISE SITES \u2014 measured, not chosen. 14 refusal paths reach a caller of clear() and only 7 raise inside the decision function's own text; the other 7 are OwnerUnresolvable propagating out of boat_owner_of, a helper shared with readers that clear nothing. A per-raise-site build passes review and records half the surface. The cost of the frame is that clear() had to split into a public door around a private _decide(), and the first cut of that door took **kwargs and silently erased the keyword-only structure that makes proven_by unsmuggleable."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE CONSUMER IS A LAW 7 DECISION, AND THE CODE ALREADY DECIDED IT. learning_block's write_trace reaps consumer='debug' records past DEBUG_TTL_DAYS=30 on every subsequent write. That structurally disqualifies 'debug' for a record of truth \u2014 the queue is 'training', and the tooth ages a store 400 days rather than citing the constant."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE READ FACE BELONGS TO THE QUEUE'S OWNER, AND THE SECOND CONSUMER IS WHAT PROVES IT. The reader was written inside the probe and was correct there while the probe was alone. The moment voyage.py's [X] marker wanted the same fact, a copy would have meant two spellings of one block/event/consumer vocabulary \u2014 and a drifted copy does not fail loudly, it reports a confident zero. It lives at clearance.read_attempts() now (Law 6); the probe composes it and only counts."
+    },
+    {
+      "q": "distinctions",
+      "a": "A PRE-DECLARED MARKER CAN OUTLIVE ITS OWN REASON. [R] requested and [X] refused were both filed as waiting on 'the queue'. With the queue built, neither grafted, and they did not even want the same thing: [R] presumes a DWELL state a synchronous gate does not have (it waits on a design question, not on data), while [X] has its fact and lacks a 'still refused since the last journaled crossing' predicate \u2014 without which the flag pins on the first refusal and fires on normal motion. The blanket sentence that covered both is the defect: one phrase over a set that stops being uniform is how a filed absence outlives the voyage that filled it. It fired the acceptance instrument RED."
+    },
+    {
+      "q": "distinctions",
+      "a": "A PROOF THAT MANUFACTURES REFUSALS MUST NOT REACH THE COUNTED STORE. Both harbor_master proofs redirect CAIRN_LB_TRACE_ROOT at import and assert byte-identity on the live file at the end. This is what makes the refusal recorded during this voyage's own close genuine evidence rather than noise \u2014 nothing in the test tree can put a record there."
+    }
+  ],
+  "constraints": [],
+  "how": "",
+  "links": [],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]   (PROVED 2026-08-10. The gate's queue is built and the falsifier was answered by a REAL refusal, not a fixture: the first attempt at this ticket's own PROVED crossing was refused Unproven \u2014 retiring the prose IOU had edited voyage.py after the seal, so Law 3 closed the validation's horizon \u2014 and the store caught it whole. Verdict berthed at verdict-20260810T222204-9239cdda9ed3.json; 6 criteria pass, 5 hypotheses confirmed.)",
+  "watchme": null,
+  "deposits": {},
+  "sorted_berth": "none, because this node was CAST 2026-07-26 via /sorted and the sorted DOOR did not exist yet \u2014 it was built 2026-08-03 by ticket sorted-becomes-a-learning-block (CairnCommons/tickets/sorted-becomes-a-learning-block.json), tenant #2 of the skill_block seam. The cast ran the sequence in conversation, which is what the door later turned into physics; its output is this ticket's node_class, workflow, gates and falsifier fields, all present. Same Law 7 reason as intent_berth: a berth minted today would date a firing that happened fifteen days ago.",
+  "intent_berth": "none, because this node was CAST 2026-07-26 and the /intent berth requirement did not exist yet \u2014 it was built by ticket intent-becomes-a-learning-block (CairnCommons/tickets/intent-becomes-a-learning-block.json), whose door first minted berths under ~/.cairn/devices/skill_block/0/berths/intent/. There is no berth to name because there was no berth to mint. Back-firing /intent now would mint a 2026-08-10 berth attesting a birth that happened on 2026-07-26, which is a fabricated record of truth (Law 7) \u2014 the exemption is the honest field. The birth IS recorded: this ticket's own 'provenance' carries it (filed as an IOU at cairn/tools/base/voyage.py:70, promoted when Akien said 'Agree. needs a fix.').",
+  "chart_claim": "validate-20260810T215804-512e3f7c2d96 \u2014 chart chain complete with real content; verdict berthed at verdict-20260810T222204-9239cdda9ed3",
+  "schema_version": "v0",
+  "dependencies": "BUILDME needs harbor_master's clearance gate (BUILT \u2014 cairn/devices/harbor_master/clearance.py: authorizes / mint_grant / clear) and a durable home for the queue, which db_domain provides. Nothing outstanding.",
+  "filed_edges": [
+    "THE DAMPING QUESTION \u2014 see horizon. The trouble lane's pattern (the ticket IS the damper) is the obvious candidate if refusals turn out to repeat, but no flapping refusal has been measured and inventing a damper for a signal we have not seen is the same error as guessing a chatter width.",
+    "[CORPUS] KIN TO A LIVE TROUBLE \u2014 read them together. This stone records the ATTEMPT; troubles/every-crossing-goes-around-the-clearance-gate measures that 229 crossings never attempted at all. If clearance turns out to be mandatory, the trace this builds is the instrument that proves it; if advisory, it is the only evidence the gate is used at all. Either way the trouble's ruling should land first, because it decides what a refusal even means."
+  ],
+  "migrated_from": "code-seam@v1 \u2014 the dissolved fifth summons stripped by sweep 2026-08-03 (Akien's ruling: the words should have been scrubbed when the version was minted). The dead token is deliberately not reprinted here; tickets/watchme-emits-a-probe is its one record."
+}

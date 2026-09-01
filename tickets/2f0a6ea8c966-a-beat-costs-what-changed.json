@@ -1,0 +1,57 @@
+{
+  "id": "2f0a6ea8c966",
+  "title": "a-beat-costs-what-changed",
+  "date": "2026-08-18",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "A beat costs what CHANGED since the last one, not the whole corpus: a probe whose question is about the corpus reads an answer rebuilt when the corpus changes, instead of re-deriving it once per second forever.",
+  "why": "CADENCE_S = 1.0 is Akien's ruling (2026-07-30) and __main__.py honours it exactly - beat(), then sleep(1.0). The sleep is not the problem; the beat is. MEASURED 2026-08-18 under an isolated instance root: a warm beat is 8.7-9.3s and the loop holds ~76% of a core, permanently, on an idle box - so the heartbeat runs at roughly a tenth of its ruled rate. Per shim, over two rounds: base 3.1-3.5s, inference_domain 2.7-4.1s, build_inspector 2.1-3.2s, which is 84% of the beat in three of twenty-two shims while eleven shims together cost 0.05s. cProfile on one beat names the mechanism rather than a culprit: 1,645 builtins.compile calls (3.1s), 1.6M ast.walk steps (8.2s cumulative), 37,722 json raw_decodes (2.6s), 32 psycopg2 round trips; hot leaves address_rule.spellings_in (5.5s cumulative / 576 calls), import_sieve.imports_in (3.1s / 332), deviceness._class_census (2.2s, parsing the corpus twice). Several probes each independently walk the same ~331 files every beat to answer questions whose answers change only when a file changes. That is Law 1's defect given a metronome, and it taxes every future probe: the marginal cost of watching one more thing is currently 'walk the corpus again'.",
+  "traces_to": "Law 1 - the resolver is spent on the novel, not on re-deriving the settled; here the settled is re-derived 86,400 times a day. The standing aim of an ever-shrinking compute footprint (event, not poll). And Law 4 at one remove: the ruled cadence is enforced by nothing, so a beat taking ten seconds is a rule that has quietly stopped constraining with no ruling behind the drift.",
+  "falsifier": {
+    "proves_green": "code-seam's invariant pair plus its class gates, and THE PARENT CROSSES ONLY AFTER ITS CHILDREN. PROVE GATE: the tester runs the node's proof, verdict and seal from the same hand. The non-hollow tooth is a pair, and it is a TIMED beat rather than a structural claim: assert the measured warm-beat wall-clock is under the ruled cadence, AND assert a file touched between two beats is seen by the second. A hollow build that cached everything forever passes the first and fails the second. DURABILITY GATE: not done until tested AND committed. FEEDS BACK TO ORIGIN ON FAILURE: a red routes to the child owning the mechanism, never to the parent.",
+    "proves_red": "DONE when a warm beat on an idle corpus costs under 1.0s - the ruled cadence - measured as it was measured at cast (each shim's on_pulse timed individually, under an isolated instance root so the instrument does not seed the tree it reads), AND a beat following a real file change still sees that change on that beat, preserving the 2026-08-11 roster clause. WRONG INTENT if the speed comes from firing probes LESS OFTEN: a time-to-live, an every-Nth-beat probe, a staggered schedule. That buys the number by looking less often; the point is that the answers are cheap when nothing changed.",
+    "horizon": "measurable the same day the last child lands - no clock, no live host. The instrument already exists: it is the script that produced the numbers in this cast, and it runs in about a minute."
+  },
+  "children": [
+    "the-corpus-is-walked-when-it-changes - base and build_inspector, 1,495 ast.parse calls per beat between them, driving 1.6M ast.walk steps and 3.1s of builtins.compile. The named leaves are address_rule.spellings_in, import_sieve.imports_in and deviceness._class_census: three existing walkers that do not know about each other. ITS FIRST ACT IS THE SURVEY THIS CAST DID NOT DO - which PROBE, not which shim, asks each question, and whether a fourth shim's cheap-today probe asks the same question and would ride the index for free.",
+    "the-beat-does-not-dial-the-database - inference_domain's 29% of the beat is not ast-driven (zero parses, 975 json loads) and the beat carries 32 psycopg2 round trips. A different mechanism wanting a different answer, and it must first establish whether its probes' answers are functions of the corpus at all or of something that legitimately changes every second."
+  ],
+  "linked_ideas": [
+    "2026-08-18-the-beat-costs-ten-seconds-against-a"
+  ],
+  "questions": [],
+  "constraints": [],
+  "how": "The decomposition is the content - see `children`. Two different mechanisms hide under the one number: (A) the corpus walk, owned by base and build_inspector (1,495 ast.parse calls per beat between them), whose answer is a shared index rebuilt on a cheap fingerprint (file set + max mtime) rather than per beat - on an idle box, zero parsing; and (B) inference_domain's 29%, which is NOT ast-driven (zero parses, 975 json loads) and looks like the beat's 32 database round trips, a different mechanism wanting a different answer. The endpoint this grows toward, named but deliberately not built first, is a probe subscribing to the corpus CHANGING rather than asking whether it did - that needs a watcher process and a per-probe subscription surface that do not exist, and building them before the cheap index would be walking past the simple answer.",
+  "links": [
+    "parent: none"
+  ],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> WATCHME(a_beat_costs_what_changed) -> PROVED",
+  "watchme": {
+    "object": "a_beat_costs_what_changed",
+    "trigger": "every beat - the loop already returns a beat record and the probe reads the wall-clock the beat just took. No new clock, no scan; the datum is one subtraction of numbers the beat already has.",
+    "enough": "NOT satisfied by a green on the corpus it was written against. Enough when it has seen the beat stay under cadence across at least one real corpus change AND one new probe being added - the two events that would make it regress. The marginal cost of watching one more thing is exactly what this node is about, so the watch's own arrival is one of the events it must survive.",
+    "carrier": "a verdict artifact against this ticket's falsifier: the beat's wall-clock, the ruled cadence, and the per-shim split when over - so a red arrives with its attribution already in it rather than needing the profile re-run.",
+    "nexus": "the ground_loop device's own tree - a fact about the heartbeat's cost, the same nexus its liveness and residency watches teach.",
+    "consumer": "the trouble lane on a sustained red (a beat drifting back over cadence is the silent kind of decay: nothing breaks, the box just gets slower), and the ground_loop pane for the standing number.",
+    "probe": "cairn/devices/ground_loop/probes/does_a_beat_cost_what_changed.py"
+  },
+  "deposits": {},
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260818T154624-b3201c0341a0.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260818T154538-8e0e46ac81f3.json",
+  "chart_claim": "none, because no chart chain was run \u2014 backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run.",
+  "schema_version": "v0",
+  "dependencies": [],
+  "open_at_cast": "TWO assumptions carried into the build rather than left standing. (1) That the heavy probes' answers are pure functions of the corpus on disk - if one legitimately depends on a clock, a live host or a database row, no fingerprint can be right for it. Unverified per probe, and it is the FIRST thing the build establishes: getting it wrong produces a fast beat answering with stale truth, which is worse than a slow one. (2) That the fingerprint is cheap - a stat sweep over ~331 files is assumed cheap and unmeasured, and if it costs a meaningful slice of a second the approach changes shape.",
+  "deliberately_unanswered": "Whether these questions belong on a heartbeat AT ALL. A corpus-wide import census is a build-time question and the tester already owns that shape. Moving work is not making it cheap, and which probes belong on a beat is a design conversation - not a decision to smuggle into a performance node. FOR AKIEN.",
+  "measurements_since_cast": [
+    {
+      "date": "2026-08-18T17:08",
+      "by": "CC, during sail:the-heartbeat-outlives-its-caller \u2014 a side measurement, not that voyage's work",
+      "what": "The live launcher-started loop (pid 574986, cairn-ground-loop.service) against the ruled 1.0 s cadence. Lifetime average: 1084 s elapsed / 119 beats = 9.11 s/beat. Windowed, sampled over a fresh 120 s: 14 beats = 8.57 s/beat.",
+      "so_what": "INSIDE the 7-14x this ticket was cast on, at the low end. The cast's range still holds and this reading neither widens nor narrows it.",
+      "a_correction_to_my_own_earlier_reading": "Earlier in the same session I reported this loop at ~16 s/beat and flagged it as WORSE than the range this ticket was cast on. That reading was taken while 14 ground loops I had leaked were running \u2014 load average 18.7 against a normal 3.5. It measured my own leak, not the beat. Recorded here rather than quietly dropped, because a scary number that turns out to be the instrument's own noise is exactly the kind of thing that gets repeated once it is in a record of truth (Law 7). The 8.57 above was taken on a quiet box."
+    }
+  ]
+}

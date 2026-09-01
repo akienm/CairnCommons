@@ -1,0 +1,65 @@
+{
+  "id": "d9c2f956d35b",
+  "title": "librarian-core-loop",
+  "date": "2026-07-27",
+  "owner": "CC (code+proofs); Akien (design: the ruling, the resubmit clause, the livelock spec)",
+  "owning_intention": "",
+  "intention": "The core resolve-or-generate loop (cairn/devices/librarian/loop.py): always the graph first. A question embeds and walks the tree; if the best cosine clears RESOLUTION_FLOOR the walk IS the answer \u2014 no inference. On a miss, the LLM is asked for NODES (never the answer); they deposit through the same provenance gate; the ORIGINAL question resubmits, and the proof the backfill worked is that structure now resolves it. The backfill-cache livelock is fixed as physics AT the junction, as the loop goes live: (1) the backfill prompt carries tree_state's digest + the nearest already-known nodes, so 'same question, changed graph' canonicalizes to a DIFFERENT cache key; (2) a round depositing nothing fresh terminates loudly as no_progress instead of spinning with the trap booked as savings.",
+  "why": "Akien's ruling, 2026-07-27, verbatim: 'The librarian ALWAYS reaches for the graph trees, and if the graph tree can't, the LLM is used to backfill it until it can.' And the load-bearing clause: 'escalate on graph failure to a node depositing call THAT VALIDATES BY RESUBMITTING THE SAME REQUEST.' This is Law 1 as a runtime mechanism \u2014 the resolver spent on the novel, every answered question becoming structure \u2014 and it is the heart every librarian face (learn, summarize, chat) beats on.",
+  "traces_to": [
+    "Law 1 \u2014 the answer path is a graph walk; inference fires only to EXTEND structure, and the second crossing of the same ground is walk-only (measured: backfills 1 -> 0)",
+    "Law 3 \u2014 RESOLUTION_FLOOR=0.65 is a LABELED n=1 guess, returned in every verdict so no caller mistakes the threshold for settled; UNRESOLVED is a measured outcome, not an error",
+    "Law 7 \u2014 a refused backfill node rides the verdict whole; no_progress and exhausted terminate loudly; every crossing breadcrumbs RESOLVED and UNRESOLVED alike",
+    "Law 8 \u2014 a hollow loop (generate answer returned, livelock reopened, progress gate absent) cannot pass the teeth"
+  ],
+  "falsifier": {
+    "proves_green": "proof gate: cairn/devices/librarian/proofs/test_librarian_loop.py (10 teeth) under the tester's MEASURED netns seal \u2014 validations/test_librarian_loop.json, green, sealed; trees re-sealed the same run (tree_state landed in trees.py, so its prior seal's horizon expired \u2014 a NEW dated entry, 14 teeth now). Build gate: inspected at the PROVEME exit. Durability: committed + pushed.",
+    "proves_red": "RED on any of: the loop returning a generate answer instead of a walk (the host in the answer path); two backfill prompts for the same question against a CHANGED graph canonicalizing to the SAME cache key (the livelock reopened \u2014 the proof pins canonicalize inequality); a no-progress round spinning instead of terminating; a refusal at the deposit door dropped from the verdict; loop.py growing an import outside its allowlist. WRONG-SHAPE SIGNAL: UNRESOLVED crossings booked anywhere as savings \u2014 the exact relabeling the livelock spec warned about.",
+    "horizon": "re-read when the learn verb / shelving lands on top of it (parent edge b), or when live use accumulates enough verdicts to tune RESOLUTION_FLOOR past n=1."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "THE RULING, MEASURED LIVE: asked what cosine similarity measures \u2014 nothing the founding tree held (best 0.39 against a 0.65 floor) \u2014 the loop drafted from qwen2.5:7b, ONE node crossed the provenance gate, the original question resubmitted and resolved through structure at 0.8568. Second crossing: ZERO backfills, zero inference in the answer path. 'Until it can', demonstrated in two crossings."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE LIVELOCK DIED AS PHYSICS, NOT POLICY: the fix is in the cache key itself \u2014 the proof pins that two prompts for the same question against a changed graph canonicalize UNEQUAL (a genuine miss), and that a fruitless round terminates loudly as no_progress. Filed 2026-07-27 in held-librarian's ruling section as 'fix AS it goes live, not after' \u2014 and it was."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE DUAL SEAM RIDES THE KEY: one door for both verbs \u2014 the model name is stamped ON the request (embed -> nomic-embed-text, generate -> qwen2.5:7b), so it is part of the canonical form and two models can never share a cache row."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE FLOOR IS A GUESS AND SAYS SO: 0.65 splits the first live walk's right node (0.7473) from its adjacent (0.6278) \u2014 n=1, labeled in the code, returned in every verdict (Law 3 on the threshold itself)."
+    }
+  ],
+  "constraints": [],
+  "how": "",
+  "links": [
+    "parent: 2fb31678b9e9"
+  ],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]   (cursor at PROVED 2026-07-27, same day as the cast; component history/state beside the code at cairn/devices/librarian/)",
+  "watchme": null,
+  "deposits": {},
+  "sorted_berth": "",
+  "intent_berth": "",
+  "chart_claim": "verdict-20260828T061949-eeb2dac2bc44.json",
+  "schema_version": "ticket-v1",
+  "dependencies": [
+    "librarian-graph-trees (the spine: deposit door, walks, tree_state) \u2014 PROVED 2026-07-27",
+    "inference_domain (resolve/canonicalize/cache; both verbs through the one door) \u2014 PROVED 2026-07-26"
+  ],
+  "filed_edges": [
+    "(a) RESOLUTION_FLOOR tunes against real use \u2014 every verdict carries best + floor, so the tuning data accumulates for free; revisit when verdicts number in the dozens",
+    "(b) backfill provenance records source 'llm-backfill' + the question + the graph digest \u2014 when the tenure loop lands, these nodes are the FIRST candidates for earn-or-expire (a model's guess must prove out faster than a human's verbatim line)",
+    "(c) MAX_BACKFILLS=3 is a parsimony guess \u2014 a question three rounds cannot ground is a finding; no live crossing has yet hit it",
+    "(d) the loop takes one question; the chat face (parent edge h) will need conversation -> questions decomposition in front of it"
+  ],
+  "migrated_from": "code-seam@v1 \u2014 the dissolved fifth summons stripped by sweep 2026-08-03 (Akien's ruling: the words should have been scrubbed when the version was minted). The dead token is deliberately not reprinted here; tickets/watchme-emits-a-probe is its one record."
+}

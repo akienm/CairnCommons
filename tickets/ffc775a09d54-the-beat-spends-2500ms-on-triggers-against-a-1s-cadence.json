@@ -1,0 +1,68 @@
+{
+  "id": "ffc775a09d54",
+  "title": "the-beat-spends-2500ms-on-triggers-against-a-1s-cadence",
+  "date": "2026-08-14",
+  "owner": "CC owns the code and the proofs. TWO BOUNDS ARE NOT CC's TO MOVE, and both are ruled: the 1.0s CADENCE_S (Akien, 2026-07-30) and the 5s liveness DEAD threshold. Widening either to make the numbers below look better is the plaster the 2026-08-14 rule forbids",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "The heartbeat's per-beat probe sweep costs a small, bounded fraction of the ruled 1.0s cadence instead of 2.5x it \u2014 so the beat period is the cadence, the liveness record is never more than one cadence old, and adding the next probe does not spend the margin that keeps the loop out of DEAD.",
+  "why": "MEASURED 2026-08-14, three ways, and the third is the one that makes it a defect rather than a cost.\n\n(1) THE SWEEP. 23 probes, each trigger called best-of-3 under the loop's own discover(): 2497 ms total, zero errors. FIVE probes are 94.6% of it \u2014 does_the_denied_set_stay_put 683 ms (27.4%), does_the_gradation_find_a_reader 593 ms (23.8%), device_claims_match_shims 538 ms (21.5%), does_a_domain_ride_the_request 342 ms (13.7%), does_the_route_leave_loopback 205 ms (8.2%). The other eighteen together cost 135 ms. This is not a diffuse tax; it is five bodies.\n\n(2) THE BEAT, END TO END. Sampled off the live daemon's own liveness record: beats 154 -> 166 across 40.0 s wall = a MEASURED beat period of 3.33 s against a ruled cadence of 1.0 s. Subtract the cadence sleep and 2.33 s of every beat is the beat's own work, which agrees with (1) to within the sampling.\n\n(3) THE MARGIN, AND THIS IS THE LIVED SYMPTOM. The liveness record is written once per beat and read against a ruled 5 s DEAD threshold. A read taken at an arbitrary moment during this measurement found the record 3.31 s old. So the healthy resting state already sits two thirds of the way to DEAD, the remaining margin is 1.67 s, and ONE more probe of the size of the top five spends it. The DEAD flicker Akien named on the staleness ticket is not a threshold that is too tight \u2014 it is this. And the failure it produces is not cosmetic: a reader that sees DEAD on a living loop is the same class of false reading the 29-hour outage was made of.\n\nAND THE COMPOUNDING PART: every WATCHME every future build arms lands in this sweep. The cost is monotonically increasing by construction, nothing observes it, and the first thing that will announce it is a DEAD flicker on a healthy loop.",
+  "traces_to": [
+    "Law 3 \u2014 nothing is known until measured. The beat period was assumed to be the cadence for as long as the loop has run; it is 3.33x it, and one read said so.",
+    "Law 9 \u2014 red is the default. A loop whose liveness record is already 3.31 s into a 5 s window is not green-with-headroom; it is one probe from red and nothing says so.",
+    "I-shrinking-footprint-event-not-poll \u2014 the standing aim is an ever-decreasing compute footprint. A per-beat sweep whose cost grows with every watch armed is that aim running backwards.",
+    "Akien 2026-08-14 \u2014 'we keep on until this whole skills and mechanical workflow is solid'. A heartbeat that cannot afford the watches the workflow arms is the workflow's floor giving way."
+  ],
+  "falsifier": {
+    "proves_green": "(1) FIND OUT WHY THE FIVE ARE SLOW BEFORE CHANGING ANYTHING. Each of the five is a candidate for a different reason \u2014 two of them (does_a_domain_ride_the_request, does_the_route_leave_loopback) name the inference host, and a probe that dials on every beat is a different defect from a probe that walks the corpus on every beat. The measurement is per-probe and already exists; the diagnosis is not done. (2) THE CHEAP EXIT IS THE PATTERN, NOT THE EXCEPTION. loop_not_stale costs 1.7 ms because its expensive half runs only when its cheap half says something is there \u2014 the shape is already in the corpus and is what the five are missing. (3) NOTHING IS DELETED TO GET THE NUMBER DOWN. A probe removed from the sweep is a watch switched off, which is the thing the staleness ticket exists to stop; if a probe genuinely should not run every beat, that is a statement about its FIRING EVENT and it goes through the event, not through the roster.",
+    "proves_red": "DONE when the measured beat period sits inside one cadence of 1.0 s and the liveness record's age at an arbitrary read is under one cadence, both re-measured by the same two readings taken here (the sweep, and beats-over-wall off the live liveness record). WRONG INTENT if: (1) CADENCE_S or the 5 s DEAD threshold is widened by any amount for any reason \u2014 that is plaster on a ruled bound and Akien has already ruled on this exact move; (2) a probe is dropped from discovery, skipped, sampled, or moved behind a flag to buy the number \u2014 the sweep must still call every armed watch; (3) the sweep is made concurrent before the five are diagnosed, because parallelism that hides a probe dialing a host on every beat has bought latency with an unmeasured resource; (4) the number goes down and nothing measures it thereafter \u2014 this cost is monotonically increasing by construction, so a fix with no standing measurement is a fix with a known expiry.",
+    "horizon": "Diagnosis first and it is bounded: five probes, each read once against the question 'what does this do on a beat where nothing is wrong?'. The repair is per-probe and each is independently landable. The standing measurement is the part that is not obviously one build \u2014 nothing today records a beat's cost, and the honest first cut may be that the beat records its own duration in the liveness record it already writes."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "A SLOW BEAT AND A TIGHT THRESHOLD PRODUCE THE SAME DEAD FLICKER AND ARE NOT THE SAME DEFECT. Akien drew this by hand before it was measured; the measurement now stands behind it. Every future reading of a DEAD flicker on a living loop should come here first."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE COST IS FIVE BODIES, NOT A TAX. 94.6% in five probes and 135 ms across the other eighteen means there is no across-the-board efficiency work to do, and an optimisation pass aimed at 'probes' generally would spend effort where 5.4% of the cost lives."
+    },
+    {
+      "q": "distinctions",
+      "a": "MONOTONICALLY INCREASING BY CONSTRUCTION IS THE PROPERTY THAT MAKES THIS URGENT, not the current 2.5x. Every build that arms a WATCHME adds to this sweep and nothing observes the total \u2014 so the failure arrives on some future unrelated voyage, wearing a DEAD flicker, pointing at the loop."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE WATCH WAS NOT DESIGNED AT THE HAND CAST AND THE HAND CAST COULD NOT HAVE DESIGNED IT. This ticket carried a bare WATCHME \u2014 a summons with no object \u2014 from 2026-08-14 until 2026-08-17, and cairn/tools/base/proofs/test_watchme_spec.py was RED at HEAD the whole time, naming it among five hand-cast siblings. Re-firing skills/sorted/door.py supplied the spec AND a sorted_berth, and the berth is the finding nobody had: the field was null, so buildme_rides_the_sorted would have refused this ticket's first crossing regardless of the watch. One hand cast, two gates it could not pass, and only one of them had an instrument."
+    }
+  ],
+  "constraints": [],
+  "how": "",
+  "links": [],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(the_beat_stays_inside_its_cadence) -> [PROVED] (proved 2026-08-26: sealed netns, emission gate clean, build gate unblocked by resolving hardcoded boot log path; clearance by CC onto cairn/devices/ground_loop/proofs/test_ground_loop.py)",
+  "watchme": {
+    "object": "the_beat_stays_inside_its_cadence",
+    "trigger": "every beat, read from the liveness record the loop already writes \u2014 the beat IS the event, so this adds no clock and no poller; the probe reads what the beat published rather than timing anything itself",
+    "enough": "when the beat period has stayed inside one cadence across 5,000 consecutive beats INCLUDING at least one beat on which a new probe was armed \u2014 the arming is the condition that matters, because the defect is a cost that grows with the watch set and a quiet 5,000 beats under a frozen probe set would prove only that nothing changed. Stop early and loudly the first time a beat exceeds one cadence: that is the finding, not a blip to average away",
+    "carrier": "a verdict artifact against THIS ticket's falsifier, carrying the two readings the ticket was measured with \u2014 the beat period from beats-over-wall, and the liveness record's age at an arbitrary read \u2014 plus, when the early stop fires, which probe was armed on the beat that broke it",
+    "nexus": "ground_loop's own diagnostic trail, because the consumer is the loop's operator and the question is about this device's running cost, not about a class of request",
+    "consumer": "ground_loop's owner, and Akien at his gate if the answer is that the cadence cannot be met without widening a bound he ruled",
+    "probe": "cairn/devices/ground_loop/probes/the_beat_stays_inside_its_cadence.py"
+  },
+  "deposits": {},
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260817T225548-8a0bdd6cb305.json",
+  "intent_berth": "none, because this is a bug: the beat is slower than its own ruled cadence and editing lines of code fixes it (ruling 2026-08-02, three entry points). No new intention is being born \u2014 ground_loop's charter already intends a heartbeat at the ruled cadence, and this is the code failing to meet it.",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260828T065046-9a51edf7c8a4.json",
+    "verdict_berth": "/home/akien/.cairn/devices/chart/0/packets/verdict-20260828T065046-7647c29dade7.json",
+    "chain_complete": true,
+    "linked": "2026-08-28"
+  },
+  "schema_version": "ticket-v1",
+  "dependencies": [
+    "Born beside the-loop-names-its-own-staleness-instead-of-benching-a-device (PROVED 2026-08-14). Neither blocks the other. That ticket made the sweep observable by keeping devices ON the beat; this one is what the beat then costs. Its owner clause names the 5 s threshold as ruled and un-widenable, which is this ticket's central bound, inherited rather than re-derived."
+  ]
+}

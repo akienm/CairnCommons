@@ -1,0 +1,60 @@
+{
+  "id": "1d73591f48d3",
+  "title": "host-empty-answer-is-not-an-unmetered-one",
+  "date": "2026-08-17",
+  "owner": "CC owns the code, the proof and the probe. Akien owns nothing here that needs his gate: the refusal's existence follows from Law 7 and from host.py's own filed edge, and no spec choice is at issue.",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "Teach cairn/devices/inference_domain/host.py:_post to refuse a host response that carries no answer, with a name distinct from HostUnmetered. The measured shape: HTTP 200, no `error` key, 96 bytes \u2014 {\"model\":\"\",\"created_at\":\"0001-01-01T00:00:00Z\",\"message\":{\"role\":\"\",\"content\":\"\"},\"done\":false} \u2014 Go's zero-valued api.ChatResponse, returned when ollama collected nothing from the runner and reported it as success. _post's existing gate checks `status >= 400 or body.get('error')` and is blind to it by construction, so the body travels on and the refusal finally happens two layers later at metered_cost, which says 'the host reported no token counters'. That sentence is true and points at the wrong thing: an answer we cannot price and an answer that does not exist are different events with different owners.",
+  "why": "A diagnostic surface that names the wrong failure costs the next mind the whole diagnosis. THE LIVED SYMPTOM, measured: this was chased across FOUR drives of aider-builds-a-piece as an intermittent host flake, with num_ctx, ask size and the resolve cache each raised as hypotheses and each killed in turn, because the only thing any surface ever said was 'no token counters'. It was cornered in the end by capturing the exact /api/chat payload and replaying it with curl \u2014 3/3 identical 96-byte failures in 0.1s while the host was wedged, and 3/3 clean passes with prompt_eval_count 9,359 and done_reason 'stop' on the identical bytes twenty minutes later. Every one of those hours was spent re-deriving what the raw body says in its first field (Law 1). This is also the SECOND instance of a shape host.py already named in its own filed edge \u2014 /api/embeddings 'returns only the vector', met by refusing the endpoint rather than metering zero, with HostUnmetered's docstring calling the failure 'shape intact while draining its meaning'. Two instances with different fixes (one ours to route around, one the host's to fix and ours to report) want two names.",
+  "traces_to": "Law 7 \u2014 errors are loud at diagnostic surfaces and permanent in records of truth; a surface that collapses 'no answer' into 'no price' has collapsed the error. Law 3 \u2014 the wedge was unmeasurable-by-narration until an instrument read the raw body; the refusal makes the next occurrence self-reporting at n=1. Law 10 \u2014 'we have not built the measurement yet' was the true state here, and this builds it.",
+  "falsifier": {
+    "proves_green": "prove_gate: the tester runs cairn/devices/inference_domain/proofs/ under isolation and seals a VALIDATION beside the code \u2014 verdict and seal from the same hand. The proof grips at the transport seam, which host.py already makes injectable ('Injectable so the proofs never need a live host'), so no live host is needed and the captured 96 bytes ride as a fixture. extra_gates: durability \u2014 committed and pushed, on the emit chokepoint. kicks_back_on: a red proof routes back to build at the point of creation (CP2). Bound additionally by this node's own shape: the new refusal must be exercised by a mutation that removes it, since a check whose absence changes no test is not a check.",
+    "proves_red": "DONE when a proof drives host._post with a transport returning HTTP 200 and the captured 96-byte zero-value body, and _post raises a refusal that (a) is distinct from HostUnmetered, (b) carries the body verbatim, and (c) says the host returned no answer rather than no counters \u2014 while the same _post still returns normally for a body carrying counters, and still raises HostRefused for a 4xx and for an `error` key. The refusal is measured against the REAL captured bytes, kept as a fixture, not a hand-typed approximation. WRONG-INTENT if the check also fires on a legitimate response: a legitimately empty completion (a model that stops immediately) WITH counters must still pass, which is why the test cannot be 'content is empty' alone. If that case turns out to be indistinguishable from the wedge, the split is in the wrong place and this ticket killed itself rather than failing.",
+    "horizon": "one build for the falsifier; the watch's horizon is 10 recorded refusals across the two arms, or the first misfiling, whichever comes first."
+  },
+  "children": "none, because the seam is one function (host.py:_post, ~14 lines) plus its proof, and the one thing that could have been a child \u2014 the host-side cause of the wedge \u2014 is explicitly out of scope and is not a code-seam at all (nothing on this box is edited to fix it).",
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "DETECTION IS NOT THE DEFECT \u2014 THE NAME IS. metered_cost already refuses correctly and must keep refusing; its job is pricing and it is right to decline to price an answerless response. What it cannot do is say WHY, because by the time it sees the payload the HTTP status and the raw body are gone. The refusal belongs where both are in scope, which is _post and nowhere else."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE THREE TELLS, so the check is not 'content is empty': `done` is FALSE (a finished non-streaming response is always true), `done_reason` is ABSENT, and the counters are absent \u2014 on top of an empty message and a zero-valued `model` and `created_at`. A legitimately empty completion has done true, a done_reason, and counters. Building the check on the empty content alone is the coin-toss-red version of this ticket."
+    },
+    {
+      "q": "distinctions",
+      "a": "WHAT WEDGES AND WHAT CLEARS THE HOST IS UNMEASURED, n=1 on the transition. Observed: while wedged, every request returns the zero value instantly, including a one-message request; after a streaming request and some minutes, everything passed including the full payload. Whether the stream request cleared it, whether time did, or whether something else did, is not known \u2014 and the hex-side ollama log was never read. Deliberately out of scope: the seam-side refusal is buildable and provable without it, and bundling an unbounded host investigation into a code-seam is how a ticket stops being finishable. Recorded so it is a known unknown rather than a silence."
+    },
+    {
+      "q": "distinctions",
+      "a": "THIS CAST IS A DECLINED REACH, DONE PROPERLY. aider_shim charter edge (o) records the same measurement from the consumer's side and explicitly refuses to edit inference_domain's code from another component's voyage (Law 6: the owner alone gates writes). The ticket is what that refusal is supposed to produce."
+    }
+  ],
+  "constraints": [],
+  "how": "",
+  "links": [
+    "parent: none"
+  ],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "[SUPERSEDED]",
+  "watchme": {
+    "object": "host_empty_answer_refusal",
+    "trigger": "every host call that raises the new refusal, and every call that raises HostUnmetered \u2014 both, because the pair is the measurement: the watch is answering whether the split actually SPLIT anything, and one arm alone cannot say.",
+    "enough": "when 10 refusals have been recorded across the two arms and every one is on the arm its body warrants (an answerless 200 on the new arm, a counterless-but-answered response on HostUnmetered), or when any single misfiling appears \u2014 the first misfiling is the finding and stops the watch immediately, because it means the split is drawn in the wrong place.",
+    "carrier": "a verdict artifact against this ticket's falsifier, carrying the raised class and the raw body's key set for each recorded refusal",
+    "nexus": "the inference_domain trouble/verdict record \u2014 the same surface that carries host.py's filed edges",
+    "consumer": "whoever next reads a drive record that names an unheard ask; today that is aider_shim's driver, whose DriveRefused message quotes the fence's dispositions verbatim",
+    "probe": "cairn/devices/inference_domain/probes/empty_answer_refusal_probe.py"
+  },
+  "deposits": {},
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260817T160347-14f84b595c62.json",
+  "intent_berth": "none, because this entered at the TICKET door, not the INTENT door: it is a bug, and editing lines of code in cairn/devices/inference_domain/host.py:_post fixes it \u2014 no harmony of the system is broken and no intention was implemented contrary to its actual intention. /intent's charter (skills/intent/SKILL.md) names TICKET as one of the three entry points and directs bugs away from the birth questions explicitly.",
+  "chart_claim": "",
+  "schema_version": "ticket-v1",
+  "dependencies": "none. host.py's transport is already injectable and the fixture bytes are captured.",
+  "superseded_by": "a-non-final-answer-is-refused-by-name",
+  "superseded_note": "Work carried to completion under ticket a-non-final-answer-is-refused-by-name (PROVED 2026-08-18). Code: HostNonFinal in host.py:_post. Proof: test_a_non_final_answer_is_refused_by_its_own_name (green). Probe: a_non_final_answer_is_refused_by_name.py (armed). Ruling: 2026-08-20-superseded-is-a-terminal-state."
+}

@@ -1,0 +1,49 @@
+{
+  "id": "3fecd170a1a6",
+  "title": "ticket-inspector",
+  "date": "2026-08-26",
+  "owner": "CC owns the tool, its checks, and its proofs. Akien owns the disposition of findings the tool surfaces",
+  "owning_intention": "cairn/tools/ticket_inspector/intention+why.json",
+  "intention": "A ticket inspector that checks every ticket in CairnCommons/tickets/ for structural completeness at its cursor position, producing findings per ticket in the same shape the build_inspector uses.",
+  "why": "MEASURED 2026-08-26: 305 findings across 79 of 86 not-done tickets, 16 defect classes. The build loop stalls re-discovering what is missing from each ticket \u2014 33 BUILDME tickets have no how field, 52 have no chart_claim, 34 have no sorted_berth. Most tickets were cast by hand before the sorted door existed, so the standing corpus was never retroactively checked. The sorted door checks at cast time; nothing checks at rest. This is the ticket-side counterpart of build_inspector.",
+  "traces_to": [
+    "Law 3 \u2014 nothing is known until measured. Ticket completeness is unmeasured: 305 findings discovered only by ad-hoc audit.",
+    "Law 4 \u2014 a rule that matters is enforced by physics, not policy. The ticket field requirements exist as prose in CLAUDE.md and the sorted skill; nothing enforces them on standing tickets.",
+    "Law 1 \u2014 the resolver is spent on the novel, not on re-deriving the settled. The build loop stalls re-discovering what is missing from each ticket."
+  ],
+  "falsifier": {
+    "proves_green": {
+      "proof_gate": "tester runs proofs: each defect class fires on a fixture ticket exhibiting that defect and stays quiet on a clean ticket; the corpus sweep produces findings matching the audit count (or names the delta); the tool is importable and callable from CLI",
+      "durability_gate": "git commit \u2014 cairn/tools/ticket_inspector/ and its proofs committed and pushed",
+      "extra": "build_inspector at the PROVEME crossing"
+    },
+    "proves_red": "RED if: (1) a ticket at BUILDME with no how field passes silently; (2) a ticket past THINKME with no sorted_berth (and no 'none, because') passes silently; (3) prose children entries are not flagged; (4) a child ticket reference that resolves to no file is not flagged; (5) the tool is built as build_inspector's private check when the population is tickets, not code; (6) findings do not carry the ticket id and defect class.",
+    "horizon": "One build \u2014 the prototype exists as ticket_audit.py, the check roster is enumerated, and the build_inspector's sieve/roster pattern is settled."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [],
+  "constraints": [],
+  "how": "A Python tool at cairn/tools/ticket_inspector/ with a roster of checks, same architecture as build_inspector's sieve families. Two check families: (1) field-presence \u2014 sorted_berth, intent_berth, gates, node_class, traces_to, watchme, intention, state, falsifier required past their cursor threshold (or explicit 'none, because'); (2) cursor-gated \u2014 chart_claim and how required at BUILDME+, children must be ticket IDs not prose, child tickets must exist on disk, owning_intention path must resolve, state string must match node_class workflow. Deterministic, no LLM. Callable from CLI (cairn tickets) and composable by the sorted door and build loop.",
+  "links": [],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(the-corpus-gets-cleaner) -> [PROVED]",
+  "watchme": {
+    "object": "the-corpus-gets-cleaner",
+    "trigger": "every commit to CairnCommons/tickets/ \u2014 the tool runs and its finding count is compared to the previous run",
+    "enough": "the finding count drops below 50 (from the current 305) and stays there for 10 consecutive runs",
+    "carrier": "a verdict artifact against this ticket's falsifier, carrying finding counts per run and the delta",
+    "nexus": "hypothesize",
+    "consumer": "the build loop and Akien at triage",
+    "probe": "cairn/tools/ticket_inspector/probes/the_corpus_gets_cleaner.py"
+  },
+  "deposits": {},
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260826T162736-0aca90003234.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260826T162621-51e5ba1d694d.json",
+  "chart_claim": "validate-20260827T184722-c960f78eaf2a \u2014 chart chain complete with real content; verdict berthed at verdict-20260827T185207-83a1a2d0ff69",
+  "schema_version": "ticket-v1",
+  "dependencies": [
+    "CairnCommons/node_classes/ \u2014 the check roster reads the workflow definitions to know which fields are required at which cursor. code-seam.json and concept-piece.json are the two classes with standing tickets."
+  ]
+}
