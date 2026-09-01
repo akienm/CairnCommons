@@ -42,7 +42,7 @@ intent ("we'll need to automate this gating process") already lives in ticket
 
 ### Genuine design questions parked on you
 
-- **d830a3f80723** — `mint_grant`: should capability grants stay flat, or nest?
+- ~~d830a3f80723~~ — `mint_grant`: flat, unlimited when explicit (ruled 2026-09-01).
 - **3fa4f993e4b8** — does an **at-rest** component's absent journal red at all,
   or only a voyage's? (Bears on the state/history drift check's scope.)
 - ~~355143331fff~~ — drained by the authority ruling: your commits are
