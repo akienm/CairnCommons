@@ -16,7 +16,9 @@
     "extends_existing": "Extend the inference_calls rows (interceptor.py) with new fields: caller identity, model/provider specified vs selected, escalation history, exceptions, graph tree nodes consulted, outcome.",
     "caller_identity": "Either Python call stack inspection or explicit envelope field on the request dict. Akien: 'call chain or message envelope.' Chart-chain question.",
     "trouble_integration": "On failure, domain.resolve calls TroubleDevice.raise with the inference call's canonical as identity. On existing trouble, the count increments (the damping pattern). On unresolvable failure, an intelligible error message is returned.",
-    "no_parallel_store": "The task ticket IS the extended inference_calls row. No separate artifact."
+    "no_parallel_store": "SUPERSEDED 2026-08-31. Was: 'The task ticket IS the extended inference_calls row.' Now: the inference call becomes a TASK the inference proxy performs, producing an ARTIFACT stored in .cairn (instance-space logging). The task ticket IS the return value — the receiver or their shim extracts the actual reply, making the call inspectable. The artifact is a single file, not a DB row.",
+    "return_value_design": "The task ticket (artifact) becomes the return value of the inference call. The receiver or their shim extracts the actual reply from it. This makes every call inspectable — the receiver can choose to examine what happened, not just consume the answer.",
+    "storage": ".cairn instance-space logging, not the inference_calls DB table. The DB table may still hold summary/index rows, but the full record is the artifact."
   },
   "gates": "code-seam invariant: proved + feeds-back-on-failure. PROVE GATE: an inference call produces a complete task ticket, a failed call raises a trouble ticket, a call with no caller identity records 'unknown'. FEEDS BACK: a red names which field is missing or which integration failed.",
   "falsifier": "DONE when every inference call via the domain produces a complete task ticket with caller, request, response, model/provider selection, and outcome, and failures raise trouble tickets. WRONG INTENT if the ticket is a parallel store, adds latency, or duplicates trouble infrastructure.",
@@ -26,7 +28,8 @@
   "dependencies": [
     "cairn/devices/inference_domain/ — the existing infrastructure this extends.",
     "the-inference-ticket-comes-back-whole (PROVED) — the reader and raw response body already built.",
-    "cairn/devices/trouble/ — the trouble lane for failure integration."
+    "cairn/devices/trouble/ — the trouble lane for failure integration.",
+    "state-machine-physics (BUILDME) — the inference call becoming a task needs the transition table enforced at the emit chokepoint (Akien 2026-08-31)."
   ],
   "distinctions_recorded": [
     "EXTENDS, NOT REPLACES: the-inference-ticket-comes-back-whole (PROVED) built the reader and raw response body. This adds caller identity, selection rationale, escalation history, and trouble integration to the same rows.",
