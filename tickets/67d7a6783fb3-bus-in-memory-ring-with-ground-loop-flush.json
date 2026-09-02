@@ -1,0 +1,10 @@
+{
+  "id": "67d7a6783fb3",
+  "slug": "bus-in-memory-ring-with-ground-loop-flush",
+  "what": "The bus holds an in-memory ring buffer; post() and request() are zero-DB. The ground loop pulse flushes the ring to Postgres in one batch transaction.",
+  "why": "On a 16GB 4-year-old laptop, every inter-device message currently round-trips through Postgres (3 DB hits per request()). The bus is the sole comms path and inference_domain embeddings will route through it — latency matters. The ring keeps the bus contract (sole path, logged, causal record) while making the hot path in-memory and batching the durable record to one transaction per heartbeat.",
+  "falsifier": "post() and request() complete with zero DB round-trips (measurable by counting store.write/store.read calls between post and return). flush() writes the full ring to DB in one transaction. After flush, read() returns the same envelopes that were in the ring. All existing bus proofs pass.",
+  "kind": "code-seam",
+  "component": "cairn/devices/cairn/machines/bus/",
+  "workflow_and_state": "[BUILDME]"
+}
