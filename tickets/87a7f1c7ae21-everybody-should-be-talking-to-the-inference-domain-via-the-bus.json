@@ -1,10 +1,41 @@
 {
   "id": "87a7f1c7ae21",
-  "slug": "everybody-should-be-talking-to-the-inference-domain-via-the-bus",
-  "what": "bug: every device should reach inference_domain through the bus, not by importing it directly",
+  "title": "everybody-should-be-talking-to-the-inference-domain-via-the-bus",
+  "date": "2026-08-30",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "every device should reach inference_domain through the bus, not by importing it directly",
   "why": "device_isolation ruling says only db_domain is exempt from cross-device import ban. librarian (and others) currently import inference_domain directly for embeddings. The bus is the sole path for inter-device comms — direct imports violate both the ruling and the bus design.",
-  "falsifier": "grep -r from.cairn.devices.inference_domain across all devices other than inference_domain itself returns zero hits; every inference call routes through bus.request() or bus.post()",
-  "kind": "bug",
-  "component": "cairn/devices/cairn/machines/bus/",
-  "workflow_and_state": "[IDEA]"
+  "traces_to": "Law 6 (everything has exactly one owner), no-cross-device-imports ruling, provider-doesn't-know-consumers principle",
+  "falsifier": {
+    "proves_green": "grep -r from.cairn.devices.inference_domain across all devices other than inference_domain itself returns zero hits; every inference call routes through bus.request() or bus.post()",
+    "proves_red": "any device other than inference_domain still imports from cairn.devices.inference_domain directly after the fix",
+    "horizon": ""
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [],
+  "constraints": [
+    "db_domain is the sole cross-device import exemption — inference_domain gets no exemption",
+    "bus.request() is the inter-device call path; bus.post() for fire-and-forget"
+  ],
+  "how": "each device that imports inference_domain directly gets refactored to use bus verbs instead. inference_domain exposes its capabilities as bus verbs (embed, infer, etc.).",
+  "links": [
+    "related: 50ad391f4e95 (aider-shim-reaches-into-inference-domain — same root cause, scoped to aider_shim)"
+  ],
+  "priority": "",
+  "node_class": "bug",
+  "workflow_and_state": "bug@v1: [BUILDME] -> PROVEME -> PROVED",
+  "watchme": null,
+  "deposits": {},
+  "sorted_berth": "",
+  "intent_berth": "",
+  "chart_claim": "",
+  "schema_version": "v1",
+  "dependencies": [
+    "inference_domain must expose embed/infer as bus verbs"
+  ],
+  "measurements_since_cast": [
+    "2026-08-30: import_sieve flags direct imports from inference_domain across multiple devices"
+  ]
 }
