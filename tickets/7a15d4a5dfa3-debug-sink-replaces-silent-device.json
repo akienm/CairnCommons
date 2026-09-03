@@ -1,0 +1,34 @@
+{
+  "id": "7a15d4a5dfa3",
+  "title": "debug-sink-replaces-silent-device",
+  "date": "2026-09-03",
+  "owner": "CC",
+  "owning_intention": "",
+  "intention": "BaseDevice gets a debug_sink property (defaults to self) that every device's logging calls route through. The silent_device sieve checks for self.debug_sink.emit() call sites instead of self.emit(). Each device declares its own sink: most use the default (self), inference_domain overrides with its trail. The module-level _trail.emit() calls in inference_domain/domain.py are replaced by self.debug_sink.emit() routed through the device instance. Harbor_master and charter get their actual emit calls added at the same time, going through the default self sink.",
+  "why": "Three devices fail the silent_device sieve (harbor_master, inference_domain, charter). inference_domain already logs through _trail.emit() — a module-level singleton that predates the BaseDevice pattern — but the sieve can't see it because it checks self.emit(). Teaching the sieve about _trail specifically (option 2) works today but requires a new sieve touch for every future logging shape. The debug_sink contract means each device declares its path once and the sieve never needs to learn device-specific internals again. Akien: 'that does bring it into alignment with my head.'",
+  "traces_to": [
+    "Law 4 — the debug_sink is the physics that replaces the silent_device sieve's AST-pattern-matching policy",
+    "Law 7 — errors are loud at diagnostic surfaces; a device that inherits emit() and never fires it is silent at every crossing"
+  ],
+  "falsifier": "RED on any of: (1) a BaseDevice subclass can be instantiated without debug_sink being set; (2) inference_domain's logging still goes through the module-level _trail instead of through self.debug_sink; (3) the silent_device sieve still scans for self.emit() instead of self.debug_sink.emit(); (4) harbor_master or charter remain without emit calls after the build. WRONG INTENT if: debug_sink becomes a feature flag for turning logging off — the sink is WHERE it goes, not WHETHER it fires.",
+  "children": [],
+  "linked_ideas": [],
+  "questions": [],
+  "constraints": [
+    "inference_domain's resolve() currently takes no device reference — threading debug_sink requires passing the sink (or the device) into the module-level functions",
+    "the _trail singleton holds state (held_diagnostics, diagnostic_trail) beyond just emit — only the emit path moves to debug_sink, the rest stays"
+  ],
+  "how": "1. Add self.debug_sink = self to BaseDevice.__init__. 2. Update silent_device sieve to check self.debug_sink.emit() call sites. 3. InferenceDomainDevice overrides debug_sink with its trail object. 4. Thread the sink from the device instance into domain.py's resolve() so _trail.emit() calls become sink.emit() calls. 5. Add self.debug_sink.emit() calls to harbor_master and charter at their meaningful state transitions. 6. Re-seal affected proofs.",
+  "links": [],
+  "priority": "clearing build inspector findings",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "",
+  "deposits": [],
+  "sorted_berth": "",
+  "intent_berth": "",
+  "chart_claim": "",
+  "schema_version": "v1",
+  "dependencies": [],
+  "filed_edges": []
+}
