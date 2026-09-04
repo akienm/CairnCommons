@@ -3,7 +3,7 @@
   "title": "a-pane-declares-its-view",
   "date": "2026-07-29",
   "owner": "CC (code+proofs); Akien (the design rulings: outgrow the <pre>, borrow patterns from the world, no compositor device, 2026-07-29)",
-  "owning_intention": "",
+  "owning_intention": "cairn/devices/web_server/intention+why.json",
   "intention": "A PANE DECLARES ITS VIEW AND ITS BOUNDS; THE SURFACE DISPATCHES. Two joined moves on the presentation surface: (1) grow render_pane's kind dispatch from {chat, everything-else-as-<pre>} into a small CLOSED vocabulary of view primitives (record / table / sequence / tree / scalar / chat), one pure `data -> html` function each, with <pre> demoted from default to explicit FALLBACK; (2) let a pane be BOUNDED — a device answers a request-carried cursor with `{cursor, window, count}`, so a log or a history can be read a piece at a time and can say WHICH piece it is showing. The bound must reach the source (a file seek, a SQL LIMIT); slicing a fully-materialised list in Python is cosmetic and buys nothing.",
   "why": "The <pre> was CORRECT when it was written — render_pane's own docstring says 'honest and complete for introspection', which is exactly right when you do not yet know the shapes. Akien's ruling 2026-07-29: 'we needed that level of simplicity when we wrote it, but we don't need that level of simplicity now.' It is outgrown, not wrong. Two things came due together: rich views (pretty JSON in a monospace block is not a face Telos 2 can rest on) and the fact that some panes — logs above all — carry MORE THAN WE SHOULD TRY TO FIT INTO MEMORY AS A UNIT (Akien, same conversation). MEASURED: there is no bound anywhere in the chain today. BaseShim.active_page() takes NO ARGUMENTS and assembles the whole page (shim.py:168); a pane is {kind, label, data} with no cursor, no total, no more-flag (shim.py:190); render_pane dumps pane['data'] into one <pre> (render.py:182). A 1,200-row log would be built in full, held in memory, and rendered entire.\n\nTHIS IS GROWTH ALONG AN EXISTING GRAIN, NOT A REWRITE — and that is the whole reason it is cheap. render_pane ALREADY dispatches on kind (chat is the proven first instance) and already emits data-kind on the section, which is the hook a stylesheet needs. And the bounded-read contract is ALREADY SETTLED IN-HOUSE: charter/projector.py's project() returns exactly {cursor, window, count}, with 'count = the full length, so the window's boundedness stays visible' — which is, verbatim, the Law 7 requirement a scrollable diagnostic pane needs. _window() even dispatches on a RULE DICT ({kind: count, n} / {kind: since_gate}, ValueError on unknown), the same declarative shape. So the surface reuses the projector's contract rather than inventing a second vocabulary for the same idea.",
   "traces_to": [
@@ -29,7 +29,7 @@
   ],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED   (built 2026-09-02; view-kind dispatch + bounded panes, 24 teeth green x2, 3 proofs sealed; BLOCKED at build gate: test_voyage_pane.py pre-existing red — zero flagged boats in fleet)",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]   (built 2026-09-02; view-kind dispatch + bounded panes, 24 teeth green x2, 3 proofs sealed; PROVED 2026-09-03 via clearance gate)",
   "watchme": null,
   "deposits": {},
   "sorted_berth": "none, because cast before the sorted door existed (ticket dated 2026-07-29, door landed 2026-08-03)",
