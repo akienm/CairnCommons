@@ -299,8 +299,21 @@ Akien, verbatim, 2026-09-06, on the private beats above:
 
 So the pipe has a shape: **one ground loop process for the box**, holding the one bus; the bus's
 hot path is an in-memory ring (cast 2026-09-04, sorted berth
-`sorted-20260904T171337-82d43e9e4c65`, title bus-in-memory-ring-with-ground-loop-flush:
-post/request touch no DB, flush is one transaction on the pulse, read merges ring + DB); the
-durable log is the flushed rows. A caller reaches the bus through its own shim's IPC to that
+`sorted-20260904T171337-82d43e9e4c65`; its title says "with-ground-loop-flush", which is CC's
+naming and WRONG in attribution — see the correction below): a message that a device comes
+for is handed over from the ring instantly, no DB; a message whose receiver was not that fast
+is written to the DB by THE BUS when the pulse comes by. The durable log is those rows. A caller reaches the bus through its own shim's IPC to that
 one loop — never by constructing a loop of its own. Measured 2026-09-06: no ground loop
 process was running on the box at all; every "bus" in use was a private one.
+
+**CORRECTION (Akien, 2026-09-06, verbatim — CC had written "ground-loop flush"):**
+
+> NO I DIDN'T SAY GROUND LOOP FLUSH. NOTHING IN THE GROUND LOOP EXCEPT THE PULSE, THE GROUND
+> LOOP CONTROL FLAGS, AND THE DEVICES FOUND LIST. EVER. But when we last talked about the bus,
+> we talked about having a ring buffer so if a new message came in, and a device came for that
+> message, it was just there instantly no db access. if the reciver wasn't that fast, that ring
+> buffer would go to the db when the ground loop pulse came by.
+
+The ground loop's contents are closed: pulse, control flags, devices-found list. The flush is
+the bus's own act; the pulse is only what it listens for. Any name, docstring or field that
+says "ground loop flush" is drift and is to be renamed when touched.
