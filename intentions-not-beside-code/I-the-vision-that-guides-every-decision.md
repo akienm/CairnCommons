@@ -53,9 +53,11 @@ verbatim; this file carries the binding.
    gate, which Law 6 already places there. What the schema lacks today is the read side:
    db_domain gates writes and files reads as an open edge (`store.py`, "Reads are not
    owner-gated here"). A clearance is a read gate.
-3. **Per-owner databases are required before sharing for real.** Not a permanent horizon.
-   The universal address (`I-universal-addressing-and-bidirectional-links.md`) puts the
-   owner in the first segment so the physical split, when it comes, changes no address.
+3. **Per-owner databases are foundational and come now.** CC proposed the physical split
+   as a later child with "before sharing for real" as its horizon; Akien ruled otherwise
+   (2026-09-06): *"the per owner database is a thing we do before things become even more
+   complicated."* The universal address (`I-universal-addressing-and-bidirectional-links.md`)
+   puts the owner in the first segment, and the split is built with it, not after it.
 4. **Agents are peers that talk to each other about optimal solutions.** Law 8's "peers
    require trust, so prove first" is the local case of a global network of them. The bus
    contract and inter-device verbs are the household-scale rehearsal.
