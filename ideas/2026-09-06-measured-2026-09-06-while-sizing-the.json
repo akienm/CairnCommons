@@ -1,0 +1,10 @@
+{
+  "author": "CC",
+  "berth": "/home/akien/.cairn/devices/skill_block/0/berths/idea/idea-20260906T172208-f714fe54a091.json",
+  "date": "2026-09-06T17:22:08.856855",
+  "finding_id": "6db523ae6c99",
+  "id": "2026-09-06-measured-2026-09-06-while-sizing-the",
+  "interpretation": "deferred",
+  "prose": "Measured 2026-09-06 while sizing the universal-addressing retrofit: the cairn Postgres database holds 9,087 tables. 12 are the system (cairn_nodes 10,538 rows, cairn_embeddings 11,230, cairn_links 0, cairn_owned 9,615, cairn_threads 0, librarian_nodes 148, codemother_root_nodes 47, inference_calls, bus_traffic and its _delivery, build_inspector_failures_nodes, orient_corrections_nodes). The other 9,075 are per-run scratch that was created and never voided: _bus_* exchange tables 2,929; _loop_* 1,452; _chat_* 1,246; _console_* 504; test_* 326; _probe_* 271; _callback_* 200; chart_<stage>_<pid>_<time>_nodes 101; build_inspector_failures_<pid>_<time>_nodes and orient_corrections_<pid>_<time>_nodes ~200; and ~95 each of _trees, _empty, _retire, _tenant, _trees2, _probeseam, _jsonb. Consequence measured: a count(*) across all tables fails with 'out of shared memory / max_locks_per_transaction'. The owner registry (cairn_owned) is 94% scratch, so 'everything has an owner' is true and the registry is mostly recording tables nobody will read again. This is the create-and-abandon pattern the addressing intention's void-and-reuse lists exist to replace, at the table level instead of the row level. Proposed disposition (not ruled): proofs and bus exchanges create tables under a scratch owner and drop them on exit, or a sweep on the cairn device voids any table whose owner is a dead pid. Either is a ticket; a trouble on 'tables owned by a dead pid' is the instrument for it.",
+  "trace_id": "d6c45a84a391"
+}
