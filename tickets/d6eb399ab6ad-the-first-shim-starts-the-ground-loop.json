@@ -1,0 +1,75 @@
+{
+  "id": "d6eb399ab6ad",
+  "title": "the-first-shim-starts-the-ground-loop",
+  "date": "2026-09-06",
+  "owner": "codemother owns the care of this seam (ruling 2026-09-06); CC/Opus builds. The ground loop package is not touched by this ticket (falsifier tooth 3).",
+  "owning_intention": "cairn/cairn/tools/base/intention+why.json",
+  "intention": "Every shim, on start, checks whether the instance's ground loop is running and launches it if not — so the heartbeat is lazy-inited by the first thing that needs a pulse and by nothing else.",
+  "why": "Akien's launch chain, told for the second time 2026-09-06 and recorded verbatim at CairnCommons/intentions-not-beside-code/I-the-command-lazy-inits-the-system.md. Cast the same day so the intention carries a ticket (CLAUDE.md: an IOU without a real ticket is itself the defect).",
+  "traces_to": [
+    "Law 1 (the shim already knows whether it has a pulse; asking anyone else re-derives it) and Law 6 (the loop's liveness is the loop's owned fact and is READ, not scanned); the ground_loop charter's 'any entry point gains the only-once guarantee by spawning the runner — a CALL, not a policy'. Akien 2026-09-06 verbatim: 'all shims, on start, check to see if the ground loop is running. if it's not, the shim launches the ground loop.'"
+  ],
+  "falsifier": {
+    "proves_green": "proof gate — cairn/tools/base/proofs/test_shim_starts_the_loop.py (new): isolated HOME, DEAD→LIVE in one beat, two shims → one loop, ground_loop package untouched (git diff --stat). Feeds back on failure naming the tooth. Durability: committed in cairn; tester seal with source_fingerprint over tools/base.",
+    "proves_red": "DONE when: (1) with no loop running (liveness DEAD, no cairn-ground-loop unit), a single `cairn <device> show status` leaves liveness LIVE within one beat plus spawn cost; (2) two shims started within the same 100ms leave exactly one loop (the loser's exit-3 refusal is in the log); (3) the shim adds no line to the ground loop package — `git diff --stat cairn/devices/cairn/machines/ground_loop/` is empty for this ticket; (4) grep across devices/*/shim.py and tools/base/shim.py finds the check in exactly one place, the base. WRONG INTENT if a shim ends up owning any loop state beyond 'did my spawn attempt start it' — that would be a second loop by another name."
+  },
+  "children": [],
+  "linked_ideas": [],
+  "questions": [
+    {
+      "q": "assumption_check",
+      "a": "One named and standing: 'shim start' is one identifiable event in either order of the bus ticket (registration into the bus process, or BaseShim.__init__ today). Load-bearing only for where the lines sit, not for the behaviour; the falsifier tooth 4 (check in exactly one place, the base) holds either way."
+    },
+    {
+      "q": "missing_check",
+      "a": "One point not wrapped at /intent, now wrapped: what the shim does when the spawn itself fails (no user manager, systemd unreachable). Answer: the superclaude launcher's fall-through (setsid spawn, and the log line SAYS it will die with the caller) is reused verbatim; the shim logs the same three outcomes. Nothing else asserted-wrapped is open."
+    },
+    {
+      "q": "collision_check",
+      "a": "Consulted the lab. ground_loop charter: 'any entry point gains the only-once guarantee by spawning the runner — a CALL, not a policy' — this is one more caller, same call. launchers charter's superclaude spawn: both call the guarded runner, so both may exist until the shim path is proven; then the launcher's spawn retires (recorded as this ticket's what_dies-later, not now). Akien's bound on the loop's contents (pulse, flags, devices-found list, ever) is untouched by construction. No Law collides."
+    },
+    {
+      "q": "builder_check",
+      "a": "A Haiku-level builder needs: (a) where — cairn/tools/base/shim.py, the start/registration path, one function `ensure_ground_loop(now)`; (b) the read — `liveness.read_liveness(now)['verdict'] == 'DEAD'` from cairn.devices.cairn.machines.ground_loop.liveness, never pgrep; (c) the spawn — copy the systemd-run block from launchers/superclaude (unit cairn-ground-loop, SuccessExitStatus=3, --setenv HOME and PATH, append redirects to ~/.cairn/logs/ground_loop_nohup.log) and its fall-through; (d) the proof — set HOME to a scratch instance, assert DEAD→LIVE and the diff-stat tooth; (e) don't — no import of the loop's runner as a library (spawn the module), no sleep-poll for LIVE beyond one beat (1s ruled cadence). All written into the ticket's how."
+    }
+  ],
+  "constraints": [
+    "No change to the ground loop's contents: pulse, control flags, devices-found list — ever (Akien 2026-09-06).",
+    "One pipe: device → IPC → own shim → bus → addressee's shim → IPC → addressee; the db alone is exempt (volume)."
+  ],
+  "how": "In the shim base (cairn/tools/base/shim.py) the start path reads liveness.read_liveness(now); on DEAD it spawns `python3 -m cairn.devices.cairn.machines.ground_loop` as a transient user unit the way launchers/superclaude already does (same systemd-run line, same SuccessExitStatus=3, same fall-through), and the loop's own flock makes a race between two shims harmless. The check keys on the INSTANCE's liveness record, never on the process table and never on the host alone. The superclaude launcher keeps its spawn for now (it is a launch too; the flock reconciles them); it retires when the shim path is proven. NOTHING is added to the ground loop itself — Akien 2026-09-06: nothing in it but the pulse, the control flags, and the devices-found list, ever.",
+  "links": [
+    "71cf487d589a one-bus-per-instance-hosts-every-shim (sibling; decides where the call sits)",
+    "0d16e513ff26 the-heartbeat-outlives-its-caller (the spawn line reused)",
+    "5ef45e513849 cairn-groundloop-stop-start-restart-status (PROVED)"
+  ],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the operational signal already exists: the loop's own liveness record (cairn/devices/cairn/machines/ground_loop/liveness.py) and its probe does_the_heartbeat_outlive_its_caller.py watch whether a loop is up; this ticket adds a starter, not a new thing to watch",
+  "deposits": [],
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260906T160100-87f1ec34778f.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260906T155923-8e4c2d3c6a6d.json",
+  "chart_claim": "none yet — the chart chain runs at the BUILDME crossing; known 2026-09-05 hang at the constrain stage for bus-touching refs (slate 2026-09-05)",
+  "cast": "2026-09-06",
+  "cast_by": "CC (Fable session; intent finding a68d658ad1f1, sorted finding d6eb399ab6ad)",
+  "intent": {
+    "what": "Every shim, on start, checks whether the instance's ground loop is running and launches it if not — so the heartbeat is lazy-inited by the first thing that needs a pulse and by nothing else.",
+    "shape": "aside",
+    "challenge": {
+      "better_approach": "A boot-time service (systemd user unit enabled at login) would be simpler and was proposed by CC on 2026-09-06; Akien's chain retires it — the system lazy-inits from the command, and ruling 2026-08-11 already forbids system-level startup. Putting the check in the launcher script instead of the shim was the other candidate; the shim is right because a shim can be started by something other than a launcher (a proof, the web server) and each of those needs the same guarantee.",
+      "prior_art": "launchers/superclaude spawns the loop as a transient user unit with a measured, proven line (launchers charter: 24-arm proof test_ground_loop_survives_its_caller.py; SuccessExitStatus=3, --setenv HOME/PATH, append redirects). guard.claim_singleton makes any second launch safe (ticket an-entry-point-starts-the-loop-only-once). liveness.read_liveness is the one address for LIVE/DEAD at the ruled 5s. This ticket moves the CALL to the shim and reuses all three; it invents nothing.",
+      "hidden_assumption": "That 'shim start' is a single, identifiable event once the bus is one process (ticket one-bus-per-instance): under reading (a) the shim starts when it registers into the bus process, so the check fires at registration. If the bus ticket lands first, this becomes a few lines in the registration path; if it lands second, the check sits in BaseShim.__init__ and moves later. Either order works; the builder should not wait on the other ticket.",
+      "real_collision": "None. The ground_loop charter says the runner is spawned by 'any entry point' — the shim is one. The superclaude launcher's spawn and the shim's spawn both call the same guarded runner, so they cannot both win. The only rule this must not touch is the ground loop's contents, and the how says so.",
+      "back_up": "proceed"
+    }
+  },
+  "why_beneath_the_why": "Akien 2026-09-06: 'if everything goes thru one pipe, we learn faster' and 'everythign automatically lazy inits' — the operator types one command and the system stands itself up behind it, on one pipe, with nothing to remember.",
+  "mechanism": null,
+  "stage_needs": null,
+  "filed_edges": [],
+  "rulings": [
+    "2026-09-06-codemother-owns-the-care-of-the-code"
+  ],
+  "task_or_ticket": "ticket"
+}
