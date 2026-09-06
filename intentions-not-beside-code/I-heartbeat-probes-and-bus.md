@@ -253,3 +253,41 @@ tester, each committed separately:
   boundary is now clean in code (a probe is the immutable worker; a ticket is the mutable
   node), but the ticket state machine still waits on the emit-chokepoint
   (`CairnCommons/tickets/state-machine-physics.json`). Not built here, by design (not the goof).
+
+## One pipe, everybody, except the db (Akien, 2026-09-06 — sharpening, not RULED)
+
+Akien, verbatim, 2026-09-06, on codemother reaching the inference proxy:
+
+> lets talk about 'talking to the infernece proxy'... that should be an ipc from codemother
+> to codemother's shim, then over the bus to the inference proxy's shim and thence over ipc
+> to the inference proxy. Why? because if everything goes thru one pipe, we learn faster. and
+> this is how everybody should communicate with everybody... except the db.
+
+> and the db gets a pass only because i expect a LOT of db traffic
+
+What this sharpens in the sections above:
+
+- **The device never touches the bus.** The path is device → (IPC) → its own shim → bus →
+  the addressee's shim → (IPC) → the addressee. The shim is the only thing that holds a bus
+  handle. "Devices never hold references to each other" already stood; this adds that a
+  device does not hold a reference to the bus either — its shim is its whole outside.
+- **The why is learning rate, not tidiness.** One pipe means every inter-device exchange is
+  one recorded observation at one address (Law 10), and whatever learns from traffic
+  (codemother, the librarian) reads one log instead of N. Every private side-channel is a
+  measurement that did not get taken.
+- **The db exception is volume, not privilege.** `db_domain` keeps its direct path only
+  because the traffic is expected to be large; it is the one substrate whose per-message cost
+  would dominate if it rode the pipe. It is not an exemption from ownership or from logging.
+
+**Measured against the code on the day (2026-09-06, CC):** `cairn/tools/base/bus_client.py`
+builds the bus, the ground loop and the addressee's shim *inside the caller's process* —
+its own docstring says "Today: in-process construction." So today there is one pipe in
+name and zero pipes in physics: nine modules call `connect_bus()` directly
+(tools/base/validation.py, intention_extractor/live.py, web_server/listener.py,
+aider_shim/interceptor.py, codemother/watch.py, codemother/seed_trees.py,
+librarian/live.py, skills/chart/live.py, and the tool itself), each booting a private bus
+and a private beat. The week's "inference_domain hangs on the bus" was that private beat
+running every discovered probe before the request was even sent (stack captured under
+`faulthandler`: the beat sat in `no_component_reaches_proved_with_an_uncharted_build`
+globbing the ticket corpus). The device-to-shim IPC exists in one primitive form: codemother's
+shim writes mail to `~/.cairn/devices/codemother/0/mail/` and returns no reply.
