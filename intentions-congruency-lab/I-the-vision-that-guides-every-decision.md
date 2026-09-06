@@ -26,7 +26,9 @@ is a horizon:
 > trying to build all that today, but this is the vision i carry that guides every decision
 > i make.
 
-"DSP" is an unbound term in this record. CC did not guess it.
+"DSP" in the verbatim is a slip for **GPU** (Akien, same day: "DSP should have been GPU"). The
+sentence reads: *with no GPU required.* The idea record keeps the slip because the door writes
+verbatim; this file carries the binding.
 
 ## Where the earlier tellings live
 
@@ -59,6 +61,10 @@ is a horizon:
    contract and inter-device verbs are the household-scale rehearsal.
 5. **Learning is the point, not a feature.** "Learning agents" and "adaptable" trace to
    `I-the-system-is-a-learning-block.md` and `I-learns-its-gates.md`.
+6. **No GPU required.** The network runs on the hardware people already have. This is the
+   hardware ladder as a constraint on the whole vision, not only on this laptop: inference
+   is spent to learn, fire-paths are compiled, and a household does not need an inference
+   host to be served (`I-prebuild-cognition-compiles.md`; the shrinking-footprint rule).
 
 ## Traces to
 
