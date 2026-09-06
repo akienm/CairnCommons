@@ -70,8 +70,37 @@ ground loop except the pulse, the ground loop control flags, and the devices-fou
 CC reads (a), because (b) contradicts the one-pipe rule stated in the same conversation and
 reproduces the nine private buses measured that morning. (a) also matches step 2 exactly: "if
 it's already running, this new shim passes the command to the running shim" — the running one
-is the bus process, with this device's shim registered in it. **If (b) is what he meant, this
-paragraph is where the correction goes.**
+is the bus process, with this device's shim registered in it.
+
+**Resolved by Akien, 2026-09-06 — (a), and wider than a box:**
+
+> one bus per cairn instance. this is actually not limited to a single computer, but we
+> haven't gotten that far yet. we have 4 laptops i7s 9th, 10th, 10th, and 12th gen. 16gb. and
+> an 8th gen asus laptop i7 20gb and a rpi400. at one point, during the very first iteration of
+> this work, we had them all running as a swarm, reading the training corpus overnight with NO
+> GPUs on local hardware with 10 MINUTE timeouts. All on one bus. One master db, and each laptop
+> had a live backup cross syncing in real time.
+
+So the unit the bus belongs to is the **cairn instance**, not the host. Today an instance is
+one laptop and the bus is one process on it; the design already intends an instance that spans
+six machines (the four i7 laptops, the Asus, the rpi400) on one bus with one master db and a
+live cross-synced backup per box. That was built and ran once, in the first iteration, with no
+GPUs and 10-minute timeouts. What follows for the chain above:
+
+- Step 4's "one bus process" is one bus **per instance**; when the instance spans hosts, the
+  bus spans them and the shims on each host register into the same bus, not a local one.
+- Step 3's ground loop is per instance for the same reason (one for everybody), so a shim on a
+  second host checks for *the instance's* loop, not for a loop on its own host.
+- The db's pass on the one-pipe rule (volume) is what the "one master db + live backup per
+  laptop" shape was already exercising: db traffic goes direct, everything else rides the bus.
+- The ring buffer and the flush-to-db-on-pulse is the piece that lets "instantly, no db access"
+  hold on a shared bus across hosts; where the ring physically lives when the bus spans hosts is
+  **not designed yet** ("we haven't gotten that far yet").
+
+None of the multi-host part is built or ticketed; it is the horizon the single-box shape must
+not foreclose. The measurable now: any design that binds the bus to the host (a per-host
+socket path with no instance name in it, a host-local singleton lock for the loop) is a
+decision against this paragraph.
 
 ## Measured against the code, 2026-09-06 (CC)
 
