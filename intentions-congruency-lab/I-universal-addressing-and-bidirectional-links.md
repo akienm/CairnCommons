@@ -1,7 +1,10 @@
 # Universal addressing and bidirectional links
 
-*From Akien, 2026-08-23 — napkin sketch promoted to intention. Spanning: touches
-db_domain, librarian/trees, and every future consumer of the database.*
+*From Akien, 2026-08-23 — napkin sketch promoted to intention (from_idea:
+`2026-08-23-universal-addressing-and-bidirectional-links`). Spanning: touches
+db_domain, librarian/trees, and every future consumer of the database. The per-owner
+segment is required before Cairn is shared for real (Akien, 2026-09-06; the use case is
+`I-the-vision-that-guides-every-decision.md`).*
 
 ## The address
 
