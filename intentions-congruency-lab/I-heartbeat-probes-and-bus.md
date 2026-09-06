@@ -289,5 +289,5 @@ librarian/live.py, skills/chart/live.py, and the tool itself), each booting a pr
 and a private beat. The week's "inference_domain hangs on the bus" was that private beat
 running every discovered probe before the request was even sent (stack captured under
 `faulthandler`: the beat sat in `no_component_reaches_proved_with_an_uncharted_build`
-globbing the ticket corpus). The device-to-shim IPC exists in one primitive form: codemother's
+globbing the ticket corpus). Timed the same evening, unbuffered: wiring the bus and shims in-process took 0.0s, the private beat took 89.3s (an earlier run of the same script exceeded a 240s cap), and the request itself — embed over the bus to inference_domain to hex.local — took 0.0s and returned a 768-dimension vector. The pipe is instant; the toll booth every caller builds in front of it is the whole cost. The device-to-shim IPC exists in one primitive form: codemother's
 shim writes mail to `~/.cairn/devices/codemother/0/mail/` and returns no reply.
