@@ -17,7 +17,9 @@
   "linked_ideas": [
     "2026-08-23-universal-addressing-and-bidirectional-links",
     "2026-09-06-the-vision-that-guides-every-decision-akien",
-    "2026-09-06-measured-2026-09-06-while-sizing-the"
+    "2026-09-06-measured-2026-09-06-while-sizing-the",
+    "2026-09-06-akien-2026-09-06-verbatim-on-cross",
+    "2026-09-06-each-user-me-you-igor-etc-has"
   ],
   "questions": [
     {
@@ -42,14 +44,18 @@
     "db_domain stays the sole connection path (test_sole_path.py is the tooth).",
     "The old `cairn` database is not dropped here; its 9,075 scratch tables are the scratch-tables ticket's.",
     "No read gate (clearance) invented here; the ticket lands the one seam it will sit on and names it.",
-    "Write-gate semantics unchanged: non-owner refused, unregistered refused, where-less refused."
+    "Write-gate semantics unchanged: non-owner refused, unregistered refused, where-less refused.",
+    "Ownership model confirmed by Akien ('exactly yes'): an employer delegates access to an employee. Each principal (Akien, CC, an Igor, the librarian, each device) holds its own creds; per-owner database is what a credential is for.",
+    "Until the hardening step before sharing, the librarian is allowed access to everything ('for now, the librarian is just allowed access to everything'). The migration and store.read(address) may rely on that; nothing may assume the read gate is closed."
   ],
   "how": "db_domain grows the address, the per-owner database and the link tuple in one voyage; the librarian, bus, inference_domain and codemother callers move onto them; a migration carries the live rows across and leaves the old `cairn` database read-only. (1) ADDRESS: db_domain/address.py parses and renders `<owner>.<table>.<leaf>`; file-side addresses are `file:<path>` with env vars allowed. (2) PER-OWNER DATABASE: store.connect(owner) reaches Postgres database `cairn_<owner>`, created on first touch the way ensure_database creates `cairn` today; DB_NAME retires; the owner registry (`cairn_owned`, CHECK owner <> '') lives inside each owner's database and records that owner's tables, so a write to owner B's table through connect(A) is refused by the database boundary before the registry ever looks. Reads of another owner's address go through store.read(address), which opens that owner's database; this is the seam a clearance (read gate) lands on later, and it is the only cross-owner route (db_domain is the ruled exception to no-cross-device-imports). (3) LINK TUPLE: each owner's database carries `links` with local, remote, kind, weight, traversals, created, unique(local, remote), indexed on remote; a link between two owners is written in both owners' tables, each side writing its own half, so Law 6 holds and reverse traversal (links_to(address)) is a local read on either side. (4) LISTS: embeddings, blobs and records carry integer row ids with a `voided` flag; void(address) flips it and returns the reverse links; allocate(table) reuses the lowest voided row. (5) MIGRATION: db_domain/migrate_to_per_owner.py, shaped like the librarian's migrate_to_three_tables.py, copies the twelve registered system tables to their owners' databases (cairn_nodes/embeddings/links/threads and librarian_nodes to cairn_librarian; codemother_root_nodes to cairn_codemother; inference_calls to cairn_inference_domain; bus_traffic and its delivery table to cairn_bus), asserts the row counts, and leaves the 9,075 scratch tables in the old database for the scratch-tables ticket to drop.",
   "links": [
     "I-universal-addressing-and-bidirectional-links.md (the intention this ticket builds)",
     "I-the-vision-that-guides-every-decision.md (the use case)",
     "48519f4789b1 one-bus-per-instance-hosts-every-shim (the bus's table creation moves onto connect(owner) in this voyage; build after it lands)",
-    "idea 2026-09-06-measured-2026-09-06-while-sizing-the (sibling: dropping the old database's scratch tables)"
+    "idea 2026-09-06-measured-2026-09-06-while-sizing-the (sibling: dropping the old database's scratch tables)",
+    "idea 2026-09-06-each-user-me-you-igor-etc-has (the credential vault: a vault machine under the cairn device, a pane on its web page; the delegation mechanism this ticket's read seam will consult)",
+    "Build order (CC, at Akien's word 2026-09-06 'you get to specify the order'): after 48519f4789b1+d6eb399ab6ad (one bus, first shim) and 0853294fe972 (floor) and b41b0c0fff0e (hot/root verbs); before 5dbc03e007c5. Reason: the bus's table creation moves onto connect(owner) here, so the bus must be one and settled first; the floor and verbs are shim-side and touch no tables, so they go before this migration rather than after it, keeping the launch chain green while the store is opened up."
   ],
   "priority": "",
   "node_class": "code-seam",
@@ -85,11 +91,12 @@
   "mechanism": null,
   "stage_needs": null,
   "filed_edges": [
-    "A cross-owner address resolve reads the other owner's database through db_domain today (the ruled exception to no-cross-device-imports). Whether it should ride a bus verb instead (memory: inter-device queries via bus verbs) is Akien's call; the seam is store.read(address), one function."
+    "RESOLVED by Akien 2026-09-06 (ruling 2026-09-06-the-employer-delegates-access-and-the-librarian-administers-it): a cross-owner read is a permission on the store, not a bus verb. 'as an igor's employer, i would give him access to my db. and then the librarian would set up the permissions for that as the overall owner.' The seam stays store.read(address); the permission it will check is administered by the librarian and granted by the employer through the vault (idea 2026-09-06-each-user-me-you-igor-etc-has). This ticket still builds no read gate; it lands the seam."
   ],
   "rulings": [
     "2026-09-06-the-per-owner-database-comes-before-more-complexity",
-    "2026-09-06-codemother-owns-the-care-of-the-code"
+    "2026-09-06-codemother-owns-the-care-of-the-code",
+    "2026-09-06-the-employer-delegates-access-and-the-librarian-administers-it"
   ],
   "task_or_ticket": "ticket"
 }

@@ -9,7 +9,7 @@ and crossing, through the doors named here — never by editing the cursor.*
 | Cursor | Count | Who clears |
 |---|---|---|
 | PROVEME:waiting | 19 | Opus (17), Akien (2 quorum seals) |
-| TICKETME:waiting | 6 | Opus |
+| TICKETME:waiting | 7 | Opus |
 
 Work in this order. Each item is independent of the ones after it.
 
@@ -93,22 +93,43 @@ falsifier=, horizon=)`; the PROVEME crossing then names that validation
 put the two pieces in front of him with the seal command filled in, and nothing else.
 The same-hand seal under a ruling is the ruled exception for CODE, not prose.
 
-## 4. Six tickets at TICKETME — cross BUILDME, then build
+## 4. Seven tickets at TICKETME — cross BUILDME, then build
 
-Five cast today with a builder_check on the ticket (files, lines to copy, don'ts); one
-older. Dependency order:
+Six cast today with a builder_check on the ticket (files, lines to copy, don'ts); one
+older. Akien delegated the order to CC ("you get to specify the order", 2026-09-06 evening);
+this is it, and the reason for each seat is written so a builder can disagree with it:
 
 1. 48519f4789b1 one-bus-per-instance-hosts-every-shim — and 2. d6eb399ab6ad
    the-first-shim-starts-the-ground-loop, in one voyage (2's call site is decided by 1).
-3. 0853294fe972 cairn-checks-the-floor-before-it-resolves.
+   First because everything below either rides the bus or moves its tables.
+3. 0853294fe972 cairn-checks-the-floor-before-it-resolves. Shim-side, touches no tables;
+   goes before the store is opened up so the launch chain is green when it is.
 4. b41b0c0fff0e hot-and-the-root-verbs-resolve-in-the-shim (child of 15d6a0ef9c11 —
    item 1 above lands the parent's PROVED first, or the child's proof asserts against a
-   parent still at PROVEME; either is legal, the first is cleaner).
-5. 5dbc03e007c5 cognition-gate-intention-extraction (2026-08-30; an `intention_fidelity`
+   parent still at PROVEME; either is legal, the first is cleaner). Same reason as 3.
+5. **aa4463bbd067 the-owner-is-a-database-and-every-link-is-a-tuple** — the per-owner
+   database, the universal address, the link tuple, the migration of the twelve live
+   tables. RULED to come "before things become even more complicated"
+   (`decisions/2026-09-06-the-per-owner-database-comes-before-more-complexity`, confirmed).
+   After 1–4 because the bus's `create_owned_table` moves onto `connect(owner)` here, so
+   the bus must be one and settled; before 5dbc03e007c5 because that sieve reads the
+   store and should be born on the new address. The ticket carries the builder-level how
+   (address.py, `cairn_<owner>` databases, registry per database, links as two owned
+   half-rows, void-and-reuse lists, `migrate_to_per_owner.py`, seven proof teeth) and two
+   rulings it must not exceed: no read gate is invented here, and **the librarian is
+   allowed access to everything until the hardening step** (Akien, same evening). The
+   credential vault (idea `2026-09-06-each-user-me-you-igor-etc-has`) is NOT in this
+   ticket; it is not yet cast.
+6. 5dbc03e007c5 cognition-gate-intention-extraction (2026-08-30; an `intention_fidelity`
    sieve in build_inspector; no chart chain yet).
-6. 4d9115eb04cd a-seal-that-cannot-be-reproven-rides-the-ruled-ladder — LAST, and only
+7. 4d9115eb04cd a-seal-that-cannot-be-reproven-rides-the-ruled-ladder — LAST, and only
    after its dependency is cast and landed: the import-closure fingerprint, idea
-   7bdf2d19671d, not yet cast. Cast it (/intent → /sorted) before touching this one.
+   7bdf2d19671d (`ideas/2026-09-06-fingerprint-what-the-proof-exercises-not-the.json`),
+   not yet cast. Cast it (/intent → /sorted) before touching this one.
+
+Sibling not in the queue: the 9,075 scratch tables in the old `cairn` database (idea
+`2026-09-06-measured-2026-09-06-while-sizing-the`) are dropped by their own ticket, not
+cast yet; item 5 leaves the old database read-only for it.
 
 Each BUILDME crossing runs the chart chain at the entry gate; constrain now trusts a
 standing seal (963a1df), so the bus-touching hang recorded in the 2026-09-05 slate no

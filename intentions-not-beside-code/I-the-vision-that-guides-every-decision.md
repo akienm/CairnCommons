@@ -53,6 +53,21 @@ verbatim; this file carries the binding.
    gate, which Law 6 already places there. What the schema lacks today is the read side:
    db_domain gates writes and files reads as an open edge (`store.py`, "Reads are not
    owner-gated here"). A clearance is a read gate.
+   **The access model, in his words (2026-09-06, ruling
+   `2026-09-06-the-employer-delegates-access-and-the-librarian-administers-it`):** *"an
+   'employer' has to delatate access to an 'employee'"*; *"as an igor's employer, i would
+   give him access to my db. and then the librarian would set up the permissions for that
+   as the overall owner"*; *"each 'user' (me, you, igor, etc) has their own creds. hence
+   the vault. i can share my creds with igor without actually sharing my creds and the
+   vault just takes care of managing it. kind of a permissions model for creds access that
+   everybody can use without being able to see them."* So: a cross-owner read is a store
+   permission, not a bus verb; the credential is per principal; delegation goes through a
+   vault machine held by the cairn device and surfaced on its web page (idea
+   `2026-09-06-each-user-me-you-igor-etc-has`). **For now the librarian is allowed access to
+   everything**: *"Yes, this is complex for the librarian. and i don't yet know what to do
+   about it... we will go thru a hardening step as we prep this for sharing."* The
+   hardening step is the horizon where the read gate closes; nothing before it may assume
+   it is closed.
 3. **Per-owner databases are foundational and come now.** CC proposed the physical split
    as a later child with "before sharing for real" as its horizon; Akien ruled otherwise
    (2026-09-06): *"the per owner database is a thing we do before things become even more
