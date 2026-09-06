@@ -131,3 +131,10 @@ decision against this paragraph.
   stays; where it lives changes.
 - The name "ground-loop flush" wherever it appears (the flush is the bus's; the pulse is what it
   listens for).
+
+## Tickets (cast 2026-09-06, all at TICKETME)
+
+- `48519f4789b1` one-bus-per-instance-hosts-every-shim — step 4, and the resolved fork.
+- `d6eb399ab6ad` the-first-shim-starts-the-ground-loop — step 3.
+- `0853294fe972` cairn-checks-the-floor-before-it-resolves — step 1.
+- `b41b0c0fff0e` hot-and-the-root-verbs-resolve-in-the-shim — step 5; child of 15d6a0ef9c11.
