@@ -291,3 +291,16 @@ running every discovered probe before the request was even sent (stack captured 
 `faulthandler`: the beat sat in `no_component_reaches_proved_with_an_uncharted_build`
 globbing the ticket corpus). Timed the same evening, unbuffered: wiring the bus and shims in-process took 0.0s, the private beat took 89.3s (an earlier run of the same script exceeded a 240s cap), and the request itself — embed over the bus to inference_domain to hex.local — took 0.0s and returned a 768-dimension vector. The pipe is instant; the toll booth every caller builds in front of it is the whole cost. The device-to-shim IPC exists in one primitive form: codemother's
 shim writes mail to `~/.cairn/devices/codemother/0/mail/` and returns no reply.
+
+Akien, verbatim, 2026-09-06, on the private beats above:
+
+> nobody should have their own ground loop. there's one for everybody. we talked yesterday or
+> the day before about using the ground loop pulse to echo the ring buffer to disk.
+
+So the pipe has a shape: **one ground loop process for the box**, holding the one bus; the bus's
+hot path is an in-memory ring (cast 2026-09-04, sorted berth
+`sorted-20260904T171337-82d43e9e4c65`, title bus-in-memory-ring-with-ground-loop-flush:
+post/request touch no DB, flush is one transaction on the pulse, read merges ring + DB); the
+durable log is the flushed rows. A caller reaches the bus through its own shim's IPC to that
+one loop — never by constructing a loop of its own. Measured 2026-09-06: no ground loop
+process was running on the box at all; every "bus" in use was a private one.
