@@ -1,0 +1,26 @@
+{
+  "id": "1c4ae8f053fe",
+  "title": "a-seal-snapshots-cairn-once-per-batch-and-binds-what-it-only-reads",
+  "node_class": "code-seam",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "from_idea": "/home/akien/dev/src/CairnCommons/ideas/2026-09-06-stop-copying-425mb-of-cairn-twice-per.json",
+  "linked_ideas": [
+    "fb5d259e4396"
+  ],
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260907T150952-f723ab61e6e5.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260907T150952-0ec0a104e7e7.json",
+  "intention": "Sealing a proof no longer copies all of ~/.cairn per proof: logs get an empty writable scratch, the aider shim's data binds read-only, ~/.cairn is snapshotted once per batch, and each proof's private copy comes from that pristine snapshot.",
+  "why": "Every seal copies ~425MB of ~/.cairn twice (measured 2026-09-06): 208MB of it is logs, 91MB the aider shim's data, neither of which a proof needs a private writable copy of. Today's 18 re-seals moved ~15GB to prove code that had not changed. The lived symptom is a seal that takes tens of seconds when the proof takes one.",
+  "how": "In the tester's bubblewrap setup: `--ro-bind` the aider shim's data dir; mount a fresh tmpfs (or empty dir) at the sandbox's ~/.cairn/logs so a proof that logs still can, into something discarded; take one snapshot of the rest of ~/.cairn per `--seal` batch under the tester's scratch root and `cp -a --reflink=auto` per proof from it (reflink is free on btrfs/xfs, a plain copy elsewhere). bubblewrap 0.9.0 here has no overlay; a true copy-on-write swap waits on 0.10+ and is out of this ticket.",
+  "falsifier": "DONE when: (1) bytes copied per proof, measured by du of the per-proof scratch before teardown, drop from ~850MB to under 150MB; (2) a batch of N proofs copies ~/.cairn once (one snapshot dir, N reflinks/copies); (3) a proof that writes ~/.cairn/logs still passes and the real logs are byte-identical after; (4) every currently-green seal re-seals green under the new sandbox (no proof depended on a writable aider dir \u2014 if one does, it is named and the bind for that dir becomes rw for that proof only). WRONG INTENT if a proof legitimately reads recent logs and the empty scratch breaks it \u2014 then logs bind ro and the proof's log writes go to a shadow path.",
+  "traces_to": "Law 1 \u2014 copying logs nobody reads is the resolver (and the disk) spent on the settled. CP4 \u2014 designing to the tool: the sandbox exists so a proof cannot touch the real instance, and that is satisfied by binding what is only read.",
+  "watchme": "none, because the cost per seal is measured on every seal once evidence carries the du figure (this ticket adds it), and the tester's validations dir is the record \u2014 a rise re-reds at the next inspector pass through the seal evidence",
+  "owner": "tester (cairn/devices/tester) owns the sandbox recipe; CC builds",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "schema_version": "ticket-v1",
+  "date": "2026-09-07",
+  "created": "2026-09-07",
+  "author": "CC",
+  "cast_under": "Akien 2026-09-07 (idea 811780d76281): 'the goal before we let go of fable is to move everything that doesn't have the word cognition in it to BUILDME'"
+}

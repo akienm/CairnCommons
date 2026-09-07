@@ -1,0 +1,26 @@
+{
+  "id": "675ab0daa171",
+  "title": "a-seal-fingerprints-the-import-closure-not-the-directory",
+  "node_class": "code-seam",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "from_idea": "/home/akien/dev/src/CairnCommons/ideas/2026-09-06-fingerprint-what-the-proof-exercises-not-the.json",
+  "linked_ideas": [
+    "7bdf2d19671d"
+  ],
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260907T150952-97985a9fb73e.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260907T150952-b972b4f538a1.json",
+  "intention": "A validation seal's source_fingerprint covers the proof file plus the component files that proof actually imported, so an edit expires only the seals that load the edited file.",
+  "why": "Measured 2026-09-05: one edit to transitions.py expired 30 tools/base proofs, 60 of 154 seals at once. Today (2026-09-07) clearing the inbox meant re-sealing 18 proofs whose code never changed \u2014 only a neighbour in the same directory did. The lived symptom is a wall of red that says nothing about what broke and an hour of re-seals to find out.",
+  "how": "The tester already runs each proof in a subprocess; at exit the runner reports the subset of sys.modules whose __file__ is under the cairn repo (the import closure). validation_store.source_fingerprint hashes that file set plus the proof, sorted, and the seal records the set under evidence.fingerprint_closure beside the hash. build_inspector.component_color recomputes from the recorded closure instead of _source_fingerprint(comp_dir), so tester and inspector cannot disagree. The record says 'import closure' in words: a proof that open()s a file without importing it is a known hole, stated, not hidden.",
+  "falsifier": "DONE when: (1) seal a proof under tools/base, edit a tools/base file that proof does not import, run the inspector \u2014 that seal still reads green while a proof importing the edited file reads expired; (2) evidence.fingerprint_closure lists only repo files and includes the proof; (3) the 2026-09-05 measurement re-run (touch transitions.py) expires only proofs that import transitions \u2014 count recorded in the ticket's crossings. WRONG INTENT if closure capture costs more than the copy it saves (measure seal wall-clock before/after).",
+  "traces_to": "Law 3 \u2014 the horizon wording already says 'the code it proves'; hashing the directory measures something else. Law 1 \u2014 18 needless re-seals today are the resolver re-deriving the settled. Residue of ticket 1b6516f92db3 (green-is-earned-not-assumed): 'yellow (dependency-change-only) is not yet derived \u2014 all changes read as red'; this is the deterministic form of yellow.",
+  "watchme": "none, because the signal is the count of seals expired per source edit, which build_inspector's component_color already measures on every run (cairn/machines/build_inspector/inspector.py:2590) \u2014 the crossings record carries the before/after count from the transitions.py touch",
+  "owner": "tester (cairn/devices/tester) owns the seal recipe; build_inspector's component_color sieve reads it and must agree; CC builds",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "schema_version": "ticket-v1",
+  "date": "2026-09-07",
+  "created": "2026-09-07",
+  "author": "CC",
+  "cast_under": "Akien 2026-09-07 (idea 811780d76281): 'the goal before we let go of fable is to move everything that doesn't have the word cognition in it to BUILDME'"
+}

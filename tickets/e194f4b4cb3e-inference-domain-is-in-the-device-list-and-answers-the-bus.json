@@ -1,0 +1,26 @@
+{
+  "id": "e194f4b4cb3e",
+  "title": "inference-domain-is-in-the-device-list-and-answers-the-bus",
+  "node_class": "code-seam",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "from_idea": "/home/akien/dev/src/CairnCommons/ideas/2026-09-06-three-things-separate-paper-ownership-from-real.json",
+  "linked_ideas": [
+    "fa72360178a7"
+  ],
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260907T150953-b073d5a92400.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260907T150953-834aecfbe353.json",
+  "intention": "inference_domain stands in the device list so the command's lazy-init brings it up, and a bus request to it either answers within hex.local's latency or fails loudly \u2014 never hangs.",
+  "why": "Measured 2026-09-06: no inference_domain process running; a bus request to it hangs 20s+; hex.local answers directly in under 5s with qwen2.5:7b. Codemother's 47-node root tree has a brain it cannot reach. The lived symptom is every chart packet this week carrying 'tree stratum unavailable' and counsel hanging on the bus.",
+  "how": "Item 2 of the idea. inference_domain is entered in the rack's device list (the ground loop is heartbeat + device list, nothing more; the shim starts what is listed); its shim answers `infer` by forwarding to hex.local through the sole path it already owns (import_sieve); a request that finds no listener gets a refusal with the reason inside the bus client's timeout (10s), not a 20s hang. `cairn inference_domain status` reports the pid.",
+  "falsifier": "DONE when: (1) after `cairn` lazy-init from a cold box, `cairn inference_domain status` shows a live pid; (2) `connect_bus().request('inference_domain', ['infer', ...])` from codemother's watch.py returns in under 10s with hex.local's answer; (3) with hex.local unreachable the same call returns a refusal naming the host inside 10s; (4) the next chart packet berthed carries a tree stratum instead of 'tree stratum unavailable'. WRONG INTENT if the hang is in the bus client's own timeout rather than the missing process \u2014 then the fix is the client's, and the ticket routes there.",
+  "traces_to": "Law 7 \u2014 a hang is a silent error; a refusal is a loud one. Law 6 \u2014 inference_domain is the sole path to the inference host (residue: import_sieve); a path nobody can reach is an owner of nothing. Memory launch-chain-lazy-init: the command lazy-inits the system; a device not in the list is never inited.",
+  "watchme": "none, because every chart packet under ~/.cairn/devices/chart/0/packets/ records whether the tree stratum was available \u2014 the grep for 'tree stratum unavailable' over new packets is the measure, and it is zero when this works",
+  "owner": "inference_domain (cairn/devices/inference_domain) owns its process and its verbs; CC builds",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "schema_version": "ticket-v1",
+  "date": "2026-09-07",
+  "created": "2026-09-07",
+  "author": "CC",
+  "cast_under": "Akien 2026-09-07 (idea 811780d76281): 'the goal before we let go of fable is to move everything that doesn't have the word cognition in it to BUILDME'"
+}
