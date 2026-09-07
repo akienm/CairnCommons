@@ -99,16 +99,16 @@ Eight cast today with a builder_check on the ticket (files, lines to copy, don't
 older. Akien delegated the order to CC ("you get to specify the order", 2026-09-06 evening);
 this is it, and the reason for each seat is written so a builder can disagree with it:
 
-0. **3feb201c84ea a-ticket-has-one-status-and-one-reader** — FIRST, and only after item 1
-   above lands a705346aa75c (same tool, operator_inbox; landing it first keeps one
-   fingerprint per seal). Akien, 2026-09-06 evening: "for a given ticket that appers in all
-   the places, i should see the same status. it has one status." The three reports he
-   reads every session (`akienupdate`: inbox, dashboard, harbor map) derive the status
-   label three times and disagree four ways (measured on the ticket). One reader in
-   operator_inbox, three formats; the map's in-port lane becomes open tickets grouped by
-   owning component; seven tickets gain an owning_intention; the harbor_master charter's
-   in-port wording changes (his gate sees it). Seated before the bus voyage because it
-   touches no table and no bus, and because the reports are wrong today.
+0. ~~**3feb201c84ea a-ticket-has-one-status-and-one-reader**~~ — **DONE 2026-09-06** in the
+   Fable session that cast it, under Akien's "ruled 3feb201c84ea approved go go go!". At
+   WATCHME(one-status-everywhere): one reader in operator_inbox (`status_label`), three
+   formats; the map's in-port lane is open tickets grouped by owning component with
+   FINDING lines for prose standings; 7 tickets assigned an owning_intention and 8 wrong-form
+   addresses repaired (each carries a `repairs` entry); harbor_master charter reworded and
+   recompiled; four proofs sealed green; verdict berthed; probe
+   `cairn/tools/operator_inbox/probes/one_status_everywhere.py` armed. It did NOT wait on
+   a705346aa75c: test_operator_inbox.py's fingerprint moved and was resealed under his go —
+   the builder of a705346aa75c reseals it once more, which is the one cost of the order.
 1. 48519f4789b1 one-bus-per-instance-hosts-every-shim — and 2. d6eb399ab6ad
    the-first-shim-starts-the-ground-loop, in one voyage (2's call site is decided by 1).
    First because everything below either rides the bus or moves its tables.
