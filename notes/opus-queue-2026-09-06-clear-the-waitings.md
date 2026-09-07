@@ -137,7 +137,9 @@ this is it, and the reason for each seat is written so a builder can disagree wi
 
 The credential vault (ideas `2026-09-06-each-user-me-you-igor-etc-has` and its parent) is
 NOT in this queue: Akien 2026-09-06, "we build the first one during the predecessor to UU.
-originally it's own device. but cairn is the right place for it for now." Not cast.
+originally it's own device. but cairn is the right place for it for now." The predecessor to UU
+is AgentDatacenter (his lineage: TheIgors → UtilityCloset → AgentDatacenter → UnseenUniversity →
+Cairn); UU's `unseen_university/devices/vault/` is the prior art to cite when it is cast. Not cast.
 
 Each BUILDME crossing runs the chart chain at the entry gate; constrain now trusts a
 standing seal (963a1df), so the bus-touching hang recorded in the 2026-09-05 slate no
