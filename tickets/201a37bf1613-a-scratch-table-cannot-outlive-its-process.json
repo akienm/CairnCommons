@@ -1,0 +1,89 @@
+{
+  "id": "201a37bf1613",
+  "title": "a-scratch-table-cannot-outlive-its-process",
+  "date": "2026-09-06",
+  "owner": "db_domain owns the store and the scratch registry (charter gated_by CC; codemother owns the care of the code, ruling 2026-09-06). CC/Opus builds. The bus and the tester are the two callers.",
+  "owning_intention": "cairn/cairn/devices/db_domain/intention+why.json",
+  "intention": "A scratch table cannot outlive the process that minted it: every proof-minted table is born through one store door that records its pid, is dropped with its companions on exit, and is swept by the tester when its pid is dead; the 9,075 leaked ones are swept now.",
+  "why": "Akien 2026-09-06, told the count: 'we have 9075 tables? wow! we should clear those up. is that another testing byproduct?' Yes: measured the same evening, 8,270 of them carry a pid nonce and every pid is dead; 2,424 are `_delivery` companions the bus mints beside a proof's table without the proof knowing (bus.py:287); the rest are chart and librarian tree fixtures from proofs with no teardown. A working surface that says 9,087 tables when 12 are alive lies to the next mind about what is running (CP4).",
+  "traces_to": [
+    "Law 4 (a rule that matters is enforced by physics: teardown in the store, not in every proof's finally); Law 6 (a scratch table has an owner and a lifetime, and the holder that minted it is the pid); Law 7 (the tester's sweep count is a loud diagnostic, the registry is a record of truth); CP4 (9,075 dead tables is a working surface that lies about what is running). Idea 2026-09-06-measured-2026-09-06-while-sizing-the. Sibling of ticket aa4463bbd067 (ruling 2026-09-06-the-per-owner-database-comes-before-more-complexity)."
+  ],
+  "falsifier": {
+    "proves_green": "proof gate — cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py (new): the six falsifier teeth, including a forked child killed with SIGKILL after minting; plus test_db_domain.py, the bus proofs, test_librarian_trees.py and test_inspector_nexus.py staying green after the move. Feeds back naming the tooth that broke. Durability: committed in cairn; sealed by the tester with source_fingerprint over db_domain and the tester's seal path.",
+    "proves_red": "DONE when, on this box: (1) `select count(*) from pg_tables where schemaname='public'` in `cairn` returns 12 after the one-time sweep, and the tester's seal log shows sweep counts; (2) a proof that mints a table through scratch() and is killed with SIGKILL mid-run leaves a cairn_scratch row that the next `sweep_scratch()` drops, together with its `_delivery` companion, and the tables are gone from pg_tables; (3) a proof that exits normally leaves neither table nor registry row; (4) grep finds no `DROP TABLE` and no `_NONCE =` under any proofs/ directory; (5) test_db_domain.py, test_bus.py, test_delivery.py, test_librarian_trees.py and test_inspector_nexus.py green after the move; (6) seven days after PROVED, the table count in `cairn` (or in each cairn_<owner> after aa4463bbd067) is still the live count plus at most the scratch of alive pids. WRONG INTENT if a proof needs a table to outlive its process on purpose (then it is not scratch and needs a named owner and a ticket), or if the sweep ever drops a live table (the live set is the registry's non-scratch rows, never a name pattern)."
+  },
+  "children": [],
+  "linked_ideas": [
+    "2026-09-06-measured-2026-09-06-while-sizing-the"
+  ],
+  "questions": [
+    {
+      "q": "assumption_check",
+      "a": "Three named. (1) A pid is a lifetime on one box: /proc/<pid> absent means the minter is gone; pid reuse is covered by the nonce's time stamp compared to the live process's start time. (2) No proof leans on a leaked table from a prior run: measured, every leaked pid is dead; a proof that goes red after the sweep is the finding, not a reason to keep the leak. (3) The tester is the event every proof passes through, so hanging the sweep on its seal path means no daemon and no clock (memory reaching-for-daemons-is-drift). If a proof is run outside the tester (`cairn test` dev path) it is not sealed and its scratch waits for the next seal; that is acceptable and stated."
+    },
+    {
+      "q": "missing_check",
+      "a": "Two points were asserted wrapped and are not. (a) Which of the 22 create_owned_table callers are proofs and which are real minters: 17 are under proofs/ and move to scratch(); bus.py, domain.py, trees.py, migrate_to_three_tables.py and store.py itself are real and do not move, except bus.py registering its _delivery companion when its parent is scratch. (b) The old `cairn` database's drop after aa4463bbd067's migration was assigned to 'the scratch ticket' by that ticket; this ticket empties the database of scratch BEFORE the migration and does not drop it, so aa4463bbd067's constraint is amended in the same act to drop the emptied database itself once its counts assert. Recorded here so neither ticket leaves the old database standing by assuming the other drops it."
+    },
+    {
+      "q": "collision_check",
+      "a": "Consulted the lab (recompiled 2026-09-06). aa4463bbd067: a distinction, and one amendment recorded in missing_check (who drops the old database). Law 6: served, scratch has an owner (the minter's owner) and a holder (the pid). Law 4: this IS the physics for a rule that lived in every proof's finally block. Memory reaching-for-daemons-is-drift: honored, the sweep is fired by the tester's seal, never by a clock. Memory self-describing-fixture-names: the scratch name grammar `<prefix>_<pid>_<stamp>` keeps the leaker legible if it ever leaks again. No decision says scratch tables are anyone's to keep."
+    },
+    {
+      "q": "builder_check",
+      "a": "A Haiku-level builder needs: (a) WHERE — cairn/devices/db_domain/store.py (scratch() context manager, register_scratch_companion(), sweep_scratch(), a `cairn_scratch` registry table with columns table_name text PK, pid integer, created timestamptz default now(), companion_of text null); cairn/devices/cairn/machines/bus/bus.py:287 (after create_owned_table of the _delivery table: `if store.is_scratch(table): store.register_scratch_companion(table, self._delivery_table)`); cairn/devices/tester/device.py where the subject is run inside the seal (isolation.py): call `store.sweep_scratch()` before the run and log the count on the seal record's evidence; cairn/devices/db_domain/migrate_scratch_sweep.py (new, run once by hand). (b) THE NAME RULE — scratch() mints `<prefix>_<pid>_<HHMMSSffff>`; prefix is the proof's own word (bus_traffic, chat_pane, trees), no leading underscore needed once the registry is the truth. (c) THE SWEEP PREDICATE — for each cairn_scratch row: pid absent from /proc, OR present with a start time later than the row's created (pid reuse), drop table and its companions and the rows; never touch a table not in cairn_scratch. (d) THE MOVE — the 17 proofs under proofs/ that call create_owned_table or BusDevice(table=...): replace the _NONCE constant + _cleanup/_drop_table pair with `with store.scratch(owner, 'bus_traffic', columns) as table:` and delete the hand-rolled teardown; test_bus.py:_cleanup is the template to delete everywhere. (e) ORDER OF WORK — migrate_scratch_sweep.py first (measure before/after, commit the numbers into the ticket's deposits); then store.scratch() + sweep_scratch() with test_db_domain.py teeth (kill -9 a child process that minted one, sweep, assert gone); then bus.py companion registration with test_delivery.py; then the tester hook; then the 17-proof move, resealing each. (f) DON'TS — no clock, no daemon, no name-pattern drop in the sweep, no dropping the old `cairn` database (aa4463bbd067 does that after its migration), no change to create_owned_table's owner gate."
+    }
+  ],
+  "constraints": [
+    "No clock and no daemon: the sweep fires on the tester's seal path, the event every proof already passes through.",
+    "The sweep drops only cairn_scratch rows (and their registered companions); a name pattern is never the predicate.",
+    "The old `cairn` database is not dropped here; aa4463bbd067 drops it after its migration asserts counts (amended in the same act, 2026-09-06).",
+    "create_owned_table's owner gate is unchanged; scratch() rides it."
+  ],
+  "how": "MEASURED 2026-09-06 (psql against `cairn`, 377 MB): 9,087 tables, 12 live. 8,270 carry a pid+time nonce and EVERY pid is dead (0 alive). 2,424 are `<table>_delivery` companions: bus.py:287 creates `_delivery` beside every traffic table it is handed, and the proofs' own `finally` blocks drop only the table they named (test_bus.py:_cleanup drops _TABLE and its registry row, never _TABLE_delivery). The rest are chart_*_<nonce>_nodes and _chat_*_<nonce> trees from proofs with no cleanup at all. So the leak is not one bug: it is every proof hand-rolling its own teardown against a store that has no notion of scratch. (1) THE DOOR: db_domain/store.py gains `scratch(owner, prefix, columns)` — a context manager that mints `<prefix>_<pid>_<HHMMSSffff>`, creates it owned through create_owned_table, records (table, pid, created) in a `cairn_scratch` registry table, and drops table + registry row on exit whatever the exit. `register_scratch_companion(table, companion)` lets a machine that creates a companion beside a scratch table (the bus's `_delivery`) register it under the same pid so it drops with its parent; bus.py calls it at :287 when the traffic table it was handed is in cairn_scratch. (2) THE SWEEP: `store.sweep_scratch()` drops every cairn_scratch row whose pid is not in /proc, and its companions, and returns the count. The tester calls it before every seal (cairn/devices/tester, the one place every proof already passes through), so a proof that dies mid-run is cleaned by the next seal, not by a daemon. (3) THE MOVE: the 17 proofs that mint tables (grep `create_owned_table\\|BusDevice(table=` under proofs/) move onto scratch(); their private _cleanup functions and nonce constants delete. (4) THE ONE-TIME SWEEP: migrate_scratch_sweep.py, run once by hand, drops every table in `cairn` that is not one of the 12 live tables (cairn_owned, inference_calls, bus_traffic, bus_traffic_delivery, build_inspector_failures_nodes, chart_constrain/decompose/hypothesize/orient/survey/triage/validate_nodes, librarian_nodes, orient_corrections_nodes, cairn_links, cairn_nodes, cairn_embeddings) and their cairn_owned rows, asserting first that no pid in any nonce is alive, and prints the count dropped and the database size before and after. Order: (4) may run first, today; (1)-(3) are the physics and run before aa4463bbd067 so the per-owner migration copies from a clean database and can drop the old one itself.",
+  "links": [
+    "aa4463bbd067 the-owner-is-a-database-and-every-link-is-a-tuple (sibling; this ticket runs BEFORE it so the per-owner migration copies from a clean database)",
+    "idea 2026-09-06-measured-2026-09-06-while-sizing-the (the census)",
+    "Build order (CC, under Akien's delegation 'you get to specify the order'): the one-time sweep may run today by hand; the physics is seated in the Opus queue immediately before aa4463bbd067."
+  ],
+  "priority": "",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(scratch-stays-swept) -> PROVED",
+  "watchme": {
+    "object": "scratch-stays-swept",
+    "trigger": "every tester seal after the crossing (sweep_scratch() runs there and returns a count)",
+    "enough": "seven days after PROVED with the live table count equal to the registry's non-scratch rows plus alive-pid scratch at every seal, or the first seal where it is not, which reports the leaker by name",
+    "carrier": "a verdict artifact against this ticket's falsifier tooth (6): tables in pg_tables, rows in cairn_scratch, alive pids, sweep counts per seal",
+    "nexus": "db_domain's tree (the store's own operational record)",
+    "consumer": "codemother, as owner of the care of the code; the operator inbox if a leaker is named",
+    "probe": "cairn/devices/db_domain/probes/scratch_stays_swept.py"
+  },
+  "deposits": [],
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260906T180842-f8b0275ee68b.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260906T180800-484fc5954c29.json",
+  "chart_claim": "none yet — the chart chain runs at the BUILDME crossing",
+  "cast": "2026-09-06",
+  "cast_by": "CC (Fable session; intent finding 275af6ecd3be, sorted finding 201a37bf1613)",
+  "intent": {
+    "what": "A scratch table cannot outlive the process that minted it: every proof-minted table is born through one store door that records its pid, is dropped with its companions on exit, and is swept by the tester when its pid is dead; the 9,075 leaked ones are swept now.",
+    "shape": "new track",
+    "challenge": {
+      "better_approach": "A `cairn_test` database that is dropped and recreated by the tester would make every scratch table disappear at once with no registry. Rejected: proofs of the bus and the librarian exercise ownership in the real registry, and the per-owner ticket makes 'which database' the owner's, not the tester's; a scratch registry keyed by pid works in any database. A daemon sweeping on a clock is the drift memory names (reaching-for-daemons-is-drift); the tester already runs before every seal and is the event.",
+      "prior_art": "test_bus.py _cleanup (the hand-rolled teardown, 5 copies across proofs); test_chat_pane.py _drop_table; bus.py:287 create_owned_table(self._delivery_table) (the silent companion); store.drop_table (the primitive the sweep uses); the tester's seal path (where the sweep hangs); memory claude-oom-kills-the-box (the SIGKILL that makes finally blocks insufficient).",
+      "hidden_assumption": "That a pid is a lifetime: on one box, /proc/<pid> gone means the minter is gone. Pid reuse could make a dead scratch look alive; the nonce carries HHMMSSffff so a reused pid with an older stamp than the process's start time is still dead — the sweep compares stamp to /proc/<pid> start time when the pid exists. Second: that no proof relies on a leaked table from a prior run. Measured: every leaked pid is dead and nothing can be reading them; if a proof goes red after the sweep, that proof was leaning on a leak and is the finding.",
+      "real_collision": "aa4463bbd067 says the old `cairn` database stays read-only until 'the scratch-tables ticket drops it'. Distinction: this ticket sweeps the scratch OUT of `cairn` before the migration; the drop of the emptied old database moves into aa4463bbd067's own voyage (its constraint is amended in the same act, by CC under the delegated ordering). No Law collides: Law 5 (history under way) does not cover Postgres tables, and a dead proof's table establishes nothing about right-now.",
+      "back_up": "proceed"
+    },
+    "from_idea": "2026-09-06-measured-2026-09-06-while-sizing-the"
+  },
+  "why_beneath_the_why": "Every proof hand-rolled its own teardown because the store had no word for 'mine until I exit'. Giving it the word is Law 4; the 9,075 tables are what the missing word cost.",
+  "mechanism": null,
+  "stage_needs": null,
+  "filed_edges": [],
+  "rulings": [
+    "2026-09-06-the-per-owner-database-comes-before-more-complexity",
+    "2026-09-06-codemother-owns-the-care-of-the-code"
+  ],
+  "task_or_ticket": "ticket"
+}

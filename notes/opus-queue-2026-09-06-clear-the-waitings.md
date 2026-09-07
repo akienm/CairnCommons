@@ -9,7 +9,7 @@ and crossing, through the doors named here — never by editing the cursor.*
 | Cursor | Count | Who clears |
 |---|---|---|
 | PROVEME:waiting | 19 | Opus (17), Akien (2 quorum seals) |
-| TICKETME:waiting | 7 | Opus |
+| TICKETME:waiting | 8 | Opus |
 
 Work in this order. Each item is independent of the ones after it.
 
@@ -93,9 +93,9 @@ falsifier=, horizon=)`; the PROVEME crossing then names that validation
 put the two pieces in front of him with the seal command filled in, and nothing else.
 The same-hand seal under a ruling is the ruled exception for CODE, not prose.
 
-## 4. Seven tickets at TICKETME — cross BUILDME, then build
+## 4. Eight tickets at TICKETME — cross BUILDME, then build
 
-Six cast today with a builder_check on the ticket (files, lines to copy, don'ts); one
+Seven cast today with a builder_check on the ticket (files, lines to copy, don'ts); one
 older. Akien delegated the order to CC ("you get to specify the order", 2026-09-06 evening);
 this is it, and the reason for each seat is written so a builder can disagree with it:
 
@@ -107,7 +107,14 @@ this is it, and the reason for each seat is written so a builder can disagree wi
 4. b41b0c0fff0e hot-and-the-root-verbs-resolve-in-the-shim (child of 15d6a0ef9c11 —
    item 1 above lands the parent's PROVED first, or the child's proof asserts against a
    parent still at PROVEME; either is legal, the first is cleaner). Same reason as 3.
-5. **aa4463bbd067 the-owner-is-a-database-and-every-link-is-a-tuple** — the per-owner
+5. **201a37bf1613 a-scratch-table-cannot-outlive-its-process** — measured 2026-09-06:
+   9,087 tables in `cairn`, 12 live; 8,270 carry a dead pid, 2,424 are `_delivery`
+   companions the bus mints at bus.py:287 that no proof's `finally` drops. The ticket: a
+   `scratch()` door in the store (pid-registered, dropped on exit, companions registered,
+   swept by the tester before each seal), the 17 minting proofs moved onto it, and a
+   one-time sweep by hand. Seated here so the per-owner migration copies from a clean
+   database; the emptied old database is then dropped by the next item, not this one.
+6. **aa4463bbd067 the-owner-is-a-database-and-every-link-is-a-tuple** — the per-owner
    database, the universal address, the link tuple, the migration of the twelve live
    tables. RULED to come "before things become even more complicated"
    (`decisions/2026-09-06-the-per-owner-database-comes-before-more-complexity`, confirmed).
@@ -119,17 +126,18 @@ this is it, and the reason for each seat is written so a builder can disagree wi
    rulings it must not exceed: no read gate is invented here, and **the librarian is
    allowed access to everything until the hardening step** (Akien, same evening). The
    credential vault (idea `2026-09-06-each-user-me-you-igor-etc-has`) is NOT in this
-   ticket; it is not yet cast.
-6. 5dbc03e007c5 cognition-gate-intention-extraction (2026-08-30; an `intention_fidelity`
+   ticket; it is not yet cast. Drops the emptied old `cairn` database after its counts
+   assert (amended: item 5 sweeps, this item drops).
+7. 5dbc03e007c5 cognition-gate-intention-extraction (2026-08-30; an `intention_fidelity`
    sieve in build_inspector; no chart chain yet).
-7. 4d9115eb04cd a-seal-that-cannot-be-reproven-rides-the-ruled-ladder — LAST, and only
+8. 4d9115eb04cd a-seal-that-cannot-be-reproven-rides-the-ruled-ladder — LAST, and only
    after its dependency is cast and landed: the import-closure fingerprint, idea
    7bdf2d19671d (`ideas/2026-09-06-fingerprint-what-the-proof-exercises-not-the.json`),
    not yet cast. Cast it (/intent → /sorted) before touching this one.
 
-Sibling not in the queue: the 9,075 scratch tables in the old `cairn` database (idea
-`2026-09-06-measured-2026-09-06-while-sizing-the`) are dropped by their own ticket, not
-cast yet; item 5 leaves the old database read-only for it.
+The credential vault (ideas `2026-09-06-each-user-me-you-igor-etc-has` and its parent) is
+NOT in this queue: Akien 2026-09-06, "we build the first one during the predecessor to UU.
+originally it's own device. but cairn is the right place for it for now." Not cast.
 
 Each BUILDME crossing runs the chart chain at the entry gate; constrain now trusts a
 standing seal (963a1df), so the bus-touching hang recorded in the 2026-09-05 slate no
