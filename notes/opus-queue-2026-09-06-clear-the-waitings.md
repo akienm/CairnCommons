@@ -165,3 +165,20 @@ longer blocks. Then /sail.
 - The review delegation (CC relays "reviewed and approved" from chat, record gains
   reviewed_by/recorded_by, Stop-hook detector for review markers) — Akien said "get it
   now" and has not ruled; it waits at his gate.
+
+## Done outside the queue — 2026-09-07 (Fable session)
+
+- **e3cf75c6dc8f system-words-fold-case-when-akien-types-them** — from Akien's /idea +
+  ruling in one breath ("RULED ruled APPROVED approved Go go GO!"). Decision
+  `decisions/2026-09-07-system-words-are-case-insensitive-when-akien-types-them.json`.
+  Full chain: /intent → /sorted → 7-stage chart → BUILDME → PROVEME → WATCHME, now
+  dwelling on the probe `cairn/tools/system_word/probes/his_case_never_bites.py`
+  (10 entry points replayed mixed-case; 0 bites). New tool `cairn/tools/system_word`
+  (fold/is_word/canon/pick/fold_head/fold_flags); nineteen seams compare through it;
+  `bin/cairn` and the codemother launcher fold with `${1,,}`; the RULED marker is
+  IGNORECASE. Cairn commit a44fc12. THE RULE FOR EVERY NEW SEAM: a verb, view, status,
+  signal, stage token, marker or flag typed at a door compares through
+  `cairn.tools.system_word`; free text (review words, ruling verbatim, learn query,
+  argv after the leading verbs) never folds; stored stage tokens keep their case.
+- Two stale SKILL.md module paths (`cairn.devices.builder` → `codemother`) fixed in
+  chart and sail in the same commit.
