@@ -9,7 +9,7 @@ and crossing, through the doors named here — never by editing the cursor.*
 | Cursor | Count | Who clears |
 |---|---|---|
 | PROVEME:waiting | 19 | Opus (17), Akien (2 quorum seals) |
-| TICKETME:waiting | 8 | Opus |
+| TICKETME:waiting | 9 | Opus |
 
 Work in this order. Each item is independent of the ones after it.
 
@@ -93,12 +93,22 @@ falsifier=, horizon=)`; the PROVEME crossing then names that validation
 put the two pieces in front of him with the seal command filled in, and nothing else.
 The same-hand seal under a ruling is the ruled exception for CODE, not prose.
 
-## 4. Eight tickets at TICKETME — cross BUILDME, then build
+## 4. Nine tickets at TICKETME — cross BUILDME, then build
 
-Seven cast today with a builder_check on the ticket (files, lines to copy, don'ts); one
+Eight cast today with a builder_check on the ticket (files, lines to copy, don'ts); one
 older. Akien delegated the order to CC ("you get to specify the order", 2026-09-06 evening);
 this is it, and the reason for each seat is written so a builder can disagree with it:
 
+0. **3feb201c84ea a-ticket-has-one-status-and-one-reader** — FIRST, and only after item 1
+   above lands a705346aa75c (same tool, operator_inbox; landing it first keeps one
+   fingerprint per seal). Akien, 2026-09-06 evening: "for a given ticket that appers in all
+   the places, i should see the same status. it has one status." The three reports he
+   reads every session (`akienupdate`: inbox, dashboard, harbor map) derive the status
+   label three times and disagree four ways (measured on the ticket). One reader in
+   operator_inbox, three formats; the map's in-port lane becomes open tickets grouped by
+   owning component; seven tickets gain an owning_intention; the harbor_master charter's
+   in-port wording changes (his gate sees it). Seated before the bus voyage because it
+   touches no table and no bus, and because the reports are wrong today.
 1. 48519f4789b1 one-bus-per-instance-hosts-every-shim — and 2. d6eb399ab6ad
    the-first-shim-starts-the-ground-loop, in one voyage (2's call site is decided by 1).
    First because everything below either rides the bus or moves its tables.
