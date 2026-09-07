@@ -2,10 +2,14 @@
   "id": "67d7a6783fb3",
   "slug": "bus-in-memory-ring-with-ground-loop-flush",
   "what": "The bus holds an in-memory ring buffer; post() and request() are zero-DB. The ground loop pulse flushes the ring to Postgres in one batch transaction.",
-  "why": "On a 16GB 4-year-old laptop, every inter-device message currently round-trips through Postgres (3 DB hits per request()). The bus is the sole comms path and inference_domain embeddings will route through it — latency matters. The ring keeps the bus contract (sole path, logged, causal record) while making the hot path in-memory and batching the durable record to one transaction per heartbeat.",
+  "why": "On a 16GB 4-year-old laptop, every inter-device message currently round-trips through Postgres (3 DB hits per request()). The bus is the sole comms path and inference_domain embeddings will route through it \u2014 latency matters. The ring keeps the bus contract (sole path, logged, causal record) while making the hot path in-memory and batching the durable record to one transaction per heartbeat.",
   "falsifier": "post() and request() complete with zero DB round-trips (measurable by counting store.write/store.read calls between post and return). flush() writes the full ring to DB in one transaction. After flush, read() returns the same envelopes that were in the ring. All existing bus proofs pass.",
   "kind": "code-seam",
   "component": "cairn/devices/cairn/machines/bus/",
   "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260904T171337-82d43e9e4c65.json"
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260904T171337-82d43e9e4c65.json",
+  "watchme": "none, because the proof cairn/devices/cairn/machines/bus/proofs/test_ring.py exercises the full falsifier deterministically and the seal cairn/devices/cairn/machines/bus/validations/test_ring.json expires on any change to bus.py or test_ring.py (source_fingerprint) - no operational signal beyond what the proof and build_inspector's crossing_fingerprints_verified sieve already provide (sorted record: logs/reviewed/sorted/sorted-20260904T171337-82d43e9e4c65.json under skill_block/0)",
+  "repairs": [
+    "2026-09-07 (ticket e3cf75c6dc8f reseal, test_watchme_spec red): the ticket was filed with watchme: null though its sorted cast carried the none-because; copied the cast's reason in with its referents - data repair, no design change."
+  ]
 }
