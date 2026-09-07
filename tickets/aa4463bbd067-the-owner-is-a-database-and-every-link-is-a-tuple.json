@@ -10,7 +10,7 @@
     "Law 6 (ownership in the address, and the owner's gate is now a database boundary, which is physics per Law 4); Law 1 (provenance derived from the link structure, never re-derived); telos 3 (share those tools with others: the vision's household and lab need several principals). Ruling 2026-09-06-the-per-owner-database-comes-before-more-complexity. Intention I-universal-addressing-and-bidirectional-links.md; use case I-the-vision-that-guides-every-decision.md."
   ],
   "falsifier": {
-    "proves_green": "proof gate — cairn/devices/db_domain/proofs/test_per_owner_addressing.py (new): the seven falsifier teeth as seven functions against `cairn_test_*` databases created and dropped by the proof; plus test_db_domain.py, test_sole_path.py and cairn/devices/librarian/proofs/ staying green. Feeds back naming the tooth that broke. Durability: committed in cairn; sealed by the tester with source_fingerprint over db_domain.",
+    "proves_green": "proof gate \u2014 cairn/devices/db_domain/proofs/test_per_owner_addressing.py (new): the seven falsifier teeth as seven functions against `cairn_test_*` databases created and dropped by the proof; plus test_db_domain.py, test_sole_path.py and cairn/devices/librarian/proofs/ staying green. Feeds back naming the tooth that broke. Durability: committed in cairn; sealed by the tester with source_fingerprint over db_domain.",
     "proves_red": "DONE when, on this box: (1) `psql -l` lists cairn_librarian, cairn_codemother, cairn_inference_domain and cairn_bus, and the migrated row counts equal the source counts measured 2026-09-06 (cairn_nodes 10,538; cairn_embeddings 11,230; librarian_nodes 148; codemother_root_nodes 47); (2) address.parse/render round-trips every address in a fixture set including file addresses with env vars; (3) a write to a librarian table through connect('codemother') is refused, loudly; (4) a link written from owner A to owner B appears in both link tables, and after A voids its row, links_to(B's address) still names A's row from B's side, so nothing orphans; (5) void then allocate on an embeddings list reuses the voided row id; (6) grep finds no `dbname=` and no DB_NAME outside store.py; test_db_domain.py, test_sole_path.py and the librarian's tree proofs stay green after migration. WRONG INTENT if a consumer turns out to need a cross-owner SQL join (the design says links are addresses the store resolves, never joins), or if one box for one person needs more than one Postgres role to run."
   },
   "children": [],
@@ -24,7 +24,7 @@
   "questions": [
     {
       "q": "assumption_check",
-      "a": "Three named. (1) 'database (per owner)' means a Postgres database — load-bearing; chosen because a database is the unit that takes its own credentials and moves hosts whole, which is what the household and lab use case needs; the wrong-intent tooth (a needed cross-owner join) is the measurement that would overturn it. (2) The role Cairn runs as has CREATEDB — true today, ensure_database already creates `cairn` with it; one box, one role stays the bound. (3) A link between two owners written as two half-rows stays consistent without a distributed transaction — held because each half is owned and gated by its own side and the reverse traversal reads locally; a half that fails to write is a loud OwnershipError, never a silent orphan."
+      "a": "Three named. (1) 'database (per owner)' means a Postgres database \u2014 load-bearing; chosen because a database is the unit that takes its own credentials and moves hosts whole, which is what the household and lab use case needs; the wrong-intent tooth (a needed cross-owner join) is the measurement that would overturn it. (2) The role Cairn runs as has CREATEDB \u2014 true today, ensure_database already creates `cairn` with it; one box, one role stays the bound. (3) A link between two owners written as two half-rows stays consistent without a distributed transaction \u2014 held because each half is owned and gated by its own side and the reverse traversal reads locally; a half that fails to write is a loud OwnershipError, never a silent orphan."
     },
     {
       "q": "missing_check",
@@ -36,7 +36,7 @@
     },
     {
       "q": "builder_check",
-      "a": "A Haiku-level builder needs: (a) WHERE — cairn/devices/db_domain/address.py (new), store.py (connect(owner), ensure_database(owner), registry per database, read(address), links_to/links_from, void/allocate), migrate_to_per_owner.py (new, copy migrate_to_three_tables.py's shape); (b) THE NAME RULE — owner `x` is database `cairn_x`, identifier-safe lowercase, no other prefix; a table inside it carries no owner prefix (cairn_nodes becomes cairn_librarian.nodes); (c) THE LINK ROW — columns local text, remote text, kind text, weight real, traversals integer default 0, created timestamptz default now(); unique(local, remote); index on remote; write both halves, each through its owner's connection; (d) THE LIST ROW — integer row id as the address leaf, `voided boolean default false`; allocate = lowest voided or next; (e) ORDER OF WORK — address.py with its proof first; then store.connect(owner) with test_db_domain.py green against `cairn_test`; then links and lists with their teeth; then move trees.py (NODES_TABLE, EMBEDDINGS_TABLE, LINKS_TABLE, THREADS_TABLE, OWNER='librarian'), bus.py (_BUS_OWNER), inference_domain/domain.py (CACHE_OWNER) and codemother's root table onto connect(owner); then run the migration and assert the counts; (f) DON'TS — no cross-database join, no second connection path (test_sole_path.py stays the tooth), no dropping the old database (that is the scratch ticket), no read gate invented here, no change to the write-gate semantics (non-owner refused, unregistered refused, where-less refused)."
+      "a": "A Haiku-level builder needs: (a) WHERE \u2014 cairn/devices/db_domain/address.py (new), store.py (connect(owner), ensure_database(owner), registry per database, read(address), links_to/links_from, void/allocate), migrate_to_per_owner.py (new, copy migrate_to_three_tables.py's shape); (b) THE NAME RULE \u2014 owner `x` is database `cairn_x`, identifier-safe lowercase, no other prefix; a table inside it carries no owner prefix (cairn_nodes becomes cairn_librarian.nodes); (c) THE LINK ROW \u2014 columns local text, remote text, kind text, weight real, traversals integer default 0, created timestamptz default now(); unique(local, remote); index on remote; write both halves, each through its owner's connection; (d) THE LIST ROW \u2014 integer row id as the address leaf, `voided boolean default false`; allocate = lowest voided or next; (e) ORDER OF WORK \u2014 address.py with its proof first; then store.connect(owner) with test_db_domain.py green against `cairn_test`; then links and lists with their teeth; then move trees.py (NODES_TABLE, EMBEDDINGS_TABLE, LINKS_TABLE, THREADS_TABLE, OWNER='librarian'), bus.py (_BUS_OWNER), inference_domain/domain.py (CACHE_OWNER) and codemother's root table onto connect(owner); then run the migration and assert the counts; (f) DON'TS \u2014 no cross-database join, no second connection path (test_sole_path.py stays the tooth), no dropping the old database (that is the scratch ticket), no read gate invented here, no change to the write-gate semantics (non-owner refused, unregistered refused, where-less refused)."
     }
   ],
   "constraints": [
@@ -59,11 +59,11 @@
     "Akien 2026-09-06 on the link tuple, reminded of his 2026-08-23 sketch: 'oh yeah, i forgot about that for the tuples! good catch! yes, i agree with past me.' The tuple stands as designed: leaves' bidirectional links are the tree-side case, the (local, remote) pair is the list-side and file-side case.",
     "Akien 2026-09-06 on the vault: 'we build the first one during the predecessor to UU. originally it's own device. but cairn is the right place for it for now.' The vault is NOT this ticket's; it berths under devices/cairn as a machine when it is cast.",
     "201a37bf1613 a-scratch-table-cannot-outlive-its-process (sibling; runs before this ticket)",
-    "Akien 2026-09-06, asked what 'the predecessor to UU' is: 'TheIgors -> UtilityCloset -> AgentDatacenter -> UnseenUniversity -> Cairn'. Then: 'The UtilityCloset was renamed to AgentDatacenter or whatever variant of that we wound up on' — one project under two names, at ~/TheIgorsProject/utility_closet. So the vault was first built during UtilityCloset/AgentDatacenter; UnseenUniversity carries it at ~/dev/src/UnseenUniversity/unseen_university/devices/vault/ (client, shim, seed, store; get_credential scoped by owner + device; encrypt/decrypt round-trip proven in tests/vault/). Prior art for the Cairn vault: cite, don't graft."
+    "Akien 2026-09-06, asked what 'the predecessor to UU' is: 'TheIgors -> UtilityCloset -> AgentDatacenter -> UnseenUniversity -> Cairn'. Then: 'The UtilityCloset was renamed to AgentDatacenter or whatever variant of that we wound up on' \u2014 one project under two names, at ~/TheIgorsProject/utility_closet. So the vault was first built during UtilityCloset/AgentDatacenter; UnseenUniversity carries it at ~/dev/src/UnseenUniversity/unseen_university/devices/vault/ (client, shim, seed, store; get_credential scoped by owner + device; encrypt/decrypt round-trip proven in tests/vault/). Prior art for the Cairn vault: cite, don't graft."
   ],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(links-get-written) -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> WATCHME(links-get-written) -> PROVED",
   "watchme": {
     "object": "links-get-written",
     "trigger": "the first row written to any owner's links table after the crossing (cairn_links held 0 rows on 2026-09-06, a built-and-never-used measurement this watch exists to not repeat)",
@@ -76,7 +76,7 @@
   "deposits": [],
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260906T173213-c9ae0f0ab7c4.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260906T173213-034cf6b0f912.json",
-  "chart_claim": "none yet — the chart chain runs at the BUILDME crossing",
+  "chart_claim": "validate-20260907T142659-e81e7261f6e7.json",
   "cast": "2026-09-06",
   "cast_by": "CC (Fable session; intent finding e90e3aa9415c, sorted finding aa4463bbd067)",
   "intent": {
@@ -84,7 +84,7 @@
     "shape": "new track",
     "challenge": {
       "better_approach": "A Postgres SCHEMA per owner inside one database would give `<owner>.<table>` names natively and keep cross-owner joins possible. Rejected here because the vision's unit is the principal: a database is what gets its own credentials (a clearance) and moves to another host whole; a schema is neither. The sketch says database, and the ruling says now. Keeping one database and adding an owner column was the cheapest shape and is what exists today (cairn_owned, 94% scratch entries): it makes ownership a lookup, which the intention names as the thing to invert.",
-      "prior_art": "store.py: ensure_database/connect/_ensure_registry/create_owned_table (the owner-gate to generalize); trees.py §6.2 link()/_ensure_links with LINKS_TABLE=cairn_links (built 2026-08, 0 rows on 2026-09-06, so the tuple has no installed base to retrofit); migrate_to_three_tables.py (the migration shape); the addressing intention's two-species table; idea 2026-09-06 scratch-tables census (sibling, the drop of the old database's 9,075 scratch tables is its ticket, not this one's).",
+      "prior_art": "store.py: ensure_database/connect/_ensure_registry/create_owned_table (the owner-gate to generalize); trees.py \u00a76.2 link()/_ensure_links with LINKS_TABLE=cairn_links (built 2026-08, 0 rows on 2026-09-06, so the tuple has no installed base to retrofit); migrate_to_three_tables.py (the migration shape); the addressing intention's two-species table; idea 2026-09-06 scratch-tables census (sibling, the drop of the old database's 9,075 scratch tables is its ticket, not this one's).",
       "hidden_assumption": "That 'database (per owner)' in the sketch means a Postgres database, not a schema or a prefix. Load-bearing and named; the falsifier's wrong-intent tooth (a needed cross-owner join) is what would show it wrong. Second: that every owner in the system is a principal worth a database. The bus and inference_domain are devices, not household members; they get one because the rule admits no exemption (a singleton is instance 0, never a special case), and because a device that moves hosts takes its database with it.",
       "real_collision": "Memory 'one bus per cairn instance ... one master db': the six-box swarm ran once on one master database. A distinction, not a collision: per-owner databases still sit in one instance's Postgres; multi-host is an address resolution change, and the owner segment is what makes it one. Memory 'inter-device queries via bus verbs': device A asks device B through a verb, not through B's tables. Distinction recorded as an open edge on the ticket: a cross-owner address resolve is db_domain reading B's database directly today (the ruled exception), and whether it should instead ride a bus verb is Akien's call, not a build blocker; the seam is one function.",
       "back_up": "proceed"
@@ -104,6 +104,26 @@
   ],
   "task_or_ticket": "ticket",
   "repairs": [
-    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/devices/db_domain/intention+why.json' resolved under neither root; stripped the extra 'cairn/' — the one reader surfaced it; data repair, no design change."
+    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/devices/db_domain/intention+why.json' resolved under neither root; stripped the extra 'cairn/' \u2014 the one reader surfaced it; data repair, no design change."
+  ],
+  "chart_chain": {
+    "orient": "/home/akien/.cairn/devices/chart/0/packets/orient-20260907T142659-b2e176a92653.json",
+    "constrain": "/home/akien/.cairn/devices/chart/0/packets/constrain-20260907T142659-26f71d7480a4.json",
+    "survey": "/home/akien/.cairn/devices/chart/0/packets/survey-20260907T142659-2c5a2829f4f9.json",
+    "decompose": "/home/akien/.cairn/devices/chart/0/packets/decompose-20260907T142659-6b398359e1d0.json",
+    "triage": "/home/akien/.cairn/devices/chart/0/packets/triage-20260907T142659-092605b57ddc.json",
+    "hypothesize": "/home/akien/.cairn/devices/chart/0/packets/hypothesize-20260907T142659-e69e96ad367f.json",
+    "validate": "/home/akien/.cairn/devices/chart/0/packets/validate-20260907T142659-e81e7261f6e7.json"
+  },
+  "crossings": [
+    {
+      "date": "2026-09-07",
+      "to": "BUILDME",
+      "by": "CC",
+      "door": "harbor_master.clearance.clear",
+      "proven_by": "cairn/devices/db_domain/proofs/test_db_domain.py",
+      "journal": "cairn/devices/db_domain/history.json",
+      "note": "Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
+    }
   ]
 }
