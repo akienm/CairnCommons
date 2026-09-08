@@ -1,0 +1,46 @@
+{
+  "id": "beat-tail-re-walks-corpora-no-sieve-counts",
+  "standing": "OPEN",
+  "why": "the heartbeat spends 23.5 of every 23.7 seconds re-walking corpora that did not move. Akien's red (2026-09-07) was that parsing all of class-space every 60s is not efficient; three fixes took the beat from 104.8s to 23.7s steady state, and what is left is the SAME defect at ~78 addresses instead of three. Each probe walks tickets/, reads history.json, or shells git on its own account, once per beat, forever. settled() is the pattern that fits and none of them is wired to it — and nothing would red the 79th probe that also is not, so the tail grows back by construction (Law 1: re-deriving a settled answer is a defect).",
+  "count": 2,
+  "first_seen": "2026-09-08T04:48:11.203883+00:00",
+  "last_seen": "2026-09-08T04:50:57.227028+00:00",
+  "occurrences": [
+    {
+      "at": "2026-09-08T04:48:11.203883+00:00",
+      "measured_on": "2026-09-07",
+      "instrument": "scratchpad/beat_steady.py — 3 beats in ONE process, so beat 2 and 3 show the cross-pulse memo working; every earlier measurement was a cold beat #1 and could not see it",
+      "beat_before_any_fix_s": 104.8,
+      "beat_cold_now_s": 32.5,
+      "beat_steady_now_s": 23.7,
+      "of_which_trigger_s": 23.5,
+      "of_which_carry_s": 0.0,
+      "of_which_enough_s": 0.0,
+      "settled_on_a_warm_beat": "1 stat sweep, 0.01s, 0 scans derived",
+      "probes_in_the_tail": 78,
+      "repeat_derivations_per_beat": {
+        "grammar.component_roster": 25883,
+        "grammar.ticket_spellings": 3136,
+        "address.component_dirs": 222
+      },
+      "the_missing_physics": "no sieve counts a corpus walk that is not behind once() or settled(). The three fixes landed are hand-placed; the 79th probe inherits nothing.",
+      "fixed_already": [
+        "42c9e15 claiming_packets index — 1,568 store sweeps per beat -> one",
+        "11d2ec0 once() + _pulse() — the pulse context that nothing ever populated",
+        "e53a973 settled() — corpus scans remembered until the corpus moves",
+        "af50ab8 context or {} at shim.py:234 and loop.py:240 — every shim swapped in its own dict, so the pulse memo was per-shim and never per-beat"
+      ],
+      "raised_by": "CC, closing the voyage Akien's red opened"
+    },
+    {
+      "at": "2026-09-08T04:50:57.227028+00:00",
+      "correction_to_the_first_raise": "RAISED WITHOUT ITS LINEAGE, and the lineage changes what is owed. This work was already cast: CairnCommons/tickets/2f0a6ea8c966-a-beat-costs-what-changed.json is at BUILDME:waiting and its intention is verbatim this defect — 'a beat costs what CHANGED since the last one, not the whole corpus'. Its `how` specifies the fix as 'a shared index rebuilt on a cheap fingerprint (file set + max mtime) rather than per beat', which is what settled() (e53a973) is, keyed on (path, mtime_ns, size). THE FOUR FIXES THIS SESSION LANDED ARE THAT TICKET'S BUILD, not a new seam. I did not read it first — Law 1, and my own failure mode: the settled answer was on disk and I re-derived it.\n\nWHAT THE LINEAGE ALSO SAYS, and it is the part still open. 2f0a6ea8c966 names two children and NEITHER WAS EVER CAST — they exist only as strings inside the parent: (A) 'the-corpus-is-walked-when-it-changes' (base + build_inspector, 1,495 ast.parse calls per beat; named leaves address_rule.spellings_in, import_sieve.imports_in, deviceness._class_census) — this session built it and it is not yet a ticket that can be crossed; (B) 'the-beat-does-not-dial-the-database' (inference_domain, zero parses, 975 json loads, 32 psycopg2 round trips per beat) — untouched, and it is now most of what is left: the per-probe RSS trace (scratchpad/beat_mem.py) steps 57MB -> 200MB -> 319MB at exactly the inference_domain probes.\n\nAND THE FALSIFIER NUMBER IS STALE, WHICH IS AKIEN'S CALL, NOT MINE. 2f0a6ea8c966 reads 'DONE when a warm beat on an idle corpus costs under 1.0s — the ruled cadence', and its `owner` field forbids CC to move that bound. THE BOUND HAS ALREADY MOVED, and legitimately: __main__.py carries 'CADENCE_S = 60.0  # the ruled cadence: once per minute (Akien, 2026-08-22; was 1.0s)', landed in 6ae83e7 which Akien authored. So the 1.0s in the ticket is not corrosion and I am not reporting it as such — it is a falsifier written against a superseded cadence. The measured 23.7s steady state is red against 1.0s and green with 36x margin against 60.0s, and which of those is the verdict is a spec question only he can settle.\n\nWHAT STAYS TRUE IN THE ORIGINAL RAISE: no sieve counts an unmemoized corpus walk, so the 79th probe inherits nothing from the four fixes. That is the physics still owed, and it is not named in 2f0a6ea8c966 or either child."
+    }
+  ],
+  "notified": [
+    "cc"
+  ],
+  "cleared_by": [],
+  "recurred_after_clear": null,
+  "prior_attempts": 0
+}
