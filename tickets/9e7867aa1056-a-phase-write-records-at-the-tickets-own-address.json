@@ -1,0 +1,54 @@
+{
+  "id": "9e7867aa1056",
+  "date": "2026-09-08",
+  "title": "a-phase-write-records-at-the-tickets-own-address",
+  "node_class": "code-seam",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(the-ticket-write-door-has-callers-after-the-first-batch) -> PROVED",
+  "from_idea": "2026-09-07-a-lot-of-things-currently-look-like",
+  "linked_ideas": [],
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260908T140029-ff03851119ab.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260908T140149-3c8f81332ac5.json",
+  "created": "2026-09-08",
+  "author": "CC",
+  "ruling": "2026-09-08-a-fleet-of-one-reshapes-the-pickup-phase",
+  "watchme": {
+    "object": "the-ticket-write-door-has-callers-after-the-first-batch",
+    "trigger": "on each ground-loop beat, against the ticket corpus and the door's own record",
+    "enough": "at least 3 phase_writes records exist across at least 2 DISTINCT calendar days that are not the initial backlog batch's day, AND every ticket in the corpus whose cursor carries a written phase (waiting, queued, hold) has a phase_writes entry whose workflow field matches its current workflow_and_state string. Both halves are required: the first says the door is still being used, the second says no hand-edit slipped past it. Sustained one week after the batch.",
+    "carrier": "a verdict artifact against THIS ticket's falsifier — specifically the WRONG INTENT branch, that the door lands and hand-edits continue anyway",
+    "nexus": "hypothesize",
+    "consumer": "Akien, via the operator inbox; a red here is the same finding pickup() earned in August 2026 and is worth the same escalation",
+    "probe": "cairn/tools/base/probes/the_ticket_write_door_has_callers.py"
+  },
+  "gates_bound": [
+    {
+      "gate": "proved",
+      "check_type": "code-proof",
+      "how": "proofs beside cairn/tools/base, run twice and sealed under the tester; teeth a hollow build could not pass — the round-trip proof mutates a real ticket copy and diffs it byte-for-byte, and the refusal proofs assert nothing was written"
+    },
+    {
+      "gate": "feeds-back-to-origin-on-failure",
+      "check_type": "verdict-artifact",
+      "how": "the claiming validate berth's criteria run by their instruments and the verdict written through verdict.write_verdict before the PROVED crossing; a failed criterion is a kick-back to the chart, never a crossing"
+    },
+    {
+      "gate": "buildme-entry",
+      "check_type": "emit-chokepoint",
+      "how": "inspect_entry's three sieves — a berthed chart chain claiming this ticket, intent_berth present, sorted_berth present — all three refused together on the first pass"
+    },
+    {
+      "gate": "watchme-emission",
+      "check_type": "armed-probe",
+      "how": "the emission gate reads the crossing's ticket, finds the spec for the named object and refuses an unarmed probe (WatchmeEmissionRed)"
+    }
+  ],
+  "assumption_check": "THE LOAD-BEARING ASSUMPTION IS THE CROSS-ROOT WRITE, and it is still unsettled at cast rather than papered over. transitions.py lives in cairn/ and the ticket corpus lives in CairnCommons/ — a second git repo. Reading already crosses that line (_TICKETS at transitions.py:799, consumed by _find_ticket, _ticket_standing and resolve_release), so a read precedent exists; a write precedent does not, because MEASURED 2026-09-08 there is no ticket writer anywhere: grep for writers to CairnCommons/tickets/ across cairn/, skills/ and bin/ returns zero hits. Law 6 says the owner alone gates writes, so if the ticket corpus's owner is a commons-side door then this seam is mounted in the wrong root. The resolution is delegated to constrain, which surfaces each ref'd component's charter owner verbatim — if it names an owner other than the transitions grammar, the build follows it there without re-opening the intent. SECOND ASSUMPTION, and it is the one that bites at the diff surface: that ticket JSON round-trips losslessly. Every ticket in the corpus is git-JSON a human reads in a diff; a writer that reorders keys or renormalises indentation turns a one-line phase record into a whole-file diff and destroys the surface the record exists to serve. The build carries object_pairs_hook=OrderedDict, indent=2, ensure_ascii=False and a trailing newline — the same shape used by hand on this corpus all session — and a proof pins it, because 'it looked fine' is not a measurement. THIRD, now retired by measurement rather than assumed: that some component legitimately owns a ticket's phase record. None does. That is precisely why 6bc43453ca64's ':queued' landed in cairn/tools/base/history.json last session — not a wrong choice among several, but the only address that existed.",
+  "missing_check": "Three points were asserted-wrapped and are NOT, and they are named here rather than discovered at build. (1) THE FAILURE DISPOSITION IS OPPOSITE TO ITS NEAREST SIBLING AND THAT IS DELIBERATE. _stamp_sail (transitions.py:1891) swallows every I/O failure and returns None, because a derived phase is a convenience and must never cost a crossing (Law 7: the crossing is the record of truth). This door does the reverse: the record IS the act, so an unwritable ticket must RAISE before anything is rendered, leaving no half-write. Two writers in one module with opposite dispositions is a genuine trap for the next reader, so the divergence is documented at the code, not just decided here. (2) THE EXISTING history_path/state_path PATH MUST STAY EXACTLY AS IT IS. Component-level callers of set_phase keep journaling through projector.append_entry unchanged; ticket= is additive. A build that quietly reroutes the component path would break callers the survey has not yet enumerated. (3) THE MISFILED RECORD IS IN SCOPE. 6bc43453ca64's phase write sits in cairn/tools/base/history.json today; the falsifier names correcting it, so the build owes both the door and the repair, and the repair is what proves the door can express what the hand-write meant.",
+  "falsifier_check": "STATED FALSIFIER: DONE when set_phase(ticket=<id>) appends a record to that ticket's own phase_writes and updates its workflow_and_state in one act; a ticket the world does not hold raises before any render, leaving nothing half-written; ticket JSON round-trips with key order, indent and trailing newline intact; the 34 backlog phases all record at their own tickets; and 6bc43453ca64's misfiled record is corrected. WRONG INTENT if the door lands and hand-edits continue anyway. HORIZON: the batch of 34 is not the measurement — it is one caller firing 34 times, which is exactly the shape that made pickup() look alive in August 2026 (thirteen records inside a four-day window, then no caller anywhere in the live system from 2026-08-10 onward). The measurement is the NEXT phase write after the batch, from a different occasion, and whether it rides the door or is typed by hand. That is what the WATCHME watches and why its object is named for callers rather than for records.",
+  "collision_check": "Two candidates examined, both resolved as distinctions rather than collisions. FIRST, Law 6 — everything has exactly one owner and the owner alone gates writes to it. The why of Law 6 is that state must never be reachable ambiently, only through its owner's gate. The why of this intention is that a phase record belongs at the phase's own address. These are not exclusive-and-terminal: they agree the write must ride a gate and differ only on where the gate is mounted, which is a placement question constrain settles from the charters. Recorded as a distinction; if constrain names a commons-side owner, the seam moves and nothing here is contradicted. SECOND, the 2026-09-08 ruling a-fleet-of-one-reshapes-the-pickup-phase. It settled the five-word vocabulary, made in-process derived, and required a deterministically-valid release field on every written phase. It is SILENT on where the write is recorded, and this intention fills that silence rather than reopening anything it settled — the release contract, _WRITABLE_PHASES and the derived read are all untouched. Confirmed against the packet's own now_the_spec_says, which is confirmed green as of today.",
+  "builder_check": "Wearing Boris Cherny's hat over a Haiku-level builder, five questions the ticket must answer and the cast now answers, so none is inferred at build time. (1) WHERE EXACTLY DOES THE RECORD GO IN THE FILE? A top-level phase_writes list, appended, created if absent, sitting beside the existing crossings list — same in-file append shape, not a new file, not a nested key. (2) WHAT ARE THE RECORD'S FIELDS? act='set_phase', at (ISO date), actor, phase, release, standing (the summons the cursor rests on), workflow (the rendered string) — the same body set_phase already builds for projector.append_entry, so the two records read alike no matter which address they land at. (3) HOW IS THE TICKET FOUND FROM AN ID? Through _find_ticket, the same resolver the release contract already uses — never a fresh glob, because two resolvers drift. (4) WHAT HAPPENS IF BOTH ticket= AND history_path= ARE PASSED? Both records are written, and that is intended, not a conflict: a component-level phase write on a ticket-bearing seam is legitimately two facts at two addresses. (5) WHAT IS THE ORDER OF OPERATIONS? Validate everything first — summons, vocabulary, writability, release, ticket resolvability — then render, then write. Nothing is written before every refusal has had its chance, which is what makes 'nothing was journaled' true in every refusal message the door already prints.",
+  "children": "none, because the seam is one door in one module with one repair beside it. The 34 backlog phase writes are this door's first CALLER, not children of it — they are the occasion that made the gap visible and they belong to the queue-sorting work, which is a separate act with its own record. Splitting the door from the repair of 6bc43453ca64 would leave a known-wrong record standing while its fix waits in a second voyage, which is the drift Law 9 reds.",
+  "crossings": []
+}
