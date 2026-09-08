@@ -1,0 +1,40 @@
+{
+  "id": "2026-09-08-a-fleet-of-one-reshapes-the-pickup-phase",
+  "kind": "ruling",
+  "date": "2026-09-08",
+  "ruled_by": "Akien",
+  "recorded_by": "CC",
+  "the_ruling_verbatim": [
+    "Code Mother isn't a builder. Aider turned out not to be a good enough builder. so we have one builder, you. so if something is waiting, it's not _nobody has taken it up_ as much as it is _cc has not had time yet_. a fleet of one so far. :)",
+    "So that being said: :waiting for 'waiting for somebody to do me' (as in TICKETME BUILDME etc) is fine. :inprocess as a state for 'i'm doing it now' is groovy. :queued <-- this is new, and means it's blocked by another ticket's completion. :hold <-- this is new, and this is the state for our 'cognition' tickets. they're on hold until the other work is done. :blocked <-- this is new, and means there's a problem and it can't move forward and you can't sort on your own what to do with it next.",
+    "nothing passes a gate with prose. an inspector will not allow it. not only has to have a field, but valid data to the limits of detection of deterministic code. we can add more sieves as needed.",
+    "Of course hold is a graveyard risk, but it's in the reports. it shows up. and it should show up in the operator inbox specifically so the operator is kept aware \"you've got a hold on these\".",
+    "in process should be AUTOMATICALLY cleared in post build part of the sail skill.",
+    "stateless read on in-process makes sense to me",
+    "exactly so. the source of truth is the picture in my head. everything else is working toward a more and more faithful implementation of that."
+  ],
+  "now_the_spec_says": "The pickup phase answers why a ticket is not moving, not who holds it: waiting, in-process, queued, hold, blocked. in-process is DERIVED, never stored. Every written phase carries a deterministically-valid release field. hold and blocked are inbox.",
+  "what_dies": [],
+  "what_conforms": [
+    "cairn/cairn/tools/base/transitions.py",
+    "cairn/cairn/tools/base/probes/a_pickup_is_witnessed.py",
+    "cairn/press_office/WorkflowDefinition.md",
+    "cairn/cairn/tools/operator_inbox/inbox.py",
+    "cairn/skills/sail/SKILL.md",
+    "CairnCommons/tickets/6bc43453ca64-a-waiting-label-with-no-blocker-is-cleared.json"
+  ],
+  "as_of": {
+    "cairn": "38483e7",
+    "CairnCommons": "92399ee"
+  },
+  "context": "THE FLEET IS ONE -- CC is the sole builder; CodeMother is not one and aider did not become one. So :waiting means 'CC has not had time', not 'nobody took it up', and the slot's axis moves from WHO HOLDS IT to WHY IT IS NOT MOVING. _PHASES grows two -> five: waiting (nobody on it yet), in-process (being done now), queued (blocked by another ticket's completion), hold (deliberately parked until other work finishes -- the cognition tickets today), blocked (a problem CC cannot sort alone). Sorted by who acts next: CC (waiting, in-process); nobody, it self-clears (queued); Akien (hold, blocked). That sort IS the inbox sieve, which the inbox cannot compute today. IN-PROCESS IS DERIVED because it is runtime state -- true only while a process runs -- and the ticket file is git-tracked and shared, so a committed :in-process claims a hand that is gone once the session ends and is false on any machine that pulls it. Nothing writes it; nothing clears it. EVERY WRITTEN PHASE CARRIES A FIELD, NOT PROSE, valid to the limits of deterministic detection: queued names the ticket it waits on (self-clearing, machine-checkable), blocked names the question or trouble that releases it, hold names the condition that ends it. HOLD IS AN INBOX ITEM, not reference -- the operator is kept aware 'you've got a hold on these', which is how the graveyard risk is paid for instead of avoided; blocked is inbox as an ESCALATION. -- MEASURED FIRST (2026-09-08, opened by Akien asking why every dashboard ticket reads :waiting): 51 of 258 tickets carry :waiting, 205 a bare pre-phase cursor, and ZERO have ever carried :in-process. The pickup door exists (transitions.py:1889) with 13 journaled records, all actor CC, all 2026-08-07..2026-08-10, and no caller anywhere in the live system. Probe cairn/tools/base/probes/a_pickup_is_witnessed.py clears on pickups >= 1, so it took its 1 in August and reads green forever off a historical fact. -- CC WAS CORRECTED TWICE: it proposed a staleness red for stranded :in-process (Akien replaced it with automatic post-build clearing, then with a stateless read, dissolving the problem instead of detecting it), and it sorted hold OUT of the inbox (overruled -- awareness is the point). -- WHY A RULING: it changes the transition grammar's vocabulary, narrows a standing ruling's premise, and moves an inbox sort. CC's read that the 2026-08-07 side-channel clause is SUPERSEDED BY THE REFRAME RATHER THAN VIOLATED was put to him explicitly and confirmed 'exactly so', with the principle restated: the source of truth is the picture in his head, every artifact a translation working toward it (Law 9). -- STILL OPEN, NOT RULED: whether queued -> in-process is legal directly or must pass back through waiting (CC's read: through waiting, so 'dependency cleared' and 'a hand is on it' stay two recorded acts). UNBUILT: _PHASES is still the two-tuple; nothing is cast. -- WHAT NARROWS RATHER THAN DIES (nothing is deleted, so what_dies is empty): 2026-08-07-the-ticket-is-the-source-period keeps its core -- the ticket is THE SOURCE PERIOD, the phase is cursor annotation, every summons inherits a pickup, terminals take none. What narrows is the multi-actor premise it was written against ('the tester picks up the ticket and all those different things have to know what to push'), because a fleet of one has no second picker-up. The pickup door's derived clause at transitions.py:1899 -- 'nobody derives \"is anyone on this?\" from a side channel' -- is superseded for the same reason: with one hand, the live session is the same hand, not a side channel. a_pickup_is_witnessed.py must stop clearing on a historical existence claim. Ticket 6bc43453ca64 re-reads as 'a queued/hold/blocked label with no valid release-condition field is a red'.",
+  "confirmed": false,
+  "conforms_fingerprint": {
+    "CairnCommons/tickets/6bc43453ca64-a-waiting-label-with-no-blocker-is-cleared.json": "717807a950e507427b2142b9ef1822802fea7170daa7d83ddbd9738c3bd9110c",
+    "cairn/cairn/tools/base/probes/a_pickup_is_witnessed.py": "2d9836b678170ed6456d09373bfc9b5a4c32d9a5459ae8fec2fdf2be9ecca8b6",
+    "cairn/cairn/tools/base/transitions.py": "086da36376e62a21e5ecace0924eced923d2ce9ee89fc65fb45efcddc3e2f2dc",
+    "cairn/cairn/tools/operator_inbox/inbox.py": "1d2a23beaca6d3992448e21c6694e7fd47e3589c9b098728cad9909892e8ca58",
+    "cairn/press_office/WorkflowDefinition.md": "d92421655419244faa5860959cc7b8b0d891ce2109086d2b4774337f00082664",
+    "cairn/skills/sail/SKILL.md": "c3d9fd085eb871d66e851a3d9c5b62fddb4bf608355b660b08f707984e561404"
+  }
+}
