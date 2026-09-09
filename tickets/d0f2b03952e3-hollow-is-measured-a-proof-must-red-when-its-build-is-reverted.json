@@ -12,7 +12,7 @@
   "falsifier": "DONE when: (1) a fixture ticket whose decompose berth lists one writes_to file and whose proof declares one tooth for it: with the file reverted the declared tooth reds and the verb reports {file: [tooth]}, exit 0; (2) a fixture whose proof stays green after the reversion is reported 'hollow: <file> reverted, no declared tooth redded', exit non-zero; (3) the live working tree is byte-identical before and after a run -- git status and a content hash of the writes_to files, measured in the proof; (4) the result lands as evidence.hollow[ticket] on the seal record and the record still carries exactly the ratified eight fields; (5) run against 9579a6f9cec6 once built, every writes_to file reds at least one declared tooth, recorded in that ticket's PROVEME crossing. WRONG INTENT if a full run on one ticket exceeds 5 minutes wall-clock on this box: then the per-file loop shares one worktree and one instance swap, not a different design.",
   "traces_to": "Law 8 -- verbatim: 'a proof a hollow build couldn't pass'; this is that clause as a verb. Law 3 -- nothing is known until measured; 'the proof exercises the build' was a hypothesis on every seal to date. Law 4 -- the rule becomes physics on the seal record. Law 9 -- a hollow green is worse than a red because a peer leans on it (Law 8's why: trust).",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
   "task_or_ticket": "ticket",
   "owner": "tester (cairn/devices/tester) owns the verb, the worktree and the evidence; CC builds",
   "owning_intention": "cairn/devices/tester/intention+why.json",
@@ -61,6 +61,26 @@
       "why_verbatim": "Akien: Gates are supposed to be hard, deterministic, state changes. no hollow evidence. that sounds like a bug.",
       "ruling": "decisions/2026-08-10-clearance-is-mandatory (MANDATORY, never ADVISORY)",
       "what": "how: the 'nope makes it advisory' switch on the PROVEME->PROVED gate is removed; the gate requires evidence.hollow, deterministically"
+    },
+    {
+      "date": "2026-09-09",
+      "by": "CC",
+      "what": "PROVED. The verb works, and the defect it carried was not failure — it was SUCCEEDING WRONGLY. Two causes, one that mattered. git exports GIT_INDEX_FILE=.git/index (RELATIVE) and GIT_PREFIX= into every hook; the pre-commit hook runs the reseal door, which runs proofs as subprocesses that inherit them. scratch_worktree died loudly under that env in 0.12s — honest, fixed first, not the problem. hollow._restore, a `git -C <worktree> checkout -- <rel>`, resolved against the CALLER's index, did nothing and said nothing. So file N stayed reverted while N+1 was measured, N+1's teeth redded for a reason unrelated to N+1, that red read as 'a declared tooth checks this file', and A FILE THAT REALLY WAS HOLLOW WAS REPORTED ok. A hollow read as green, manufactured inside the catcher built to find one — Law 8's false green, leaned on by a peer. `git -C <root>` is no defence anywhere: GIT_DIR and its siblings outrank it everywhere."
+    },
+    {
+      "date": "2026-09-09",
+      "by": "CC",
+      "what": "THE FIX, AND THE PART THAT GENERALISES. _git_env became public git_env(); every tester git call meaning 'the repository I am pointing at' now takes it (3 in scratch.py, 4 in hollow.py, the fixtures in test_hollow.py). And _restore RAISES HollowUnmeasurable when the checkout fails — because the next thing to stop a checkout will not be an env var, and the verb must not measure past it (Law 3: a measurement that could not be taken may not travel home through the same return as a clean one). A 13th tooth pins that raise and is deliberately NOT coupled to the env var that revealed it — it fails the checkout by pointing at a directory that is no repository. Mutation-verified both ways. THE LINE NOT OVER-APPLIED, in the docstring because it is easy to get wrong: reseal.staged_files must NOT scrub — under `git commit -a` git writes a TEMPORARY index and points GIT_INDEX_FILE at it, so the hook's staged set lives there and nowhere else; scrubbing would read the pre-`-a` index and reseal the wrong proofs."
+    },
+    {
+      "date": "2026-09-09",
+      "by": "CC",
+      "what": "MEASURED. test_hollow.py under GIT_INDEX_FILE=.git/index GIT_PREFIX= went 4 failed -> 12 passed in 311.64s; seals 13 teeth_green / 0 teeth_red. Live fire `cairn test --seal --hollow 9579a6f9cec6` at HEAD 3159682: 8 measured, 0 hollow, 2 skipped, exit 0, 'SEALED — hollow evidence landed on 3 of 3 standing validation(s)', wall clock 2m7s against this ticket's 5-minute WRONG INTENT threshold — so the shared-worktree redesign that clause calls for is NOT owed. All three seals carry the eight ratified fields and evidence.hollow['9579a6f9cec6'] over 8 files."
+    },
+    {
+      "date": "2026-09-09",
+      "by": "CC",
+      "what": "OWED AND DELIBERATELY OUT OF BOUNDS, with the reason. 12 proof files and 11 non-proof modules shell `git -C <root>` and only 2 scrub: test_inspector.py, test_history_integrity.py and test_forwarding_derivation.py bare-inherit; test_ruling.py inherits os.environ straight into git. Not fixed here for a structural reason, not a tired one — git_env lives in cairn.devices.tester.scratch, so build_inspector's and ruling's proofs cannot import it without a cross-device import (ruled: only db_domain). Its right home is a tool, and picking that rung is design work rather than a patch. Owed to Akien, not silently dropped."
     }
   ],
   "phase_writes": [
