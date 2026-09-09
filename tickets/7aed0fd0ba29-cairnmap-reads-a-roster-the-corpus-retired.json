@@ -1,0 +1,73 @@
+{
+  "id": "7aed0fd0ba29",
+  "title": "cairnmap reads a roster the corpus retired",
+  "date": "2026-09-09",
+  "owner": "codemother",
+  "node_class": "code-seam",
+  "task_or_ticket": "ticket",
+  "intention": "cairnmap reads a roster the corpus retired",
+  "what": "cairnmap's skill-roster lanes read a field the corpus deliberately retired, so a missing roster silently becomes an empty one and multiplies into one false finding per skill instead of the single fault its own charter demands.",
+  "why": "cairnmap IS the diagnostic surface for charter coverage, and it is currently reporting 15 errors that do not exist while the real fault — its roster reader is stale — is invisible. A gate that cries wolf stops being read, and this one has not been read for weeks. Law 7: errors are loud at diagnostic surfaces. A false red is the inverse hollow of a false green, and it costs the same thing: a peer stops leaning on the surface.",
+  "how": "cairnmap.py:134 reads `.get('members_so_far', [])` — an ABSENT key returns the default rather than an error, so `roster_err` stays None, the guard at line 237 lets both roster lanes run against an empty roster, and 15 chartered skills red as 'missing from the roster'. But members_so_far was retired on purpose: node_classes/skill.json now carries `members_derived_by` ('ls -d ~/dev/src/cairn/skills/*/ | grep -v __pycache__') and CairnCommons/node_classes/proofs/test_membership_derived.py asserts members_so_far must be ABSENT. Two candidate fixes, and the choice is the design question: (a) minimal and faithful — a missing key is an unreadable roster, one finding, both lanes ABSENT, exactly clause 12; (b) follow the retirement — derive membership from members_derived_by. Note (b) makes the charter-vs-roster comparison tautological (the roster becomes the set of skill dirs), so the lane's original purpose — catching the set's own record forgetting its newest members — is discharged by the derivation itself, and the lane should become a check that members_derived_by is present and its command still resolves.",
+  "traces_to": "Law 7 — errors are loud at diagnostic surfaces and permanent in records of truth. cairnmap IS the diagnostic surface, and it is currently reporting 15 errors that do not exist while the real fault (its roster reader is stale) is invisible. Also Law 8: a gate that manufactures findings is the inverse hollow — not a false green but a false red, and a peer leaned on a surface that cries wolf stops reading it.",
+  "falsifier": "DONE when `cairnmap --gate` over the live corpus reports the roster fault ONCE if at all, never once per skill; when the retirement proof and cairnmap agree about where membership lives; and when the gate's remaining findings are all real. WRONG INTENT if the fix is to put members_so_far back — that would red CairnCommons/node_classes/proofs/test_membership_derived.py::test_members_so_far_removed and re-open a defect the corpus already closed on purpose.",
+  "children": "none, because the fix is one reader, one guard, and the fixtures that encode the old contract — a single component, a single seam. The lane-fate question inside it is a decision the build makes with reasoning recorded, not a separable piece of work with its own falsifier.",
+  "linked_ideas": [
+    "2026-09-09-agreed-and-we-should-scrub-all-ious"
+  ],
+  "workflow_and_state": {
+    "cursor": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(the-roster-fault-is-one-finding) -> PROVED",
+    "node_class_version": "code-seam@v2"
+  },
+  "watchme": {
+    "carrier": "a verdict artifact against this ticket's falsifier: the run's total finding count, the roster-fault count, and whether the derivation command resolved",
+    "consumer": "whoever next reads `cairnmap --gate`, and the IOU scrub that found this (an-iou-notices-when-its-physics-arrives is its sibling from the same idea)",
+    "enough": "10 gate runs across at least 3 distinct corpus states (a skill added, a skill removed, the node class edited) with the roster fault never appearing more than once per run. Fewer runs than that and a green reads as 'the corpus did not move', which is the shape of the historical-fact green this system keeps catching.",
+    "nexus": "cairnmap's own tree — the surface that learns whether its findings are real",
+    "object": "the-roster-fault-is-one-finding",
+    "probe": "cairn/tools/cairnmap/probes/the_roster_fault_is_one_finding.py",
+    "trigger": "each `cairnmap --gate` run over the live corpus — the gate is the thing being watched, so its own firing is the trigger; no clock, no daemon"
+  },
+  "gates_bound": [
+    {
+      "check_type": "proofs beside the code, run twice, sealed under the tester with isolation",
+      "gate": "prove_gate",
+      "why": "class invariant (Law 3 + Law 8): a hollow build must not pass, and this build's whole subject is a check that passed while measuring nothing real"
+    },
+    {
+      "check_type": "a red at PROVEME kicks back to this ticket, never to a paragraph",
+      "gate": "feedback_to_origin_on_failure",
+      "why": "class invariant (Law 8) — and this ticket exists because a declared rule went unenforced, so an unenforced red here would be the same defect twice"
+    },
+    {
+      "check_type": "run `cairnmap --gate` over the live corpus and count the roster findings — at most one",
+      "gate": "the charter's own falsifier clause (12)",
+      "why": "the component already declared the behaviour; the gate is reading its own charter back against the running code, which is exactly what nothing does today"
+    }
+  ],
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260909T125551-e4a6dd69b4a9.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260909T125855-9d8616365c65.json",
+  "cast": "2026-09-09",
+  "cast_by": "CC",
+  "constraints": {
+    "in": [
+      "cairn/tools/cairnmap/cairnmap.py — the roster reader at line 134 and the guard at line 237",
+      "cairn/tools/cairnmap/proofs/test_cairnmap.py — the fixtures encoding the retired field, plus a NEW tooth for the missing-KEY shape",
+      "cairn/tools/cairnmap/intention+why.json — only if the design shifts (the falsifier clause already states the rule; it likely does not need touching)",
+      "cairn/tools/cairnmap/probes/the_roster_fault_is_one_finding.py — the WATCHME probe berth"
+    ],
+    "out": [
+      "The other 6 real findings in the same gate run: /ruled carrying a charter but not installed in ~/.claude/skills, and the 5 bin/cmd entries (groundloop, mailcheck, operator, review, ruled) no charter's invoke names. Real, but different work in different components — tidying them in would make the gate green for two reasons at once.",
+      "CairnCommons/node_classes/proofs/test_membership_derived.py's missing __main__ block and its failing derivation-count tooth — that is the live trouble proofs-with-no-main-block-seal-green-over-zero-teeth.",
+      "Restoring members_so_far in any form. It reds an existing commons proof and re-opens a closed decision."
+    ]
+  },
+  "open_for_akien": "None. The one design call inside this ticket — whether the charter-vs-roster lane survives derivation or is replaced by a check that members_derived_by resolves — is settled by reading the derivation at build time, not by a ruling.",
+  "measured_at_cast": {
+    "gate_run": "cairnmap --gate exits 1: 21 findings over 73 charters",
+    "false_findings": 15,
+    "real_findings": 6,
+    "readers_of_members_so_far": "3 — cairnmap.py, the commons proof asserting its absence, and cairnmap's own fixtures",
+    "retirement_proof": "4 green / 1 red when run by hand; seals green because it has no __main__ block"
+  }
+}
