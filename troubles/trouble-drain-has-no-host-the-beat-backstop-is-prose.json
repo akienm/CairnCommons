@@ -1,0 +1,34 @@
+{
+  "id": "trouble-drain-has-no-host-the-beat-backstop-is-prose",
+  "standing": "OPEN",
+  "why": "The three trouble lanes (raise/clear/reconcile) each write one emission file and rely on TroubleShim.drain() to fold it. drain() has exactly two callers: receive_raise (the in-process poke, which needs _trouble_notifier wired in the SAME process) and on_pulse (the shim's beat). MEASURED 2026-09-08: `systemctl --user list-units 'cairn*'` lists two units, cairn-ground-loop and cairn-web-server; pgrep shows those two processes and nothing else. No process hosts the trouble shim, so on_pulse never fires, so the beat backstop the lane's docstrings promise ('the emission is on disk either way, and the beat drains it') does not exist. Emissions pile up until a hand runs the drain. Measured effect today: a hand-run drain folded 39 emissions spanning 22:41 to 00:48 UTC, including a reconcile that cleared 23 stale inspector findings which had been sitting in the operator inbox. The ground loop pulses PROBES (cairn/devices/<d>/probes/*.py), not shims, and a probe that drained would be a probe with authority — so this is not fixed by adding a probe, and not by a daemon (that reflex is drift). It wants the rack, which is the next rung of the ruled ladder and is not built.",
+  "count": 1,
+  "first_seen": "2026-09-09T00:58:30.659396+00:00",
+  "last_seen": "2026-09-09T00:58:30.659396+00:00",
+  "occurrences": [
+    {
+      "at": "2026-09-09T00:58:30.659396+00:00",
+      "drain_callers": [
+        "TroubleShim.receive_raise",
+        "TroubleShim.on_pulse"
+      ],
+      "measured_at": "2026-09-08T18:58 MDT",
+      "measured_backlog_folded_by_hand": 39,
+      "stale_troubles_cleared_by_that_drain": 23,
+      "traces_to": "Law 4 — the backstop is prose, not physics",
+      "units_running": [
+        "cairn-ground-loop",
+        "cairn-web-server"
+      ],
+      "raised_by": "cc",
+      "raised_at": "2026-09-09T00:58:30.583141+00:00",
+      "emission": "20260909.005830.583141.cc.raise_trouble.json"
+    }
+  ],
+  "notified": [
+    "cc"
+  ],
+  "cleared_by": [],
+  "recurred_after_clear": null,
+  "prior_attempts": 0
+}
