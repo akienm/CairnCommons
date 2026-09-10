@@ -1,0 +1,60 @@
+{
+  "id": "4c022c44de53",
+  "title": "orient-deposit-reads-stored-provenance",
+  "node_class": "code-seam",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(berth_deposits_again) -> PROVED",
+  "from_idea": "none, because this is a defect fix under a ruling Akien already made: CairnCommons/decisions/2026-09-10-orient-deposit-reads-stored-provenance.json, whose ruling field carries his words verbatim ('R2 yes. that's why we stored it.'). The measurement behind it is CairnCommons/troubles/an-orient-berth-cannot-be-deposited-once-its-own-build-lands.json.",
+  "intent_berth": "none, because a defect does not route through /intent (CLAUDE.md: if editing lines of code fixes it, it is a ticket). Cast directly under the standing loop instruction to cast queue defects with /sorted.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260910T165114-051602378bb2.json",
+  "intention": "The chart stages' DEPOSIT doors read the provenance already stored on the packet; only the WRITE doors re-measure it. validate_orient and validate_constrain gain a keyword-only measure_provenance switch, default True. write_packet and write_constrain keep measuring; deposit_orient and deposit_constrain pass False. Everything else at the deposit door is unchanged: the packet still runs the stage inspector and the gate, so shape, coverage, stratum vocabulary and ref existence are all still refused there. Only the floor-vs-cc re-derivation stops.",
+  "why": "A berth cannot be deposited once its own build lands. The write door measures provenance against a world CURRENT WITH THE PACKET; the deposit door measures against whatever the corpus looks like when the deposit happens, which may be days later and after the very build the packet chartered. Measured: berth orient-20260909T215820-6525fe88f4a3.json for ticket dd8ad9702b49 declared {domain: floor, refs: floor}; re-running the floor today measures {domain: cc, refs: cc}, because floor_now_refs carries 5 entries against floor_then_refs 4 - the extra being cairn/tools/bus_client, which that ticket's own build created. The berth is not wrong; the world moved. And the deposit door has nothing to gain from re-measuring: the anti-hollow-provenance instrument exists to stop a SENDER labelling its own work, and the sender is gone by deposit time - skills/chart/live.py::_learn loads the packet back off disk with json.load, so the only label the deposit door can measure is one the write door already derived and stamped. Re-measuring it is the door refusing the packet it itself authored. Akien, 2026-09-10: 'R2 yes. that's why we stored it.'",
+  "how": "(1) validate_orient (cairn/devices/codemother/machines/orient/orient.py:421) and validate_constrain (cairn/devices/codemother/machines/constrain/constrain.py:731) take a keyword-only measure_provenance: bool = True. When True: the existing measured_provenance + refuse_misdeclared_floor_provenance + in-place stamp, unchanged. When False: none of the three, and packet['provenance'] is left exactly as stored. Everything after that point - inspect_orient / inspect_constrain, the gate verdict, render_lacks - runs identically in both branches. (2) Four call sites, the whole edit surface: orient.py:463 write_packet measures (unchanged); orient.py:484 deposit_orient passes measure_provenance=False; constrain.py:772 write_constrain measures (unchanged); constrain.py:805 deposit_constrain passes False. (3) The in-place mutation stays: /chart calls write_packet(p) then deposit_orient(p, ...) with the SAME object, so the write door's stamp is what the deposit door reads off that object; a copy would break the pair. (4) The refusal sentence in refuse_misdeclared_floor_provenance (orient.py:327, constrain.py:567) loses its deposit-path lie - it currently ends 'Drop those keys (the door writes them) and carry request so there is something to reproduce', advice that is wrong in both halves once the deposit door no longer measures. It is rewritten to name the write door as the place the measurement happens and to say that a declaration matching the measurement is not refused. (5) The docstring in validate_orient that argues the both-doors placement is corrected in the same act, because it is the reasoning a later reader would restore the defect from.",
+  "falsifier": "DONE when (a) validate_orient and validate_constrain each take an explicit switch selecting whether provenance is MEASURED or READ, defaulting to measured so no existing caller changes behaviour by silence; (b) write_packet and write_constrain measure, and deposit_orient and deposit_constrain read; (c) the berth the trouble names - orient-20260909T215820-6525fe88f4a3.json, ticket dd8ad9702b49 - deposits without refusal against TODAY'S corpus, having refused before the change; (d) a packet whose stored provenance is malformed, does not cover its authored fields, or names an unknown stratum is STILL refused at the deposit door, because reading the stored label is not skipping the gate; and (e) the refusal sentence no longer instructs a sender to drop keys the door itself wrote. HORIZON: the next chart chain run end to end, whose seven berths all deposit. WRONG INTENT if the switch becomes a way to skip the gate rather than to choose the provenance source - the deposit door must still run the inspector and the ref-existence check, and a build that green-lights a shapeless packet at deposit has traded a false refusal for a false pass, which is the worse of the two under Law 8.",
+  "traces_to": "Law 3 (nothing is known until measured - and a measurement is ABOUT THE MOMENT IT WAS TAKEN; re-taking it later answers a different question and calling the answer the same is the defect). Law 7 (the deposit refusal is an error at a diagnostic surface that is not real - the packet is well-formed and its label is correct for when it was written). Law 1 (a berth that cannot be deposited never teaches the tree, so the next similar request re-derives the orientation this one already settled).",
+  "watchme": {
+    "object": "berth_deposits_again",
+    "trigger": "on the beat, at rest - the same at-rest probe cadence the cairn device already runs; it needs no build to have happened, because the failure it watches for is the WORLD moving under a berth that never changed.",
+    "enough": "two consecutive beats reporting zero provenance-refusals across every standing orient and constrain berth, where at least one of those beats follows a commit that changed the floor's answer for some berthed request. Zero alone is not enough: a corpus that has not moved cannot distinguish a fixed door from a quiet week, which is the shape that let a_pickup_is_witnessed.py read green off one August fact forever.",
+    "carrier": "a verdict artifact against this ticket's falsifier, naming the count of berths walked, the count refused, and for each refusal the field and its declared-vs-measured pair",
+    "nexus": "orient",
+    "consumer": "CodeMother, as owner of the chart machines; escalates to Akien only on a refusal that is not a provenance disagreement",
+    "probe": "cairn/devices/codemother/machines/orient/probes/a_berth_deposits_again.py"
+  },
+  "owner": "CC builds it; CodeMother owns the chart machines whose doors change (cairn/devices/codemother/machines/orient and .../constrain).",
+  "owning_intention": "cairn/devices/codemother/machines/orient/intention+why.json",
+  "schema_version": "ticket-v1",
+  "date": "2026-09-10",
+  "created": "2026-09-10",
+  "author": "CC",
+  "cast_under": "Akien 2026-09-10, ruling CairnCommons/decisions/2026-09-10-orient-deposit-reads-stored-provenance.json ('R2 yes. that's why we stored it.'), and the standing bounds ruling 2026-09-09-a-bug-the-voyage-uncovers-is-fixed-by-that-voyage.json, under which constrain's identical defect is fixed by this voyage rather than queued.",
+  "scope_note": "TWO stages, not one. Measured over all seven chart machines: refuse_misdeclared_floor_provenance exists in exactly two - orient.py:327 and constrain.py:567 - and both are reached from their deposit doors. survey, decompose, triage, hypothesize and validate carry no such call and are out of scope. constrain's version is the more dangerous of the two: it re-runs the floor over intent_ref, an UPSTREAM BERTH PATH, so a constrain deposit refuses whenever the orient berth it points at has drifted - a second-order dependency on corpus movement rather than a first-order one.",
+  "measured_at_cast": {
+    "chart_machines_total": 7,
+    "machines_carrying_refuse_misdeclared_floor_provenance": [
+      "orient",
+      "constrain"
+    ],
+    "deposit_doors_reaching_it": {
+      "orient.py:484": "validate_orient(packet)",
+      "constrain.py:805": "validate_constrain(packet, root=root)"
+    },
+    "trouble_berths_deposited": 7,
+    "trouble_berths_refused": 1,
+    "refused_berth": "orient-20260909T215820-6525fe88f4a3.json",
+    "refused_berth_ticket": "dd8ad9702b49",
+    "refused_berth_declared": {
+      "domain": "floor",
+      "refs": "floor"
+    },
+    "refused_berth_measured_now": {
+      "domain": "cc",
+      "refs": "cc"
+    },
+    "floor_then_refs": 4,
+    "floor_now_refs": 5,
+    "the_extra_ref": "cairn/tools/bus_client",
+    "constrain_refusals_measured": 0,
+    "constrain_zero_is_under_measurement": "nothing has walked the constrain berth population; the zero is absence of an instrument, not evidence of health"
+  }
+}
