@@ -61,5 +61,28 @@
   },
   "rulings_during_cast": [
     "2026-09-11-the-one-web-server-rule-governs-the-ui-not-service-ports — closes cast check (3); the door may open a service port"
-  ]
+  ],
+  "measured_before_build": {
+    "_why": "The door's wire spec is no longer my memory of the OpenAI schema. hermes-agent 0.21.1 was installed editable on 2026-09-11 and pointed at a throwaway listener; these are what it PUT ON THE WIRE. The instrument is CairnCommons/measurements/2026-09-11-hermes-openai-door-spike.py — a SPIKE, deliberately not in class-space, and not a component.",
+    "client": "openai python SDK 2.24.0 (User-Agent 'OpenAI/Python 2.24.0', X-Stainless-* headers)",
+    "endpoint_used": "POST /v1/chat/completions and GET /v1/models — nothing else was dialed",
+    "request_top_level_keys": [
+      "messages",
+      "model",
+      "tools"
+    ],
+    "no_temperature_sent": "hermes sends no temperature key at all; the door must default, not require one",
+    "streaming": "hermes prefers streaming for every turn, but honors `model.streaming: false` in ~/.hermes/config.yaml, documented at cli-config.yaml.example as the escape hatch for self-hosted OpenAI-compatible servers. With it set, no `stream` key is sent. SO STREAMING IS NOT A BLOCKER FOR v1 — it is a later capability.",
+    "tools_are_not_optional": "25 function tools ride EVERY request (browser_exec, terminal, read_file, write_file, patch, memory, skill_manage, tool_search, ...). host.ollama_resolver's chat branch sends no 'tools' key, so the one door as it stands today cannot serve an agent at all. This is the ticket's central build item, measured rather than assumed.",
+    "system_prompt_size": "10930 chars on turn 1 — it is a stable prefix, which is exactly what makes the cache pay",
+    "TWO_TRANSLATIONS_THE_DOOR_OWES": {
+      "outbound": "ollama returns tool calls as {'function': {'name', 'arguments': <object>}}; OpenAI clients need an 'id', a 'type': 'function', and arguments as a JSON STRING.",
+      "inbound": "THE ONE THAT BIT. OpenAI echoes those arguments back as a JSON STRING in the assistant turn; ollama /api/chat wants an OBJECT and refuses the string with HTTP 400 \"Value looks like object, but can't find closing '}' symbol\". Measured against hex.local qwen3-coder:30b on the SECOND turn of a tool-using conversation — turn one passed, so a one-shot test would have read green. A tooth for this belongs in the proof."
+    },
+    "validated_messages_refuses_agent_turns": "cairn/devices/inference_domain/host.py:184 requires every turn to carry a non-empty string 'role' AND 'content'. An agent's assistant turn carries tool_calls with content '' and its tool-result turn carries a tool_call_id; both are legal OpenAI and both are refused today. The check is right for the chat verb and wrong for the agent verb — this is a second checkable shape, not an exemption (per the 2026-09-11 gate-health ruling).",
+    "IT_RAN": "With those three gaps closed in the spike, hermes completed a full agent loop through inference_domain on 2026-09-11: prompt -> tool_calls -> terminal tool executed -> tool result returned -> final answer 'akiendelllinux'. Metered rows carry model qwen3-coder:30b and the 25-name toolset in provenance.",
+    "THE_CACHE_ALREADY_PAYS": "Measured in the same session: the retry after the inbound fix served turn 1 from cache — verdicts 'hit' at cost 12175 and 262 avoided. An agent replays a stable prefix constantly, so this is the compile-once gate doing its job on a tenant it was not built for.",
+    "tools_belong_in_the_cache_key": "The spike puts `tools` into the request dict domain.resolve canonicalizes, because the same turns under a different toolset are a different question. Confirm this at build — it is my read, not a ruling.",
+    "the_meter_counted_the_failures": "The three failed retries landed as verdict 'refused' rows at cost 0. Law 7 held without anything being added."
+  }
 }

@@ -61,5 +61,23 @@
   },
   "rulings_during_cast": [
     "2026-09-11-the-one-web-server-rule-governs-the-ui-not-service-ports — hermes runs its own gateway process that listens; by this ruling that is a SERVICE PORT, not a second user interface, and needs no web_server pane. The bound it inherits: hermes may not serve a human-facing UI at that port."
-  ]
+  ],
+  "measured_before_build": {
+    "_why": "hermes-agent is INSTALLED as of 2026-09-11, so the device ticket now builds against a thing that exists rather than a repo that was read.",
+    "install": {
+      "method": "the project's OWN developer path — uv venv --python 3.11 + `uv pip install -e \".[all]\"`, which is what setup-hermes.sh:268 does. The setup script was NOT run: it carries two interactive `read -p` prompts (lines 317, 493) under `set -e`, so a non-interactive run would abort mid-install.",
+      "version": "Hermes Agent v0.21.1 (2026.9.7), upstream 2ddeba9e, python 3.11.15, openai SDK 2.24.0",
+      "install_method_self_reported": "git — hermes knows it is running from a working tree, which is what makes altering it in place the supported case rather than a fork",
+      "footprint": [
+        "/home/akien/dev/src/hermes-agent/venv (251M, editable — edits to the repo take effect with no reinstall)",
+        "/home/akien/.hermes/config.yaml (written by hand, points at the door)",
+        "~/.hermes/ runtime state (instance-space by our lights)"
+      ],
+      "NOT_done": "no bin symlink was created and no setup wizard was run, so nothing was added to PATH and no provider was configured beyond our own door"
+    },
+    "it_is_running": "A full agent loop completed through inference_domain on 2026-09-11 (see ticket 548dd13fb4db's measured_before_build). hermes is live on this box and reaching hex.local only through the one door.",
+    "config_is_the_whole_integration_for_cognition": "~/.hermes/config.yaml with provider 'custom' + base_url + `streaming: false`. `provider: custom` is first-class (cli-config.yaml.example:73). No patch to hermes was needed to make it a tenant — which is the finding that keeps the fork question closed.",
+    "SURFACES_WORTH_A_LOOK_AT_BUILD": "hermes carries its own `proxy`, `gateway`, `serve`, `cron`, `sessions`, `monitoring`, `curator` and `learning` subcommands. Several of those are surfaces Cairn already owns and they are where a second system's machinery would quietly grow beside ours. The device charter should say which of hermes' own daemons are permitted to run.",
+    "OWNERSHIP_EDGE_STILL_OPEN": "Unchanged by tonight: hermes appears in no charter's gated_by, so it can file troubles/questions only as a proposal. Nothing about running it interactively touches this; anything UNATTENDED does."
+  }
 }
