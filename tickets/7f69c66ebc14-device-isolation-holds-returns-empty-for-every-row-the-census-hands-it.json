@@ -1,0 +1,47 @@
+{
+  "id": "7f69c66ebc14",
+  "title": "device-isolation-holds-returns-empty-for-every-row-the-census-hands-it",
+  "node_class": "bug",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "date": "2026-09-11",
+  "created": "2026-09-11",
+  "author": "CC",
+  "owner": "CC builds it; cairn/machines/build_inspector owns the sieve",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "cairn/machines/build_inspector/inspector.py:3220 opens `if not row['dir'].startswith('devices/'): return []`, and the very next line refuses any dir that is not exactly two segments. device_census() emits dir as the REPO-RELATIVE FULL PATH — 'cairn/devices/inference_domain', three segments. So in every live inspector run the sieve returns the empty list at its first statement, for all 26 device rows, and has never examined a single import. Make the guard match the shape the census actually hands it, so the ruling behind the sieve is enforced by the sieve.",
+  "why": "Law 4 — a rule that matters is enforced by physics, not policy. The no-cross-device-imports ruling (2026-08-31) is written down, has a sieve, is registered in SIEVES, and is enforced by nothing: the physics is a stub that reads green because it never looks. Law 8 — a false green is worse here than a red, because a peer leans on it; every device promoted since this sieve landed carries a device_isolation_holds pass that means only 'the guard did not match'. Law 3 — 'no device imports another device' is today an unmeasured claim wearing a measurement's clothes. And CLAUDE.md's Residues section names import_sieve as SHIPPED PHYSICS for exactly this door.",
+  "how": "One guard, and then re-measure. The census shape is 'cairn/devices/<name>' for a top-level device and 'cairn/devices/<device>/machines/<name>' for a nested machine, so the test becomes a prefix match on 'cairn/devices/' plus a segment count of 3 (the docstring's 'top-level device rows' intent is unchanged — nested machines are still reached through their device's tree, because import_graph scans comp_dir.parent). Then RUN it over the live corpus before sealing: the sieve has never executed against real imports, so whatever it finds on first contact is a measurement about the corpus, and each finding is a ticket. Narrowing the sieve to make the first run green is the corrosion shape and is refused. Check the same guard bug in every other sieve that tests row['dir'] against a 'devices/'-rooted string.",
+  "falsifier": "DONE when a seeded fixture device that imports another device draws exactly one device_isolation_holds finding through the LIVE path — device_census -> SIEVES dispatch -> finding — and a fixture device importing only db_domain draws none; and when the live corpus run is recorded with its findings either zero or ticketed. WRONG INTENT if the guard is fixed and the first live run's findings are dispositioned by weakening the rule, adding an exemption, or moving a file: the sieve's job is to say what is true, and the first thing it says is the corpus's problem, not the sieve's.",
+  "traces_to": "Law 4 (physics, not policy — and this is prose that only LOOKS like physics); Law 8 (a hollow green that peers lean on); Law 3 (an unmeasured claim labelled as measured); Law 9 (every device row has been reading green off a sieve that never ran).",
+  "watchme": {
+    "object": "device_isolation_holds_has_actually_examined_an_import",
+    "trigger": "each inspector run: whether the sieve reached its import_graph call at least once, rather than returning at the guard",
+    "enough": "the reach count is non-zero on a live full-corpus run — one honest execution retires the question this ticket exists for; a standing zero is the same defect back",
+    "carrier": "a verdict artifact against this ticket's falsifier",
+    "nexus": "build_inspector's own sieve-health reading",
+    "consumer": "CC at PROVEME, and Akien at the inbox if it ever reads zero again",
+    "probe": "cairn/machines/build_inspector/probes/device_isolation_holds_has_actually_examined_an_import.py"
+  },
+  "gates_bound": [
+    "proof gate — cairn/machines/build_inspector/proofs/test_inspector.py carries a seeded-failure tooth firing the sieve THROUGH the census shape, and it must red against today's guard.",
+    "feeds back to origin on failure — a red routes to this ticket's voyage.",
+    "durability gate — not done until proven AND committed."
+  ],
+  "children": "none, because it is one guard plus the first live reading it makes possible",
+  "measured_at_cast": {
+    "date": "2026-09-11",
+    "by": "CC, session 7a3cf7ce, found while charting 76639374d9f9 (openai_wire needs a sibling sieve for machines)",
+    "reading_1": "device_census(root=repo)['measured']['components'] -> 62 rows. Rows whose dir startswith 'devices/': 0. Rows whose dir startswith 'cairn/devices/': 26. Rows with exactly 2 path segments: 0.",
+    "reading_2": "All 26 device rows through device_isolation_holds(row, root/row['dir']) -> 0 findings.",
+    "reading_3": "SEEDED CONTROL. A fixture tree $T/devices/{a_fixture_device/thing.py containing `from cairn.devices.inference_domain import host`, inference_domain/host.py}. Called twice against the SAME comp_dir, differing only in row['dir']: census shape 'cairn/devices/a_fixture_device' -> n=0. Guard shape 'devices/a_fixture_device' -> n=1, about='a_fixture_device/thing.py imports [...] - a_fixture_device may not import inference_domain'. The guard, not the corpus, is what produces the zero.",
+    "also_measured": "The live corpus genuinely has no cross-device import outside proofs today (the seeded-guard-shape run over all 26 rows also returned 0), so the first honest run may well be green. That does not shrink the defect: green-because-clean and green-because-blind are the same output and only one of them is a measurement."
+  },
+  "found_while": "charting 76639374d9f9 — the new machine_imports_no_device sieve is modelled on this one, and reading it to copy the shape is what surfaced the guard",
+  "related": [
+    "76639374d9f9 — the sibling sieve for cairn/machines/, which must not inherit this guard bug"
+  ],
+  "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'.",
+  "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
+  "schema_version": "ticket-v1"
+}
