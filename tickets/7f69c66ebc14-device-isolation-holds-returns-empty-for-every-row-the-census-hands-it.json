@@ -3,7 +3,7 @@
   "title": "device-isolation-holds-returns-empty-for-every-row-the-census-hands-it",
   "node_class": "bug",
   "task_or_ticket": "ticket",
-  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "bug@v1: THINKME -> [KILLED] -> BUILDME -> PROVEME -> PROVED   (KILLED 2026-09-11, same session it was cast — see the KILLED field; the cursor above is where it stopped, kept honest)",
   "date": "2026-09-11",
   "created": "2026-09-11",
   "author": "CC",
@@ -43,5 +43,15 @@
   ],
   "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'.",
   "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
-  "schema_version": "ticket-v1"
+  "schema_version": "ticket-v1",
+  "KILLED": {
+    "date": "2026-09-11",
+    "by": "CC, session 7a3cf7ce — the same hand that cast it, within the hour",
+    "the_claim": "device_isolation_holds returns [] at its first statement for every row the census hands it, because the guard tests dir.startswith('devices/') and the census emits 'cairn/devices/<name>'.",
+    "why_it_is_false": "THE CENSUS EMITS BOTH SHAPES, AND WHICH ONE DEPENDS ON THE ROOT. cairn/tools/orient/orient.py:121 — `root = root or (_REPO_ROOT / 'cairn')`. The LIVE inspector run (inspector.py:3313) takes that same default, so it censuses /home/akien/dev/src/cairn/cairn and rows read 'devices/inference_domain' — two segments, and the guard matches. I measured with root=/home/akien/dev/src/cairn (the repo root, one level up), which is a legal call nobody makes, and rows came back 'cairn/devices/inference_domain'. The zero was mine, not the sieve's.",
+    "the_measurement_that_killed_it": "device_census(root=Path('/home/akien/dev/src/cairn/cairn'))['measured']['components'] -> 26 device rows, 13 of them top-level and passing the guard. Seeded control under the LIVE shape: a fixture $T/devices/{a_fixture_device/thing.py importing cairn.devices.inference_domain, inference_domain/host.py} through device_isolation_holds({'dir':'devices/a_fixture_device',...}) -> n=1, about='a_fixture_device/thing.py imports [...] — a_fixture_device may not import inference_domain'. The sieve fires. The live corpus reads 0 because it is clean.",
+    "what_actually_stands": "The sieve is healthy. What remains true from the cast is the OTHER half, and it was never this ticket's: cairn/machines/ is outside device_isolation_holds's reach by design (the guard is for top-level DEVICE rows), so nothing stops a file under cairn/machines/ from importing a device. That gap is 76639374d9f9's machine_imports_no_device piece and needs no ticket of its own.",
+    "the_failure_mode_named": "Structure measured when behaviour was meant. I read the guard, constructed a census by hand to test it, and never asked what root the LIVE caller passes — the one line (orient.py:121) that decides the whole question. A seeded control run under MY shape reproduced my own mistake faithfully and read as confirmation.",
+    "cost": "one ticket cast and killed inside an hour; no code changed, no sieve narrowed, no green weakened."
+  }
 }
