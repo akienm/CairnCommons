@@ -1,0 +1,36 @@
+{
+  "id": "7203db7f151e",
+  "title": "proven-by-is-demanded-at-proved-and-askable-only-earlier",
+  "node_class": "bug",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "date": "2026-09-11",
+  "created": "2026-09-11",
+  "author": "CC",
+  "owner": "CC builds it; cairn/devices/cairn/machines/harbor_master owns the clearance gate",
+  "owning_intention": "cairn/devices/cairn/machines/harbor_master/intention+why.json",
+  "intention": "The clearance gate refuses PROVED with [proof_named] when no crossing since BUILDME carries proven_by — but PROVED is the LAST crossing, and by the time the lack is named the crossing that should have carried the proof is already journaled and append-only. The only repair is a back-edge into the record of truth. Name the lack where it can still be supplied: the PROVEME crossing, which is the crossing that claims the build is proved, must refuse without proven_by.",
+  "why": "The record of truth is append-only by design (Law 7), so a gate that can only be satisfied by editing history is a gate that teaches builders to edit history. Measured this session: satisfying it took a back-edge to PROVEME, a commit, a forward re-cross, and a second commit — four acts and two extra journal entries, none of which say anything about the build. The information was available at PROVEME and nothing asked for it.",
+  "how": "Fire the same _coverage_lacks predicate the PROVED rung uses (clearance.py:1340) at the PROVEME crossing, restricted to the [proof_named] lack alone — hollow evidence legitimately cannot exist yet at PROVEME, so [hollow_evidence_absent] must stay where it is. My read, NOT ruled: PROVEME demands a named proof, PROVED keeps both lacks, and the PROVED [proof_named] check becomes the backstop it was always meant to be rather than the first time anyone asks. Also check whether emit's own PROVEME arm is the right site rather than the clearance machine, since PROVEME today rides bare emit while PROVED rides clear().",
+  "falsifier": "DONE when a PROVEME crossing carrying no proven_by is refused by name, the refusal says which argument is missing, and a voyage that supplies it at PROVEME reaches PROVED without any back-edge. WRONG INTENT if the answer is to let PROVED accept a proof named on the clear() call alone — proven_by is journal-derived on purpose (crossings.py:242 proven_by_since_buildme), because a proof named only in an argument leaves no record for the hollow check to read, and hollow reads the journal.",
+  "traces_to": "Law 7 (the record of truth is permanent — a gate whose only repair is a back-edge turns an append-only journal into an editable one); Law 1 (the resolver is spent on the novel — four acts to supply one already-known fact); Law 4 (the rule is real physics already; its FIRING POINT is the defect).",
+  "watchme": "none, because the falsifier is checkable deterministically at the gate itself and the next voyage through PROVEME is its own live fire; a probe would watch for back-edges, which is the symptom rather than the rule.",
+  "gates_bound": [
+    "proof gate — a proof beside the harbor_master that crosses a fixture voyage to PROVEME without proven_by and asserts the refusal; it must pass against today's code by NOT being refused, so the tooth reds until the fix lands.",
+    "feeds back to origin on failure — a red routes to this ticket's own voyage.",
+    "durability gate — not done until proven AND committed."
+  ],
+  "children": "none, because it is one predicate fired at one more place",
+  "measured_at_cast": {
+    "date": "2026-09-11",
+    "by": "CC, session 7a3cf7ce, found while sailing 548dd13fb4db",
+    "reading_1": "clear(..., 'PROVED') raised Uncovered with 2 lacks: [proof_named] 'the ticket has crossings and none carries proven_by' and [hollow_evidence_absent] 'no hollow reading'.",
+    "reading_2": "the PROVEME crossing had already been emitted without proven_by and nothing refused it.",
+    "reading_3": "PROVEME -> PROVEME is IllegalTransition ('a no-op at position 3'), so a back-edge cannot be repaired by re-crossing to the same summons; the evidence has to ride the NEXT forward crossing, which in this voyage was WATCHME.",
+    "reading_4": "clearance.py:1296 builds _named from clear()'s own proven_by argument, while cairn/devices/tester/hollow.py reads crossings.proven_by_since_buildme — two different sources for the same fact, which is why naming a proof at clear() alone did not satisfy hollow."
+  },
+  "found_while": "sailing 548dd13fb4db. Cast under Akien's standing instruction, 2026-09-11: 'Follow the cairn workflow (reds found along the way are ticketed)'.",
+  "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'. Node class CairnCommons/node_classes/bug.json.",
+  "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
+  "schema_version": "ticket-v1"
+}

@@ -1,0 +1,44 @@
+{
+  "id": "357c402172ca",
+  "title": "the-reseal-hook-leaves-dirty-the-tree-it-just-rewrote",
+  "node_class": "bug",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "date": "2026-09-11",
+  "created": "2026-09-11",
+  "author": "CC",
+  "owner": "CC builds it; cairn/devices/tester owns the reseal door and the hook",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The pre-commit reseal hook (.git/hooks/pre-commit -> cairn-reseal-door, sourced from cairn/devices/tester/hooks/pre-commit) reproves what the commit touches and REWRITES the validation seals — and then does not `git add` them. So the commit it is attached to lands WITHOUT the seals it just recomputed, and the working tree is dirty the instant the commit returns. Make the hook stage what it wrote, or make it refuse to write during a commit; either is honest, the current shape is not.",
+  "why": "The dirt is not cosmetic — it is load-bearing against the next gate. The very next ticket-carrying crossing reds on working_tree_clean and on history_integrity (which compares the working copy against `git show HEAD:<path>`), so a builder who commits and then crosses is refused by a mess the commit itself made. Measured this session: one commit left 48 dirty validation files, and the crossing after it raised BuildGateRed with three findings, none of them about the build.",
+  "how": "First measure which shape is right rather than assuming: the hook already runs `python3 -m cairn.devices.tester.cli --reseal || true` and always exits 0. Option A is `git add` on exactly the files reseal reports as CHANGED (it prints them), which keeps the commit self-consistent. Option B is to reseal in a post-commit or a door the builder fires, so a commit never rewrites tracked files behind the committer's back. My read, NOT ruled: A, because the seal belongs with the code whose fingerprint it certifies and splitting them across two commits is what makes source_fingerprint drift possible at all. Akien's call if the two differ in kind rather than in convenience.",
+  "falsifier": "DONE when a commit that causes a reseal leaves `git status --porcelain` empty, and the crossing immediately after it passes working_tree_clean and history_integrity with no hand-staging in between. WRONG INTENT if the fix is to make working_tree_clean or history_integrity tolerate unstaged validations — that would trade a loud, correct red for a permanently blind gate, and those two checks are exactly the physics that catches an unsealed build.",
+  "traces_to": "Law 4 (a rule that matters is enforced by physics — and physics that reds on its own side effect is physics fighting itself); Law 7 (a gate refusing for three reasons, none of them the builder's, is a diagnostic surface collapsing the real cause); Law 8 (the seal is what makes proven-space mean anything, and it is currently left out of the commit that earned it).",
+  "watchme": {
+    "object": "a-commit-that-reseals-leaves-a-clean-tree",
+    "trigger": "every reseal that reports at least one CHANGED seal — the event already fires, on every commit that touches a proved file.",
+    "enough": "when 20 reseal-changing commits have landed and none was followed by a dirty validation file; at that point the hook's staging is measured rather than assumed.",
+    "carrier": "a verdict artifact against this ticket's falsifier: the tree is clean after the commit the reseal rode.",
+    "nexus": "the tester's own validation store — the same records the reseal writes, so the watch costs no new table",
+    "consumer": "CC, and Akien through the operator inbox if the rate says the hook is still writing behind the committer",
+    "probe": "cairn/devices/tester/probes/a_commit_that_reseals_leaves_a_clean_tree.py"
+  },
+  "gates_bound": [
+    "proof gate — a proof beside cairn/devices/tester that fires the hook's own path over a fixture repo and asserts the tree is clean after; it must red against today's hook.",
+    "feeds back to origin on failure — a red routes to this ticket's own voyage.",
+    "durability gate — not done until proven AND committed."
+  ],
+  "children": "none, because it is one hook and one door",
+  "measured_at_cast": {
+    "date": "2026-09-11",
+    "by": "CC, session 7a3cf7ce, found while sailing 548dd13fb4db",
+    "reading_1": "48 validation files left modified by the commit that triggered their reseal; committed separately as 940e8a5 to clear the tree.",
+    "reading_2": "the next crossing raised BuildGateRed with 3 findings — history_integrity x2 and working_tree_clean — none about the build.",
+    "reading_3": "convergence IS reached once the outputs are committed: the following reseal reported '1 unchanged' and the tree stayed clean. So the defect is a guaranteed extra commit, not an unstable loop.",
+    "reading_4_not_a_defect": "three reseal runs exceeded the 120s Bash default this session. Measured cause: reseal time scales with how many proofs must reprove — with few files staged it finishes in seconds ('nothing to reprove (0 proof(s) sealed over 2 staged file(s))'). Recorded here as explained rather than cast as its own red."
+  },
+  "found_while": "sailing 548dd13fb4db. Cast under Akien's standing instruction, 2026-09-11: 'Follow the cairn workflow (reds found along the way are ticketed)'.",
+  "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'. Node class CairnCommons/node_classes/bug.json.",
+  "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
+  "schema_version": "ticket-v1"
+}
