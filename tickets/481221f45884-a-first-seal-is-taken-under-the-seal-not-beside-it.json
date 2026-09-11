@@ -1,0 +1,42 @@
+{
+  "id": "481221f45884",
+  "title": "a-first-seal-is-taken-under-the-seal-not-beside-it",
+  "node_class": "code-seam",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(first_seal_isolation) -> PROVED",
+  "from_idea": "none, because this is a defect entering at the TICKET door; the origin is the pre-approved build list B1 in CairnCommons/slates/2026-09-10-the-gates-are-deterministic-and-one-hand-still-writes-crossings.json, which names the fix verbatim",
+  "intent_berth": "none, because a defect does not route through /intent (CLAUDE.md: a bug goes straight to TICKET); the slate named above is the origin record and Akien pre-approved the build in it",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260910T200730-9cafe2813267.json",
+  "intention": "A proof's FIRST seal is taken under the network seal, not beside it: cli.isolation_for (cairn/devices/tester/cli.py:386) returns netns rather than none when no standing validation exists. And the run's summary line never prints an unqualified SEALED over a record whose seal verdict is 'open' - it states how many landed sealed and how many landed with the route open, both counts, in the line that is still on screen when the next decision is made.",
+  "why": "A first --seal today lands a real VALIDATION taken with the network route open by construction (isolation.py:65: 'not asked for'), and the summary prints 'SEALED - N VALIDATION(s) persisted' over it. The record stands for less than the line claims, and the line is the diagnostic surface. That is Law 7 in one sentence - a presentation surface may collapse an error into a coherent shape, a record of truth never may, and here the surface is collapsing the difference between a proof that was held away from the network and one that was not. It is also Law 8: a seal is what makes 'proven-space' mean anything, and a seal nobody asked for proves nothing about reach.",
+  "how": "(1) cli.isolation_for's last branch returns 'netns' instead of 'none' when args.seal is set and standing_seal() is None. --netns still wins outright; isolation_for_seal's mapping of a standing 'open' verdict back to 'none' is untouched, because reproducing a standing seal is 4431cf2bc625's rule and this ticket only touches the branch with nothing to reproduce. (2) The summary at cli.py:484 splits its count by evidence.seal.verdict, which every record in sealed_green already carries - no new read of the store. (3) A proof beside cairn/devices/tester/ with teeth a hollow build could not pass, and the WATCHME probe at the berth named below.",
+  "falsifier": "DONE when: (1) a proof with no standing validation, run under --seal without --netns, runs at isolation netns and its landed validation records seal verdict 'sealed'; (2) the summary line never prints an unqualified SEALED over records whose seal verdict is 'open' - both counts appear; (3) the six proofs measured at cast reproduce - five green sealed, and launchers/proofs/test_bootstrap.py's red is its dependency tooth, not the seal. WRONG INTENT if the netns default makes proofs red for reasons unrelated to network reach and the reflex becomes a wider escape hatch rather than a fix - that would mean the ticket bought a stronger default and spent it. HORIZON: the probe reports per beat how many standing validations carry seal verdict 'open', how many at 'sealed', and how many first seals were taken in the window. A corpus where the open count never falls is a default being routed around.",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces and permanent in records of truth - the summary line is collapsing 'sealed' and 'route open' into one word). Law 8 (nothing enters proven-space without a proof a hollow build could not pass - a seal nobody asked for is a proof that was not held away from anything). Law 9 (red is the default, green is earned - a first seal defaulting to the weaker isolation is green granted rather than earned). Law 3 (nothing is known until measured - the netns default here was measured over the six unsealed proofs before it was proposed).",
+  "watchme": {
+    "object": "first_seal_isolation",
+    "trigger": "on the beat, at the at-rest probe sweep over class-space",
+    "enough": "30 consecutive days with zero validations landing at seal verdict 'open' from a first seal, AND at least one first seal taken in the window. Stillness alone is not enough: a corpus where no proof is ever newly sealed would clear this probe while saying nothing about the default - the failure shape a_pickup_is_witnessed.py already demonstrated at this address.",
+    "carrier": "a verdict artifact against this ticket's falsifier: the count of standing validations at seal verdict 'open', the count at 'sealed', the count of first seals taken in the window, and the isolation each was taken at",
+    "nexus": "hypothesize",
+    "consumer": "the tester's diagnostic surface and the operator inbox, where a rising open count is a red to fix rather than a note to read",
+    "probe": "cairn/devices/tester/probes/a_first_seal_is_taken_under_the_seal.py"
+  },
+  "owner": "CC builds it; cairn/devices/tester owns the command, the default and the summary line",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "schema_version": "ticket-v1",
+  "date": "2026-09-10",
+  "created": "2026-09-10",
+  "author": "CC",
+  "cast_under": "Akien, pre-approved as B1 in CairnCommons/slates/2026-09-10-the-gates-are-deterministic-and-one-hand-still-writes-crossings.json: 'PRE-APPROVED BUILDS (each closes a false green or makes an existing gate do what it prints), in order: B1 a brand-new proof's first --seal ... Fix: default to netns and never print SEALED for seal=open. Law 8 false green - first.'",
+  "measured_at_cast": {
+    "date": "2026-09-10",
+    "by": "CC, running cairn.devices.tester.discovery.discover and validation_store.standing_seal over the live corpus, and cairn.devices.tester.device.TesterDevice().run_proof at isolation netns over the six unsealed proofs",
+    "proofs_discovered": 209,
+    "no_standing_seal": 6,
+    "standing_seal_open": 52,
+    "standing_seal_asked_for": 151,
+    "netns_trial_of_the_six": "5 green sealed, 1 red - and the red (launchers/proofs/test_bootstrap.py) reds bare too, on test_every_third_party_import_is_declared, which is isolation-independent and was fixed separately in cairn commit 337eeca",
+    "correction_to_the_slate": "the slate says a first --seal 'seals nothing'. It lands a VALIDATION; what it omits is the network seal, so the record stands for less than the summary claims rather than being absent."
+  },
+  "known_hole_inherited_knowingly": "The 52 standing validations already carrying seal verdict 'open' are NOT re-sealed by this ticket, and isolation_for_seal goes on reproducing a standing 'open' as 'none' - deliberately, because 4431cf2bc625 exists to stop a sweep silently changing how an already-sealed proof is sealed. So after this build the corpus still holds 52 records taken with the route open; what changes is that the summary stops calling them simply SEALED, and that no NEW one is created by default. Whether those 52 should be re-sealed under netns is a real question with a real cost and it is left open here rather than answered by a side effect."
+}
