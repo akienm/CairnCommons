@@ -1,0 +1,35 @@
+{
+  "id": "39966e1cefe4",
+  "title": "hollow-can-only-see-the-files-the-chart-declared",
+  "node_class": "bug",
+  "task_or_ticket": "ticket",
+  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "date": "2026-09-11",
+  "created": "2026-09-11",
+  "author": "CC",
+  "owner": "CC builds it; cairn/devices/tester owns hollow",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "cairn/devices/tester/hollow.py:428 takes its subject set from writes_to(ticket) — the decompose berth's hand-authored list of what the build will write. So the hollow reading measures WHAT THE CHART PREDICTED, not what the build DID. A file the build genuinely changed and the chart never named is not reverted, not run against, and not reported — it is silently outside the reading, and the run still prints a clean green. Make the subject set the UNION of writes_to and the files actually changed since the pre-build commit hollow already resolves, so an undeclared build file is measured (or, at minimum, NAMED as unmeasured) rather than invisible.",
+  "why": "Law 8 — nothing enters proven-space without a proof a hollow build couldn't pass, and hollow is the instrument that says so. An instrument whose field of view is drawn by the same hand it is auditing cannot see the thing that hand forgot. Law 7 — the run prints '2 file(s) measured · 0 hollow' with no line anywhere saying a third file was changed and skipped, which collapses 'measured clean' into 'not looked at'. And Law 3 — 'this build is not hollow' is a claim about the build, and today it is only a claim about the declaration.",
+  "how": "hollow.measure() already resolves the pre-build commit (the BUILDME crossing's HEAD) and already builds a worktree at the current HEAD. `git diff --name-only <pre-build>..HEAD` in that same worktree is therefore free and is the honest subject set. Two candidate shapes, and the choice is the build's: (1) measure the union — every changed file gets reverted and run like any other, which makes the reading complete but can only widen it; or (2) keep measuring writes_to and REPORT the difference — 'changed but not declared: <files>' as a loud line and a field on the seal. Prefer (1) with (2)'s line kept, because a named-but-unmeasured file is still a hole a caller can walk past. _classify()'s existing skips (instruments, records, outside-repo) apply unchanged to the widened set.",
+  "falsifier": "DONE when a fixture ticket whose build changes a file its decompose berth does not name produces a hollow run that either REDS that file or NAMES it as changed-and-unmeasured — and a control run, where the berth names everything the build touched, reads identically to today. WRONG INTENT if the widening is satisfied by trusting writes_to harder (a sieve that reds an incomplete berth at chart time is a different, useful ticket and does not close this one): the point is that hollow stops depending on a declaration being complete, not that declarations get scolded.",
+  "traces_to": "Law 8 (the hollow reading IS the proof-that-a-hollow-build-couldn't-pass; a reading with a hand-drawn field of view is not one); Law 7 (a diagnostic surface may not print a green over a file it never looked at); Law 3 (nothing is known until measured — and today what is measured is the chart, not the build).",
+  "watchme": "none, because the fix's own control pair is the standing check: the fixture ticket with an incomplete berth must red and the complete one must not, and both live in cairn/devices/tester/proofs/. A probe counting undeclared-file events in the wild would measure how often charts are incomplete — a real question, and a DIFFERENT one from whether the instrument can see them.",
+  "gates_bound": [
+    "proof gate — cairn/devices/tester/proofs/ runs green under the tester at isolation=netns, and the new tooth reds against today's writes_to-only subject set.",
+    "feeds back to origin on failure — a red routes to this ticket's own voyage, never to a paragraph.",
+    "durability gate — not done until proven AND committed."
+  ],
+  "children": "none, because it is one subject-set resolution inside one function",
+  "measured_at_cast": {
+    "date": "2026-09-11",
+    "by": "CC, session 7a3cf7ce, found while sailing 548dd13fb4db",
+    "reading": "`cairn test --hollow 548dd13fb4db --seal` reported '2 file(s) measured · 1 skipped' — host.py and probes/an_agent_retry_gets_a_fresh_sample.py. The same voyage ALSO changed cairn/devices/inference_domain/device.py (commit 1b2f223, the _handle_resolve whitelist that had been dropping the `tools` key), and device.py appears nowhere in the run. Its revert would red test_a_toolset_survives_the_bus_verb BY NAME, so the file is not merely unmeasured — it is the one file in the voyage whose coverage was in question.",
+    "cause": "hollow.py:428 `files = writes_to(ticket, berths_root=berths_root)`; the decompose berth for 548dd13fb4db predates the discovery of the bus-verb defect and names host.py and the probe only.",
+    "not_a_defect_of_this_voyage": "The berth was honest when it was written — the defect was found after charting. That is exactly the case the fix must cover, because it is the normal case: a voyage that finds nothing new needs no widening."
+  },
+  "found_while": "sailing 548dd13fb4db (the one inference door carries a tool-using conversation)",
+  "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'.",
+  "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
+  "schema_version": "ticket-v1"
+}
