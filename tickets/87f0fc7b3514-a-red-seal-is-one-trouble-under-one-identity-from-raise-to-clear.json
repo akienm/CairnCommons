@@ -18,13 +18,15 @@
   "decisions": [
     {
       "n": 1,
-      "text": "One identity per seal trouble, derived by one function at one address inside cairn/devices/tester, called by both the commit ladder (reseal.py) and the validation store's announce/clear.",
-      "by": "measured 2026-09-15: two emitters, two keys, 90 of 96 identities with raise != clear; Akien's standing 'we need to fix things that come up too. time to ticket those'"
+      "text": "One identity per seal trouble, derived by one function at one address inside cairn/devices/tester, called by both the commit ladder (reseal.py) and the validation store's announce/clear. The function is D6's seal_trouble_identity(proof_path) in validation_store.py.",
+      "by": "measured 2026-09-15: two emitters, two keys, 90 of 96 identities with raise != clear; Akien's standing 'we need to fix things that come up too. time to ticket those'",
+      "amended": "2026-09-16 by CC after rehearsal pass 1: forward pointer to D6 so D1 reads whole"
     },
     {
       "n": 2,
-      "text": "The ladder emits a clear only for a key that stands raised (in this run, or in the log tree); a green reseal with nothing raised emits nothing.",
-      "by": "measured: seal-red-cairn-tools-base raised 4 / cleared 145 — 141 clears with no raise"
+      "text": "The ladder emits a clear only for a key that stands raised (in this run, or in the log tree); a green reseal with nothing raised emits nothing. The reader is D7's standing_raises(log_home, recipient=); the check is D7's predicate at the clear site.",
+      "by": "measured: seal-red-cairn-tools-base raised 4 / cleared 145 — 141 clears with no raise",
+      "amended": "2026-09-16 by CC after rehearsal pass 1: forward pointer to D7 so D2 reads whole"
     },
     {
       "n": 3,
@@ -35,10 +37,40 @@
       "n": 4,
       "text": "The drain host, the trouble store's fold, and the 219 undrained emissions are OUT.",
       "by": "live trouble trouble-drain-has-no-host-the-beat-backstop-is-prose; the hand-run drain is asked in chat under c0e47b140309"
+    },
+    {
+      "n": 5,
+      "text": "STACK AT THE RAISE (Akien, open-f998fae25b35: 'a trouble should have it's diagnostic info too, so the call stack will be in there. if not, we make it so' — measured 0 of 249 raises carry one): DiagnosticBase.raise_trouble in cairn/tools/base/diagnostic.py adds detail[\"stack\"] = traceback.format_stack()[:-1] (a list of strings, innermost last, the raise_trouble frame itself dropped) to EVERY raise before emit(); clear_trouble adds nothing. A caller-supplied detail is copied, not mutated. One tooth in cairn/tools/base/proofs/test_diagnostic.py: a raise through a fixture raiser under a temp log home lands a record whose values.detail.stack is a non-empty list whose last entry names the proof file and the line of the raise call.",
+      "by": "CC",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "THE ONE FUNCTION: def seal_trouble_identity(proof_path) -> str in cairn/devices/tester/validation_store.py (the store side — reseal.py already imports from it; base may not import a device; trouble may not be imported by tester). Body under the per-PROOF grain (open-69cd989012c4 standing; if the answer is per COMPONENT only this body changes): returns \"seal-red-\" + the proof's repo-relative path with .py stripped, slugged by reseal._SLUG (e.g. seal-red-cairn-devices-tester-proofs-test-reseal-door). reseal.trouble_identity is deleted and its three call sites (:361/:412/:484 raises, :437 clear) call seal_trouble_identity; announce_verdict_change (:561) and the green round-trip clear (:790) call it too — the string \"validation-verdict-changed-\" no longer appears in cairn/devices/tester. reseal.py's docstring paragraph 'ONE TROUBLE PER COMPONENT…' is replaced by one sentence pointing at this decision. ALTERNATE BODY, used if open-69cd989012c4 is answered per COMPONENT: returns \"seal-red-\" + the repo-relative path of component_root_for(proof_path) slugged by _SLUG (today's reseal body, e.g. seal-red-cairn-devices-tester), and the store's announce and round-trip clear then fold every proof of a component under that one key. Under EITHER answer the function's name, address, signature and all five call sites are the same; the builder picks the body from the recorded answer and nothing else changes.",
+      "by": "CC",
+      "step": "D6",
+      "source": "rehearsal",
+      "amended": "2026-09-16 by CC after rehearsal pass 1: both bodies recorded so the build is determinate under either answer to open-69cd989012c4"
+    },
+    {
+      "n": 7,
+      "text": "THE READER AND THE CHECK (D2): def standing_raises(log_home: Path, *, recipient: str) -> set[str] in cairn/devices/tester/reseal.py reads only files named *.raise_trouble.json and *.clear_trouble.json directly under log_home (the raiser's own emission tree, ~/.cairn/logs/tester/0 live; a temp dir in proofs), sorted by filename (the stamp is the filename prefix), and returns the pointers whose LAST event is a raise or whose last clear has values.by != recipient. It imports nothing from cairn/devices/trouble and writes nothing. The ladder's clear at reseal.py:437 becomes: if identity in raised_this_run or identity in standing_raises(raiser.log_home, recipient=CLEARS_FOR): raiser.clear_trouble(...); else no emission. raised_this_run is a module-level set the three raise sites add to. log_home for a ModuleRaiser is the directory emit() writes into (diagnostic.py's home attribute).",
+      "by": "CC",
+      "step": "D7",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "THE PROOFS: (a) test_reseal_door.py gains three teeth on its existing fake-raiser + temp-root fixture: 'a green reseal with nothing raised emits no clear' (fake raiser records zero clears), 'ladder red then hand green leaves nothing outstanding for cc' (raise then TesterDevice.run_proof green → exactly one clear, same pointer, by cc; standing_raises afterwards is empty), and 'standing_raises reads raise/clear pairs' (a temp tree with raise k1, clear k1 by cc, raise k2, clear k2 by someone-else → {k2}). (b) test_the_seal_announces_itself.py gains 'the store's announce pointer equals seal_trouble_identity(proof) equals the ladder's raise pointer' — three strings compared on one proof path. (c) the census tooth in test_reseal_door.py reads the LIVE ~/.cairn/logs/tester/0 read-only, restricted to files whose stamp is later than git log -1 --format=%cI of this build's commit (skipped with a printed reason when git is absent, i.e. the hollow worktree), and asserts by invariant: every clear_trouble pointer after the bound has an earlier raise_trouble pointer after the bound, and no pointer has two cc clears without a raise between — never a count. All four proofs (test_diagnostic, test_reseal_door, test_the_seal_announces_itself, test_validation_store) are resealed under netns and name their teeth (77f15efd5a96).",
+      "by": "CC",
+      "step": "D8",
+      "source": "rehearsal"
     }
   ],
   "questions": [
-    "open-f998fae25b35"
+    "open-f998fae25b35",
+    "open-69cd989012c4"
   ],
   "intention": "A red seal is one trouble under one identity from raise to clear, whoever turns it green.",
   "why": "Law 7: a raised trouble no clear can reach is a permanent error the record lies about — the log tree says ground-loop is red 7 times over while its seal is green. Law 6: the tester owns the seal, so it owns the one identity; two keys is two owners of one condition.",
