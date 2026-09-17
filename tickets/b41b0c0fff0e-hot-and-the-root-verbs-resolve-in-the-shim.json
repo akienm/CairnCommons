@@ -4,40 +4,40 @@
   "date": "2026-09-06",
   "owner": "codemother owns the care of this seam (ruling 2026-09-06); CC/Opus builds. Child of 15d6a0ef9c11 (the vocabulary, RULED).",
   "owning_intention": "cairn/tools/base/intention+why.json",
-  "intention": "The shim's resolver parses the ruled root verbs \u2014 list, show, get, stop, start, settings \u2014 and the `hot` modifier, so that `cairn <device> show status hot` starts the device if it must and answers with real values, not cached ones.",
+  "intention": "The shim's resolver parses the ruled root verbs — list, show, get, stop, start, settings — and the `hot` modifier, so that `cairn <device> show status hot` starts the device if it must and answers with real values, not cached ones.",
   "why": "Akien's launch chain, told for the second time 2026-09-06 and recorded verbatim at CairnCommons/intentions-not-beside-code/I-the-command-lazy-inits-the-system.md. Cast the same day so the intention carries a ticket (CLAUDE.md: an IOU without a real ticket is itself the defect).",
   "traces_to": [
     "Ticket 15d6a0ef9c11 valid-verbs-standard-cli-vocabulary (RULED root set 2026-09-06: 'list show get stop start settings'; `hot` recorded there the same day). Law 1 (one resolver, every device; no device re-derives the vocabulary). Law 3 (`hot` is the operator saying 'measure, don't recall'). Akien 2026-09-06 verbatim: \"the shim's resolver says 'show status = get json status and format for humans'... but then it also sees 'hot' which means the device has to be running. so it starts the librarian.\""
   ],
   "falsifier": {
-    "proves_green": "proof gate \u2014 cairn/tools/base/proofs/test_root_verbs.py (new): a fixture device with and without settings, with and without a lifecycle; all six verbs plus `hot` exercised; grep tooth for device-local resolvers. Feeds back naming the verb that failed. Durability: committed in cairn; tester seal over tools/base.",
-    "proves_red": "DONE when: (1) every device that has a shim answers all six root verbs through the one base resolver \u2014 `grep -rn \"def resolve\" devices/*/shim.py` returns zero device-local resolvers; (2) `cairn librarian show status hot` with the librarian stopped starts it and returns a status whose timestamp is after the command was typed; (3) the same command without `hot` on a stopped librarian returns the last-known state marked cached, and starts nothing; (4) `cairn <device> settings` on a device with no settings prints exactly 'No settings'. WRONG INTENT if `hot` becomes a verb of its own or a per-device flag \u2014 it is one modifier read by one resolver."
+    "proves_green": "proof gate — cairn/tools/base/proofs/test_root_verbs.py (new): a fixture device with and without settings, with and without a lifecycle; all six verbs plus `hot` exercised; grep tooth for device-local resolvers. Feeds back naming the verb that failed. Durability: committed in cairn; tester seal over tools/base.",
+    "proves_red": "DONE when: (1) every device that has a shim answers all six root verbs through the one base resolver — `grep -rn \"def resolve\" devices/*/shim.py` returns zero device-local resolvers; (2) `cairn librarian show status hot` with the librarian stopped starts it and returns a status whose timestamp is after the command was typed; (3) the same command without `hot` on a stopped librarian returns the last-known state marked cached, and starts nothing; (4) `cairn <device> settings` on a device with no settings prints exactly 'No settings'. WRONG INTENT if `hot` becomes a verb of its own or a per-device flag — it is one modifier read by one resolver."
   },
   "children": [],
   "linked_ideas": [],
   "questions": [
     {
       "q": "assumption_check",
-      "a": "Two named. (1) 'Start the device' is definable per device \u2014 standing, via a lifecycle declaration on the device class defaulting to 'no separate process' (a calibre-shaped device reports that `start` is a no-op). (2) The STATUS and SETTINGS panes are the same data as the web panes \u2014 RULED 2026-09-06 on 15d6a0ef9c11, so not an assumption. Neither is load-bearing beyond the build."
+      "a": "Two named. (1) 'Start the device' is definable per device — standing, via a lifecycle declaration on the device class defaulting to 'no separate process' (a calibre-shaped device reports that `start` is a no-op). (2) The STATUS and SETTINGS panes are the same data as the web panes — RULED 2026-09-06 on 15d6a0ef9c11, so not an assumption. Neither is load-bearing beyond the build."
     },
     {
       "q": "missing_check",
-      "a": "One point was asserted wrapped and was not: what a non-hot answer on a stopped device is made of. Now wrapped: the shim's last-known state (introspect()['state'] as held), marked `cached: true` with its timestamp, and 'never run' if there is none. And `restart` from the groundloop verbs ticket has no ruled root \u2014 it becomes stop+start, recorded as a supersession in vocabulary."
+      "a": "One point was asserted wrapped and was not: what a non-hot answer on a stopped device is made of. Now wrapped: the shim's last-known state (introspect()['state'] as held), marked `cached: true` with its timestamp, and 'never run' if there is none. And `restart` from the groundloop verbs ticket has no ruled root — it becomes stop+start, recorded as a supersession in vocabulary."
     },
     {
       "q": "collision_check",
-      "a": "Consulted the lab. 15d6a0ef9c11 is the vocabulary at PROVEME; this is its build, cast as a child rather than widening a ticket past its cursor. 5ef45e513849 cairn-groundloop-stop-start-restart-status (PROVED) is a device-local precursor: superseded in vocabulary (restart), re-homed in function; its proof stays green because stop+start is what restart did. Recursive-CLI-resolution (each segment resolves its children; no master index) is served \u2014 bin/cairn still knows no verbs. No Law collides."
+      "a": "Consulted the lab. 15d6a0ef9c11 is the vocabulary at PROVEME; this is its build, cast as a child rather than widening a ticket past its cursor. 5ef45e513849 cairn-groundloop-stop-start-restart-status (PROVED) is a device-local precursor: superseded in vocabulary (restart), re-homed in function; its proof stays green because stop+start is what restart did. Recursive-CLI-resolution (each segment resolves its children; no master index) is served — bin/cairn still knows no verbs. No Law collides."
     },
     {
       "q": "builder_check",
-      "a": "A Haiku-level builder needs: (a) the verb table and each verb's source \u2014 show/get: declared_views() in cairn/tools/base/device.py (exists); list: the keys of declared_views() plus declared_panes(); settings: introspect()['settings'] or the literal 'No settings'; start/stop: a new `lifecycle` declaration on BaseDevice (default: none); (b) `hot` handling \u2014 strip it from the verb line, set a flag, and if the device is not running call start before the view; (c) where \u2014 one `resolve(verbs)` on BaseShim, and `cairn/devices/*/shim.py` must not override it; (d) the human format for `show` \u2014 the existing pane renderer the web server uses, not a new one; (e) don't \u2014 no new verbs, no per-device parsing, no `restart`. All written into the ticket's how."
+      "a": "A Haiku-level builder needs: (a) the verb table and each verb's source — show/get: declared_views() in cairn/tools/base/device.py (exists); list: the keys of declared_views() plus declared_panes(); settings: introspect()['settings'] or the literal 'No settings'; start/stop: a new `lifecycle` declaration on BaseDevice (default: none); (b) `hot` handling — strip it from the verb line, set a flag, and if the device is not running call start before the view; (c) where — one `resolve(verbs)` on BaseShim, and `cairn/devices/*/shim.py` must not override it; (d) the human format for `show` — the existing pane renderer the web server uses, not a new one; (e) don't — no new verbs, no per-device parsing, no `restart`. All written into the ticket's how."
     }
   ],
   "constraints": [
-    "No change to the ground loop's contents: pulse, control flags, devices-found list \u2014 ever (Akien 2026-09-06).",
-    "One pipe: device \u2192 IPC \u2192 own shim \u2192 bus \u2192 addressee's shim \u2192 IPC \u2192 addressee; the db alone is exempt (volume)."
+    "No change to the ground loop's contents: pulse, control flags, devices-found list — ever (Akien 2026-09-06).",
+    "One pipe: device → IPC → own shim → bus → addressee's shim → IPC → addressee; the db alone is exempt (volume)."
   ],
-  "how": "One resolver in the shim base, shaped like the CLI's recursive resolution: `show status` = the STATUS pane's JSON formatted for humans (introspect()['intention'] + ['state']); `get status` = the same JSON raw; `settings` = the SETTINGS pane or the literal 'No settings'; `list` = the device's declared views; `start`/`stop` = the device process's lifecycle through its shim (IPC 'or whatever the device requires'). `hot` is a modifier, not a verb: it forbids answering from what the shim holds, which means the device must be running \u2014 so the resolver starts the device (lazy init) and asks it. Without `hot`, a stopped device's last-known state answers and is labelled as cached. Devices override nothing here; they declare panes and views and the resolver reads them (a provider doesn't know its consumers).",
+  "how": "One resolver in the shim base, shaped like the CLI's recursive resolution: `show status` = the STATUS pane's JSON formatted for humans (introspect()['intention'] + ['state']); `get status` = the same JSON raw; `settings` = the SETTINGS pane or the literal 'No settings'; `list` = the device's declared views; `start`/`stop` = the device process's lifecycle through its shim (IPC 'or whatever the device requires'). `hot` is a modifier, not a verb: it forbids answering from what the shim holds, which means the device must be running — so the resolver starts the device (lazy init) and asks it. Without `hot`, a stopped device's last-known state answers and is labelled as cached. Devices override nothing here; they declare panes and views and the resolver reads them (a provider doesn't know its consumers).",
   "links": [
     "15d6a0ef9c11 valid-verbs-standard-cli-vocabulary (parent; PROVEME)",
     "5ef45e513849 cairn-groundloop-stop-start-restart-status (superseded in vocabulary: restart = stop+start)",
@@ -54,17 +54,17 @@
   "cast": "2026-09-06",
   "cast_by": "CC (Fable session; intent finding 644fe6d70363, sorted finding b41b0c0fff0e)",
   "intent": {
-    "what": "The shim's resolver parses the ruled root verbs \u2014 list, show, get, stop, start, settings \u2014 and the `hot` modifier, so that `cairn <device> show status hot` starts the device if it must and answers with real values, not cached ones.",
+    "what": "The shim's resolver parses the ruled root verbs — list, show, get, stop, start, settings — and the `hot` modifier, so that `cairn <device> show status hot` starts the device if it must and answers with real values, not cached ones.",
     "shape": "aside",
     "challenge": {
-      "better_approach": "Making each device parse its own verbs is what exists in pieces today (declared_views for show/get) and is the shape that produced 'no master index, help emergent' \u2014 that part is kept: the resolver reads declarations. The alternative of a central verb table in bin/cairn was rejected because bin/cairn resolves the device and execs; the verbs are the shim's to resolve, and bin/cairn must not know them (recursive CLI resolution, each segment resolves its children).",
+      "better_approach": "Making each device parse its own verbs is what exists in pieces today (declared_views for show/get) and is the shape that produced 'no master index, help emergent' — that part is kept: the resolver reads declarations. The alternative of a central verb table in bin/cairn was rejected because bin/cairn resolves the device and execs; the verbs are the shim's to resolve, and bin/cairn must not know them (recursive CLI resolution, each segment resolves its children).",
       "prior_art": "Ticket 15d6a0ef9c11 carries the ruled vocabulary, the STATUS/SETTINGS pane reading and the `hot` note. declared_views() in cairn/tools/base/device.py already serves show/get. `cairn groundloop status|start|stop|restart` (ticket 5ef45e513849, PROVED) is a device-local precursor of start/stop and should be re-homed onto the base resolver by this ticket rather than left as a second vocabulary. The web STATUS and SETTINGS panes are the same data by ruling ('same as the web pane').",
-      "hidden_assumption": "That 'start the device' is a defined act for every device once the bus is one process (ticket one-bus-per-instance) \u2014 for a Python device it is a subprocess on IPC; for a calibre-shaped device 'the shim is just a calibre database interface' and `start` may be a no-op that reports so. The resolver needs a per-device lifecycle declaration, defaulting to 'no separate process'.",
+      "hidden_assumption": "That 'start the device' is a defined act for every device once the bus is one process (ticket one-bus-per-instance) — for a Python device it is a subprocess on IPC; for a calibre-shaped device 'the shim is just a calibre database interface' and `start` may be a no-op that reports so. The resolver needs a per-device lifecycle declaration, defaulting to 'no separate process'.",
       "real_collision": "None. 15d6a0ef9c11 is at PROVEME with the vocabulary as spec; this ticket is the build of the resolver that vocabulary demands, cast as its child rather than widening a ticket already at PROVEME. The groundloop verbs ticket (PROVED) is superseded in vocabulary, not in function: 'restart' has no ruled root and becomes stop+start.",
       "back_up": "proceed"
     }
   },
-  "why_beneath_the_why": "Akien 2026-09-06: 'if everything goes thru one pipe, we learn faster' and 'everythign automatically lazy inits' \u2014 the operator types one command and the system stands itself up behind it, on one pipe, with nothing to remember.",
+  "why_beneath_the_why": "Akien 2026-09-06: 'if everything goes thru one pipe, we learn faster' and 'everythign automatically lazy inits' — the operator types one command and the system stands itself up behind it, on one pipe, with nothing to remember.",
   "mechanism": null,
   "stage_needs": null,
   "filed_edges": [],
@@ -73,7 +73,7 @@
   ],
   "task_or_ticket": "ticket",
   "repairs": [
-    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/tools/base/intention+why.json' resolved under neither root; stripped the extra 'cairn/' \u2014 the one reader surfaced it; data repair, no design change."
+    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/tools/base/intention+why.json' resolved under neither root; stripped the extra 'cairn/' — the one reader surfaced it; data repair, no design change."
   ],
   "phase_writes": [
     {
@@ -84,11 +84,98 @@
       "standing": "BUILDME",
       "workflow": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:queued] -> PROVEME -> PROVED",
       "at": "2026-09-08T15:00:58",
-      "why": "its own links name 15d6a0ef9c11 as PARENT \u2014 the verb vocabulary this ticket's resolver parses."
+      "why": "its own links name 15d6a0ef9c11 as PARENT — the verb vocabulary this ticket's resolver parses."
     }
   ],
   "release": "15d6a0ef9c11",
   "notes": [
-    "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 \u2192 BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 \u2014 the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
+    "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 → BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 — the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "lets say i type 'cairn librarian show status hot' ... 'hot' isn't in there yet. I added that just now. hot would mean don't show cached values, get the real values.",
+      "by": "Akien verbatim 2026-09-06 (ticket 15d6a0ef9c11, how.modifiers)"
+    },
+    {
+      "n": 2,
+      "text": "the root set is exactly list, show, get, stop, start, settings. get returns JSON, show renders human-readable, list enumerates. `status` is a root view: list/show/get status carry the same content the web STATUS pane carries (shim.active_page: introspect()['intention'] + ['state']). `settings` carries the same content as the web SETTINGS pane (introspect()['settings']) and answers 'No settings' when the device declares none. start/stop act on the device instance's process (a device is its own process in the rack).",
+      "by": "Akien RULED 2026-09-06 (ticket 15d6a0ef9c11, how.vocabulary)"
+    },
+    {
+      "n": 3,
+      "text": "WHERE: ONE resolver, `BaseShim.resolve(self, argv: list[str]) -> dict` in cairn/tools/base/shim.py (the class at shim.py:196), returning `{'exit': int, 'text': str, 'data': Any, 'cached': bool | None}`; and ONE mouth beside it, module-level `cli_main(shim_cls, argv: list[str]) -> int` in the same file, which constructs `shim_cls()`, calls `resolve(argv)`, prints `text` to stdout (exit 0) or stderr (exit != 0), and returns `exit`. No device shim defines `resolve` — `grep -rn 'def resolve' cairn/devices/*/shim.py` is empty today (measured) and stays empty (falsifier clause 1, a tooth). Devices declare views, panes and a `_start_device`; the resolver reads them (a provider doesn't know its consumers).",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 4,
+      "text": "THE VERB LINE: argv[0] is the verb, folded through cairn.tools.system_word.canon against the six root verbs (system words fold, ruled 2026-09-07); `hot` is a MODIFIER — the folded word 'hot' anywhere in argv[1:] is removed and sets hot=True; it is never argv[0]: `cairn <device> hot` is refused (exit 2, 'hot is a modifier, not a verb — put it after show, get or list'). An empty argv prints exactly the two lines every self-named launcher prints today (`device: <id>` and `class:  cairn/devices/<id>/`), exit 0, so `cairn tester` is byte-for-byte what it was (the d6eb399ab6ad and 0853294fe972 live fires drove it). A verb outside the six → exit 2, `cairn <device>: no such verb '<word>' — root verbs: list show get stop start settings`. `show`/`get` with no view name → exit 2 naming the views available (the root two plus the device's); no silent default.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 5,
+      "text": "THE VIEWS: two ROOT views exist for every device without declaring them — `status` = `{'intention': introspect()['intention'], 'state': introspect()['state']}` and `settings` = `introspect()['settings']` (the same data the web STATUS and SETTINGS panes carry, shim.active_page, ruled on 15d6a0ef9c11); the device's `declared_views()` (device.py:184) are appended, names folded through canon. A device view named status or settings is a COLLISION and is refused when resolved (exit 2, `device view 'status' collides with the root view` — 15d6a0ef9c11's 'a verb that collides with a standard one is refused', applied to views at the one place they are read; nothing is registered anywhere, so resolve time IS registration time).",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 6,
+      "text": "THE PROCESS MODEL THIS RESOLVER STANDS ON, measured 2026-09-16: every `cairn <device> …` is a FRESH process — bin/cairn:191 `exec \"$target\" \"$@\"` into the self-named launcher, which constructs one shim and exits — so 'the device is running' is a fact about the INSTANCE, not about this process, and the only thing that survives between two commands is the shim's `last_known.json` in instance-space (shim.py:830 `_persist_last_known`, at instance_path(device, 0)/last_known.json, today `{presence, timestamp}` only). THIS TICKET MAKES THAT FILE THE CACHE: `_capture_last_known` (shim.py:825) also stores `'introspect': self._device.introspect()` when the device is awake, so the file holds `{presence, timestamp, introspect}`. A resident device process is 48519f4789b1's (one bus per instance) and its open question open-b49db843959b; when it lands, `_ensure_device` is where the resident start plugs in and this resolver changes no line.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 7,
+      "text": "COLD vs HOT (the modifier's whole meaning): WITHOUT `hot`, show/get/list answer from what the shim HOLDS and start nothing — if this process's shim is already ONLINE (never, from a CLI; always, from a racked shim) the live introspect is free and is used; otherwise `last_known.json` is read: present → the view is projected from its `introspect` snapshot and the answer is `cached: True` with the file's `timestamp`; absent or without a snapshot → `text` 'never run' (`data` None, `cached` True, exit 0 — an honest empty, not a red). WITH `hot`, the resolver calls `self._ensure_device()` (shim.py:848 — the shim's own lazy start, `_start_device` in-process today, the resident start later), then reads `self._device.introspect()` live, snapshots it (so the next cold answer is this one, with a timestamp AFTER the command — falsifier clause 2 literally), and answers `cached: False`. `hot` on stop/start/settings is accepted and ignored (settings is show settings; start already starts).",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 8,
+      "text": "RENDERING: `show` hands the view's data to `self._device._render_view(name, data)` (device.py:223, devices override for pretty output) when the device is awake; a CACHED show has no device to render, so it prints `json.dumps(data, indent=2, default=str)` under one header line `cached <timestamp> — the <device> is not running; add hot for live values`. `get` ALWAYS prints one line of compact JSON with one shape: `{'device', 'view', 'cached', 'timestamp', 'data'}` (`timestamp` is the snapshot's when cached, now when hot; `data` None on never-run) — a script parses one shape whether or not the device was up (JSON for machines, text for people: memory inter-device-queries-via-bus-verbs).",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 9,
+      "text": "`settings` BARE is `show settings`; when the dict is empty (or the cold snapshot's settings is empty, or the device has never run) the text is EXACTLY the literal `No settings`, exit 0 (falsifier clause 4). `get settings` on an empty dict prints the one-shape JSON with `data: {}` — the literal is the human face only.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 10,
+      "text": "`list` enumerates `{'verbs': [the six], 'views': ['status', 'settings', *device views], 'panes': [kinds of declared_panes()]}`. Cold, the device views and panes come from the shim's `declared_contract()` (shim.py:817 — the without-waking answer, default empty; CodeMotherShim overrides it today) — so a cold list on a device with no contract shows the six verbs and the two root views and says so (`cached: True`); hot, from the awake device's `declared_views()` and `declared_panes()`. Text: one section per key, one name per line.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 11,
+      "text": "`start` = `self._ensure_device()` then snapshot; text `started <device>` (or `<device> already running` when ONLINE), exit 0. `stop` = a NEW base method `_stop_device(self) -> None` (default: if ONLINE, `self._device = None`, `self._presence = OFFLINE` (shim.py:83), snapshot written with the last live introspect kept and presence OFFLINE); text `stopped <device>` (or `<device> is not running`), exit 0. `_start_device`/`_stop_device` ARE the lifecycle — no separate `lifecycle` declaration is added (the cast's builder_check floated one; a second name for the pair `_start_device` already spells would be a table nothing else reads). `restart` is not a verb (stop then start; 5ef45e513849's device-local restart is superseded in vocabulary, its proof stays green because stop+start is what it did). `stop` on a device whose concrete shim starts a real process is that shim's `_stop_device` override to write when such a shim exists; none does today.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 12,
+      "text": "THE LAUNCHERS: the self-named launchers that today construct the shim and print device/class — cairn/devices/{cc,inference_domain,tester}/0/bin/<device> (measured: identical 8-line bodies) — become `exec python3 -c \"import sys; sys.path.insert(0, REPO_ROOT); from cairn.devices.<d>.shim import <D>Shim; from cairn.tools.base.shim import cli_main; sys.exit(cli_main(<D>Shim, sys.argv[1:]))\" \"$@\"`. codemother's launcher keeps its arms (cross, watch, question, seed, show dashboard) and its `*)` arm and `show *)` arm hand the whole line to cli_main(CodeMotherShim) — so `cairn codemother show status` resolves and `cairn codemother` alone prints its help as today (cli_main is called only when argv is non-empty there). trouble's launcher: the same, its `*)` arm hands a non-empty line to cli_main(TroubleShim). librarian's launcher: `--status` stays (0853294fe972 D10 drives it); a first token that folds to one of the six root verbs → cli_main(LibrarianShim); anything else → the web-server start as today. NOTHING in bin/cairn changes — it still knows no verbs (recursive CLI resolution; the self-named launcher already receives the whole line, bin/cairn:161).",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 13,
+      "text": "NOT THIS TICKET: the cairn device's own launcher (class-space has no cairn/devices/cairn/0/bin — measured; `cairnhelp = cairn cairn show help` is 15d6a0ef9c11's composability line); resident device processes (48519f4789b1); the web server (it renders active_page and is not touched); any new verb; per-device parsing of the verb line.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 14,
+      "text": "NEVER: `hot` as a verb or as a per-device flag (WRONG INTENT clause — one modifier read by one resolver); a `def resolve` in any cairn/devices/*/shim.py; a cold query that starts the device; a hot query that answers from the file; a second cache beside last_known.json; an exception escaping resolve (any error becomes exit 1 with `<device>: <verb> failed: <type>: <text>` — Law 7, loud, and the shim still constructed).",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 15,
+      "text": "THE PROOF cairn/tools/base/proofs/test_root_verbs.py (new), sealed under the tester: two fixture shims over two fixture devices in the proof file — one with settings {'colour': 'red'} and a view `weather`, one with settings {} and no views — each run under a scratch HOME (instance_path resolves from HOME at import, so the snapshot file lands under the scratch and the live instance is never touched; the shim is driven in a subprocess per command to mirror the fresh-process model). Teeth: (1) cold `list` names the six verbs and the two root views and starts nothing (presence NEVER_BOOTED after); (2) cold `show status` before any run prints `never run`, starts nothing; (3) `show status hot` starts the device and the JSON timestamp is >= the instant before the call; (4) a NEW process's cold `show status` after (3) is `cached: True` with (3)'s timestamp, starts nothing; (5) `get status` is one line of JSON carrying exactly device/view/cached/timestamp/data; (6) `settings` on the bare device prints exactly `No settings`, on the other prints the rendered dict; (7) `start` then `stop` → started/stopped texts and the snapshot's presence ONLINE then OFFLINE; `stop` cold says not running; (8) `hot` as argv[0] and an unknown verb are refused exit 2 with the six named; (9) `git grep -n 'def resolve' -- 'cairn/devices/*/shim.py'` is empty and `def resolve(` appears exactly once in cairn/tools/base/shim.py; (10) a device view named `status` is refused as a collision. Green twice bare, then `cairn test --hollow b41b0c0fff0e --seal`.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 16,
+      "text": "THE LIVE FIRE, readings written into the ticket before PROVEME: `cairn tester show status` (cold — cached or never run, nothing started), `cairn tester show status hot` (live, timestamp after the command), `cairn tester get status`, `cairn tester settings`, `cairn tester list`, and falsifier clause 2 as written: `cairn librarian show status hot` — the LibrarianShim's `_start_device` wakes a LibrarianDevice with its chat session in this process (librarian/shim.py:44) and the status carries a fresh timestamp; if that wake reaches the embed host and is slow or refused, the reading is recorded as measured, not smoothed.",
+      "by": "CC at cast 2026-09-16"
+    },
+    {
+      "n": 17,
+      "text": "WATCH: none new — the ticket's cast watchme stands as written.",
+      "by": "CC at cast 2026-09-16"
+    }
   ]
 }
