@@ -1,0 +1,799 @@
+{
+  "ticket": "201a37bf1613",
+  "record": "rehearsals/201a37bf1613-20260918T083649.json",
+  "at": "2026-09-18T08:36:49+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "45d0bd09cd79e2da173e1e1fa8f096f0db16377251433244fbae1177d8a5038c",
+  "ticket_sha256_at_read": "45d0bd09cd79e2da173e1e1fa8f096f0db16377251433244fbae1177d8a5038c",
+  "reads": [
+    {
+      "ticket": "201a37bf1613",
+      "ticket_sha256": "45d0bd09cd79e2da173e1e1fa8f096f0db16377251433244fbae1177d8a5038c",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: Create cairn_scratch registry table and implement scratch() + sweep_scratch() + register_scratch_companion() in store.py",
+          "state": "builds_under_assumption",
+          "assumption": "When sweep_scratch() processes a dead-pid row, it must manually query for and drop all companion rows (where companion_of points back to the deleted table's name) before deleting the registry row, ensuring companions drop alongside their parents.",
+          "would_settle": "Clarify the sweep algorithm: for each dead-pid row, identify companions via companion_of lookup, then (1) DROP TABLE on main table, (2) DROP TABLE on each companion table, (3) DELETE all associated registry rows—or specify if DB cascade is preferred.",
+          "confidence": 0.83
+        },
+        {
+          "step": "unlisted: Integrate register_scratch_companion() into bus.py at line 287",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Integrate sweep_scratch() into tester seal path before proofs run",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can locate the seal execution point in cairn/devices/tester/device.py or isolation.py where proofs run and insert sweep_scratch() before that point; can infer the data structure field meant by 'seal record's evidence' from examining existing seal record code.",
+          "would_settle": "Name the specific function/method in the tester where sweep_scratch() should be called (e.g., 'inside isolation.run()') and specify the seal record field where the count is logged.",
+          "confidence": 0.78
+        },
+        {
+          "step": "unlisted: Move 17 proofs from hand-rolled teardown to scratch() context manager",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can grep for 'create_owned_table|BusDevice(table=' in proofs/ to find the 17 callers, and can infer each proof's assigned prefix (e.g., bus proofs→'bus_traffic', chat→'chat_pane') by examining the proof's context and the table it mints.",
+          "would_settle": "Provide the list of 17 proofs with their assigned prefixes, or specify the rule for deriving prefix from proof purpose if the pattern is formulaic.",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: Create and run migrate_scratch_sweep.py one-time script",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.89
+        },
+        {
+          "step": "unlisted: Implement test_scratch_cannot_outlive_its_process.py with 6 falsifier teeth",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can infer from the falsifier_red criteria (1-6) which aspects to test: normal-exit lifecycle, SIGKILL resilience, companion-table coordination, proof grep validation, table-count assertions, and stable-count long-term probe. Can implement Python process-fork and SIGKILL test fixtures.",
+          "would_settle": "List which of the 6 falsifier_red criteria are tested by the new proof itself vs. by regression seals (test_db_domain, test_bus, etc.) vs. by migrate_scratch_sweep.py vs. by the watchme probe. Specify the exact test functions and expected assertions.",
+          "confidence": 0.77
+        }
+      ]
+    },
+    {
+      "ticket": "201a37bf1613",
+      "ticket_sha256": "45d0bd09cd79e2da173e1e1fa8f096f0db16377251433244fbae1177d8a5038c",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: Add scratch() context manager and register_scratch_companion() to db_domain/store.py, backed by a cairn_scratch registry table",
+          "state": "builds_under_assumption",
+          "assumption": "The scratch() context manager queries cairn_scratch on __exit__ to find and drop all companion tables (rows with companion_of pointing to the parent, or all rows matching the pid) alongside the parent table and registry row.",
+          "would_settle": "Specify whether scratch().__exit__ drops only the parent table + its own registry row, or also drops all companions (by companion_of or by pid).",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: Add sweep_scratch() to db_domain/store.py that drops every cairn_scratch row whose pid is dead (or reused)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Implement store.is_scratch() to check if a table is in cairn_scratch, and wire register_scratch_companion() call into bus.py:287",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Move the 17 proofs that call create_owned_table or BusDevice(table=...) onto scratch(), deleting _NONCE constants and _cleanup functions",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: Wire sweep_scratch() call into the tester seal path (cairn/devices/tester/isolation.py) before the proof runs, logging the sweep count",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Write migrate_scratch_sweep.py to drop all non-live tables from cairn after asserting their pids are dead, measuring before/after counts and size",
+          "state": "builds_under_assumption",
+          "assumption": "The list of live tables provided (cairn_owned, inference_calls, bus_traffic, bus_traffic_delivery, build_inspector_failures_nodes, chart_constrain/decompose/hypothesize/orient/survey/triage/validate_nodes, librarian_nodes, orient_corrections_nodes, cairn_links, cairn_nodes, cairn_embeddings) is complete and correct, even though the stated count (12) does not match the 17 tables listed.",
+          "would_settle": "Confirm the exact count and provide the definitive list of live table names.",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: Write test_scratch_cannot_outlive_its_process.py with the 6 falsifier teeth: normal-exit cleanup, SIGKILL sweep, companion cleanup, code migration (no DROP TABLE / _NONCE in proofs), regression tests (test_db_domain/bus/delivery/librarian/inspector stay green), and long-term probe over 7 days",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "ticket": "201a37bf1613",
+      "ticket_sha256": "45d0bd09cd79e2da173e1e1fa8f096f0db16377251433244fbae1177d8a5038c",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: Create cairn_scratch registry table",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: Add scratch() context manager to store.py",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Add sweep_scratch() to store.py",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Add register_scratch_companion() to store.py",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Implement is_scratch() helper and wire register_scratch_companion() into bus.py at line 287",
+          "state": "builds_under_assumption",
+          "assumption": "is_scratch() should check whether a table is registered in cairn_scratch (the text specifies the call `if store.is_scratch(table):` but never defines what this function does)",
+          "would_settle": "specify whether is_scratch() checks the cairn_scratch registry for the table name, or whether it returns an object property from scratch()",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: Move 17 proofs that mint tables from private _NONCE/_cleanup to scratch() context manager",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: Wire tester seal path to call sweep_scratch() before the subject runs inside isolation.py",
+          "state": "builds_under_assumption",
+          "assumption": "the seal record has a documented structure where the sweep count can be logged as evidence (the text says 'log the count on the seal record's evidence' but does not specify the field name or access pattern)",
+          "would_settle": "specify the exact field or method on the seal record object where sweep_scratch()'s return count should be recorded",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: Create migrate_scratch_sweep.py one-time migration script",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Create test_scratch_cannot_outlive_its_process.py proof with six falsifier teeth",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: Add scratch() context manager and register_scratch_companion() to db_domain/store.py, backed by a cairn_scratch registry table",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The scratch() context manager queries cairn_scratch on __exit__ to find and drop all companion tables (rows with companion_of pointing to the parent, or all rows matching the pid) alongside the parent table and registry row."
+      ],
+      "would_settle": [
+        "Specify whether scratch().__exit__ drops only the parent table + its own registry row, or also drops all companions (by companion_of or by pid)."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Create cairn_scratch registry table and implement scratch() + sweep_scratch() + register_scratch_companion() in store.py",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "When sweep_scratch() processes a dead-pid row, it must manually query for and drop all companion rows (where companion_of points back to the deleted table's name) before deleting the registry row, ensuring companions drop alongside their parents."
+      ],
+      "would_settle": [
+        "Clarify the sweep algorithm: for each dead-pid row, identify companions via companion_of lookup, then (1) DROP TABLE on main table, (2) DROP TABLE on each companion table, (3) DELETE all associated registry rows—or specify if DB cascade is preferred."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement is_scratch() helper and wire register_scratch_companion() into bus.py at line 287",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "is_scratch() should check whether a table is registered in cairn_scratch (the text specifies the call `if store.is_scratch(table):` but never defines what this function does)"
+      ],
+      "would_settle": [
+        "specify whether is_scratch() checks the cairn_scratch registry for the table name, or whether it returns an object property from scratch()"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement test_scratch_cannot_outlive_its_process.py with 6 falsifier teeth",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder can infer from the falsifier_red criteria (1-6) which aspects to test: normal-exit lifecycle, SIGKILL resilience, companion-table coordination, proof grep validation, table-count assertions, and stable-count long-term probe. Can implement Python process-fork and SIGKILL test fixtures."
+      ],
+      "would_settle": [
+        "List which of the 6 falsifier_red criteria are tested by the new proof itself vs. by regression seals (test_db_domain, test_bus, etc.) vs. by migrate_scratch_sweep.py vs. by the watchme probe. Specify the exact test functions and expected assertions."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Integrate sweep_scratch() into tester seal path before proofs run",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder can locate the seal execution point in cairn/devices/tester/device.py or isolation.py where proofs run and insert sweep_scratch() before that point; can infer the data structure field meant by 'seal record's evidence' from examining existing seal record code."
+      ],
+      "would_settle": [
+        "Name the specific function/method in the tester where sweep_scratch() should be called (e.g., 'inside isolation.run()') and specify the seal record field where the count is logged."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Move 17 proofs from hand-rolled teardown to scratch() context manager",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder can grep for 'create_owned_table|BusDevice(table=' in proofs/ to find the 17 callers, and can infer each proof's assigned prefix (e.g., bus proofs→'bus_traffic', chat→'chat_pane') by examining the proof's context and the table it mints."
+      ],
+      "would_settle": [
+        "Provide the list of 17 proofs with their assigned prefixes, or specify the rule for deriving prefix from proof purpose if the pattern is formulaic."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Wire tester seal path to call sweep_scratch() before the subject runs inside isolation.py",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the seal record has a documented structure where the sweep count can be logged as evidence (the text says 'log the count on the seal record's evidence' but does not specify the field name or access pattern)"
+      ],
+      "would_settle": [
+        "specify the exact field or method on the seal record object where sweep_scratch()'s return count should be recorded"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Write migrate_scratch_sweep.py to drop all non-live tables from cairn after asserting their pids are dead, measuring before/after counts and size",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The list of live tables provided (cairn_owned, inference_calls, bus_traffic, bus_traffic_delivery, build_inspector_failures_nodes, chart_constrain/decompose/hypothesize/orient/survey/triage/validate_nodes, librarian_nodes, orient_corrections_nodes, cairn_links, cairn_nodes, cairn_embeddings) is complete and correct, even though the stated count (12) does not match the 17 tables listed."
+      ],
+      "would_settle": [
+        "Confirm the exact count and provide the definitive list of live table names."
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Add register_scratch_companion() to store.py",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Add scratch() context manager and register_scratch_companion() to db_domain/store.py, backed by a cairn_scratch registry table",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Add scratch() context manager to store.py",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Add sweep_scratch() to db_domain/store.py that drops every cairn_scratch row whose pid is dead (or reused)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Add sweep_scratch() to store.py",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create and run migrate_scratch_sweep.py one-time script",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create cairn_scratch registry table",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create cairn_scratch registry table and implement scratch() + sweep_scratch() + register_scratch_companion() in store.py",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create migrate_scratch_sweep.py one-time migration script",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create test_scratch_cannot_outlive_its_process.py proof with six falsifier teeth",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement is_scratch() helper and wire register_scratch_companion() into bus.py at line 287",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement store.is_scratch() to check if a table is in cairn_scratch, and wire register_scratch_companion() call into bus.py:287",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement test_scratch_cannot_outlive_its_process.py with 6 falsifier teeth",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Integrate register_scratch_companion() into bus.py at line 287",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Integrate sweep_scratch() into tester seal path before proofs run",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Move 17 proofs from hand-rolled teardown to scratch() context manager",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Move 17 proofs that mint tables from private _NONCE/_cleanup to scratch() context manager",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Move the 17 proofs that call create_owned_table or BusDevice(table=...) onto scratch(), deleting _NONCE constants and _cleanup functions",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Wire sweep_scratch() call into the tester seal path (cairn/devices/tester/isolation.py) before the proof runs, logging the sweep count",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Wire tester seal path to call sweep_scratch() before the subject runs inside isolation.py",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write migrate_scratch_sweep.py to drop all non-live tables from cairn after asserting their pids are dead, measuring before/after counts and size",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write test_scratch_cannot_outlive_its_process.py with the 6 falsifier teeth: normal-exit cleanup, SIGKILL sweep, companion cleanup, code migration (no DROP TABLE / _NONCE in proofs), regression tests (test_db_domain/bus/delivery/librarian/inspector stay green), and long-term probe over 7 days",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Add register_scratch_companion() to store.py",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Add scratch() context manager and register_scratch_companion() to db_domain/store.py, backed by a cairn_scratch registry table",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify whether scratch().__exit__ drops only the parent table + its own registry row, or also drops all companions (by companion_of or by pid)."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Add scratch() context manager to store.py",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Add sweep_scratch() to db_domain/store.py that drops every cairn_scratch row whose pid is dead (or reused)",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Add sweep_scratch() to store.py",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create and run migrate_scratch_sweep.py one-time script",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create cairn_scratch registry table",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create cairn_scratch registry table and implement scratch() + sweep_scratch() + register_scratch_companion() in store.py",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Clarify the sweep algorithm: for each dead-pid row, identify companions via companion_of lookup, then (1) DROP TABLE on main table, (2) DROP TABLE on each companion table, (3) DELETE all associated registry rows—or specify if DB cascade is preferred."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create migrate_scratch_sweep.py one-time migration script",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create test_scratch_cannot_outlive_its_process.py proof with six falsifier teeth",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement is_scratch() helper and wire register_scratch_companion() into bus.py at line 287",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "specify whether is_scratch() checks the cairn_scratch registry for the table name, or whether it returns an object property from scratch()"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement store.is_scratch() to check if a table is in cairn_scratch, and wire register_scratch_companion() call into bus.py:287",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement test_scratch_cannot_outlive_its_process.py with 6 falsifier teeth",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "List which of the 6 falsifier_red criteria are tested by the new proof itself vs. by regression seals (test_db_domain, test_bus, etc.) vs. by migrate_scratch_sweep.py vs. by the watchme probe. Specify the exact test functions and expected assertions."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Integrate register_scratch_companion() into bus.py at line 287",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Integrate sweep_scratch() into tester seal path before proofs run",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Name the specific function/method in the tester where sweep_scratch() should be called (e.g., 'inside isolation.run()') and specify the seal record field where the count is logged."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Move 17 proofs from hand-rolled teardown to scratch() context manager",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Provide the list of 17 proofs with their assigned prefixes, or specify the rule for deriving prefix from proof purpose if the pattern is formulaic."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Move 17 proofs that mint tables from private _NONCE/_cleanup to scratch() context manager",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Move the 17 proofs that call create_owned_table or BusDevice(table=...) onto scratch(), deleting _NONCE constants and _cleanup functions",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Wire sweep_scratch() call into the tester seal path (cairn/devices/tester/isolation.py) before the proof runs, logging the sweep count",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Wire tester seal path to call sweep_scratch() before the subject runs inside isolation.py",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "specify the exact field or method on the seal record object where sweep_scratch()'s return count should be recorded"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write migrate_scratch_sweep.py to drop all non-live tables from cairn after asserting their pids are dead, measuring before/after counts and size",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Confirm the exact count and provide the definitive list of live table names."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write test_scratch_cannot_outlive_its_process.py with the 6 falsifier teeth: normal-exit cleanup, SIGKILL sweep, companion cleanup, code migration (no DROP TABLE / _NONCE in proofs), regression tests (test_db_domain/bus/delivery/librarian/inspector stay green), and long-term probe over 7 days",
+      "reads": [
+        2
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1660917,
+        "duration_ms": 217315,
+        "is_error": false,
+        "session_id": "9feea75a-8215-4a04-85f1-0fabde3b2332"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1674097,
+        "duration_ms": 212337,
+        "is_error": false,
+        "session_id": "59be86de-6a62-44e9-8f03-4b5d36e32f5e"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.10674869999999999,
+        "duration_ms": 78485,
+        "is_error": false,
+        "session_id": "b8344434-66dd-486a-9f9f-ba88b64196b5"
+      }
+    ],
+    "cost_usd": 0.44025,
+    "duration_ms": 508137,
+    "rendered_chars": 47318,
+    "by": null
+  },
+  "divergence": null
+}

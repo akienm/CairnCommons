@@ -10,7 +10,7 @@
     "Law 4 (a rule that matters is enforced by physics: teardown in the store, not in every proof's finally); Law 6 (a scratch table has an owner and a lifetime, and the holder that minted it is the pid); Law 7 (the tester's sweep count is a loud diagnostic, the registry is a record of truth); CP4 (9,075 dead tables is a working surface that lies about what is running). Idea 2026-09-06-measured-2026-09-06-while-sizing-the. Sibling of ticket aa4463bbd067 (ruling 2026-09-06-the-per-owner-database-comes-before-more-complexity)."
   ],
   "falsifier": {
-    "proves_green": "proof gate \u2014 cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py (new): the six falsifier teeth, including a forked child killed with SIGKILL after minting; plus test_db_domain.py, the bus proofs, test_librarian_trees.py and test_inspector_nexus.py staying green after the move. Feeds back naming the tooth that broke. Durability: committed in cairn; sealed by the tester with source_fingerprint over db_domain and the tester's seal path.",
+    "proves_green": "proof gate — cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py (new): the six falsifier teeth, including a forked child killed with SIGKILL after minting; plus test_db_domain.py, the bus proofs, test_librarian_trees.py and test_inspector_nexus.py staying green after the move. Feeds back naming the tooth that broke. Durability: committed in cairn; sealed by the tester with source_fingerprint over db_domain and the tester's seal path.",
     "proves_red": "DONE when, on this box: (1) `select count(*) from pg_tables where schemaname='public'` in `cairn` returns 12 after the one-time sweep, and the tester's seal log shows sweep counts; (2) a proof that mints a table through scratch() and is killed with SIGKILL mid-run leaves a cairn_scratch row that the next `sweep_scratch()` drops, together with its `_delivery` companion, and the tables are gone from pg_tables; (3) a proof that exits normally leaves neither table nor registry row; (4) grep finds no `DROP TABLE` and no `_NONCE =` under any proofs/ directory; (5) test_db_domain.py, test_bus.py, test_delivery.py, test_librarian_trees.py and test_inspector_nexus.py green after the move; (6) seven days after PROVED, the table count in `cairn` (or in each cairn_<owner> after aa4463bbd067) is still the live count plus at most the scratch of alive pids. WRONG INTENT if a proof needs a table to outlive its process on purpose (then it is not scratch and needs a named owner and a ticket), or if the sweep ever drops a live table (the live set is the registry's non-scratch rows, never a name pattern)."
   },
   "children": [],
@@ -32,8 +32,9 @@
     },
     {
       "q": "builder_check",
-      "a": "A Haiku-level builder needs: (a) WHERE \u2014 cairn/devices/db_domain/store.py (scratch() context manager, register_scratch_companion(), sweep_scratch(), a `cairn_scratch` registry table with columns table_name text PK, pid integer, created timestamptz default now(), companion_of text null); cairn/devices/cairn/machines/bus/bus.py:287 (after create_owned_table of the _delivery table: `if store.is_scratch(table): store.register_scratch_companion(table, self._delivery_table)`); cairn/devices/tester/device.py where the subject is run inside the seal (isolation.py): call `store.sweep_scratch()` before the run and log the count on the seal record's evidence; cairn/devices/db_domain/migrate_scratch_sweep.py (new, run once by hand). (b) THE NAME RULE \u2014 scratch() mints `<prefix>_<pid>_<HHMMSSffff>`; prefix is the proof's own word (bus_traffic, chat_pane, trees), no leading underscore needed once the registry is the truth. (c) THE SWEEP PREDICATE \u2014 for each cairn_scratch row: pid absent from /proc, OR present with a start time later than the row's created (pid reuse), drop table and its companions and the rows; never touch a table not in cairn_scratch. (d) THE MOVE \u2014 the 17 proofs under proofs/ that call create_owned_table or BusDevice(table=...): replace the _NONCE constant + _cleanup/_drop_table pair with `with store.scratch(owner, 'bus_traffic', columns) as table:` and delete the hand-rolled teardown; test_bus.py:_cleanup is the template to delete everywhere. (e) ORDER OF WORK \u2014 migrate_scratch_sweep.py first (measure before/after, commit the numbers into the ticket's deposits); then store.scratch() + sweep_scratch() with test_db_domain.py teeth (kill -9 a child process that minted one, sweep, assert gone); then bus.py companion registration with test_delivery.py; then the tester hook; then the 17-proof move, resealing each. (f) DON'TS \u2014 no clock, no daemon, no name-pattern drop in the sweep, no dropping the old `cairn` database (aa4463bbd067 does that after its migration), no change to create_owned_table's owner gate."
-    }
+      "a": "A Haiku-level builder needs: (a) WHERE — cairn/devices/db_domain/store.py (scratch() context manager, register_scratch_companion(), sweep_scratch(), a `cairn_scratch` registry table with columns table_name text PK, pid integer, created timestamptz default now(), companion_of text null); cairn/devices/cairn/machines/bus/bus.py:287 (after create_owned_table of the _delivery table: `if store.is_scratch(table): store.register_scratch_companion(table, self._delivery_table)`); cairn/devices/tester/device.py where the subject is run inside the seal (isolation.py): call `store.sweep_scratch()` before the run and log the count on the seal record's evidence; cairn/devices/db_domain/migrate_scratch_sweep.py (new, run once by hand). (b) THE NAME RULE — scratch() mints `<prefix>_<pid>_<HHMMSSffff>`; prefix is the proof's own word (bus_traffic, chat_pane, trees), no leading underscore needed once the registry is the truth. (c) THE SWEEP PREDICATE — for each cairn_scratch row: pid absent from /proc, OR present with a start time later than the row's created (pid reuse), drop table and its companions and the rows; never touch a table not in cairn_scratch. (d) THE MOVE — the 17 proofs under proofs/ that call create_owned_table or BusDevice(table=...): replace the _NONCE constant + _cleanup/_drop_table pair with `with store.scratch(owner, 'bus_traffic', columns) as table:` and delete the hand-rolled teardown; test_bus.py:_cleanup is the template to delete everywhere. (e) ORDER OF WORK — migrate_scratch_sweep.py first (measure before/after, commit the numbers into the ticket's deposits); then store.scratch() + sweep_scratch() with test_db_domain.py teeth (kill -9 a child process that minted one, sweep, assert gone); then bus.py companion registration with test_delivery.py; then the tester hook; then the 17-proof move, resealing each. (f) DON'TS — no clock, no daemon, no name-pattern drop in the sweep, no dropping the old `cairn` database (aa4463bbd067 does that after its migration), no change to create_owned_table's owner gate."
+    },
+    "open-94bffa097602"
   ],
   "constraints": [
     "No clock and no daemon: the sweep fires on the tester's seal path, the event every proof already passes through.",
@@ -41,7 +42,7 @@
     "The old `cairn` database is not dropped here; aa4463bbd067 drops it after its migration asserts counts (amended in the same act, 2026-09-06).",
     "create_owned_table's owner gate is unchanged; scratch() rides it."
   ],
-  "how": "MEASURED 2026-09-06 (psql against `cairn`, 377 MB): 9,087 tables, 12 live. 8,270 carry a pid+time nonce and EVERY pid is dead (0 alive). 2,424 are `<table>_delivery` companions: bus.py:287 creates `_delivery` beside every traffic table it is handed, and the proofs' own `finally` blocks drop only the table they named (test_bus.py:_cleanup drops _TABLE and its registry row, never _TABLE_delivery). The rest are chart_*_<nonce>_nodes and _chat_*_<nonce> trees from proofs with no cleanup at all. So the leak is not one bug: it is every proof hand-rolling its own teardown against a store that has no notion of scratch. (1) THE DOOR: db_domain/store.py gains `scratch(owner, prefix, columns)` \u2014 a context manager that mints `<prefix>_<pid>_<HHMMSSffff>`, creates it owned through create_owned_table, records (table, pid, created) in a `cairn_scratch` registry table, and drops table + registry row on exit whatever the exit. `register_scratch_companion(table, companion)` lets a machine that creates a companion beside a scratch table (the bus's `_delivery`) register it under the same pid so it drops with its parent; bus.py calls it at :287 when the traffic table it was handed is in cairn_scratch. (2) THE SWEEP: `store.sweep_scratch()` drops every cairn_scratch row whose pid is not in /proc, and its companions, and returns the count. The tester calls it before every seal (cairn/devices/tester, the one place every proof already passes through), so a proof that dies mid-run is cleaned by the next seal, not by a daemon. (3) THE MOVE: the 17 proofs that mint tables (grep `create_owned_table\\|BusDevice(table=` under proofs/) move onto scratch(); their private _cleanup functions and nonce constants delete. (4) THE ONE-TIME SWEEP: migrate_scratch_sweep.py, run once by hand, drops every table in `cairn` that is not one of the 12 live tables (cairn_owned, inference_calls, bus_traffic, bus_traffic_delivery, build_inspector_failures_nodes, chart_constrain/decompose/hypothesize/orient/survey/triage/validate_nodes, librarian_nodes, orient_corrections_nodes, cairn_links, cairn_nodes, cairn_embeddings) and their cairn_owned rows, asserting first that no pid in any nonce is alive, and prints the count dropped and the database size before and after. Order: (4) may run first, today; (1)-(3) are the physics and run before aa4463bbd067 so the per-owner migration copies from a clean database and can drop the old one itself.",
+  "how": "MEASURED 2026-09-06 (psql against `cairn`, 377 MB): 9,087 tables, 12 live. 8,270 carry a pid+time nonce and EVERY pid is dead (0 alive). 2,424 are `<table>_delivery` companions: bus.py:287 creates `_delivery` beside every traffic table it is handed, and the proofs' own `finally` blocks drop only the table they named (test_bus.py:_cleanup drops _TABLE and its registry row, never _TABLE_delivery). The rest are chart_*_<nonce>_nodes and _chat_*_<nonce> trees from proofs with no cleanup at all. So the leak is not one bug: it is every proof hand-rolling its own teardown against a store that has no notion of scratch. (1) THE DOOR: db_domain/store.py gains `scratch(owner, prefix, columns)` — a context manager that mints `<prefix>_<pid>_<HHMMSSffff>`, creates it owned through create_owned_table, records (table, pid, created) in a `cairn_scratch` registry table, and drops table + registry row on exit whatever the exit. `register_scratch_companion(table, companion)` lets a machine that creates a companion beside a scratch table (the bus's `_delivery`) register it under the same pid so it drops with its parent; bus.py calls it at :287 when the traffic table it was handed is in cairn_scratch. (2) THE SWEEP: `store.sweep_scratch()` drops every cairn_scratch row whose pid is not in /proc, and its companions, and returns the count. The tester calls it before every seal (cairn/devices/tester, the one place every proof already passes through), so a proof that dies mid-run is cleaned by the next seal, not by a daemon. (3) THE MOVE: the 17 proofs that mint tables (grep `create_owned_table\\|BusDevice(table=` under proofs/) move onto scratch(); their private _cleanup functions and nonce constants delete. (4) THE ONE-TIME SWEEP: migrate_scratch_sweep.py, run once by hand, drops every table in `cairn` that is not one of the 12 live tables (cairn_owned, inference_calls, bus_traffic, bus_traffic_delivery, build_inspector_failures_nodes, chart_constrain/decompose/hypothesize/orient/survey/triage/validate_nodes, librarian_nodes, orient_corrections_nodes, cairn_links, cairn_nodes, cairn_embeddings) and their cairn_owned rows, asserting first that no pid in any nonce is alive, and prints the count dropped and the database size before and after. Order: (4) may run first, today; (1)-(3) are the physics and run before aa4463bbd067 so the per-owner migration copies from a clean database and can drop the old one itself.",
   "links": [
     "aa4463bbd067 the-owner-is-a-database-and-every-link-is-a-tuple (sibling; this ticket runs BEFORE it so the per-owner migration copies from a clean database)",
     "idea 2026-09-06-measured-2026-09-06-while-sizing-the (the census)",
@@ -71,7 +72,7 @@
     "challenge": {
       "better_approach": "A `cairn_test` database that is dropped and recreated by the tester would make every scratch table disappear at once with no registry. Rejected: proofs of the bus and the librarian exercise ownership in the real registry, and the per-owner ticket makes 'which database' the owner's, not the tester's; a scratch registry keyed by pid works in any database. A daemon sweeping on a clock is the drift memory names (reaching-for-daemons-is-drift); the tester already runs before every seal and is the event.",
       "prior_art": "test_bus.py _cleanup (the hand-rolled teardown, 5 copies across proofs); test_chat_pane.py _drop_table; bus.py:287 create_owned_table(self._delivery_table) (the silent companion); store.drop_table (the primitive the sweep uses); the tester's seal path (where the sweep hangs); memory claude-oom-kills-the-box (the SIGKILL that makes finally blocks insufficient).",
-      "hidden_assumption": "That a pid is a lifetime: on one box, /proc/<pid> gone means the minter is gone. Pid reuse could make a dead scratch look alive; the nonce carries HHMMSSffff so a reused pid with an older stamp than the process's start time is still dead \u2014 the sweep compares stamp to /proc/<pid> start time when the pid exists. Second: that no proof relies on a leaked table from a prior run. Measured: every leaked pid is dead and nothing can be reading them; if a proof goes red after the sweep, that proof was leaning on a leak and is the finding.",
+      "hidden_assumption": "That a pid is a lifetime: on one box, /proc/<pid> gone means the minter is gone. Pid reuse could make a dead scratch look alive; the nonce carries HHMMSSffff so a reused pid with an older stamp than the process's start time is still dead — the sweep compares stamp to /proc/<pid> start time when the pid exists. Second: that no proof relies on a leaked table from a prior run. Measured: every leaked pid is dead and nothing can be reading them; if a proof goes red after the sweep, that proof was leaning on a leak and is the finding.",
       "real_collision": "aa4463bbd067 says the old `cairn` database stays read-only until 'the scratch-tables ticket drops it'. Distinction: this ticket sweeps the scratch OUT of `cairn` before the migration; the drop of the emptied old database moves into aa4463bbd067's own voyage (its constraint is amended in the same act, by CC under the delegated ordering). No Law collides: Law 5 (history under way) does not cover Postgres tables, and a dead proof's table establishes nothing about right-now.",
       "back_up": "proceed"
     },
@@ -87,7 +88,7 @@
   ],
   "task_or_ticket": "ticket",
   "repairs": [
-    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/devices/db_domain/intention+why.json' resolved under neither root; stripped the extra 'cairn/' \u2014 the one reader surfaced it; data repair, no design change."
+    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/devices/db_domain/intention+why.json' resolved under neither root; stripped the extra 'cairn/' — the one reader surfaced it; data repair, no design change."
   ],
   "phase_writes": [
     {
@@ -101,6 +102,162 @@
     }
   ],
   "notes": [
-    "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 \u2192 BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 \u2014 the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
+    "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 → BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 — the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D-THE-STEPS: the how paragraph builds as exactly these eight steps, in this order, each a decision line below named S1..S8 — S1 registry+door in store.py; S2 companions in bus.py and trees.py; S3 the sweep in store.py; S4 the tester calls the sweep before every seal; S5 the one-time migration; S6 the new proof; S7 the 39 proofs move onto scratch(); S8 the probe. Nothing else is a step; a reader who finds one not on this list has found a gap in this line, not a missing step.",
+      "by": "CC",
+      "step": "THE STEPS",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "D-S1-STORE-DOOR (built, measured at working tree): cairn/devices/db_domain/store.py gains _SCRATCH = 'cairn_scratch' (line 69), _ensure_scratch_registry(conn) (:428; columns table_name PRIMARY KEY, pid int, created timestamptz, companion_of text NULL), scratch_name(prefix) -> '<prefix>_<pid>_<HHMMSSffff>' (:449), process_start(pid) reading /proc/<pid>/stat starttime (:459), minter_alive(pid, created) = /proc/<pid> exists AND process_start(pid) <= created (:478 — pid reuse reads dead), is_scratch(table, *, conn=None) = a row in cairn_scratch names it (:490), scratch_rows(*, conn=None) (:507), register_scratch_companion(table, companion, *, conn=None) (:522; raises OwnershipError when table is not scratch), and @contextmanager scratch(owner, prefix, columns, *, conn=None) (:579): mints the name, create_owned_table under owner, inserts the registry row, yields the name, and on ANY exit calls _drop_scratch_family(table, conn) (:553) which drops every companion whose companion_of == table, then the table, deleting each one's cairn_scratch row (drop_table deletes the cairn_owned row) — so __exit__ drops parent AND companions, never by pid.",
+      "by": "CC",
+      "step": "S1",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "D-S2-COMPANIONS (built): bus.py _ensure() at cairn/devices/cairn/machines/bus/bus.py:321-322 — after creating the _delivery table: if store.is_scratch(self._table): store.register_scratch_companion(self._table, self._delivery_table). trees.py at cairn/devices/librarian/trees.py:991-993 registers a tree's two child tables the same way when the parent is scratch. No other minter registers a companion.",
+      "by": "CC",
+      "step": "S2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "D-S3-THE-SWEEP (built): store.sweep_scratch(*, conn=None, report=None) -> int at store.py:606 — for every cairn_scratch row with companion_of IS NULL whose minter_alive(pid, created) is False, _drop_scratch_family(table) (companions first, then the parent, each registry row deleted); appends every dropped name to report when a list is passed; returns the count. Rows whose pid is alive are never touched; a name pattern is never the predicate.",
+      "by": "CC",
+      "step": "S3",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "D-S4-THE-TESTER-SWEEPS-BEFORE-SEALING (built, corrected from the how paragraph by a measured red): the sweep does NOT live in tester/device.py — test_inspector_nexus runs import_sieve.catches(import_graph(repo), inspector._FIRE_PATH) and the closure inspector.py -> cairn.tools.base.validation -> cairn.devices.tester.device may not import cairn.devices.db_domain (even a lazy in-function import is seen; measured red 2026-09-18). So: (a) cairn/devices/tester/scratch_sweep.py (new) def sweep() -> dict returning {dropped: n, tables: [...]} or {error: '<Type>: <msg>'}; (b) run_proof(..., scratch_sweep: dict | None = None) in tester/device.py raises ValueError when sink == 'validations' and scratch_sweep is not a dict, and records base_evidence['scratch_sweep'] on every seal (the evidence field is 'scratch_sweep'); (c) the two seal writers pass it — cli.py:484 scratch_sweep=sweep_scratch() if sink == 'validations' else None, reseal.py:385 scratch_sweep=sweep_scratch(); (d) cli.py prints 'swept N scratch table(s) before <rel>: <names|error>' only when dropped > 0 or error. hollow.py, constrain.py and quorum.py seal no proof run and sweep nothing.",
+      "by": "CC",
+      "step": "S4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "D-S5-MIGRATION (done 2026-09-18, log at the session scratchpad migrate_sweep.log): cairn/devices/db_domain/migrate_scratch_sweep.py, regex _PID_NONCE = r'_(\\d{1,7})_(\\d{6,12})(?:_|$)', asserts every nonce pid dead then drops. Dry run: tables 9774, keep 21, nonced-to-drop 8399, other-to-drop 1354, nonce pids 1009, alive []. --drop: dropped 9753, orphan cairn_owned rows removed 528, remaining 21, size 454 MB -> 257 MB. Post-check: pg_tables 21 == cairn_owned rows 21, no registered-but-absent, no present-but-unregistered, cairn_scratch rows []. The falsifier's '12' and the how's 'MEASURED 12 live' were undercounts — the live set is the registry's non-scratch rows, 21 today: build_inspector_failures_nodes, bus_traffic, bus_traffic_delivery, cairn_embeddings, cairn_links, cairn_nodes, cairn_owned, cairn_scratch, cairn_threads, chart_{constrain,decompose,hypothesize,orient,survey,triage,validate,verdict}_nodes, codemother_root_nodes, inference_calls, librarian_nodes, orient_corrections_nodes. Falsifier (1) reads 'equals the registry's non-scratch row count' (the invariant), not the literal 12.",
+      "by": "CC",
+      "step": "S5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "D-S6-THE-PROOF (built): cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py, PROVES = {'201a37bf1613': {'1': test_a_seal_sweeps_first_and_says_so, '2': test_a_killed_minter_is_swept_with_its_delivery_companion, '3': test_a_normal_exit_leaves_neither_table_nor_row, '4': test_no_proof_drops_a_table_by_hand, '5': test_the_moved_proofs_stay_green, '6': test_the_sweep_never_touches_a_live_table}} — one tooth per falsifier clause: (1) plants a dead-pid scratch row, seals a tiny proof under a scratch proofs/ dir through python3 -m cairn.devices.tester.cli --seal and asserts the 'swept 1 scratch table(s)' line names it and the validation's evidence.scratch_sweep carries it; (2) forks a child that mints through scratch() and BusDevice(table=...).read() (so _delivery is registered), SIGKILLs it, asserts both rows stand, sweep_scratch() drops both, pg_tables lacks both; (3) forks a child that exits normally, asserts neither table nor row; (4) greps cairn/**/proofs/*.py for 'DROP TABLE' and '_NONCE =' (zero hits); (5) runs test_db_domain, test_bus, test_delivery, test_librarian_trees, test_inspector_nexus (cairn/machines/build_inspector/proofs/) green; (6) asserts every non-scratch registry row survives a sweep and cairn_owned == pg_tables before and after. Clause (6)'s seven-day half is the probe's (S8), not a tooth.",
+      "by": "CC",
+      "step": "S6",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "D-S7-THE-MOVE (count corrected by measurement): the how said 17 proofs; grep -rl 'DROP TABLE\\|_NONCE =' cairn --include=*.py under proofs/ finds 39 (2026-09-18). Each moves onto with store.scratch(owner, prefix, columns) as table: (prefix = the proof's old name stem: bus proofs 'bus_traffic'/'bus_menu'/... under _BUS_OWNER with _TRAFFIC_COLUMNS; chart proofs use a scratch prefix that satisfies nexus_table's [a-z][a-z0-9_]* and register the nexus tables as companions; librarian proofs keep their node-row DELETEs but drop no table by hand) — deleting _NONCE =, _cleanup, _drop_table and every DROP TABLE. Each moved proof is resealed (--seal --timeout 600, at most 2 concurrent). Tooth (4) of S6 is the gate that says the move is complete.",
+      "by": "CC",
+      "step": "S7",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "D-S8-THE-PROBE: cairn/devices/db_domain/probes/scratch_stays_swept.py in the pattern of cairn/tools/base/probes/the_durability_lane_refuses.py — module-level PROBE = Probe(why, trigger, to='harbor_master', body={nexus: 'hypothesize', kind: 'efficacy', ticket: owning_ticket('201a37bf1613'), object: 'scratch-stays-swept'}, carry, enough, horizon); survey() = {pg_tables count, registry non-scratch rows, scratch rows with alive pids, scratch rows with dead pids}; trigger when live count != non-scratch rows + alive scratch (the leaker named = the unregistered or dead-pid names); enough = seven days after PROVED with the invariant holding at every survey, or the first survey where it does not.",
+      "by": "CC",
+      "step": "S8",
+      "source": "rehearsal"
+    },
+    {
+      "n": 10,
+      "text": "D-WHAT-A-READER-NEEDS: readers cannot see the repo; every line above carries the file, the line number, the function signature or the exact command, and the measured numbers, so the build is a transcription. Where the how paragraph and a D-line disagree, the D-line is the correction (Law 7).",
+      "by": "CC",
+      "step": "READERS",
+      "source": "rehearsal"
+    },
+    {
+      "n": 11,
+      "text": "D-S3-ORPHAN-COMPANIONS: sweep_scratch also sweeps a companion row whose parent row is gone, on the companion's own pid (store.py:606 docstring 'A companion whose parent row is gone is swept on its own pid') — D4's 'companion_of IS NULL' names the parents it walks first, not the only rows it drops.",
+      "by": "CC",
+      "step": "S3",
+      "source": "rehearsal"
+    },
+    {
+      "n": 12,
+      "text": "D-S3-SWEEP-WALKS-TWO-KINDS: sweep_scratch() handles both parent rows (companion_of IS NULL, walked first; each verdict by minter_alive(pid, created)) and orphan companion rows whose parent row is gone (each on its own pid) — D11 restated at S3 so the step carries it.",
+      "by": "CC",
+      "step": "S3",
+      "source": "rehearsal"
+    },
+    {
+      "n": 13,
+      "text": "D-S4-NAMING: the module cairn/devices/tester/scratch_sweep.py defines exactly 'def sweep() -> dict' (line 19); cli.py:59 and reseal.py:82 import it as 'from cairn.devices.tester.scratch_sweep import sweep as sweep_scratch' and call sweep_scratch() at cli.py:484 / reseal.py:385 — an import alias, no second definition.",
+      "by": "CC",
+      "step": "S4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 14,
+      "text": "D-S6-TEMPLATE: the proof IS the template — cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py (built, 6 teeth): tooth 2 forks a child that mints via store.scratch() then os.kill(SIGKILL); tooth 4 runs the tester CLI (PYTHONPATH=. python3 -m cairn.devices.tester.cli --seal <proof>) and reads evidence['scratch_sweep'] from the validation JSON; tooth 5 asserts the moved proofs' text has no _NONCE/_cleanup/DROP TABLE; the runner is the standard _main()/finally pattern of cairn/devices/cairn/machines/bus/proofs/test_bus.py.",
+      "by": "CC",
+      "step": "S6",
+      "source": "rehearsal"
+    },
+    {
+      "n": 15,
+      "text": "D-S7-MAPPING: owner is the proof's existing create_owned_table owner (bus proofs: 'bus' via BusDevice.scratch(prefix) which fixes owner=_BUS_OWNER; chart proofs: 'chart' via tree.scratch_nexus(kind) which yields the nexus name so nexus_table(name)==the scratch table; librarian proofs: 'librarian'/'test' as they stand; inference_domain/db_domain/build_inspector/tools-base proofs: their own owner word); prefix is the proof's old table stem with the leading underscore and nonce dropped (bus_traffic, bus_infer, charter_held, bus_sysrm, chart_<kind>, ...). The 39 = every proof whose text at HEAD carried _NONCE or a DROP TABLE (grep -l '_NONCE\\|DROP TABLE' cairn/**/proofs/*.py); tooth 5 of the proof lists them by that grep, so the mapping is measured, not authored.",
+      "by": "CC",
+      "step": "S7",
+      "source": "rehearsal"
+    },
+    {
+      "n": 16,
+      "text": "D-S8-TEMPLATE: the probe copies cairn/tools/base/probes/the_durability_lane_refuses.py structure exactly (survey() -> dict; _trigger(now, context) via once(context,'survey',survey); _enough(context); _carry(context) -> {finding, survey, ticket}; module-level PROBE = Probe(why, trigger, to='harbor_master', body={nexus:'hypothesize', kind:'efficacy', ticket: owning_ticket(...), object}, carry, enough, horizon=1000); __main__ prints survey/would_trigger/enough/carry) — built at cairn/devices/db_domain/probes/scratch_stays_swept.py.",
+      "by": "CC",
+      "step": "S8",
+      "source": "rehearsal"
+    },
+    {
+      "n": 17,
+      "text": "D-D5-SWEEP-SHAPE: scratch_sweep.sweep() at cairn/devices/tester/scratch_sweep.py:19 is exactly: try: from cairn.devices.db_domain import store (a function-local import, so importing scratch_sweep touches no database); tables=[]; n = store.sweep_scratch(report=tables); return {'dropped': n, 'tables': tables} — except Exception as exc: return {'error': f'{type(exc).__name__}: {exc}'}. The import cycle is avoided by ADDRESS, not by import style: device.py never names db_domain; cli.py:59 and reseal.py:82 import scratch_sweep and pass its dict to run_proof(scratch_sweep=...).",
+      "by": "CC",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 18,
+      "text": "D-D4-CONN: sweep_scratch(*, conn=None, report=None) at store.py:610 acquires its connection on the first line of the body: own_conn = conn or connect() (store.py:616). It reads scratch_rows(conn=own_conn) and drops through _drop_scratch_family(name, own_conn) on that same connection, and the finally at store.py:637-639 is: if conn is None: own_conn.close() — so a caller that passes a conn keeps it open and owns it; a caller that passes none (scratch_sweep.sweep() does) gets a fresh connect() that sweep_scratch closes itself before returning. Measured 2026-09-18.",
+      "by": "CC",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 19,
+      "text": "D-D6-INVOCATION: the migration's interface is one command, run from the repo root: PYTHONPATH=. python3 cairn/devices/db_domain/migrate_scratch_sweep.py [--drop]. main(argv) reads exactly one flag, do_drop = '--drop' in argv; without it the run is a dry run. Measured output 2026-09-18 (after the 2 leaked _delivery tables were dropped): 'tables: 21  keep: 21  nonced-to-drop: 0  other-to-drop: 0  nonce pids: 0  alive: []' / 'size before: 256 MB' / 'keeping: build_inspector_failures_nodes, bus_traffic, ... orient_corrections_nodes' (21 names) / 'dry run — nothing dropped (pass --drop)'. With --drop it prints 'dropped: N table(s); orphan registry rows removed: M', 'remaining: K table(s): ...', 'size after: ...'. It REFUSES (exit non-zero, drops nothing) when any nonce pid is alive.",
+      "by": "CC",
+      "step": "D6",
+      "source": "rehearsal"
+    },
+    {
+      "n": 20,
+      "text": "D-D7-ORDER: S7 (move every proof off _NONCE/DROP TABLE) lands BEFORE the new proof is run, and tooth 4 and tooth 5 are what verify S7 — the order is S6 write the proof, S7 move the proofs, then run the proof. Measured 2026-09-18 after S7: grep -rl '_NONCE =\\|DROP TABLE' --include='*.py' cairn | grep /proofs/ returns 0 files (tooth 4 green); the 5 _MOVED proofs run green as subprocesses (tooth 5 green); test_scratch_cannot_outlive_its_process.py ran green twice bare (6 passed, ~35s each). Nothing in the proof depends on S7 being complete before the proof is WRITTEN — only before it is RUN, which is the ordinary order.",
+      "by": "CC",
+      "step": "D7",
+      "source": "rehearsal"
+    },
+    {
+      "n": 21,
+      "text": "D-D4-CONN-2: D4's connection pattern IS D18, restated here at D4 so a reader of D4 alone has it: sweep_scratch acquires own_conn = conn or connect() on entry (store.py:616) and closes own_conn in its finally ONLY when conn was None (store.py:637-639); a passed-in conn is the caller's to close.",
+      "by": "CC",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 22,
+      "text": "D-D5-SWEEP-2: D5's sweep() IS D17's code, restated here at D5 so a reader of D5 alone has it — cairn/devices/tester/scratch_sweep.py:19-29 is exactly: def sweep() -> dict: try: from cairn.devices.db_domain import store; tables: list[str] = []; n = store.sweep_scratch(report=tables); return {'dropped': n, 'tables': tables}; except Exception as exc: return {'error': f'{type(exc).__name__}: {exc}'}. The import is function-local (importing the module touches no database); the except is bare Exception so a store that cannot be reached is a stated failure on the seal's evidence, never a silent 'swept 0'.",
+      "by": "CC",
+      "step": "D5",
+      "source": "rehearsal"
+    }
   ]
 }
