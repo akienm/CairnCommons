@@ -36,7 +36,8 @@
     {
       "q": "distinctions",
       "a": "The listener (the socket binding) stays thin — Starlette's ASGI is the new listener, uvicorn is the runner. The device logic (routing, rendering) stays in server.py and render.py."
-    }
+    },
+    "open-7d7aea4d7a93"
   ],
   "constraints": [],
   "how": "Replace stdlib http.server with Starlette + uvicorn. Graft source: TheIgors/lab/claudecode/utility_closet_server.py (already built + tested). One graft, one proof, one VALIDATION.",
@@ -79,100 +80,44 @@
   "decisions": [
     {
       "n": 1,
-      "text": "starlette 1.6.0 and uvicorn 0.52.4 are installed in the venv at $HOME/.cairn/venv (pip install starlette uvicorn; measured 2026-09-17 by python3 -c 'import starlette,uvicorn;print(starlette.__version__,uvicorn.__version__)'). httpx is NOT installed and is not needed: the proof drives the ASGI app in-process over raw scopes. No other package enters.",
+      "text": "starlette 1.6.0 and uvicorn 0.52.4 are ALREADY installed in the venv every cairn command runs under, $HOME/.cairn/venv (interpreter $HOME/.cairn/venv/bin/python3; measured 2026-09-17 by $HOME/.cairn/venv/bin/python3 -c 'import starlette,uvicorn;print(starlette.__version__,uvicorn.__version__)'). Nothing is installed by this build. If a fresh box lacks them the one command is $HOME/.cairn/venv/bin/pip install starlette uvicorn — no activation step. httpx is NOT installed and not needed: the proof drives the ASGI app in-process over raw scopes. No other package enters.",
       "by": "CC",
       "step": "unlisted: Install starlette and uvicorn packages",
       "source": "rehearsal"
     },
     {
       "n": 2,
-      "text": "The built cairn/devices/web_server/listener.py (commit bc8eb273) is the whole graft: module globals _device (a WebServerDevice, wired in main) and _bus; async handlers _handle_get(request) and _handle_post(request) that call _device.serve(path[, body]) and wrap the (status, content_type, body) it returns in a starlette Response — no rendering, no markup, no device logic in the transport; _handle_ws_troubles(websocket) accepts, asks the bus to='trouble' verb='live' and pushes the JSON list, removing the client from _ws_clients on disconnect; _make_app() returns Starlette(routes=[WebSocketRoute('/ws/troubles', ...), Route('/{path:path}', _handle_get, methods=['GET']), Route('/{path:path}', _handle_post, methods=['POST'])]); main(argv) keeps the prior listener's argparse (--port default 80, --bind default 0.0.0.0) and runs uvicorn.Server(uvicorn.Config(app, host=bind, port=port, log_level='warning')).run(). From TheIgors/lab/claudecode/utility_closet_server.py only the wiring pattern is taken — Starlette app + Route/WebSocketRoute binding + uvicorn.Config/Server run — never its application logic; the docstring names the source file and this ticket.",
+      "text": "NOTHING IS WRITTEN OR TRANSLATED IN THIS STEP: the listener is ALREADY BUILT and committed — cairn/devices/web_server/listener.py at commit bc8eb273, unchanged at HEAD 7cf3e513 — and that file IS the deliverable; the builder reads it and changes nothing. What it holds, as built: module docstring (lines 1-5) naming '72e8e3509287' and 'utility_closet_server.py'; imports Request from starlette.requests, Response from starlette.responses, Starlette from starlette.applications, Route and WebSocketRoute from starlette.routing, WebSocket from starlette.websockets, and (line 44) connect_system, harbor_source from cairn.tools.bus_client; module globals _device (a WebServerDevice) and _bus, both set in main(); _ws_clients (a list of accepted websockets); async def _handle_get(request): status, content_type, body = _device.serve(request.url.path); return Response(body, status_code=status, media_type=content_type); async def _handle_post(request): raw = (await request.body()).decode('utf-8', errors='replace'); status, content_type, body = _device.serve(request.url.path, method='POST', body=raw); return Response(body, status_code=status, media_type=content_type); async def _handle_ws_troubles(websocket): await websocket.accept(); append it to _ws_clients; send the JSON list the bus returns for to='trouble' verb='live' (the live trouble list) as one text frame; on disconnect remove it from _ws_clients. The path handed to serve() is request.url.path — the catch-all parameter is never read. _make_app() returns Starlette(routes=[WebSocketRoute('/ws/troubles', _handle_ws_troubles), Route('/{path:path}', _handle_get, methods=['GET']), Route('/{path:path}', _handle_post, methods=['POST'])]). main(argv): argparse with --port (default 80) and --bind (default 0.0.0.0); _bus, heartbeat = connect_system(devices=['ground_loop', 'librarian', 'trouble']) (cairn/tools/bus_client/bus_client.py line 132 — returns (bus, loop), the loop is the heartbeat; no GroundLoop is instantiated, nothing is imported from ground_loop); _device = WebServerDevice(heartbeat, harbor_source=harbor_source(), port=args.port) (harbor_source at bus_client.py line 142); print one '[web_server] serving on http://<bind>:<port>' line; then asyncio.run(server.serve()) where server = uvicorn.Server(uvicorn.Config(app, host=args.bind, port=args.port, log_level='warning')) — .run() is NOT used. This _bus/_device wiring is what the pre-graft listener already did and it does not change. No rendering, no markup, no device logic in the transport. From /home/akien/dev/src/TheIgors/lab/claudecode/utility_closet_server.py (exists on disk, measured 2026-09-17) only the wiring pattern was taken — Starlette app + Route/WebSocketRoute binding + uvicorn.Config/Server — never its handlers, models or state; TheIgors is not consulted again.",
       "by": "CC",
       "step": "unlisted: Replace listener.py with Starlette/uvicorn ASGI pattern from TheIgors",
       "source": "rehearsal"
     },
     {
       "n": 3,
-      "text": "The standing proofs (test_web_server.py, test_web_server_chat.py, test_web_server_views.py, test_voyage_pane.py) exercise WebServerDevice.serve() without a socket and pass unchanged, because serve()'s contract is untouched. test_web_server.py additionally gained five teeth declared in PROVES for this ticket's five clauses (commit 6c233e3c): one web server in the tree; logic out of the transport; every pane URL byte-identical through the ASGI app driven in-process plus a WebSocket accept-and-push; no dependency beyond stdlib+starlette+uvicorn+cairn; the graft names its ticket and source. Green twice at HEAD, 4 of 5 red against the pre-graft listener.",
+      "text": "NOTHING TO IMPLEMENT: the proofs are already built. The standing proofs (test_web_server.py, test_web_server_chat.py, test_web_server_views.py, test_voyage_pane.py under cairn/devices/web_server/proofs/) exercise WebServerDevice.serve() without a socket and pass unchanged, because serve()'s contract is untouched. test_web_server.py additionally carries, since commit 6c233e3c, five teeth declared in its module-level PROVES = {'72e8e3509287': {'1': 'test_there_is_one_web_server', '2': 'test_device_logic_stays_out_of_the_transport', '3': 'test_existing_pane_urls_render_identically_through_the_asgi_app', '4': 'test_the_graft_brings_no_dependency_beyond_its_source', '5': 'test_the_graft_carries_its_ticket_and_proof'}} — one per falsifier clause; each is a function in that file and _main runs every tooth printing PASS/FAIL per name. The builder's whole act here is to run it twice: PYTHONPATH=. $HOME/.cairn/venv/bin/python3 cairn/devices/web_server/proofs/test_web_server.py (exit 0 = green). Green twice at HEAD; 4 of 5 red against the pre-graft listener (bc8eb273^).",
       "by": "CC",
       "step": "unlisted: Verify existing proofs pass under the new listener",
       "source": "rehearsal"
     },
     {
       "n": 4,
-      "text": "Measured by tooth 2 (test_device_logic_stays_out_of_the_transport) and tooth 4 (test_the_graft_brings_no_dependency_beyond_its_source) in test_web_server.py: the listener's AST holds no string constant with markup or 'text/html', imports no renderer, every non-ws handler calls _device.serve, and its import roots are a subset of stdlib | {starlette, uvicorn, cairn}. utility_closet_server.py's handlers, models and state never crossed.",
+      "text": "NOTHING TO IMPLEMENT: 'no TheIgors application logic in the listener' is measured, not reviewed, by tooth 2 (test_device_logic_stays_out_of_the_transport) and tooth 4 (test_the_graft_brings_no_dependency_beyond_its_source) in test_web_server.py: the listener's AST holds no string constant with markup or 'text/html', imports no renderer, every non-ws handler calls _device.serve, and its import roots are a subset of stdlib | {starlette, uvicorn, cairn}. utility_closet_server.py's handlers, models and state never crossed. Running D3's command is running this check.",
       "by": "CC",
       "step": "unlisted: Verify the listener contains no TheIgors application logic, only the wiring pattern",
       "source": "rehearsal"
     },
     {
       "n": 5,
-      "text": "THIS ticket (72e8e3509287) is the graft ticket — no separate one is created. Law 8's entry-by-grafting is satisfied by this ticket plus test_web_server.py's PROVES block for 72e8e3509287 and tooth 5 (test_the_graft_carries_its_ticket_and_proof), which asserts the listener docstring names both 72e8e3509287 and utility_closet_server.py.",
+      "text": "NO SEPARATE GRAFT TICKET IS CREATED: THIS ticket (72e8e3509287) is the graft ticket. Law 8's entry-by-grafting is satisfied by this ticket plus test_web_server.py's PROVES block for 72e8e3509287 and tooth 5 (test_the_graft_carries_its_ticket_and_proof), which asserts via ast.get_docstring(module) that the MODULE docstring of listener.py (lines 1-5, multi-line) contains both '72e8e3509287' and 'utility_closet_server.py' as substrings — no particular line or format beyond that. Already true at HEAD.",
       "by": "CC",
       "step": "unlisted: Create graft ticket and proof entry documenting bytes from TheIgors (Law 8 compliance)",
       "source": "rehearsal"
     },
     {
       "n": 6,
-      "text": "The validation is cairn/devices/web_server/validations/test_web_server.json, resealed by the tester (python3 -m cairn.devices.tester.cli --hollow 72e8e3509287 --seal cairn/devices/web_server/proofs/test_web_server.py) after the BUILDME crossing that names the proof in proven_by; its schema is the tester's standard seal (verdict, source_fingerprint, fingerprint_closure, evidence.hollow). No new validation file.",
+      "text": "NO NEW VALIDATION FILE: the validation is the existing cairn/devices/web_server/validations/test_web_server.json, which the tester overwrites in place beside the proof. Sequence, in this order, all from the repo root with PYTHONPATH=. under $HOME/.cairn/venv/bin/python3: (i) the BUILDME crossing is emitted by CC through cairn.tools.base.transitions.emit(..., ticket='72e8e3509287', proven_by='cairn/devices/web_server/proofs/test_web_server.py') — proven_by is a keyword argument CC passes on the crossing; nothing sets it automatically; (ii) python3 -m cairn.devices.tester.cli --seal --timeout 600 cairn/devices/web_server/proofs/test_web_server.py runs the proof under the tester and writes the seal (verdict 'green'|'red', source_fingerprint, fingerprint_closure, isolation); (iii) python3 -m cairn.devices.tester.cli --hollow 72e8e3509287 --seal cairn/devices/web_server/proofs/test_web_server.py reverts the ticket's build to the commit standing at its BUILDME crossing, reruns the proof, and lands ONLY evidence.hollow['72e8e3509287'] (the per-file red reading) onto the standing seal — it does not re-run the proof green, which is why (ii) precedes it. The tester CLI is cairn/devices/tester/cli.py (main at line 325); its flags are --seal (persist the validation), --hollow <ticket> (take the hollow reading), --timeout <seconds>, -q; the validation's location is fixed by the tester — validations/<proof stem>.json beside the proof's proofs/ directory — and no flag moves it. Schema is the tester's standard seal, the same every validations/*.json in the repo carries.",
       "by": "CC",
       "step": "unlisted: Create or update validation JSON for the listener migration",
-      "source": "rehearsal"
-    },
-    {
-      "n": 7,
-      "text": "The venv is $HOME/.cairn/venv and it exists (it is the interpreter every cairn command runs under: $HOME/.cairn/venv/bin/python3). pip targets it by being invoked as $HOME/.cairn/venv/bin/pip install starlette uvicorn — no activation step; the same interpreter path is what the proof and the tester run.",
-      "by": "CC",
-      "step": "D1",
-      "source": "rehearsal"
-    },
-    {
-      "n": 8,
-      "text": "The graft source exists at /home/akien/dev/src/TheIgors/lab/claudecode/utility_closet_server.py (measured 2026-09-17: ls names it) and carries the wiring pattern named in D2 — a Starlette app with Route and WebSocketRoute bindings, run by uvicorn.Config + uvicorn.Server. Nothing beyond that pattern is taken.",
-      "by": "CC",
-      "step": "D2",
-      "source": "rehearsal"
-    },
-    {
-      "n": 9,
-      "text": "The five teeth exist as built in commit 6c233e3c of cairn/devices/web_server/proofs/test_web_server.py, declared in its module-level PROVES = {'72e8e3509287': {'1': 'test_there_is_one_web_server', '2': 'test_device_logic_stays_out_of_the_transport', '3': 'test_existing_pane_urls_render_identically_through_the_asgi_app', '4': 'test_the_graft_brings_no_dependency_beyond_its_source', '5': 'test_the_graft_carries_its_ticket_and_proof'}}; each is a function in that file, and _main runs every tooth and prints PASS/FAIL per name. Nothing is left to implement.",
-      "by": "CC",
-      "step": "D3",
-      "source": "rehearsal"
-    },
-    {
-      "n": 10,
-      "text": "The tester's command is python3 -m cairn.devices.tester.cli (cairn/devices/tester/cli.py, main at line 325) with flags --seal, --hollow <ticket>, --timeout <s>, -q; run with PYTHONPATH=. from the repo root. The validation it writes beside the proof is the tester's standard seal JSON: verdict ('green'|'red'), source_fingerprint, fingerprint_closure, isolation, and evidence.hollow[<ticket>] carrying the hollow reading — the same schema every validations/*.json in the repo already carries (cairn/devices/web_server/validations/test_web_server.json is the file it overwrites).",
-      "by": "CC",
-      "step": "D6",
-      "source": "rehearsal"
-    },
-    {
-      "n": 11,
-      "text": "How main() obtains _bus and _device, as built (listener.py lines 103-116): _bus, heartbeat = connect_system(devices=['ground_loop', 'librarian', 'trouble']) — connect_system is the existing system-connection helper the pre-graft listener already used (imported at the top of listener.py), returning the bus and the heartbeat in one call; then _device = WebServerDevice(heartbeat, harbor_source=harbor_source(), port=args.port). No GroundLoop is instantiated and nothing is imported from ground_loop directly. The server then runs asyncio.run(uvicorn.Server(uvicorn.Config(app, host=args.bind, port=args.port, log_level='warning')).serve()), printing one '[web_server] serving on http://<bind>:<port>' line first.",
-      "by": "CC",
-      "step": "D2",
-      "source": "rehearsal"
-    },
-    {
-      "n": 12,
-      "text": "connect_system and harbor_source EXIST at cairn/tools/bus_client/bus_client.py (def connect_system(*, devices: list[str] | None = None, beat: bool = True) at line 132 returns (bus, loop) — the loop is the heartbeat the listener names; def harbor_source() at line 142 returns the harbor's traffic_image function). listener.py line 44 imports both: from cairn.tools.bus_client import connect_system, harbor_source. Nothing is defined for them in this ticket.",
-      "by": "CC",
-      "step": "D11",
-      "source": "rehearsal"
-    },
-    {
-      "n": 13,
-      "text": "The startup pattern is asyncio.run(server.serve()) where server = uvicorn.Server(uvicorn.Config(app, host=args.bind, port=args.port, log_level='warning')) — listener.py lines 117-127, as built. D2's earlier 'Server.run' wording is superseded by this line; .run() is not used. Handler details as built (listener.py lines 53-63): async def _handle_get(request: Request) -> Response: status, content_type, body = _device.serve(request.url.path); return Response(body, status_code=status, media_type=content_type). async def _handle_post(request: Request) -> Response: raw = (await request.body()).decode('utf-8', errors='replace'); status, content_type, body = _device.serve(request.url.path, method='POST', body=raw); return Response(body, status_code=status, media_type=content_type). The path is request.url.path (the catch-all Route '/{path:path}' is not consulted for the parameter); Request, Response, Starlette, Route, WebSocketRoute, WebSocket are imported from starlette.requests / starlette.responses / starlette.applications / starlette.routing / starlette.websockets.",
-      "by": "CC",
-      "step": "D2",
-      "source": "rehearsal"
-    },
-    {
-      "n": 14,
-      "text": "The reference is the MODULE docstring of cairn/devices/web_server/listener.py (lines 1-5 as built): multi-line, and it names both '72e8e3509287' and 'utility_closet_server.py' as substrings anywhere within it — tooth 5 asserts substring presence on ast.get_docstring(module), so no particular line or format beyond 'both names appear in the module docstring' is required.",
-      "by": "CC",
-      "step": "D5",
       "source": "rehearsal"
     }
   ],
