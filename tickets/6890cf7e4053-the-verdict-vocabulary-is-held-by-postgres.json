@@ -18,7 +18,9 @@
   },
   "children": "one child, and it proves first: a-standing-table-gains-its-constraint-through-the-one-door — db_domain gains the one thing it lacks, a way to bring an ALREADY-CREATED owned table up to the shape its column spec declares, through the one door rather than a hand psql. It is a child rather than a sibling because this cast cannot reach its own falsifier without it (the falsifier names the STANDING table), and it is a separate node rather than part of this one because it lands in a different device under a different charter's gate. It will be cast through its own /sorted firing. NAMING NOTE: the /sorted firing called it a-standing-table-reaches-its-declared-shape; the cast narrowed to a constraint primitive rather than a shape reconciler, and the id was corrected to match what will actually be built. The berth carries the older name.",
   "linked_ideas": [],
-  "questions": [],
+  "questions": [
+    "open-cd5220e7916c"
+  ],
   "constraints": [],
   "how": "Declare the CHECK in the column spec itself — \"verdict\": \"text NOT NULL CHECK (verdict IN ('miss','hit','refused'))\" in _CACHE_COLUMNS. create_owned_table passes each column's type through sql.SQL() raw (store.py:170-172), so a CHECK rides free with NO new db_domain primitive and no ALTER: a fresh install gets the physics at CREATE TABLE. What that does NOT reach is the STANDING table, already created without it — hence the child, which proves first.",
   "links": [
@@ -26,7 +28,7 @@
   ],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [WATCHME(the_verdict_vocabulary_is_refused_at_the_database):waiting] -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(the_verdict_vocabulary_is_refused_at_the_database) -> PROVED",
   "watchme": {
     "carrier": "a verdict artifact against this ticket's falsifier: the distinct verdict values found past the era with a row count each, whether a check constraint over verdict exists on the live table, and its expression text if so.",
     "consumer": "the next builder to add a verdict value — who should meet a refusal rather than discover months later that a reader has been silently miscounting — and whoever next asks whether this system's vocabularies are enforced anywhere or merely written down.",
@@ -45,5 +47,70 @@
     "a-standing-table-gains-its-constraint-through-the-one-door (child, proves first) — without it the declaration reaches a fresh install and not the running database",
     "a-refused-ask-leaves-a-row (PROVED 2026-08-18) — the build that made the vocabulary three values"
   ],
-  "standing_note": "STANDING IN QUESTION AS OF 2026-08-18, UPDATED 2026-08-31. Original concern: the inference_calls table shape may change, making a three-value CHECK on verdict the wrong grain. UPDATE 2026-08-31 (Akien): the inference call becomes a TASK the inference proxy performs, producing an ARTIFACT of the process stored in .cairn (instance-space logging, not the DB table). The task ticket becomes the RETURN VALUE — the receiver or their shim extracts the actual reply, making the call inspectable. The three-value verdict vocabulary still needs enforcement but the mechanism changes: it examines a single artifact rather than constraining a DB column. Dependencies shift: state-machine-physics (BUILDME) is now upstream — task state transitions need the transition table enforced. The inference-call-comprehensive-task-ticket (TICKETME:waiting) must land first to settle the new shape. This ticket's falsifier, how, and gates will need recasting against the new shape once it lands."
+  "standing_note": "STANDING IN QUESTION AS OF 2026-08-18, UPDATED 2026-08-31. Original concern: the inference_calls table shape may change, making a three-value CHECK on verdict the wrong grain. UPDATE 2026-08-31 (Akien): the inference call becomes a TASK the inference proxy performs, producing an ARTIFACT of the process stored in .cairn (instance-space logging, not the DB table). The task ticket becomes the RETURN VALUE — the receiver or their shim extracts the actual reply, making the call inspectable. The three-value verdict vocabulary still needs enforcement but the mechanism changes: it examines a single artifact rather than constraining a DB column. Dependencies shift: state-machine-physics (BUILDME) is now upstream — task state transitions need the transition table enforced. The inference-call-comprehensive-task-ticket (TICKETME:waiting) must land first to settle the new shape. This ticket's falsifier, how, and gates will need recasting against the new shape once it lands.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The vocabulary is declared once, at ensure_cache: store.add_owned_constraint(CACHE, CACHE_OWNER, 'verdict_vocabulary', \"verdict IN ('hit', 'miss', 'refused')\") immediately after create_owned_table; _CACHE_COLUMNS keeps verdict as 'text NOT NULL' (no CHECK inside the column spec), so a fresh install and the standing table receive the constraint by the same act and cannot disagree — this supersedes the HOW's column-spec declaration because the child's door (db059208bbd9, PROVED 2026-08-26) exists now.",
+      "by": "CC",
+      "step": "unlisted: add-check-to-verdict-column-spec",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "The child db059208bbd9 (store.add_owned_constraint) is already built and PROVED; the call in ensure_cache is idempotent and applies verdict_vocabulary to the standing inference_calls table on the first call after the build — no separate migration, no ALTER outside the one door, nothing to wait on.",
+      "by": "CC",
+      "step": "unlisted: apply-constraint-to-standing-table-via-ensure-cache",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "Teeth live in cairn/devices/inference_domain/proofs/test_inference_domain.py and are live write attempts, never DDL inspection alone: test_an_out_of_vocabulary_verdict_is_refused_at_the_database (a nonce table through create_owned_table + ensure_cache; a raw INSERT of verdict 'bogus' raises psycopg 23514 CheckViolation while 'hit', 'miss', 'refused' land), test_the_standing_table_refuses_an_out_of_vocabulary_write (one INSERT against the STANDING table, refused with 23514 and rolled back, the table left as found), and test_the_verdict_constraint_exists_on_the_table (an information_schema companion to the write teeth, never their substitute).",
+      "by": "CC",
+      "step": "unlisted: write-proof-teeth-for-constraint-validation",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "The probe berths at cairn/devices/inference_domain/probes/the_verdict_vocabulary_is_refused_at_the_database.py and declares a module-level frozen PROBE carrying both carry and enough per the ticket's watchme; test_the_probes_row_read_agrees_with_an_actual_write_refusal binds it at call time and holds its information_schema read against the refusal of an actual write.",
+      "by": "CC",
+      "step": "unlisted: create-and-arm-watchme-probe",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "Compose, do not rewrite: run python3 cairn/devices/inference_domain/proofs/test_inference_domain.py whole (22 teeth) green twice locally, then the tester seals it under netns as the ticket's proven_by; the other inference_domain validations stand as they are — the constraint touches no reader and no other proof is edited.",
+      "by": "CC",
+      "step": "unlisted: verify-existing-proofs-remain-green",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "The probe's shape is cairn.tools.base.probe.Probe (a frozen dataclass: why, trigger(now, context)->bool, to='inference_domain', body={'nexus':'hypothesize','kind':'efficacy'}, carry(context)->dict, enough(context)->bool, horizon=1000) — copy cairn/devices/librarian/probes/standing_moves_under_live_use.py's PROBE = Probe(...) block and replace its survey. test_the_probes_row_read_agrees_with_an_actual_write_refusal is a FOURTH tooth in test_inference_domain.py (beside D3's three, not inside the probe): it imports the probe module at call time via importlib, calls its survey_the_corpus(), and asserts constraint_exists is True exactly when the raw INSERT of an out-of-vocabulary verdict is refused with 23514.",
+      "by": "CC",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "22 is the count of test_ functions test_inference_domain.py holds AFTER the build (18 standing + the 4 of D3/D4); the chart's '17 (15+2)' was the 2026-09-02 plan and is superseded. The gate is the exit code: the file runs green twice (exit 0 both times); the tooth count is a diagnostic to report, never a pass condition.",
+      "by": "CC",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "D4 read with D6 and this line: the probe module is cairn/devices/inference_domain/probes/the_verdict_vocabulary_is_refused_at_the_database.py; its module-level PROBE is cairn.tools.base.probe.Probe, a frozen dataclass whose fields are exactly: why (str), trigger (callable (now, context) -> bool), to (str, here 'inference_domain'), verb (str, default ''), channel (str, default 'personal'), body (dict, here {'nexus': 'hypothesize', 'kind': 'efficacy'}), carry (callable (context) -> dict), while_true (bool, default False), enough (callable (context) -> bool), horizon (int, here 1000). The template to copy is the PROBE = Probe(...) block of cairn/devices/librarian/probes/standing_moves_under_live_use.py, both files readable in the repo; replace its survey with an information_schema.check_constraints read of the verdict_vocabulary clause on inference_calls. Nothing else in D4 is left to infer.",
+      "by": "CC",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "The expected tooth count after D3 and D4 is exactly 22: 18 standing test_ functions in test_inference_domain.py before this ticket, plus the 3 teeth D3 names, plus the 1 tooth D4 names (test_the_probes_row_read_agrees_with_an_actual_write_refusal). Confirmed by count on 2026-09-17 (grep -c 'def test_' -> 22). The pass condition remains the exit code, 0 on two consecutive whole-file runs.",
+      "by": "CC",
+      "step": "D5",
+      "source": "rehearsal"
+    }
+  ]
 }

@@ -3,7 +3,7 @@
   "title": "a-chart-tree-tooth-asserts-a-refusal-the-orient-door-never-reaches",
   "node_class": "bug",
   "task_or_ticket": "ticket",
-  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "bug@v1: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
   "date": "2026-09-11",
   "created": "2026-09-11",
   "author": "CC",
@@ -32,6 +32,59 @@
   "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth; the defect's falsifier is the wrong behaviour itself, which is why bug.json calls the design stage optional.",
   "schema_version": "ticket-v1",
   "questions": [
-    "open-ee5e755e2b73"
-  ]
+    "open-ee5e755e2b73",
+    "open-155ed994d17b"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "In cairn/tools/tree/proofs/test_chart_tree.py, _packet()'s provenance becomes {'intent':'cc','scope':'cc','domain':'cc','refs':'cc','unknowns':'cc'} — stratum 'cc' for all five (it is in orient's _STRATA_ACCEPTED and matches the two keys already there). The fixture stands for a BERTHED packet: the write door stamps domain/refs/unknowns, the deposit door measures nothing and only requires coverage, so with all five covered deposit_orient reaches its berth-existence check.",
+      "by": "CC",
+      "step": "unlisted: widen _packet() provenance to cover domain, refs, and unknowns",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "test_gate_before_seed keeps its FIRST refusal exactly as it stands (the malformed packet: _refuses(OrientRefused, deposit_orient, {'intent':'x'}, ...) — leave that call untouched). Its SECOND call passes _packet() with berth_path=os.path.join(tmp,'no-such-berth.json') and asserts three things on the message: 'does not exist' in msg, the missing path in msg, and 'provenance does not cover' NOT in msg (that would mean the refusal came one lack early). Then assert trees.tree_state(_NEXUS, table=_TABLE, owner='chart') == before. THE CONTROL, last: control = _packet(intent='the gate control packet of the chart tree proof [' + _NEXUS + ']'); berth = _berthed_fixture(tmp, control); r = deposit_orient(control, [1.0,0.0,0.0], berth_path=berth, nexus=_NEXUS); _CREATED_NODES.append(r['node_id']) (the proof's existing teardown deletes every id in that list); assert r['duplicate'] is False. Two deposit_orient calls with _packet(), not three; the malformed call is the pre-existing first one.",
+      "by": "CC",
+      "step": "unlisted: rewrite test_gate_before_seed to assert missing-berth refusal and add control",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "Run python3 cairn/tools/tree/proofs/test_chart_tree.py twice; both exit 0. Commit the proof. Then the seal: PYTHONPATH=. python3 -m cairn.devices.tester.cli --hollow 9c46e187f2de --seal --timeout 600 cairn/tools/tree/proofs/test_chart_tree.py (this CLI exists and takes --hollow, --seal, --timeout — the validate chart's instrument is correct); the validation lands at cairn/tools/tree/validations/test_chart_tree.json. If the hollow reading reds because every writes_to file is an instrument or a record (proofs/ and validations/ are both skipped by hollow), that is a gate finding to carry to Akien as a question, never a plaster.",
+      "by": "CC",
+      "step": "unlisted: run proof twice and reseal validation under the tester",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "test_gate_before_seed's mechanics, as built at cairn/tools/tree/proofs/test_chart_tree.py: (a) before = trees.tree_state(_NEXUS, table=_TABLE, owner='chart') is captured as the tooth's FIRST line, before any deposit_orient call, and the tree-unchanged assertion compares against it after both refusals and before the control; (b) _packet(...) (line 77) is the fixture function whose every provenance field is a keyword argument with a default — _packet() yields a berthed-shaped packet, _packet(intent='...') overrides one field; (c) both refusals go through _refuses(exc, fn, *args, **kwargs) (line 69), which calls fn, asserts exc was raised, and returns str(exc) — the missing-berth call is msg = _refuses(OrientRefused, deposit_orient, _packet(), [1.0, 0.0, 0.0], berth_path=<no-such-berth path>) and the three assertions ('does not exist', the berth path, not 'provenance does not cover') read msg.",
+      "by": "CC",
+      "step": "D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "_packet() as built (cairn/tools/tree/proofs/test_chart_tree.py lines 77-106) is a plain function: def _packet(intent='wire the tree stratum into the orient nexus of the chart device', **over) builds the dict p = {'intent': intent, 'domain': 'chart — the nexus machinery', 'scope': 'IN: the orient nexus's tree. OUT: everything else.', 'refs': ['tree'], 'unknowns': [], 'confidence': 0.7, 'provenance': {'intent': 'cc', 'scope': 'cc', 'domain': 'cc', 'refs': 'cc', 'unknowns': 'cc'}}, then p.update(over) and returns p. The widening was adding the three keys domain/refs/unknowns = 'cc' to that provenance dict; nothing else in the fixture moved.",
+      "by": "CC",
+      "step": "D1",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "Everything test_gate_before_seed depends on is module-scope in test_chart_tree.py, no pytest: os, json, tempfile, datetime, Path imported at lines 34-40; trees is cairn.devices.librarian.trees (line 56); OrientRefused and deposit_orient from cairn.devices.codemother.machines.orient.orient (line 50); _NEXUS (line 64, an orient_<pid>_<hhmmss> nexus name) and _TABLE = nexus_table(_NEXUS) (line 65); _refuses(exc, fn, *args, **kwargs) at line 69; _packet(intent=..., **over) at line 77; _berthed_fixture(tmp, packet) at line 109 writes packet as JSON to <tmp>/orient-20260728T120000-feedfacecafe.json and returns that path; tmp is a tempfile.TemporaryDirectory() opened inside the tooth (line 139), not a fixture; _CREATED_NODES is the module-level list the teardown reads to delete every node a tooth registered.",
+      "by": "CC",
+      "step": "D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "The orient door's berth-existence refusal is fixed text at cairn/devices/codemother/machines/orient/orient.py line 543-546: deposit_orient first runs validate_orient(packet, root=root, measure_provenance=False) (which is where 'provenance does not cover: ...' comes from, and which a D1-shaped packet passes), then, when berth_path is not a str or os.path.isfile(os.path.expanduser(berth_path)) is False, raises OrientRefused(f\"deposit_orient: berth {berth_path!r} does not exist on disk — a node whose provenance points at nothing is fabricated attribution one layer up; nothing landed\"). So the message carries the literal 'does not exist' and the berth path (repr-quoted), and never 'provenance does not cover'.",
+      "by": "CC",
+      "step": "D2",
+      "source": "rehearsal"
+    }
+  ],
+  "rehearsal": "rehearsals/9c46e187f2de-20260918T015134.json"
 }

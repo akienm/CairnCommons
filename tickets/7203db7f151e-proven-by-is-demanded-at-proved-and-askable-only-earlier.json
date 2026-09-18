@@ -32,5 +32,70 @@
   "found_while": "sailing 548dd13fb4db. Cast under Akien's standing instruction, 2026-09-11: 'Follow the cairn workflow (reds found along the way are ticketed)'.",
   "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'. Node class CairnCommons/node_classes/bug.json.",
   "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
-  "schema_version": "ticket-v1"
+  "schema_version": "ticket-v1",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The check sits in cairn/tools/base/transitions.py emit(), in the forward arm where target == 'PROVEME' and target_idx > wf.cursor, placed BEFORE the entry-gate re-run at that crossing so a caller hears the cheapest lack first; it fires only when journal_extra names a ticket (journal_extra.get('ticket') is not None) — a ticketless crossing journals the lane as 'not_checked', the same v0 jurisdiction the entry gate uses. PROVED's clearance rung (clearance.py _coverage_lacks) is untouched: [proof_named] and [hollow_evidence_absent] both stay there as the backstop.",
+      "by": "CC",
+      "step": "unlisted: the site of the check",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "The predicate is the UNION the record will read: cairn.tools.base.crossings.proven_by_since_buildme(ticket) plus this crossing's own journal_extra['proven_by'] normalised to a list (a str is one path, a list is many, None/'' is none). Empty union -> raise ProofNamedRed(IllegalTransition) — a new sibling of EntryGateRed/BuildGateRed/ExitGateRed, never a subclass — whose message names the missing argument verbatim: 'proven_by'. Nothing is written before the raise.",
+      "by": "CC",
+      "step": "unlisted: the predicate",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "A new inspect_proof_named(ticket, journal_extra) -> list[dict] in transitions.py returns one lane named the_proveme_crossing_names_its_proof (via _lane, code 'transitions.py::inspect_proof_named') with expected/actual text and values {'named': [...], 'since_buildme': [...]}; the lane is appended to the crossing's proved list in every outcome (pass, refusal, not_checked), so a gate that stops running makes the record SHORTER (Akien 2026-08-13: no empty anywhere).",
+      "by": "CC",
+      "step": "unlisted: the lane",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "Proof at cairn/tools/base/proofs/test_proveme_names_its_proof.py, module-level PROVES = {'7203db7f151e': {'all': 'test_a_proveme_crossing_without_a_proof_is_refused_by_name'}} (the falsifier is one unnumbered clause, so one composite tooth). The tooth binds ProofNamedRed and inspect_proof_named at call time via getattr (so a hollow reversion of transitions.py reds the tooth rather than crashing the runner), drives emit() over a tmp history/state pair with workflow 'bug@v1: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> PROVED' and a fixture ticket id no journal carries: (a) no proven_by -> ProofNamedRed whose message contains 'proven_by' and the ticket id, and the history file is unchanged; (b) proven_by='cairn/tools/base/proofs/test_proveme_names_its_proof.py' -> whatever is raised is NOT ProofNamedRed and inspect_proof_named's lane reads expected == actual; (c) ticket=None -> the lane reads not_checked. Runner: if __name__ == '__main__': raise SystemExit(print_teeth_main(__file__)).",
+      "by": "CC",
+      "step": "unlisted: the proof",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "Validation: cairn/tools/base/validations/test_proveme_names_its_proof.json, sealed by PYTHONPATH=. python3 -m cairn.devices.tester.cli --hollow 7203db7f151e --seal --timeout 600 cairn/tools/base/proofs/test_proveme_names_its_proof.py after the BUILDME crossing is journaled. The 'reaches PROVED without any back-edge' half of the falsifier is the live fire: this ticket's own voyage crosses PROVEME carrying proven_by=cairn/tools/base/proofs/test_proveme_names_its_proof.py and then PROVED through harbor_master.clearance.clear, and the verdict cites that crossing.",
+      "by": "CC",
+      "step": "unlisted: the seal and the live fire",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "No exemption roster, no widening: _require_named_ticket, _entry_gate, the exit gate, and clearance.py are byte-identical before and after (git diff on those functions is empty). Back-edges into or out of PROVEME stay ungated. The existing proof cairn/tools/base/proofs/test_transitions.py is not edited (it carries uncommitted work of ticket 77f15efd5a96).",
+      "by": "CC",
+      "step": "unlisted: what does not change",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "The seat sits in emit()'s forward target == 'PROVEME' arm AFTER the entry-gate block at that same crossing (the entry gate asks whether the build was charted, this seat asks whether it is proven, and in the voyage the chart comes first — a builder wrong about both hears EntryGateRed first; ProofNamedRed fires only for a charted build). It fires only when journal_extra['ticket'] is not None. A ticketless PROVEME crossing records proof_gate: 'not_checked' and appends NO lane — exactly the entry gate's v0 jurisdiction, which appends no lane for a ticketless BUILDME->PROVEME crossing (test_transitions.py::test_every_journaled_crossing_carries_the_record_of_what_it_proved pins the ticketless record to the three inspect_rules lanes). This supersedes D1's 'placed BEFORE the entry-gate re-run' and D3's 'not_checked' lane.",
+      "by": "CC",
+      "step": "unlisted: the site of the check",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "One lane, identity the_proveme_crossing_names_its_proof, built by _lane with code transitions.py::inspect_proof_named and values {'ticket','named','since_buildme'}; appended to the crossing's proved list on PASS and on REFUSAL (the raise carries it as findings). It is NOT appended for a ticketless crossing — that crossing carries only the proof_gate: 'not_checked' field on the record, so the existing exact-identity assertion over ticketless records stays green without editing test_transitions.py (D6).",
+      "by": "CC",
+      "step": "unlisted: the lane",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "Under D7 the real entry gate refuses a chartless fixture ticket before the seat is reached, so legs (a) and (b) run with transitions._entry_gate replaced (setattr, restored in finally) by a stub returning ('clean — fixture chart', []) and transitions._stamp_sail replaced by a no-op (a fixture ticket must not claim the live sail record in instance-space); the seat itself, ProofNamedRed, inspect_proof_named and the history write are all REAL. Leg (b) asserts emit returns a string whose cursor stands at PROVEME, the journaled record's proof_gate starts with 'clean — proof named:' and its proved list carries exactly one lane the_proveme_crossing_names_its_proof with expected == actual. Leg (c) supersedes D4's wording: ticket=None -> emit succeeds with the real gates, the record's proof_gate == 'not_checked', and NO lane of that identity is in proved. proven_by_since_buildme reads the live journal for the fixture id and must return [] (the invariant that no journal carries it).",
+      "by": "CC",
+      "step": "unlisted: the proof",
+      "source": "rehearsal"
+    }
+  ]
 }
