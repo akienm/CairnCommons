@@ -67,6 +67,42 @@
       "by": "CC 2026-09-18, measured; unobjected",
       "step": "unlisted: add output reporting undeclared files as 'changed but not declared: <files>'",
       "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "_inside(f: str, repo_root: Path) -> str is defined at hollow.py:289: an absolute path under repo_root comes back repo-relative (posix), any other spelling comes back unchanged for _classify to skip. git diff --name-only already prints repo-relative posix paths, so the changed list needs no normalisation; only the declared list passes through _inside, exactly as the current line 445 does.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "The proof, concretely: from cairn.devices.tester.proofs.test_hollow import _fixture, _berth_decompose, _berths_root, FIXTURE (helpers already there, test_hollow.py:108-171); from cairn.devices.tester.hollow import measure; from cairn.tools.base.scratch import scratch_dir. Tooth 1 test_an_undeclared_changed_file_is_named_and_measured(): tmp = scratch_dir('cairn-hollow-undeclared-'); repo, commons = _fixture(tmp); _berth_decompose(tmp, ['subject.py', 'proofs/test_fixture.py']) (overwrites the berth _fixture wrote); f = measure(FIXTURE, repo_root=repo, commons=commons, berths_root=_berths_root(tmp), timeout=60) — the same call test_hollow._measured makes at test_hollow.py:199; assert f['undeclared'] == ['unchecked.py']; assert f['measured']['unchecked.py'] == [] and f['hollow'] == ['unchecked.py']; assert f['verdict'] == 'red'; return True. Tooth 2 test_a_complete_berth_reads_as_today(): same fixture with the berth _fixture already wrote (all three files); f = measure(...) identical call; assert f['undeclared'] == []; assert f['measured'] == {'subject.py': ['test_value_is_two'], 'unchecked.py': []} and f['hollow'] == ['unchecked.py'] and [s['file'] for s in f['skipped']] == ['proofs/test_fixture.py'] — the exact assertions test_hollow's first tooth (test_hollow.py:202-213) makes today, which IS the control baseline; return True. The finding is the dict hollow.py:648 returns: keys ticket, commit, buildme_at, worktree, proofs, declared, silent_proofs, baseline_green, measured {file: [red teeth]}, skipped [{file, why}], hollow [files], unran, unchanged, verdict 'red'|'green', reasons — plus the new undeclared [files]. A tooth is a test_ function that returns True; the tester names it green on stdout.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "The exact pattern, copied from prebuild_commit at hollow.py:182-190 which is in the same file: proc = subprocess.run(['git', '-C', str(repo_root), 'diff', '--name-only', f'{commit}..HEAD'], capture_output=True, text=True, env=git_env()); if proc.returncode != 0: raise HollowUnmeasurable(f'hollow: git diff {commit[:12]}..HEAD failed in {repo_root} ({proc.stderr.strip()!r})'); changed = [l.strip() for l in proc.stdout.splitlines() if l.strip()]. subprocess, git_env and HollowUnmeasurable are already imported/defined in hollow.py.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "PROVES syntax, verbatim from test_hollow.py:38-41: a module-level dict of tooth NAMES as strings, not function objects — PROVES = {'39966e1cefe4': {'1': 'test_an_undeclared_changed_file_is_named_and_measured', '2': 'test_a_complete_berth_reads_as_today'}}. A tooth is any module-level function named test_* that returns True; the tester runs the module and prints each tooth's name with green/red — no pytest, plain assert statements.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 10,
+      "text": "Signatures as they stand in test_hollow.py: FIXTURE is a str ticket id constant; _fixture(tmp: Path, *, with_added=False) -> (repo: Path, commons: Path) builds the two-commit repo, writes the decompose berth naming all three files and the fixture ticket; _berth_decompose(tmp: Path, files: list[str]) -> Path overwrites that berth with the given writes_to list; _berths_root(tmp: Path) -> Path is tmp/'berths'. Plain assert statements; the tooth returns True at its end.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D7",
+      "source": "rehearsal"
     }
-  ]
+  ],
+  "rehearsal": "rehearsals/39966e1cefe4-20260918T122002.json"
 }
