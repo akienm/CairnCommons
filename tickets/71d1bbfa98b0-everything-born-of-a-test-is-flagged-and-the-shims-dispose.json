@@ -96,6 +96,62 @@
       "by": "CC 2026-09-18, measured; unobjected",
       "step": "D5",
       "source": "rehearsal"
+    },
+    {
+      "n": 11,
+      "text": "D10's literal 'test' is corrected (Law 7, later line): CAIRN_TESTER_ORIGIN carries the RUN ID — env['CAIRN_TESTER_ORIGIN'] = run_id, set in _env_pinned_to (device.py:188), run_id minted once per run_proof call as f'{utc stamp %Y%m%dT%H%M%S%f}-{pid}'. The kind is implied by the variable's existence: a reader constructs origin = {'kind': 'test', 'run': os.environ['CAIRN_TESTER_ORIGIN']} when the var is set and non-empty, else stamps nothing. The readers, by line: (a) the sole envelope builder Bus.post at cairn/devices/cairn/machines/bus/bus.py:372 adds 'origin' to the envelope dict (the ticket's 'bus_client.post' names this door — cairn/tools/bus_client/bus_client.py has no post; every post reaches Bus.post); (b) the artifact door's journal entry builder _entry at cairn/tools/artifact/artifact.py:319 adds 'origin' to the entry; (c) records with a header: DiagnosticBase.emit's record dict at cairn/tools/base/diagnostic.py:287 (troubles ride raise_trouble -> emit) and open_question's record at cairn/tools/question/question.py:170 each add 'origin' the same way. One helper, cairn.tools.base.origin.test_origin() -> dict|None, is the single reader all four call.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 12,
+      "text": "Measured 2026-09-18: TesterDevice writes NOTHING under ~/.cairn/devices/tester/0 today (it holds bin/, groundloop/, last_known.json, tools/ — none are run artifacts), and its run artifacts are (i) the closure file, mkstemp'd in /tmp at device.py:458, and (ii) one 'run_proof' breadcrumb per run at device.py:638 that breadcrumb_log berths flat under log_path('tester') as <stamp>.TesterDevice.run_proof.json (23,548 files, no runs/ dir). The build: run_proof makes address.log_path('tester')/runs/<run_id>/ (run_id from D11) and writes the closure file there as closure.json plus the returned record as run.json; the breadcrumb keeps its address (breadcrumb_log owns it, Law 6) and carries values={'run': run_id}. No migration of the 23,548 standing breadcrumbs — they are logging under D3 and age out.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 13,
+      "text": "Contagion is one reader, four sites, no handler logic: test_origin() (D11) is read at Bus.post (a reply posted from inside a marked process carries it — the shim.py:645 reply path needs no change because it posts through Bus.post), at DiagnosticBase.emit (so raise_trouble's emission carries it), at open_question (question.py:170), and at artifact._entry. A record born OUTSIDE a marked process from a marked input — a shim handling an origin:test envelope in an unmarked device process — copies the envelope's origin onto its reply at the one reply path shim.py:645 (the reply carries reply_to; the origin rides beside it). Those are the only two mechanisms: env at birth, copy at reply.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D6",
+      "source": "rehearsal"
+    },
+    {
+      "n": 14,
+      "text": "The census is a module, not a scratchpad script: cairn/devices/tester/debris_census.py, run as PYTHONPATH=. python3 -m cairn.devices.tester.debris_census, printing one JSON line {'commons': n, 'bus': n, 'at': <utc>} where commons = count of records under CairnCommons/troubles, questions, tickets whose text names /tmp or a fixture path (regex (/tmp/|fixture)) and carry no origin field, and bus = the same count over the bus store's envelope table (why/body text) via db_domain. It is invoked by hand, twice — before the drain and after one full 'cairn test' — and its two lines are pasted verbatim as the verdict's evidence; the verdict's instrument is that one command. D8's numbers (9 troubles, 603 envelopes) are the first 'before' it must reproduce.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: Build the census instrument to measure before/after test debris counts",
+      "source": "rehearsal"
+    },
+    {
+      "n": 15,
+      "text": "handles_test_mail is a class attribute on BaseShim (cairn/tools/base/shim.py:223), default False, read in BaseShim.deliver (shim.py:750) before the handler dispatch: an envelope carrying origin.kind == 'test' on a shim whose class leaves it False is appended to log_path(<device>)/test_debris.jsonl and dropped (no bounce, no handler). A device that must answer test mail sets handles_test_mail = True in its own shim's class body — that is the whole declaration, no registry. Measured 2026-09-18: grep handles_test_mail over cairn/ is 0 hits today, so every shim starts disposing; which shims must declare True is MEASURED at build, not guessed: run one full cairn test under the mark, then for each device whose test_debris.jsonl gained an envelope that a proof waited on (the proof reds or times out on a missing reply), set True in that shim and re-run; the resulting list and count ride the verdict.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 16,
+      "text": "D5 as built: CAIRN_TESTER_ORIGIN='<run_id>' with run_id = f'{utc now:%Y%m%dT%H%M%S%f}-{os.getpid()}' minted once per TesterDevice.run_proof call and set in _env_pinned_to (D11 carries the reader sites).",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 17,
+      "text": "D6 as built: one helper cairn.tools.base.origin.test_origin() -> {'kind':'test','run':<id>} | None, called at exactly four record-building doors — Bus.post (bus.py:372), DiagnosticBase.emit (diagnostic.py:287), open_question (question.py:170), artifact._entry (artifact.py:319) — plus the copy at the shim reply path shim.py:645 (D13).",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D6",
+      "source": "rehearsal"
+    },
+    {
+      "n": 18,
+      "text": "D8 as built: the before/after census is python3 -m cairn.devices.tester.debris_census (D14), run by hand twice, its two JSON lines the verdict's evidence — not a scratchpad script.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D8",
+      "source": "rehearsal"
     }
   ],
   "why": "A proof's mail and troubles land beside a hand's with nothing to tell them apart, so the live inbox, the trouble list, and the bus fill with debris that a hand must sweep — and a lane that cannot tell a test from a hand cannot tell a forgery from an owner either.",

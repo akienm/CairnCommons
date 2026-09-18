@@ -31,5 +31,42 @@
   "found_while": "sailing 548dd13fb4db (the one inference door carries a tool-using conversation)",
   "sorted_berth": "none, because a bug enters directly as a ticket — /intent's own SKILL.md: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket'.",
   "intent_berth": "none, because a bug enters directly as a ticket — see sorted_berth.",
-  "schema_version": "ticket-v1"
+  "schema_version": "ticket-v1",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Shape (1) with (2)'s line, as the ticket's how prefers: the subject set is the UNION of writes_to(ticket) and the files git says changed between the pre-build commit and HEAD; every file in the union is classified and measured exactly as a declared one is today, AND the finding gains a field undeclared: [<repo-relative files in the diff but not in writes_to>] that the CLI prints as one loud line 'changed but not declared: a, b' (or nothing when empty). No trust in writes_to is added and no chart-time sieve is built (WRONG INTENT clause).",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: decide implementation approach — measure union of declares+actual, or report-only",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "One edit in hollow.measure at hollow.py:445, after commit = prebuild_commit(...): changed = git -C <repo_root> diff --name-only <commit>..HEAD (run with git_env(), non-zero exit -> HollowUnmeasurable naming the command, as prebuild_commit already does); declared = writes_to(...) normalised through _inside; files = declared + [c for c in changed if c not in declared] in that order; undeclared = the appended tail. Live repo, not the worktree — the diff is between two commits and the worktree is at HEAD anyway.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: modify hollow.measure() to obtain actual changed files via git diff",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "_classify (hollow.py:306) is not touched: it already runs per file in the measurement loop (hollow.py:~577 for rel in files: why = _classify(rel)), so instruments, records and outside-repo files in the widened set are skipped with the same named reasons and land in skipped like today; an undeclared file that is skipped is still listed under undeclared (the two facts are separate, Law 7).",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: apply _classify() skips unchanged to the widened file set",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "No new fixture world: test_hollow.py's _fixture (proofs/test_hollow.py:108) already commits two files that change in the build (subject.py, unchecked.py) and _berth_decompose(tmp, files) already takes the declared list. The proof for this ticket is a new file cairn/devices/tester/proofs/test_hollow_sees_undeclared_files.py importing those helpers, with two teeth: (1) incomplete berth — _berth_decompose(tmp, ['subject.py', 'proofs/test_fixture.py']) then measure(...) — asserts f['undeclared'] == ['unchecked.py'], 'unchecked.py' in f['measured'] and in f['hollow'] (the file reds no tooth), verdict 'red'; (2) control — the berth names subject.py, unchecked.py, proofs/test_fixture.py — asserts f['undeclared'] == [] and every other finding key equals the reading test_hollow's first tooth pins today. PROVES = {'39966e1cefe4': {'1': tooth 1, '2': tooth 2}}; both run under the tester, netns, twice, before PROVEME.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: create fixture tickets with incomplete and complete decompose berths",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "The CLI's hollow report (cli.py, the --hollow arm that prints 'N file(s) measured · M hollow') prints one extra line only when f['undeclared'] is non-empty: '  changed but not declared: ' + ', '.join(undeclared). The seal's evidence.hollow carries the whole finding already, so the field rides the seal with no further edit; test_hollow's tooth 'evidence_hollow_lands_inside_the_seal_and_the_eight_fields_still_stand' is updated to nine fields (undeclared added) — that tooth's edit is the one existing-proof change, named here so it is not a surprise at reseal.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: add output reporting undeclared files as 'changed but not declared: <files>'",
+      "source": "rehearsal"
+    }
+  ]
 }
