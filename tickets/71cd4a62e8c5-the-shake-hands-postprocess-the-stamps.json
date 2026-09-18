@@ -22,7 +22,9 @@
     "feeds back to origin on failure — a record finding that changes bytes under the new shake is a question on this ticket, never a re-baseline."
   ],
   "children": "none, because the shake change, the two route sieves, the phase_of derivation, and the teeth sieve's move are one build over one tool and two tenants; the probe nest is the follow-on ticket probes-are-a-nest-with-settled-in-preprocess, not a child.",
-  "questions": [],
+  "questions": [
+    "open-8ecde12362d6"
+  ],
   "cast_checks": {
     "assumption_check": "THREE, each measured or pinned by a tooth. (1) Every record sieve is pure over its subject — necessarily true today because shake is subject-outer (nest.py:75), and the byte-identity reseal of the inspector's proofs is the instrument. (2) route's survivors after the shake carry cash_per_mtoken from the provider view (route.py:262) — the postprocess compare reads the same field the sort reads today. (3) phase_of can see the stamps argument in source — it already parses the file text (route.py:213 passes Path(__file__).read_text()); the signature is in that text.",
     "missing_check": "ONE point not wrapped, on purpose: WHICH probes become preprocess sieves — that is the next ticket (probes-are-a-nest-with-settled-in-preprocess), which depends on this one's preprocess contract (the sieve receives the subject set and returns the subset to score). This ticket builds the contract with one fixture preprocess sieve in the nest proof and no live tenant; the probe ticket is the first live one. Everything else is a decision line.",
@@ -76,6 +78,41 @@
       "n": 6,
       "text": "The preprocess contract is built with a fixture sieve in the nest proof only; the first live preprocess tenant is the probe-nest follow-on ticket.",
       "by": "CC 2026-09-16, unobjected; build-minimal-grow-against-need"
+    },
+    {
+      "n": 7,
+      "text": "The loop, literally: shake(assembled, subjects, fire) keeps its signature; inside, gradation = {s: {} for s in subjects} and skipped = set() are owned by shake itself (nothing outside initialises or reads them mid-shake). for band, names in assembled: (band 0) for name in names: keep = set(fire(name, subjects)); for s in subjects: if s in keep: gradation[s][name] = 1.0 else: gradation[s][name] = 1.0; gradation[s]['skipped_by'] = name; skipped.add(s) — a preprocess sieve returns the subject KEYS to score and never a finding; (band 1) for name in names: for s, subject in subjects.items(): if s in skipped: continue; caught = fire(name, subject); findings += caught; gradation[s][name] = 0.0 if caught else 1.0; (band 2) for name in names: for s, subject in subjects.items(): if s in skipped: continue; caught = fire(name, subject, gradation); same scoring. 'assembled' stays exactly what nest() returns today: [(band, [names]), ...] sorted by band. roll_up unchanged: min over the numeric stamps (the 'skipped_by' string is not a score — roll_up reads only float values). The tenant's fire is variadic: fire(name, *args) -> SIEVES[name](*args, ...) — shake picks the arity by band, the tenant passes it through.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D1",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "Sieve return convention (measured route.py:170-195): a sieve returns a list of findings; [] means the subject passes (stamp 1.0), non-empty means caught (stamp 0.0). cheapest(view, stamps) and prefers(view, stamps) follow it. Both compute the SAME compare over stamps: S = {k for k, row in stamps.items() if all(v == 1.0 for v in row.values() if isinstance(v, float))} (the record-band survivors — every stamp so far is 1.0); P = {k in S whose view['prefers'] names its model}; T = P if P else S. prefers(view, stamps) returns [] iff view's key is in T or not in S, else one finding 'not preferred while a preferred rung survives'. cheapest(view, stamps) returns [] iff view's key is not in S, or view's key is in T and its cash_per_mtoken == min cash over T; else one finding 'not the cheapest survivor'. So roll_up 1.0 after the shake is exactly the pick set: min cash within the preferred tier when any preferred rung survives, else min cash overall — the same host today's sort at :264 + reorder at :272 puts first. For the sieves to see their own key and the domain, each subject view gains 'key' (its subjects-dict key) and 'prefers' (the domain row's prefers list, [] when domain is None); route() resolves the domain row BEFORE the shake (the RouteRefused for an unknown domain moves ahead of the shake, same message). 'preferred' means exactly today's route.py:272: the model name is in the domain row's prefers list.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D3",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "phase_of detection, literally (cairn/tools/import_sieve/sieve.py:85-99): POSTPROCESS_PARAMS stays {'stamps','scores','gradation','prior_stamps'}; a new PREPROCESS_PARAMS = frozenset({'subjects'}) is added; _local_phase: params & POSTPROCESS_PARAMS -> 2; params & PREPROCESS_PARAMS -> 0; params non-empty -> 1; no params -> 0 (today's rule, kept). Names only, never annotations — a parameter NAME is what the source reads. Proof tooth in cairn/tools/import_sieve/proofs/test_import_sieve.py beside test_phase_classifies_by_what_the_sieve_reads: def pre(subjects): -> 0, def rec(row, comp_dir): -> 1, def post(row, comp_dir, stamps): -> 2.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 10,
+      "text": "Measured 2026-09-18: green_seal_names_a_tooth is in the code at cairn/machines/build_inspector/inspector.py:3458 (77f15efd5a96 is at BUILDME:waiting, held on open-f754b9b80107; its sieve and proofs are committed — this ticket needs the code, not the crossing). The move is one signature change: def green_seal_names_a_tooth(row, comp_dir, stamps=None). stamps is OPTIONAL because falsifier (2) reseals cairn/machines/build_inspector/proofs/ UNCHANGED and test_green_seal_names_a_tooth.py calls the sieve bare with two arguments. When stamps is handed (inside a shake), the sieve reads stamps[row['dir']]['component_color'] before it walks — a KeyError there is the loud, correct failure: the record band did not stamp this component first, so the band order is broken (Law 7, never caught). The read gates nothing and changes no finding byte: the walk over validations and the _finding shape stay exactly inspector.py:3476-3501. phase_of derives 2 from the parameter name (D4), so the live inspector assembly reads postprocess >= 1 from this sieve alone.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 11,
+      "text": "The pin tooth is the FIRST act of the build, before route.py changes: a new proof file cairn/devices/inference_domain/machines/route/proofs/test_the_pick_is_pinned.py with one tooth per fixture in test_route.py that routes today — (load_stacks + _FIXTURE_OVERLAY, generate/qwen2.5:7b) -> 'hex'; (load_stacks + _FIXTURE_OVERLAY, embed/nomic-embed-text) -> 'hex'; (_preference_fixture(['m-dear']), no domain) -> ('p-cheap','m-cheap'); (_preference_fixture(['m-dear']), domain='particular') -> ('p-dear','m-dear'); (_preference_fixture([]), domain='general') -> ('p-cheap','m-cheap') — each asserting route()['survivors'][0] as a literal (provider, model). It is written and run green against HEAD before D3 touches route.py, committed in its own commit, and must read green unchanged after.",
+      "by": "CC 2026-09-18, measured; unobjected",
+      "step": "unlisted: measure current route.py fixture picks",
+      "source": "rehearsal"
     }
   ],
   "why": "The bands were built for the inference proxy to pick the cheapest path inside the nest, and today the cheapest pick is a sort after the shake while every sieve in the system is record and postprocess holds nothing — the declaration never got its consumer (Akien: 'if it's not like that now, that's a bug').",
