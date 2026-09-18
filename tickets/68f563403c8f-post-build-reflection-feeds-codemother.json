@@ -34,7 +34,7 @@
     }
   ],
   "constraints": [],
-  "how": "The chain (validate berth validate-20260906T111910-9fe69b52c831) fixes the split; this plan names every step so a cold reader finds nothing unlisted. Placement is settled by the intention's own words (\"before PROVEME/WATCHME\"), which outrank the decompose berth's \"between §4 and §6\": the step goes between §3 (prove twice) and §4 (journal PROVEME).\n\nD1. skills/sail/reflection.py — the packet shape and its door. SHAPE = {ticket: 12-hex id; at_par: bool (REQUIRED and EXPLICIT — true means \"the packet was fine\", which is the positive data point, never a skip); findings: list of {artifact: one of chart|ticket|intention, field: the field named (e.g. survey.holdings, ticket.how), kind: praise|flag, text: what specifically, would_change: required on a flag, absent on praise}; cost_estimate: free text naming the extra tool calls or minutes the packet cost; stratum: code|tree}. check(packet) -> list[str] returns EVERY lack in one pass, [] when the packet passes; a lack is: a missing key, a non-bool at_par, at_par false with zero flag findings, a finding missing artifact/field/kind/text, kind outside praise|flag, a flag without would_change, an empty cost_estimate, a stratum outside code|tree, and ANY key outside SHAPE (a packet carrying a patch, diff or files key is a second build wearing a reflection's clothes — refused by name). fire(packet, bus=None) refuses a packet check() names (raises ValueError with the lacks) and otherwise posts ONE bus request to codemother: verb \"feedback\", sender \"sail\", channel \"personal\", why naming the ticket, body {\"reflection\": packet}; the bus is cairn.tools.bus_client.reach(\"codemother\") when none is handed in. python3 -m skills.sail.reflection <packet.json> runs check then fire and exits 2 on a refusal, printing the lacks.\n\nD2. skills/sail/SKILL.md — a numbered step \"## 3b. Reflect on the packet — before PROVEME\" inserted between §3 and §4, naming skills/sail/reflection.py and the command in D1, with the prompt: three questions only — (a) was the prebuild packet (chart chain, ticket, intention) at par with what the build needed? yes/no, explicit; (b) name the specific artifact and field for anything worth praising or flagging — praise is as welcome as a flag, and at_par true with no findings is a complete, positive answer; (c) what did the packet cost you (tool calls, minutes). The step says out loud that the reflection is backward-looking: a finding that would change this build's code is a second build, not a reflection, and goes to a new ticket.\n\nD3. cairn/devices/codemother/shim.py — a \"feedback\" verb: _handle_feedback(envelope) reads body.reflection; refuses (accepted false, naming the lack) a body without a dict reflection or one whose at_par is not a bool; otherwise appends ONE record to the held charter backpack (charter_instance() data_recorder, the same inbound the \"charter\" verb writes) shaped {\"probe_source\": sender, \"inspector_target\": \"codemother/0/tools/charter\", \"finding\": \"<ticket>: at par\" or \"<ticket>: below par (<n> flags)\", \"metadata\": {\"type\": \"feedback\"}, \"reflection\": <packet verbatim>} and answers {accepted: true, verb: \"feedback\", written: <id>, records: <count>}. Registered in declared_verbs() so the verb menu compiles it (Law 1).\n\nD4. cairn/devices/codemother/ingest.py — ingest_reflections(records) -> list[PatternType]: over data_recorder records, keeps those with metadata.type == \"feedback\" and a dict reflection; each with at_par false yields ONE negative type (name \"reflection:<ticket>\", why = the flag findings' text + would_change joined, signals = one per flag, source \"cc-reflection:<ticket>\", tags (\"cc-feedback\", \"reflection\")); each with at_par true yields ONE positive type (same naming, why = \"at par\" plus any praise text, tags (\"cc-feedback\", \"reflection\", \"at-par\")). ingest_memory_files (lines 23-55) is untouched: it reads .md frontmatter, not recorder records, so \"picks it up unchanged\" from the decompose berth was wrong — the compose is a sibling function over the same PatternType vocabulary.\n\nD5. cairn/devices/codemother/proofs/test_feedback_verb.py — PROVES {\"68f563403c8f\": {\"1\": ..., \"2\": ..., \"3\": ..., \"4\": ..., \"5\": ...}} one tooth per proves_red clause plus the chain's criteria: (1) check({}) and check({... no at_par}) name at_par among the lacks — silence is refused; (2) check() names a packet carrying a patch/diff/files key as a lack, and fire() over a fake bus posts exactly one message and returns the reply; (3) fire() addresses \"codemother\", and the verb appends to codemother's held backpack under scratch roots (via CodeMotherDevice(bus=fake)._handle_feedback with instance roots pointed at scratch) — one call, one record, metadata.type feedback; (4) SKILL.md's step is one numbered section under 40 lines naming reflection.py, and check() accepts at_par true with findings [] (the \"was fine\" answer costs nothing); (5) a praise finding passes check() and ingest_reflections yields a POSITIVE type for an at-par packet and a NEGATIVE one tagged cc-feedback for a below-par one. Every tooth binds its subject at call time. Sealed twice bare, then under cairn test --seal, then hollow.\n\nD6. Charter delta on skills/sail/intention+why.json: feedback.probes grows a second probe {to: \"cairn/devices/codemother\", why: \"the builder's post-build reflection\", consumer: \"passive\"} and the filed edge list notes the -2- edge now has one delivered leg; recompile_gate.sh in the same act. codemother's charter gains nothing (the verb is a face, not a design shift).",
+  "how": "The chain (validate berth validate-20260906T111910-9fe69b52c831) fixes the split; this plan names every step so a cold reader finds nothing unlisted. Placement is settled by the intention's own words (\"before PROVEME/WATCHME\"), which outrank the decompose berth's \"between §4 and §6\": the step goes between §3 (prove twice) and §4 (journal PROVEME). The build is the decision list D1-D6 below (D7-D9 settle placement, the ingest compose and the delivery route); a step not named there is a gap to decide, never to improvise.",
   "links": [
     "61416fbb8013"
   ],
@@ -77,22 +77,95 @@
   "release": "61416fbb8013",
   "decisions": [
     {
+      "n": 1,
+      "text": "skills/sail/reflection.py — the packet shape and its door. SHAPE = {ticket: 12-hex id; at_par: bool (REQUIRED and EXPLICIT — true means \"the packet was fine\", which is the positive data point, never a skip); findings: list of {artifact: one of chart|ticket|intention, field: the field named (e.g. survey.holdings, ticket.how), kind: praise|flag, text: what specifically, would_change: required on a flag, absent on praise}; cost_estimate: free text naming the extra tool calls or minutes the packet cost; stratum: code|tree}. check(packet) -> list[str] returns EVERY lack in one pass, [] when the packet passes; a lack is: a missing key, a non-bool at_par, at_par false with zero flag findings, a finding missing artifact/field/kind/text, kind outside praise|flag, a flag without would_change, an empty cost_estimate, a stratum outside code|tree, and ANY key outside SHAPE (a packet carrying a patch, diff or files key is a second build wearing a reflection's clothes — refused by name). fire(packet, bus=None) refuses a packet check() names (raises ValueError with the lacks) and otherwise posts ONE bus request to codemother: verb \"feedback\", sender \"sail\", channel \"personal\", why naming the ticket, body {\"reflection\": packet}; the bus is cairn.tools.bus_client.reach(\"codemother\") when none is handed in. python3 -m skills.sail.reflection <packet.json> runs check then fire and exits 2 on a refusal, printing the lacks.",
       "by": "CC",
-      "at": "2026-09-18",
+      "step": "D1",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "skills/sail/SKILL.md — a numbered step \"## 3b. Reflect on the packet — before PROVEME\" inserted between §3 and §4, naming skills/sail/reflection.py and the command in D1, with the prompt: three questions only — (a) was the prebuild packet (chart chain, ticket, intention) at par with what the build needed? yes/no, explicit; (b) name the specific artifact and field for anything worth praising or flagging — praise is as welcome as a flag, and at_par true with no findings is a complete, positive answer; (c) what did the packet cost you (tool calls, minutes). The step says out loud that the reflection is backward-looking: a finding that would change this build's code is a second build, not a reflection, and goes to a new ticket.",
+      "by": "CC",
+      "step": "D2",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "cairn/devices/codemother/shim.py — a \"feedback\" verb: _handle_feedback(envelope) reads body.reflection; refuses (accepted false, naming the lack) a body without a dict reflection or one whose at_par is not a bool; otherwise appends ONE record to the held charter backpack (charter_instance() data_recorder, the same inbound the \"charter\" verb writes) shaped {\"probe_source\": sender, \"inspector_target\": \"codemother/0/tools/charter\", \"finding\": \"<ticket>: at par\" or \"<ticket>: below par (<n> flags)\", \"metadata\": {\"type\": \"feedback\"}, \"reflection\": <packet verbatim>} and answers {accepted: true, verb: \"feedback\", written: <id>, records: <count>}. Registered in declared_verbs() so the verb menu compiles it (Law 1).",
+      "by": "CC",
+      "step": "D3",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "cairn/devices/codemother/ingest.py — ingest_reflections(records) -> list[PatternType]: over data_recorder records, keeps those with metadata.type == \"feedback\" and a dict reflection; each with at_par false yields ONE negative type (name \"reflection:<ticket>\", why = the flag findings' text + would_change joined, signals = one per flag, source \"cc-reflection:<ticket>\", tags (\"cc-feedback\", \"reflection\")); each with at_par true yields ONE positive type (same naming, why = \"at par\" plus any praise text, tags (\"cc-feedback\", \"reflection\", \"at-par\")). ingest_memory_files (lines 23-55) is untouched: it reads .md frontmatter, not recorder records, so \"picks it up unchanged\" from the decompose berth was wrong — the compose is a sibling function over the same PatternType vocabulary.",
+      "by": "CC",
+      "step": "D4",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "cairn/devices/codemother/proofs/test_feedback_verb.py — PROVES {\"68f563403c8f\": {\"1\": ..., \"2\": ..., \"3\": ..., \"4\": ..., \"5\": ...}} one tooth per proves_red clause plus the chain's criteria: (1) check({}) and check({... no at_par}) name at_par among the lacks — silence is refused; (2) check() names a packet carrying a patch/diff/files key as a lack, and fire() over a fake bus posts exactly one message and returns the reply; (3) fire() addresses \"codemother\", and the verb appends to codemother's held backpack under scratch roots (via CodeMotherDevice(bus=fake)._handle_feedback with instance roots pointed at scratch) — one call, one record, metadata.type feedback; (4) SKILL.md's step is one numbered section under 40 lines naming reflection.py, and check() accepts at_par true with findings [] (the \"was fine\" answer costs nothing); (5) a praise finding passes check() and ingest_reflections yields a POSITIVE type for an at-par packet and a NEGATIVE one tagged cc-feedback for a below-par one. Every tooth binds its subject at call time. Sealed twice bare, then under cairn test --seal, then hollow.",
+      "by": "CC",
+      "step": "D5",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "Charter delta on skills/sail/intention+why.json: feedback.probes grows a second probe {to: \"cairn/devices/codemother\", why: \"the builder's post-build reflection\", consumer: \"passive\"} and the filed edge list notes the -2- edge now has one delivered leg; recompile_gate.sh in the same act. codemother's charter gains nothing (the verb is a face, not a design shift).",
+      "by": "CC",
+      "step": "D6",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "the reflection step sits between SKILL.md §3 (prove twice) and §4 (journal PROVEME), settled by the intention's own words 'before PROVEME/WATCHME'; the decompose berth's '§4 to §6' is the chart's translation and the intention outranks it",
+      "by": "CC",
       "step": "placement",
-      "line": "the reflection step sits between SKILL.md §3 (prove twice) and §4 (journal PROVEME), settled by the intention's own words 'before PROVEME/WATCHME'; the decompose berth's '§4 to §6' is the chart's translation and the intention outranks it"
+      "source": "cast"
     },
     {
+      "n": 8,
+      "text": "ingest.py:23-55 (ingest_memory_files) reads .md frontmatter, not recorder records, so it does NOT pick a reflection up unchanged; the compose is a new sibling ingest_reflections(records) over the same PatternType vocabulary, ingest_memory_files untouched",
       "by": "CC",
-      "at": "2026-09-18",
       "step": "ingest",
-      "line": "ingest.py:23-55 (ingest_memory_files) reads .md frontmatter, not recorder records, so it does NOT pick a reflection up unchanged; the compose is a new sibling ingest_reflections(records) over the same PatternType vocabulary, ingest_memory_files untouched"
+      "source": "cast"
     },
     {
+      "n": 9,
+      "text": "the reflection reaches codemother as a bus request (verb feedback) through cairn.tools.bus_client.reach('codemother'), never a file write into codemother's berth from the sail side; the verb appends to the held charter backpack the 'charter' verb already writes",
       "by": "CC",
-      "at": "2026-09-18",
       "step": "delivery",
-      "line": "the reflection reaches codemother as a bus request (verb feedback) through cairn.tools.bus_client.reach('codemother'), never a file write into codemother's berth from the sail side; the verb appends to the held charter backpack the 'charter' verb already writes"
+      "source": "cast"
+    },
+    {
+      "n": 10,
+      "text": "SKILL.md step 3b does not prompt anything: the builder (CC, reading the skill) writes the answers by hand as JSON at <scratchpad>/reflection.json in reflection.SHAPE, then runs PYTHONPATH=$HOME/dev/src/cairn python3 -m skills.sail.reflection <scratchpad>/reflection.json; the module's main() reads the file, check()s it, and fire()s it. No bridge code exists or is needed.",
+      "by": "CC",
+      "step": "D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 11,
+      "text": "The append is: from cairn.tools.data_recorder.data_recorder import load; from cairn.devices.codemother.shim import charter_instance, ensure_charter_instance; ensure_charter_instance(); load(charter_instance()).write({...record...}) — exactly the calls the existing 'charter' verb handler in shim.py makes; the record must carry finding, inspector_target, probe_source, timestamp (data_recorder.REQUIRED_KEYS; write() stamps timestamp) plus metadata.type='feedback' and reflection=<packet>.",
+      "by": "CC",
+      "step": "D3",
+      "source": "rehearsal"
+    },
+    {
+      "n": 12,
+      "text": "PatternType is built through the factories in cairn/devices/codemother/types.py: negative(name=, why=, signals=[PatternSignal(description=...)], source=, tags=()) and positive(...) with the same arguments; ingest.py already imports them for ingest_memory_files — copy that construction, one PatternType per reflection record.",
+      "by": "CC",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 13,
+      "text": "Sealing is three commands over the proof path P=cairn/devices/codemother/proofs/test_feedback_verb.py: (1) run it bare twice — PYTHONPATH=$HOME/dev/src/cairn python3 P, twice, both must exit 0; (2) cairn test --seal P — the tester runs it in a netns and persists validations/test_feedback_verb.json beside it; (3) cairn test --hollow 68f563403c8f --seal P — reverts each writes_to file in a scratch worktree and checks the proof reds each time. No 'real' or 'test' data is involved; the proof builds its own fixtures.",
+      "by": "CC",
+      "step": "D5",
+      "source": "rehearsal"
     }
   ],
   "proof": "cairn/devices/codemother/proofs/test_feedback_verb.py"
