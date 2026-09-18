@@ -40,5 +40,63 @@
     "check_type": "deterministic — a clock comparison and a file read, no LLM in the fire path."
   },
   "children": "none, because this is a leaf: one tool file, one pass-through in cairn/tools/base/device.py, one probe, one proof. The three teeth are teeth in one proof, not separable nodes — tooth 2 is only meaningful beside tooth 1. The reader that would eventually call stamp_read is NOT a child and must not become one: this ticket measures the absence of reading, and building its own consumer would green its own measurement.",
-  "cast_at": "2026-09-07 via /sorted; finding 8896a8b822fd, trace af8719a23186"
+  "cast_at": "2026-09-07 via /sorted; finding 8896a8b822fd, trace af8719a23186",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "reading.json is written by DataRecorder._write_reading beside records.jsonl with exactly four keys (started, last_read, expected_read_frequency_seconds, on_read); write(record, *, now=None) calls it after the append with first_write=True so started is stamped once, on the first write, and never moved; construction touches no disk and reading() returns None until the first write; the settings are ALWAYS the constructor's, so a holder that changes its declaration is read as it now declares.",
+      "by": "cc",
+      "step": "unlisted: the recorder's self-declaration (reading.json, started, last_read, expected_read_frequency_seconds, on_read, stamp_read door)",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "stamp_read(ids=None, *, now=None) -> int: under on_read 'drain' with ids it calls clear(ids) and then stamps last_read=now in the same act; under 'hold' or with no ids it stamps only; returns the count cleared. __init__(base_dir, *, expected_read_frequency_seconds=None, on_read=None) refuses with ValueError an on_read outside ('drain','hold') or a frequency that is not a positive int (bool excluded).",
+      "by": "cc",
+      "step": "unlisted: DataRecorder gains reading.json (started on first write, last_read, expected_read_frequency_seconds, on_read) and stamp_read(ids=None)",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "The declaration is two CLASS ATTRIBUTES on the holder — RECORDER_READ_FREQUENCY_SECONDS: int|None = None and RECORDER_ON_READ: str|None = None — declared on BaseDevice (cairn/tools/base/device.py) and on _FeedbackDevice (ground_loop/discovered.py); a device class overrides them to declare; _get_recorder at both sites passes them through as DataRecorder(path, expected_read_frequency_seconds=..., on_read=...). None is the honest undeclared state and reads red under the probe; no default is invented anywhere.",
+      "by": "cc",
+      "step": "unlisted: the holders pass through what the device declares (two settings: expected_read_frequency_seconds and on_read)",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "A probe module raises through ModuleRaiser('data_recorder', roots=roots) — the DiagnosticBase surface for a module (cairn/tools/base/diagnostic.py) — never by importing the trouble device and never over the bus; the raise sits in the probe's TRIGGER, memoized per beat via probe.once(context, 'recorder_reading', ...), so a standing overdue raises every beat and the trouble drain folds recurrences on identity; the same pass calls raiser.reconcile_troubles('recorder-', <sorted identities observed>, by='cc', what_changed=...) so a recorder that gets read clears. Emissions land under instance/logs/data_recorder/0/ (measured) and the trouble shim drains that home like any device's.",
+      "by": "cc",
+      "step": "unlisted: cairn/tools/data_recorder/probes/reading_is_declared_and_current.py globs held recorders, reads reading.json against clock, raises two distinct identities via DiagnosticBase.raise_trouble",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "The census is the pure function census(now, *, roots=None): recorders are found through address.held_tool_paths('data_recorder', roots) one level down (each child dir carrying reading.json or records.jsonl; name = the child dir name; device and instance read from the held path's parents). reading.json absent OR expected_read_frequency_seconds null -> recorder-declares-no-reader-<device>-<instance>-<name>; else since = last_read or started and (now - since) > frequency -> recorder-read-overdue-<device>-<instance>-<name>; otherwise the recorder is current. report(now, *, roots=None, raiser=None) raises and reconciles; the Probe declares to='harbor_master', body {nexus: hypothesize, kind: at-rest, scope: 'recorder-'}, carry = counts + finding, no enough (a standing watch), poke at the crossing (while_true False).",
+      "by": "cc",
+      "step": "unlisted: the at-rest probe that reds the undeclared and the overdue with two distinct identities",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "No freezegun and no clock library: the clock is frozen by handing fixed timezone-aware datetimes through the now= seam every door carries — DataRecorder.write(now=), stamp_read(now=), probe.census(now)/report(now) and ModuleRaiser.raise_trouble(now=). Isolation is a scratch roots table {repo, commons, instance} -> <tmp>/world (the shape cairn/devices/trouble/proofs/test_trouble.py:490 uses) with recorders at world/devices/<dev>/0/tools/data_recorder/inbound and emissions read back from world/logs/data_recorder/0/*.json. Five teeth: started-on-first-write-never-moves; drain-drains-hold-holds; overdue raises exactly the overdue identity and lands in the log home; inside-frequency raises nothing; undeclared raises no-reader and never overdue. Run bare as PYTHONPATH=. /home/akien/.cairn/venv/bin/python3 cairn/tools/data_recorder/proofs/test_reading_declaration.py.",
+      "by": "cc",
+      "step": "unlisted: the five-tooth proof on a frozen clock",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "The WATCHME probe writes NO artifact itself — a probe carries no authority (Law 6). Its trigger takes the population census through the at-rest probe's _recorders(roots) (memoized once per beat under 'recorder_population') and fires the first beat any recorder carries a non-null last_read; carry is the counts as data — recorders, declared, read, read_names, frequencies (the distinct declared set), discriminates (bool), ticket a4c2be029f49, and a one-line finding; enough is read >= 3 AND len(frequencies) >= 2; to='harbor_master', body {nexus: hypothesize, kind: efficacy, ticket}, horizon 2000 beats. The verdict artifact against the WRONG INTENT clause is written by the owner (CC) through cairn.devices.codemother.machines.verdict.verdict.write_verdict from that carried evidence when the poke lands.",
+      "by": "cc",
+      "step": "unlisted: cairn/tools/data_recorder/probes/declared_cadence_discriminates.py as WATCHME probe with module-level PROBE carrying trigger, carry, enough, and verdict artifact emission",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "The population census and the discriminates predicate are the two public functions population(*, roots=None) and discriminates(pop) in the WATCHME probe module, so the same numbers the beat carries can be read at rest by hand: PYTHONPATH=. python3 -c 'from cairn.tools.data_recorder.probes.declared_cadence_discriminates import population; print(population())'.",
+      "by": "cc",
+      "step": "unlisted: declared cadence actually discriminates in the field (WATCHME until measured)",
+      "source": "rehearsal"
+    }
+  ]
 }
