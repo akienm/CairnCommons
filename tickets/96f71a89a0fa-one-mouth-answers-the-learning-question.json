@@ -69,5 +69,94 @@
     "found_by": "the 2026-09-09 IOU scrub, while verifying that CLAUDE.md's learning-as-a-pattern IOU was stale before moving it to the residues",
     "original_design_named_the_field": "cairn/machines/build_inspector/nexus.py:76, dated 2026-07-27, states the candidate sieve's question as 'What shape reds a charter whose how_it_learns is absent or empty?' — the design named how_it_learns five weeks before the build read `learns`. Found 2026-09-09 while scrubbing that site's stale IOU citation; it is independent corroboration of which field survives, and it was not available when this ticket was cast an hour earlier."
   },
-  "owning_intention": "cairn/machines/build_inspector/intention+why.json"
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: learning_declared (cairn/machines/build_inspector/inspector.py, def learning_declared, registered in SIEVES under the same name) reads how_it_learns and only that: a non-blank string passes. Three ways to red, all under method learning_declared so the jurisdiction stays one sieve: (a) how_it_learns absent, None or blank -> claim \"charter answers 'how does this component learn?'\" expected True actual False; (b) the charter carries the retired key learns at all, whatever its value -> claim \"charter answers the learning question with one mouth (learns is retired)\" expected True actual False, finding field retired='learns'; (c) the charter cannot be read or parsed (OSError, JSONDecodeError, or a top-level value that is not a dict) -> claim 'charter parses' expected True actual False, finding field error=<the exception text>. Every finding carries charter=<path>. The sieve never raises and never returns [] on a file it could not read.",
+      "by": "cc",
+      "step": "unlisted: the sieve reads one field",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "D2: MEASURED 2026-09-18 at the build (the cast's 73/70/3 grew): 81 charters, 74 carry both fields, 6 carry only learns (cairn/devices/cairn, cairn/machines/corrosion, cairn/machines/counting_block, cairn/machines/exemptions, cairn/machines/installer, cairn/machines/openai_wire), 1 carries only how_it_learns (cairn/devices/codemother/0/tools/charter), 0 neither. Each of the 74 pairs was read (the pairs are dumped side by side before the migration): in every one how_it_learns is the reasoned answer and learns is the 2026-08-31 backfill's one-liner or an echo of it (bus_client's learns says 'see how_it_learns'; rehearsal's two texts are identical; artifact, cgroup and question carry authored prose in both and how_it_learns is the more specific), so how_it_learns survives VERBATIM in all 74 and learns is removed. In the 6 only-learns charters the learns text moves under how_it_learns verbatim and learns is removed. No text is rewritten, merged or shortened by this ticket.",
+      "by": "cc",
+      "step": "unlisted: which text survives, per pair",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "D3: every charter write rides the artifact door: cairn artifact write --verb charter --why '96f71a89a0fa: one mouth answers the learning question' --from <scratch json> <charter path>, one call per charter, the JSON re-serialised with indent=2 and ensure_ascii=False and key order preserved (how_it_learns takes the position learns held when it is newly added). cairn/tools/intentions_model_compiler/recompile_gate.sh is poked once after the batch, in the same act. The four proofs whose fixture charters carry learns (cairn/machines/build_inspector/proofs/test_inspector.py, cairn/machines/build_inspector/proofs/test_address_sieve.py, cairn/tools/base/proofs/test_transitions.py, cairn/devices/codemother/proofs/test_codemother.py) rename that fixture key to how_it_learns with the same text — a fixture is not a charter and does not ride the door.",
+      "by": "cc",
+      "step": "unlisted: how the charters are written",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "D4: in cairn/machines/build_inspector/proofs/test_inspector.py the learning_declared block (the tooth named 'learning_declared (learning-as-a-pattern)') is rewritten: (a) how_it_learns: '' reds exactly [learning_declared]; (b) the key deleted reds exactly [learning_declared]; (c) NEW: a charter with how_it_learns populated AND learns: 'anything' reds exactly [learning_declared] and the finding's claim contains 'retired' — the falsification run the watch requires; (d) NEW: the charter file written as the bytes '{\"component\": \"bad_json\",' reds exactly [learning_declared] with 'parses' in the claim and inspect() does not raise; the healthy fixture (how_it_learns populated, no learns) stays clean. Teeth (c) and (d) are separate tooth() names: 'learning_declared refuses the retired field' and 'learning_declared reds an unparseable charter'.",
+      "by": "cc",
+      "step": "unlisted: the teeth",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "D5: the census is code, not a scratch script: cairn/machines/build_inspector/probes/one_mouth_answers_the_learning_question.py exposes census(root: Path) -> dict with keys charters, both, only_learns, only_how_it_learns, neither, unparseable, contradictions, offenders (paths carrying learns, or neither, or unparseable). It walks every intention+why.json under root skipping any path containing /proofs/ or /scratch. contradictions counts charters where the two texts open in opposite shapes — the first 60 chars of one match the yes-shape r'^\\s*(yes|the point|directly|through|by |reflexively|from |partly|barely)' and of the other the no-shape r'^\\s*(it does not|it doesn.t|no\\b|not yet|nothing|it holds nothing)' — the same first-clause yes/no reading the cast's 36 came from (it reads 36 over the 74 pairs today). python3 -m cairn.machines.build_inspector.probes.one_mouth_answers_the_learning_question prints the census as JSON; at PROVED it prints both=0 only_learns=0 neither=0 unparseable=0 contradictions=0 charters=81.",
+      "by": "cc",
+      "step": "unlisted: the census instrument",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "D6: the same module declares a frozen module-level PROBE (cairn.tools.base.probe.Probe) with why, trigger, to='harbor_master', body={'nexus': 'hypothesize', 'kind': 'efficacy'}, carry, enough, horizon=1000. It reads the live repo root (Path(__file__).resolve().parents[4]) unless context['roots']['cairn'] names another. trigger: census offenders non-empty. enough: offenders empty AND both == 0 AND the falsification run stands — the latest record of cairn/machines/build_inspector/validations/test_inspector.json is green and its evidence.teeth_green names 'learning_declared refuses the retired field'. carry: finding text, the census, offenders, ticket=owning_ticket('96f71a89a0fa'), against_falsifier and suggests strings. No thresholds= (HEAD's Probe has no such field; 336a781018ba declares them when it lands) and no numeric knob exists here. Proof teeth for it live in test_inspector.py: PROBE frozen with callable carry and enough; over a scratch root with one offender enough is False and trigger True; over a clean scratch root with a fixture validation naming the tooth enough is True.",
+      "by": "cc",
+      "step": "unlisted: the probe",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "D7: out, verbatim from constraints: no agreement check between two fields, no scripted rename, no content judgement; 'it doesn't, because X' stays a valid answer. The charter of build_inspector itself gains nothing new beyond its own learns removal (its how_it_learns already says the sieve set grows per caught failure). The PROVEME crossing runs on component cairn/machines/build_inspector and the proof is sealed under netns then hollow-measured against the writes_to set: inspector.py, test_inspector.py, the probe module, the 80 charters and the 3 other fixture proofs.",
+      "by": "cc",
+      "step": "unlisted: what stays out",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "D8: correcting D2/D5's '36': with D5's two regexes over the first 60 chars, the census reads contradictions=27 over the 74 pairs on 2026-09-18 (both=74 only_learns=6 only_how_it_learns=1 neither=0 unparseable=0 offenders=80). The cast's 36 was a hand reading on 2026-09-09; the module's number is the one that stands, and the only number enough depends on is 0. The regexes are not tuned to reproduce 36.",
+      "by": "cc",
+      "step": "unlisted: the contradiction count",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "D9: the Probe API is cairn/tools/base/probe.py — Probe(why, trigger, to, body, carry, enough, horizon) is a frozen dataclass; trigger(now, context) -> bool; carry(context) -> dict; enough(context) -> bool; once(context, key, compute) memoizes one read per pulse; owning_ticket(id) -> the ticket record for the carry. against_falsifier and suggests are plain string keys in the carry dict, not helpers. The template is cairn/tools/base/probes/the_casting_door_has_callers.py (23089d52d805, PROVED 2026-09-18) — copy its shape verbatim, swap the survey.",
+      "by": "cc",
+      "step": "unlisted: the probe module's API",
+      "source": "rehearsal"
+    },
+    {
+      "n": 10,
+      "text": "D10: the validation file cairn/machines/build_inspector/validations/test_inspector.json is a JSON LIST of records; the probe reads the LAST element d[-1]: d[-1]['verdict'] == 'green' and d[-1]['evidence']['teeth_green'] is a list of the printed tooth labels verbatim (strings); the tooth is named when any label contains 'learning_declared refuses the retired field'. On OSError/ValueError/TypeError the read returns False. carry(context) returns EXACTLY this dict: {'finding': <str, one of: '<n> charter(s) answer the learning question with two mouths' | '<n> charter(s) still carry the retired field learns' | 'a charter answers the learning question with no mouth, or cannot be read' | 'the sieve has not yet redded a deliberately reintroduced learns' | 'every charter answers once and the sieve has refused a second mouth'>, 'census': <the census dict minus offenders>, 'offenders': <list of repo-relative charter paths>, 'falsification_stands': <bool>, 'ticket': owning_ticket('96f71a89a0fa'), 'against_falsifier': <the ticket's WRONG INTENT clause as a str>, 'suggests': <str>}. enough(context) -> bool = offenders empty AND both == 0 AND falsification_stands. trigger(now, context) -> bool = offenders non-empty. The survey is read once per pulse via once(context, 'census', fn).",
+      "by": "cc",
+      "step": "unlisted: the probe's inputs and outputs, exactly",
+      "source": "rehearsal"
+    },
+    {
+      "n": 11,
+      "text": "D11: the module is 200 lines in this order: docstring; from __future__ import annotations; import json, re; from pathlib import Path; from cairn.tools.base.probe import Probe, once, owning_ticket; _REPO_ROOT = Path(__file__).resolve().parents[4]; constants _OWNING_TICKET, _RETIRED='learns', _FIELD='how_it_learns', _VALIDATION (relative path), _TOOTH, _HORIZON=1000, _YES/_NO compiled regexes, _HEAD=60; def _repo_root(context) -> Path (context['roots']['cairn'] if present else _REPO_ROOT); def _charters(root) -> sorted list of root.rglob('intention+why.json') skipping any path containing '/proofs/', 'scratch' or '/.git/'; def _shape(text) -> 'yes'|'no'|''; def census(root=None) -> dict; def _falsification_stands(root) -> bool; def _survey(context) -> dict via once; def _enough(context); def _trigger(now, context); def _carry(context); PROBE = Probe(why=<str>, trigger=_trigger, to='harbor_master', body={'nexus': 'hypothesize', 'kind': 'efficacy'}, carry=_carry, enough=_enough, horizon=_HORIZON); if __name__ == '__main__': print(json.dumps(census(), indent=2, ensure_ascii=False)). Probe is a frozen dataclass — no attribute is set after construction.",
+      "by": "cc",
+      "step": "unlisted: the probe module's shape, inline",
+      "source": "rehearsal"
+    },
+    {
+      "n": 12,
+      "text": "D12: DISCOVERY: the 80 charters to migrate are exactly the paths listed in the decompose berth's fifth piece writes_to (/home/akien/.cairn/devices/chart/0/packets/decompose-20260918T121248-85cf34a9b0a3.json), which equals the output of: grep -rl '\"learns\"' --include=intention+why.json . | grep -v /proofs/ | grep -v scratch | sort (run at repo root before the migration; 80 lines; the 81st charter, cairn/machines/build_inspector/proofs is excluded because it is a proof fixture — the census of 81 counts every non-proof charter, 80 of which carry learns and 1 carries only how_it_learns). KEY ORDER: the serializer does NOT preserve it automatically; the builder reconstructs by hand: read the charter with json.loads (dict preserves insertion order), then build a new dict iterating the old items in order: skip the key 'learns' — except when how_it_learns is absent or blank, in which case emit ('how_it_learns', <the learns text>) AT THE POSITION learns held and skip the blank how_it_learns key wherever it sits; every other key copied verbatim. Serialize with json.dumps(out, indent=2, ensure_ascii=False) plus a trailing newline iff the original ended with one (all 80 originals are indent=2 utf-8 — the raw diff against each original is exactly one deleted line for the 74 kept charters). Write that text to a scratch file and fire cairn artifact write --verb charter --why '96f71a89a0fa: one mouth answers the learning question' --from <scratch> <charter path> — never write_text at the charter path.",
+      "by": "cc",
+      "step": "unlisted: charter discovery and key order, mechanically",
+      "source": "rehearsal"
+    }
+  ],
+  "questions": [
+    "open-af88692e7180"
+  ]
 }
