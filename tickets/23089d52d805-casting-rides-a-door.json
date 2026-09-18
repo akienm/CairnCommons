@@ -15,7 +15,7 @@
   "linked_ideas": [
     "2026-09-09-agreed-and-we-should-scrub-all-ious"
   ],
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(the-casting-door-has-callers) -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [WATCHME(the-casting-door-has-callers):waiting] -> PROVED",
   "watchme": {
     "carrier": "a verdict artifact against this ticket's falsifier: tickets journaled through the door, tickets arriving unjournaled, and the distinct calendar days spanned",
     "consumer": "whoever casts the next ticket, and e71983e8d76c (author + via), which cannot be enforced at all until this door exists",
@@ -71,5 +71,78 @@
     "pattern_already_proved": "55dc1f3d799b-validation-store-door-is-the-only-path",
     "failure_shape_next_door": "the phase door built 2026-09-08 took 13 records across 4 days, then had no caller at all"
   },
-  "owning_intention": "skills/sorted/intention+why.json"
+  "owning_intention": "skills/sorted/intention+why.json",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cast_ticket lives in cairn/tools/base/transitions.py directly beside set_phase (the open_for_akien read stands: pre-approved by Akien 2026-09-17, everything cast is pre-approved through BUILDME/PROVEME); splitting a tickets-store module out is a later question once both doors have callers.",
+      "by": "cc",
+      "step": "unlisted: where the door lives",
+      "source": "rehearsal"
+    },
+    {
+      "n": 2,
+      "text": "D2: cast_ticket(doc: dict, *, actor: str, tickets_dir: Path | None = None) -> Path. doc is the assembled ticket (hand fields plus the berth-derived ones). tickets_dir defaults to the live CairnCommons/tickets (the module's _TICKETS); a proof hands a scratch one. The door collects EVERY lack, then raises CastRefused (a subclass of IllegalTransition) naming all of them in one message; on refusal nothing is written and nothing is journaled. On pass it returns the written path tickets_dir/<id>-<slug>.json, slug derived from title: lowercase, every run of characters outside [a-z0-9] becomes one '-', leading/trailing '-' trimmed, capped at 80 chars.",
+      "by": "cc",
+      "step": "unlisted: the door's signature and its refusal",
+      "source": "rehearsal"
+    },
+    {
+      "n": 3,
+      "text": "D3: the required set is _CAST_REQUIRED in transitions.py: id, title, date, owner, owning_intention, intention, why, traces_to, how, falsifier, node_class, workflow_and_state, watchme, sorted_berth, intent_berth — the 15 keys the store template names that are present on at least 73 of the 77 tickets cast since 2026-09-01 (measured 2026-09-18 over 308 tickets). A key lacks when absent, None, or a blank/whitespace string (watchme may be a dict or the string 'none, because <X>'; falsifier may be a string or the template's dict). Nothing else in the template is required; extra keys are allowed.",
+      "by": "cc",
+      "step": "unlisted: the required fields",
+      "source": "rehearsal"
+    },
+    {
+      "n": 4,
+      "text": "D4: (a) any required lack (D3); (b) id not exactly 12 lowercase hex chars, or a file already standing under tickets_dir named <id>.json or <id>-*.json, or the target filename already existing; (c) workflow_and_state that parse_workflow raises MalformedWorkflow on — the parser's own text is carried in the lack; (d) sorted_berth that is not an existing file, or is a file whose JSON lacks skill == 'sorted', or whose answers.workflow != doc['workflow_and_state'], or whose answers.node_class != doc['node_class'] — the door composes the judged packet, so a cast that disagrees with its berth is refused; intent_berth that is not an existing file, unless it is the string 'none, because <X>' where reason_has_referent(X) holds (imported lazily from cairn.machines.build_inspector.inspector, the way the BUILDME lanes already are at transitions.py:1379). Berth paths resolve as given (absolute, or relative to the cwd).",
+      "by": "cc",
+      "step": "unlisted: the four refusal classes",
+      "source": "rehearsal"
+    },
+    {
+      "n": 5,
+      "text": "D5: the write rides cairn.tools.artifact.artifact.write(path, json.dumps(doc, indent=2, ensure_ascii=False) + newline, verb='cast', why='cast_ticket: <id> <title> by <actor>'). That journal line — at, caller (cgroup class), sha_before 'absent', and the stack frame transitions.py:<n>:cast_ticket — IS the 'who cast this and when' record. Before writing, the door stamps doc['cast'] = today's ISO date only when the key is absent, and touches no other key; authorship fields (author, via) are e71983e8d76c's and are not written here.",
+      "by": "cc",
+      "step": "unlisted: the journal",
+      "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "D6: cairn/tools/base/cast.py holds sweep_casts(commons_root: Path) -> dict. It reads artifact.read_journal(commons_root) once and classifies every tickets/*.json (names starting with '_' skipped) by the FIRST journal entry for its relative path: through_the_door (sha_before == 'absent' and some stack frame ends with ':cast_ticket'), journaled_beside (a creation entry, sha_before 'absent', without that frame), pre_door (first entry's verb is 'genesis'), unjournaled (no entry at all). It returns {'counts': {class: n}, 'tickets': {class: [relative paths]}, 'landing': <at of the earliest through_the_door entry or None>} and never raises on the backlog. The same module is the CLI: python3 -m cairn.tools.base.cast <fields.json> --actor <who> fires cast_ticket and prints the path (exit 0) or the refusal (exit 1); python3 -m cairn.tools.base.cast --sweep [commons_root] prints the sweep as JSON and exits 0 always. bin/cmd/cast registers it as 'cairn cast'.",
+      "by": "cc",
+      "step": "unlisted: the backlog sweep",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "D7: cairn/tools/base/probes/the_casting_door_has_callers.py declares a module-level frozen PROBE (cairn.tools.base.probe.Probe) with trigger, carry and enough, to='harbor_master', body {'nexus': 'hypothesize', 'kind': 'efficacy'}. It reads the commons root from the pulse context (context.get('roots', {}).get('commons'), else the live CairnCommons) and memoizes ONE sweep_casts per pulse via once(context, 'casts', ...). Arrivals = tickets whose first journal entry is a creation (sha_before 'absent') at or after the landing (the earliest cast_ticket entry, DERIVED never hard-coded), in journal order. enough: at least 10 arrivals stand, the last 10 are all through_the_door, those 10 span at least 3 distinct calendar days (at[:10]), and zero arrivals since the landing are journaled_beside or unjournaled — one such re-opens it (it goes back down). trigger: at least one arrival stands and enough is false. carry: the counts, the offending relative paths, the days spanned, and owning_ticket('23089d52d805'). Constants _ENOUGH_CASTS = 10, _ENOUGH_DAYS = 3 from the ticket's watchme. No thresholds= keyword: HEAD's probe.py carries no Threshold type (336a781018ba adds it and its migration will declare this probe's numbers when that ticket lands).",
+      "by": "cc",
+      "step": "unlisted: the WATCHME probe",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "D8: skills/sorted/SKILL.md step 5 replaces 'write it with cairn artifact write ... --verb cast --from <file>' with: assemble the fields to <scratchpad>/ticket_fields.json (no id needed — the door mints one; sorted_berth = the berth the door just printed) and fire 'cairn cast <scratchpad>/ticket_fields.json --actor cc'; the door judges, mints the filename, journals, prints the path. skills/sorted/intention+why.json 'what' says 'survivors are cast through cast_ticket' in place of 'survivors file to CairnCommons' (written through cairn artifact write --verb charter, poking recompile_gate.sh in the same act). CairnCommons/tickets/_charter+why.json gains one later line under notes_on_the_store (Law 7, the earlier line stands) saying the 15-field required set is enforced by cast_ticket since 23089d52d805, and cairn/tools/base/watchme_spec.py:38's IOU sentence gains the residue line that entry now has a chokepoint; the backlog is reported by the sweep and never redded.",
+      "by": "cc",
+      "step": "unlisted: the skill and the charters",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "D9: cairn/tools/base/proofs/test_cast_ticket.py, PROVES {'23089d52d805': {'all': 'test_the_door_the_sweep_and_the_watch_end_to_end'}} plus narrow teeth. Every tooth plants a scratch commons (tickets/ + a sorted berth file + an intent berth file) and points the artifact door at it with artifact.set_diagnostic_roots({'cairn': repo, 'CairnCommons': scratch}) restored in finally; binds cast_ticket/CastRefused/sweep_casts/PROBE at call time. Teeth: (1) a well-formed doc casts, the file lands at <id>-<slug>.json, the journal's entry has verb cast, sha_before absent and a cast_ticket frame; (2) a doc lacking three required keys, with a bad id, a malformed workflow and a berth that disagrees is refused with EVERY lack named in one message and nothing written; (3) a duplicate id is refused; (4) sweep_casts classifies a hand-dropped file as unjournaled, a genesis-first file as pre_door, an artifact.write-created file as journaled_beside, and a door-cast one as through_the_door; (5) the probe over a scratch commons: not enough at 9 casts, not enough at 10 casts on one day, enough at 10 casts across 3 days, back to not-enough when a hand-dropped file appears; (6) the composite. Run twice bare; sealed by the tester; hollow under --hollow 23089d52d805 --seal. The build is committed only after the BUILDME crossing.",
+      "by": "cc",
+      "step": "unlisted: the proof",
+      "source": "rehearsal"
+    },
+    {
+      "n": 10,
+      "text": "D10: seven steps in order: (1) edit transitions.py — CastRefused, _CAST_REQUIRED, _slug, cast_ticket beside set_phase; (2) CREATE cairn/tools/base/cast.py (sweep_casts + CLI) and bin/cmd/cast; (3) CREATE the WATCHME probe; (4) CREATE the proof; (5) edit skills/sorted/SKILL.md step 5; (6) write the two charter lines through the door (sorted charter via --verb charter + recompile_gate.sh; tickets store charter via the door) and the watchme_spec.py residue line; (7) prove twice, seal, hollow, verdict.",
+      "by": "cc",
+      "step": "unlisted: build order",
+      "source": "rehearsal"
+    }
+  ],
+  "rehearsal": "rehearsals/23089d52d805-20260918T171023.json"
 }
