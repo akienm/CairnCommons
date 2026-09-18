@@ -153,6 +153,34 @@
       "by": "cc",
       "step": "D6",
       "source": "rehearsal"
+    },
+    {
+      "n": 17,
+      "text": "NOTHING crosses automatically. The PROVEME -> WATCHME(declared-cadence-discriminates) crossing is emitted by CC, by hand, through cairn.tools.base.transitions.emit(workflow, 'WATCHME', ticket='a4c2be029f49', ...) after PROVEME; the emission gate's only act is to refuse (WatchmeEmissionRed) when the module at the ticket's watchme.probe path is missing or lacks a module-level PROBE with carry and enough. The probe being on disk ARMS the crossing; it never fires it.",
+      "by": "cc",
+      "step": "D12",
+      "source": "rehearsal"
+    },
+    {
+      "n": 18,
+      "text": "The at-rest probe, whole, in one place — cairn/tools/data_recorder/probes/reading_is_declared_and_current.py: imports json, datetime/timezone, Path, held_tool_paths (cairn.tools.base.address), ModuleRaiser (cairn.tools.base.diagnostic), Probe and once (cairn.tools.base.probe); constants TOOL='data_recorder', SCOPE='recorder-', NO_READER='recorder-declares-no-reader', OVERDUE='recorder-read-overdue'; functions _parse(stamp)->aware datetime|None, _recorders(roots=None)->[{device,instance,name,dir,reading}], census(now,*,roots=None)->{recorders,troubles,current}, report(now,*,roots=None,raiser=None)->census+{raised}, _trigger(now,context)=bool(once(context,'recorder_reading',lambda: report(now))['troubles']), _carry(context)->{recorders,raised,current,finding}; PROBE = Probe(why=..., trigger=_trigger, to='harbor_master', body={'nexus':'hypothesize','kind':'at-rest','scope':'recorder-'}, carry=_carry) with no enough and default while_true. D10, D13, D14 and D15 elaborate this and add nothing outside it.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal"
+    },
+    {
+      "n": 19,
+      "text": "The census and carry, whole, in one place: _recorders walks held_tool_paths('data_recorder', roots) and for each held path takes device=held.parent.parent.parent.name, instance=held.parent.parent.name, and every child dir (sorted) carrying reading.json or records.jsonl, parsing reading.json with json.loads (unreadable or malformed -> reading None). census: tail='<device>-<instance>-<name>'; reading None or expected_read_frequency_seconds None -> troubles[NO_READER-tail]={dir,reading,why}; else since=_parse(last_read) or _parse(started) (None -> NO_READER with why 'neither last_read nor started is stamped'); age=(now-since).total_seconds(); age>freq -> troubles[OVERDUE-tail]={dir,reading,age_seconds,expected_read_frequency_seconds,why}; else current.append(tail). report raises each trouble via raiser.raise_trouble(identity, why=detail['why'], detail=detail, now=now) in sorted order, then raiser.reconcile_troubles(SCOPE, sorted(troubles), by='cc', what_changed='the recorder's reading.json now reads current on the beat (reading_is_declared_and_current)', now=now), and returns the census with raised=sorted(troubles). The carry dict is exactly {recorders, raised, current, finding}. D11 and D15 elaborate this and add nothing outside it.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal"
+    },
+    {
+      "n": 20,
+      "text": "The WATCHME probe, whole, in one place — cairn/tools/data_recorder/probes/declared_cadence_discriminates.py: imports datetime/timezone, Probe and once, and _recorders from the at-rest module; TICKET='a4c2be029f49', ENOUGH_READ=3, ENOUGH_FREQUENCIES=2; population(*, roots=None)->{recorders, declared, read, read_names, frequencies} where read counts recorders whose reading carries a non-null last_read and frequencies is the sorted set of non-null expected_read_frequency_seconds; discriminates(pop)=pop['read']>=3 and len(pop['frequencies'])>=2; _trigger(now,context)=once(context,'recorder_population',population)['read']>=1; _carry(context)->{ticket, at (ISO now), population, discriminates, finding}; _enough(context)=discriminates(population); PROBE=Probe(why=..., trigger=_trigger, to='harbor_master', body={'nexus':'hypothesize','kind':'efficacy','ticket':TICKET}, carry=_carry, enough=_enough, horizon=2000). It writes no artifact and emits no crossing (D12, D17). D8 and D12 elaborate this and add nothing outside it.",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal"
     }
   ]
 }
