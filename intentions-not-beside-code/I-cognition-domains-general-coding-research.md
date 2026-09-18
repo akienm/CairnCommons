@@ -75,6 +75,8 @@ ticket foresaw — general, coding and research as separate builds — collapsed
 is the cheaper shape the design predicted; a domain that needs more than a row (its own loop)
 is cast as a machine when a device pulls for it.
 
-**Provenance:** ticket `728d393d70ed` · ruling `2026-08-08-inference-proxy-is-a-rules-stack`
+## Provenance
+
+ticket `728d393d70ed` · ruling `2026-08-08-inference-proxy-is-a-rules-stack`
 · ticket `2ff6113705be` (the-domain-carries-the-inference-side) · traces to Telos 1, Law 6, and the design
 notes cocoon-settle-stages-around-cc and nexi-everywhere-hardware-ladder.
