@@ -90,6 +90,76 @@
       "by": "CC",
       "step": "live fire",
       "source": "rehearsal"
+    },
+    {
+      "n": 6,
+      "text": "D-VERBS. LANDED (this ticket, commit after 973daf6f in cairn): cairn/devices/inference_domain/device.py declared_verbs() returns {**super().declared_verbs(), 'resolve': self._handle_resolve, 'embed': self._handle_embed, 'infer': self._handle_infer}; a module-level _with_kind(envelope, kind) copies the envelope with body['kind'] fixed; _handle_embed = _handle_resolve over kind 'embed', _handle_infer = _handle_resolve over kind 'generate' (the domain's two request kinds — 'infer' is the chart's name for a completion). The verb overrides a caller's own kind key. Nothing else in the tree adds verbs: e194f4b4cb3e adds nothing this ticket needs. The verbs inference_domain exposes are therefore: show, get (views yield and models), resolve, embed, infer.",
+      "by": "CC",
+      "step": "unlisted: Add embed/infer verbs to inference_domain.device",
+      "source": "rehearsal"
+    },
+    {
+      "n": 7,
+      "text": "D-ORDER. Nothing is waited on and nothing runs in parallel: every decision in this ticket describes code ALREADY in HEAD of cairn (D1-D5 at 18e1923d, D-VERBS in the commit after 973daf6f). The verbs D2 and D3 ride — get (what=models) and resolve — existed before this ticket (test_resolve_verb.py proves both, ticket 548dd13fb4db); embed and infer landed with D-VERBS. The builder executes no step: the build is to verify each decision against HEAD, run the two proofs twice, and cross.",
+      "by": "CC",
+      "step": "unlisted: Ensure inference_domain verbs are available before D2 executes",
+      "source": "rehearsal"
+    },
+    {
+      "n": 8,
+      "text": "D-REACH-CONTRACT. cairn.tools.bus_client.reach(*devices) is landed code (cairn/tools/bus_client/bus_client.py, proven by test_a_client_reaches_and_never_beats.py): it builds a BusDevice, a GroundLoopDevice, discovers each named device's shim from cairn/devices/<name>/shim.py, pulses each once (no beat), and returns the bus. bus.request(sender=<str>, to=<device id>, verb=<str>, why=<str>, body=<dict>) fires the poke chain synchronously and returns the reply ENVELOPE, a dict whose 'body' is the handler's return value — for get the body is {'device','view','cached','timestamp','data'} so the stack is reply['body']['data']; for resolve/embed/infer the body is domain.resolve's result {'answer','hit','canonical','cost','provenance','ticket'} (or the refusal shape {'outcome':'refused',...}). The verbs inference_domain must expose before D2 runs are get and resolve; both predate this ticket.",
+      "by": "CC",
+      "step": "D2 reach() and the request contract",
+      "source": "rehearsal"
+    },
+    {
+      "n": 9,
+      "text": "D-D3-AFTER-D2. D3 (the interceptor) rides D2's inference_bus() and the get/resolve verbs; both are in HEAD (18e1923d). D3's code is also in HEAD in the same commit. There is no ordering to enforce at build time because there is no build left — only verification.",
+      "by": "CC",
+      "step": "D3 depends on D2",
+      "source": "rehearsal"
+    },
+    {
+      "n": 10,
+      "text": "D-TWO-PROOFS. Both exist and both are required: (A) cairn/devices/cairn/machines/bus/proofs/test_inference_rides_the_bus.py (D4) carries PROVES for this ticket's falsifier — the sole-path composite tooth over get/resolve — and is what proven_by names at PROVEME; (B) cairn/devices/inference_domain/proofs/test_bus_infer.py is the chart's second criterion (validate-20260906T111940-63fc41318d0d): a device asks infer then embed over the bus with a stub resolver (unittest.mock.patch on cairn.devices.inference_domain.host.ollama_resolver), no host dialed — five teeth: declaration beside resolve, infer answers a completion, embed answers a vector, the verb fixes the kind over a contrary body, the stub saw every request. (B) is not in PROVES: it proves the chart's criterion, the falsifier is proven by (A). The decompose chart's path is (B); the ticket's falsifier tooth is (A). No reconciliation is owed — the chart asked for (B) and it exists.",
+      "by": "CC",
+      "step": "D4 which proof path and which verbs",
+      "source": "rehearsal"
+    },
+    {
+      "n": 11,
+      "text": "D-D5-IS-RECORD. (B): D5 is the record of a live fire already done; the builder verifies it (scratchpad live87a7.log, rc=0) and does not repeat it. Every decision on this ticket is a record to verify against HEAD, not a step to execute.",
+      "by": "CC",
+      "step": "D5 executed now or verified",
+      "source": "rehearsal"
+    },
+    {
+      "n": 12,
+      "text": "EVERYTHING D1-D11 DESCRIBE IS IN cairn HEAD — no step here waits on a commit. Read these hashes and lines as the record: 18e1923d landed cairn/tools/bus_client/bus_client.py (inference_bus() at line 152, models_stack() at line 170; inference_seam is gone — line 155 is the docstring noting it) and cairn/devices/aider_shim/interceptor.py (_bus at line 178, _do_resolve at line 203, _stack at line 430) and cairn/devices/cairn/machines/bus/proofs/test_inference_rides_the_bus.py (PROVES at line 34; sub-teeth at lines 69, 114, 143, 159; the composite tooth test_every_inference_call_rides_the_bus at line 172). 3e0a9683 landed cairn/devices/inference_domain/device.py (_with_kind at line 18, embed/infer declared at line 44, _handle_embed line 46, _handle_infer line 49) and cairn/devices/inference_domain/proofs/test_bus_infer.py. A reader who cannot see the repo takes these as given: the builder's only remaining acts are the crossing (D13) and the verdict (D14).",
+      "by": "CC",
+      "step": "D12 D-LANDED",
+      "source": "rehearsal"
+    },
+    {
+      "n": 13,
+      "text": "THE CROSSING STEP, spelled: BUILDME->PROVEME rides the emit chokepoint, cairn.tools.base.transitions.emit(component='cairn/devices/cairn/machines/bus', ticket='87a7f1c7ae21', to='PROVEME', proven_by='cairn/devices/cairn/machines/bus/proofs/test_inference_rides_the_bus.py', ...) — its entry gate needs a clean rehearsal record over the live ticket bytes, which is why every gap here is decided before it. PROVEME->PROVED rides cairn.devices.cairn.machines.harbor_master.clearance.clear(ticket, component, 'PROVED', note, proven_by) after the hollow seal (python3 -m cairn.devices.tester.cli --hollow 87a7f1c7ae21 --seal --timeout 600), the verdict (D14), and both repos pushed (the durability lane the_stones_are_pushed refuses otherwise). No other command crosses a ticket; there is no cairn cross.",
+      "by": "CC",
+      "step": "D13 D-CROSSING",
+      "source": "rehearsal"
+    },
+    {
+      "n": 14,
+      "text": "THE VERDICT against the chart's validate berth (validate-20260906T111940-63fc41318d0d) is written with cairn.devices.codemother.machines.verdict.write_verdict — one {claim, instrument, outcome, evidence} per criterion, claim verbatim: (1) declared_verbs() carries embed and infer beside resolve, instrument the berth's own python -c assert; (2) the proof seals green and its fingerprint matches, evidence the netns seal of test_bus_infer.py; (3) the berth's word-grep is NOT the instrument run — a literal grep for the string cairn.devices.inference_domain hits 5 non-proof files that are all prose or constants (build_inspector/probes/does_the_denied_set_stay_put.py, build_inspector/inspector.py, tools/bus_client/bus_client.py docstring, tools/determinism/determinism.py oracle-name constant, tools/base/probes/hand_spelled_instance_paths.py) and zero imports; the instrument run is the import-grep grep -rlE '^\\s*(from|import)\\s+cairn\\.devices\\.inference_domain' over cairn --include=*.py excluding proofs and the owner, expected empty, and the evidence names the 5 prose hits honestly. Then deposit: python3 -m skills.chart.live learn <verdict berth>.",
+      "by": "CC",
+      "step": "D14 D-VERDICT",
+      "source": "rehearsal"
+    },
+    {
+      "n": 15,
+      "text": "D5 and D11 RESTATED so nothing points at a scratchpad: the live fire's record of truth is D5 ITSELF — the observation written down (Law 10: every recorded observation is a measurement; n=1). live87a7.log was the terminal capture the observation was read from; it is session-ephemeral, not committed, not retained, and NOT to be looked for. A builder verifying the live fire re-runs it (aider_shim surface, no bus injected, one completion) rather than reading any log. No decision here depends on the file existing.",
+      "by": "CC",
+      "step": "D15 D-LIVE-IS-THE-LINE",
+      "source": "rehearsal"
     }
   ]
 }
