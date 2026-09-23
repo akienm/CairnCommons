@@ -11,16 +11,40 @@
   "verdict": null,
   "what": "A `/restart` skill CC fires on itself: it measures what is behind this session, closes the boundary the way a boundary is closed (a slate through the saveslate door), and then hands off -- either by asking the inner loop to bring this session back, or by standing a new instance up beside it. One word, and the session is on the new build with its continuity written down.",
   "why": "Today the act is three commands a tired operator has to remember in the right order, and the order is the whole safety of it: measure, save, then relaunch. Getting it wrong in the other order is a session that ends with nothing written down. Akien, 2026-09-22: 'cairn restart and cairn cc.x restart and slash restart. We only need to have you around to supervise the process the first time.' The skill is the third name, and it is the one CC types.",
-  "how": "Three steps, in this order and no other. (1) `cairn cc restart status` -- the measurement decides the branch: `inner loop: HOLDING (pid N)` means a loop is behind this session and `now` will bring it back; anything else means there is nothing behind it and `spawn` is the only safe verb. (2) Fire /saveslate -- as a skill, not shelled, because its door demands instruments_read.git_heads matching the live repos and only CC can compile that. A refusal here ABORTS: a restart that relaunched anyway would have spent the conversation to save nothing. (3) Fire the verb the measurement chose. On the `spawn` branch nothing dies -- the skill reports the new instance's remote-control name and STOPS; it must not then kill anything.",
+  "how": "Three steps, in this order and no other. (1) `cairn cc restart status` -- the measurement decides the branch: `inner loop: HOLDING (pid N)` means a loop is behind this session and `now` will bring it back; anything else means there is nothing behind it and `spawn` is the only safe verb. (2) Fire /saveslate -- as a skill, not shelled, because its door demands instruments_read.git_heads matching the live repos and only CC can compile that. A refusal here ABORTS: a restart that relaunched anyway would have spent the conversation to save nothing. (3) Fire the verb the measurement chose. On the `spawn` branch nothing dies -- the skill reports the new instance's remote-control name and STOPS; it must not then kill anything.\n\nTHE BUILD SPEC IS THE `decisions` LIST ON THIS TICKET: D1..D7, settled 2026-09-22 by CC inside the bounds already cast here, each composed from code that already stands and naming its source. A ticket is a list of one-line decisions and the rehearsal reads that list; prose in `how` is the first cut, the decisions are the build.",
   "traces_to": "Law 1 -- the resolver is spent on the novel, not on re-deriving the settled: the safe order (measure, save, relaunch) is settled and today has no address but an operator's memory. Also CP4 -- design to the tool: the tool is a CC session that cannot restart itself, and the skill is the one surface that session can reach.",
   "falsifier": "GREEN when a session is relaunched by typing one word and the slate written in that act is readable afterward with the pre-restart git heads in its instruments_read. RED if /restart can end a session that has no loop behind it and no spawned replacement already reachable -- a hang-up, the one failure this skill must never cause.",
   "constraints": [
-    {"text": "The order is status, then slate, then relaunch -- never slate-then-status. The status decides which relaunch verb is fired, and arming a flag before knowing whether anything can consume it is the hang-up this skill exists to prevent.", "source": "cairn/devices/cc/0/bin/restart", "kind": "charter"},
-    {"text": "A slate refusal aborts the restart. The slate and the relaunch are one act; half of it is worse than none.", "source": "skills/saveslate/SKILL.md", "kind": "charter"},
-    {"text": "Match on HOLDING, and treat every other status output as NONE. The safe branch is the one that kills nothing, so an unparseable status must fall to `spawn`, never to `now`.", "source": "cairn/devices/cc/0/bin/restart", "kind": "charter"},
-    {"text": "/saveslate is FIRED AS A SKILL, never shelled. Its door refuses a packet whose instruments_read.git_heads do not match the live repos, and only a CC session can compile those.", "source": "skills/saveslate/door.py", "kind": "charter"},
-    {"text": "On the spawn branch this session does not end. The skill reports the new instance's remote-control name and stops; killing anything after a successful spawn is out.", "source": "cairn/devices/cc/0/bin/restart", "kind": "charter"},
-    {"text": "This skill relaunches ONE Claude Code process and nothing beneath it. `cairn restart` is the system's restart and does not touch running cc instances (Akien, 2026-09-22); two different acts may not wear one word.", "source": "3264ef726e35", "kind": "ruling"}
+    {
+      "text": "The order is status, then slate, then relaunch -- never slate-then-status. The status decides which relaunch verb is fired, and arming a flag before knowing whether anything can consume it is the hang-up this skill exists to prevent.",
+      "source": "cairn/devices/cc/0/bin/restart",
+      "kind": "charter"
+    },
+    {
+      "text": "A slate refusal aborts the restart. The slate and the relaunch are one act; half of it is worse than none.",
+      "source": "skills/saveslate/SKILL.md",
+      "kind": "charter"
+    },
+    {
+      "text": "Match on HOLDING, and treat every other status output as NONE. The safe branch is the one that kills nothing, so an unparseable status must fall to `spawn`, never to `now`.",
+      "source": "cairn/devices/cc/0/bin/restart",
+      "kind": "charter"
+    },
+    {
+      "text": "/saveslate is FIRED AS A SKILL, never shelled. Its door refuses a packet whose instruments_read.git_heads do not match the live repos, and only a CC session can compile those.",
+      "source": "skills/saveslate/door.py",
+      "kind": "charter"
+    },
+    {
+      "text": "On the spawn branch this session does not end. The skill reports the new instance's remote-control name and stops; killing anything after a successful spawn is out.",
+      "source": "cairn/devices/cc/0/bin/restart",
+      "kind": "charter"
+    },
+    {
+      "text": "This skill relaunches ONE Claude Code process and nothing beneath it. `cairn restart` is the system's restart and does not touch running cc instances (Akien, 2026-09-22); two different acts may not wear one word.",
+      "source": "3264ef726e35",
+      "kind": "ruling"
+    }
   ],
   "intention": "",
   "owning_intention": "",
@@ -29,7 +53,9 @@
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260922T193358-671a7764e526.json",
   "verdict_berth": "",
   "deposits": {},
-  "linked_ideas": ["2026-09-22-so-next-we-build-that-out-cairn"],
+  "linked_ideas": [
+    "2026-09-22-so-next-we-build-that-out-cairn"
+  ],
   "children": "none, because the skill is a composition of two things that already exist and are already proved -- cairn/devices/cc/0/bin/restart and skills/saveslate/ -- so there is no part of it that could prove independently before the whole. The one new artifact is the branch selector, and it is the thing the proof at skills/restart/proofs/ drives.",
   "questions": "none, because the one spec choice this cast could not settle by itself -- which relaunch verb a session fires on itself -- is settled by MEASUREMENT rather than by his gate: cairn/devices/cc/0/bin/restart prints `inner loop: HOLDING` or `inner loop: NONE` and the skill reads which, so there is nothing here for him to choose. The boundary a cast like this would otherwise have to ask about -- whether relaunching a CC session and restarting the system are one act or two -- he already ruled on 2026-09-22, and ticket 3264ef726e35 carries the other half of that ruling.",
   "watchme": {
@@ -43,13 +69,84 @@
   },
   "workflow_and_state": "skill@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(a_restart_leaves_a_slate_behind_it) -> PROVED",
   "links": [
-    {"id": "3264ef726e35", "what": "cairn restart cycles the SYSTEM -- the sibling name. Akien ruled the boundary on 2026-09-22: that one does NOT restart the running cc instance(s); this one is the only thing that touches a CC session."},
-    {"id": "55fc9263bf5a", "what": "the dispatcher resolves an instance address -- `cairn cc.1 restart`. The third name. /restart fires `cairn cc restart` on instance 0, so it does not wait on that ticket, but the spawn branch's report reads better once `cairn cc.1 restart` resolves."},
-    {"path": "cairn/devices/cc/0/bin/restart", "what": "the verb this skill composes -- status|now|fresh|onexit|spawn|standdown|clear, landed 2026-09-22 in commits da6f8b01 and 6261e14d."},
-    {"path": "skills/saveslate/", "what": "the door the boundary is closed through -- step 2, and the abort condition."}
+    {
+      "id": "3264ef726e35",
+      "what": "cairn restart cycles the SYSTEM -- the sibling name. Akien ruled the boundary on 2026-09-22: that one does NOT restart the running cc instance(s); this one is the only thing that touches a CC session."
+    },
+    {
+      "id": "55fc9263bf5a",
+      "what": "the dispatcher resolves an instance address -- `cairn cc.1 restart`. The third name. /restart fires `cairn cc restart` on instance 0, so it does not wait on that ticket, but the spawn branch's report reads better once `cairn cc.1 restart` resolves."
+    },
+    {
+      "path": "cairn/devices/cc/0/bin/restart",
+      "what": "the verb this skill composes -- status|now|fresh|onexit|spawn|standdown|clear, landed 2026-09-22 in commits da6f8b01 and 6261e14d."
+    },
+    {
+      "path": "skills/saveslate/",
+      "what": "the door the boundary is closed through -- step 2, and the abort condition."
+    }
   ],
   "notes": [
-    {"date": "2026-09-22", "from": "Akien", "text": "So next we build that out. cairn restart and cairn cc.x restart and slash restart. We only need to have you around to supervise the process the first time. Once we know it works we don't have to do any of that. ... No, cairn restart does not restart the running cc instance(s). Otherwise yes, approved all the way to proved."},
-    {"date": "2026-09-22", "from": "cc", "text": "MEASURED, and it decides which branch gets exercised first: every session alive today was launched by a superclaude that still exec'd claude (the loop landed in da6f8b01, after they started), so `cairn cc restart status` reports NONE for all of them and the FIRST firing of /restart takes the spawn branch. The loop branch stays unmeasured until a session launched after that commit fires it -- which is exactly the supervised first run Akien described."}
+    {
+      "date": "2026-09-22",
+      "from": "Akien",
+      "text": "So next we build that out. cairn restart and cairn cc.x restart and slash restart. We only need to have you around to supervise the process the first time. Once we know it works we don't have to do any of that. ... No, cairn restart does not restart the running cc instance(s). Otherwise yes, approved all the way to proved."
+    },
+    {
+      "date": "2026-09-22",
+      "from": "cc",
+      "text": "MEASURED, and it decides which branch gets exercised first: every session alive today was launched by a superclaude that still exec'd claude (the loop landed in da6f8b01, after they started), so `cairn cc restart status` reports NONE for all of them and the FIRST firing of /restart takes the spawn branch. The loop branch stays unmeasured until a session launched after that commit fires it -- which is exactly the supervised first run Akien described."
+    }
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "PLACEMENT, AND THE MEASURED HOLDINGS THE OTHER DECISIONS STAND ON (measured 2026-09-22; the reader has no repository, so this paragraph IS the repository for these names). The skill berths at skills/restart/ in class-space, beside the fifteen skills already there (cairnhelp, challenge, chart, commit, design, idea, intent, moreabout, note, ruled, sail, saveslate, sorted, tellmeabout, whatslefttodo). Four files are written there: SKILL.md (D4), selector.py (D2), proofs/test_restart_selector.py (D3), intention+why.json (D5); one symlink is made outside the repo (D6); one probe is armed at cairn/devices/cc/probes/a_restart_leaves_a_slate_behind_it.py (D7). HOLDINGS: (h1) skills/saveslate/ is the template folder and holds exactly SKILL.md, intention+why.json, door.py, proofs/, probes/, validations/, state.json, history.json. (h2) A SKILL.md opens with a YAML frontmatter block delimited by lines of three hyphens carrying exactly two keys, `name:` and `description:` (one line each), then a level-1 markdown heading and numbered prose sections; skills/saveslate/SKILL.md is the model to copy the shape from. (h3) ~/.claude/skills/ holds one symlink per skill, each pointing at /home/akien/dev/src/cairn/skills/<name> (measured: fifteen such links, e.g. saveslate -> /home/akien/dev/src/cairn/skills/saveslate). (h4) cairn/devices/cc/0/bin/restart is the verb this skill drives; `cairn cc restart status` prints one `key: value` line per fact and the branch-deciding line is `inner loop: HOLDING (pid <N>)` when a loop holds the session and `inner loop: NONE -- this session cannot relaunch itself` otherwise; the verbs are status|now|fresh|onexit|spawn [N]|standdown|clear. (h5) The superclaude inner loop's flags home is $HOME/.cairn/launchers/superclaude/<instance>/ and it is exported to the session as SUPERCLAUDE_FLAGS_HOME; a consumed one-shot is MOVED to <flags home>/consumed/<flag>.<stamp> where <stamp> is `date +%Y%m%dT%H%M%S` (launchers/superclaude:81-82). (h6) A slate is a JSON file at CairnCommons/slates/<id>.json carrying id, date, written_at (ISO, no timezone), session, author, at_sea, next_direction, open_threads. (h7) A Cairn probe module declares a module-level `PROBE` that is a frozen cairn.tools.base.probe.Probe built with keyword arguments why, trigger, to, verb, channel, body, carry, enough, horizon; trigger is `(now, context) -> bool`, carry is `(context) -> dict | None`, enough is `(context) -> bool`; cairn/devices/cc/probes/is_the_memory_curve_recorded.py is the module in exactly that shape to copy. (h8) cairn.tools.base.address.instance_path(device, instance=0, roots=None) -> Path resolves ~/.cairn/devices/<device>/<instance>. (h9) cairn.tools.base.probe.owning_ticket(<ticket id or slug>) is what a probe's carry puts in its \"ticket\" key. (h10) A skill proof is a plain python module run as __main__ (NOT pytest): it inserts the repo root on sys.path, defines an ok(name, cond, detail=\"\") helper that prints and raises SystemExit(1) on a red, defines main() -> int, and ends `if __name__ == \"__main__\": sys.exit(main())`; skills/saveslate/proofs/test_slate_door.py is the module in exactly that shape. BUILD ORDER: D2 (the selector) then D3 (its proof) then D4 (the prose that calls it) then D5, D6, D7. A decision's number is its address, not its build order.",
+      "by": "CC",
+      "step": "D1",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "THE SELECTOR IS CODE, NOT PROSE, AND IT LIVES AT skills/restart/selector.py. It is a module with one public function: `def branch(status_text: str) -> str`. It returns the literal string \"now\" if and only if the text contains a line whose content, after stripping, begins with \"inner loop:\" and whose remainder after the colon, stripped, begins with the word HOLDING (compared case-foldedly through cairn.tools.system_word.fold, because HOLDING is a word the system prints and a system word folds). It returns the literal string \"spawn\" for EVERYTHING else -- no loop line, a loop line saying NONE, an empty string, unparseable bytes, a status command that failed. There is no third return value and no exception path: an unreadable status is not an error to raise, it is the safe branch, because the safe branch is the one that kills nothing (the ticket's third constraint, verbatim: \"Match on HOLDING, and treat every other status output as NONE\"). The module also carries `HOLDING = \"HOLDING\"` and `LOOP_LINE_PREFIX = \"inner loop:\"` as module constants so the proof and the prose name the same strings. The selector is code rather than a sentence in SKILL.md precisely so it can be proved (D3); a branch condition that lives only in prose is a branch nobody can red.",
+      "by": "CC",
+      "step": "D2",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "THE PROOF: skills/restart/proofs/test_restart_selector.py, in the plain-module shape of holding (h10). It imports `branch` from the sibling selector module by inserting skills/restart on sys.path (the same way skills/saveslate/proofs/test_slate_door.py inserts skills/saveslate and imports door). Module-level PROVES = {\"15b80c0c393c\": {\"all\": \"test_only_holding_selects_the_session_ending_verb\"}} -- the ticket key a STRING LITERAL, because proof_coverage.declared reads it with ast.literal_eval, and the falsifier is unnumbered so its single clause name is \"all\". ONE composite tooth of that name, taking no arguments, asserting with bare assert and printing a green line per assertion. The tooth drives branch() over these captured forms and asserts the outcome for each: (a) the full `cairn cc restart status` output of a HELD session, containing the line `inner loop: HOLDING (pid 12345)` among five other lines -> \"now\"; (b) the full output of an UNHELD session, containing `inner loop: NONE -- this session cannot relaunch itself` -> \"spawn\"; (c) the empty string -> \"spawn\"; (d) garbled bytes -- a string with no colon, no newline and non-ascii -- -> \"spawn\"; (e) a line that MENTIONS holding in another position, e.g. `tmux sessions: cairn_cc_1: 1 windows (HOLDING)` with the loop line saying NONE -> \"spawn\", which is the tooth a hollow selector written as a bare substring search could not pass; (f) lowercase `inner loop: holding (pid 12345)` -> \"now\", the system-word fold. Run the proof twice bare before sealing; check the clause names against proof_coverage.clauses before the first seal.",
+      "by": "CC",
+      "step": "D3",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "SKILL.md: skills/restart/SKILL.md, in the shape of holding (h2). Frontmatter `name: restart` and a one-line `description:` saying the skill measures what is behind this session, writes the slate, and then hands off. The body is three numbered sections in this order and no other, each naming the exact command or skill it fires: (1) MEASURE -- run `cairn cc restart status`, capture stdout, and hand the captured text to `branch()` from skills/restart/selector.py (`PYTHONPATH=$HOME/dev/src/cairn python3 -c \"import sys; sys.path.insert(0, '$HOME/dev/src/cairn/skills/restart'); import selector; print(selector.branch(sys.stdin.read()))\"`). The prose states the two outcomes and says the selector, not the reader, decides. (2) SAVE -- fire /saveslate AS A SKILL, through the Skill tool, never shelled: its door refuses a packet whose instruments_read.git_heads do not match the live repos and only a CC session can compile those. If /saveslate refuses -- any refusal, for any reason -- THE SKILL ABORTS HERE: it prints the refusal verbatim, states that nothing was relaunched, and stops. It does not retry, does not fall back, and does not arm a flag. (3) HAND OFF -- fire the verb step 1 chose: `cairn cc restart now` on the \"now\" branch (this ends the conversation; the loop brings it back), or `cairn cc restart spawn` on the \"spawn\" branch. On the spawn branch the skill then REPORTS the new instance's tmux session and its remote-control name as printed by the verb, and STOPS -- it must not kill, sign off, or arm any flag afterward; nothing dies on this branch. The file closes with a \"Stay honest\" section naming the one failure the skill must never cause: ending a session that has no loop behind it and no reachable replacement.",
+      "by": "CC",
+      "step": "D4",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "THE CHARTER: skills/restart/intention+why.json, carrying exactly the nineteen keys skills/saveslate/intention+why.json carries, in that order -- component, role, schema_version, axis, what, why, invoke, state, writes_to, input_contract, relation_to_memory, how_it_learns, traces_to, owner, proof, provenance, filed_edges, learns, claim_provenance -- with these values: component=\"skill:/restart\"; role=\"charter\"; schema_version=\"v0 - skill-charter shape, as skills/saveslate/intention+why.json\"; axis=\"utility\"; what = one paragraph naming the three steps and the selector; why = this ticket's `why` field; invoke=\"/restart (from inside a CC session, when the session should come back on a new build)\"; state=\"v0 - first cast 2026-09-22 under ticket 15b80c0c393c, the third of Akien's three names\"; writes_to=\"nothing of its own: it fires /saveslate, which writes CairnCommons/slates/ through its door, and cairn cc restart, which writes flags under $HOME/.cairn/launchers/superclaude/<instance>/\"; input_contract={} (this skill takes no packet -- it is prose plus a selector, not a door); relation_to_memory=\"none of its own; the continuity it preserves is the slate's\"; how_it_learns=\"By the probe at cairn/devices/cc/probes/a_restart_leaves_a_slate_behind_it.py: a restart with no slate behind it is the signal, and it says the skill step was not enough and physics is owed\"; traces_to = a list naming Law 1 (the order is settled knowledge, not re-derived each time) and Law 7 (a slate refusal is loud and aborts, never collapsed); owner=\"CC owns the skill and gates writes to it; Akien ratifies changes\"; proof=\"skills/restart/proofs/test_restart_selector.py\"; provenance=\"Born 2026-09-22 from idea 9e4e8f7cc609 and intent 2dc4e498ad80; cast as 15b80c0c393c\"; filed_edges = a list of the two UNMEASURED ASSUMPTIONS this skill rests on, each as one sentence: (a) that `claude --continue` restores enough of the conversation that a relaunched session can pick the work up, and (b) that `cairn cc restart status` can be stale -- it reads a pid file and a process, and both can change between the read and the relaunch; learns=\"It does not; the probe learns for it\"; claim_provenance={\"role\": \"cc-read\", \"what\": \"cc-read\", \"why\": \"cc-read\"}. The charter write pokes cairn/tools/intentions_model_compiler/recompile_gate.sh in the same shell act (it always exits 0 and cannot block its caller).",
+      "by": "CC",
+      "step": "D5",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "THE SYMLINK, AND IT IS A SYMLINK, NOT A COPY: `ln -s /home/akien/dev/src/cairn/skills/restart /home/akien/.claude/skills/restart`, matching holding (h3) -- fifteen existing skills reach the client exactly this way, and a copy would be a second authority that drifts. The link is made in the same act as the skill files, and it is the whole of \"the skill is reachable\": there is no registration step, no manifest, and no restart of the client needed. This link lives outside both repos (it is in ~/.claude, which is instance-space) so it is NOT committed and NOT in git; it is re-made by hand on a fresh box, and that is a named edge rather than a gap -- the other fifteen have the same property.",
+      "by": "CC",
+      "step": "D6",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "THE WATCHME PROBE: cairn/devices/cc/probes/a_restart_leaves_a_slate_behind_it.py, a module in the shape of holding (h7), copying cairn/devices/cc/probes/is_the_memory_curve_recorded.py. It reads two folders and pairs them. CONSUMED = the flags home's consumed folder: for each instance folder under Path.home()/\".cairn\"/\"launchers\"/\"superclaude\", the subfolder \"consumed\"; every file there is named <flag>.<stamp> with <stamp> in %Y%m%dT%H%M%S local time (holding h5). SLATES = /home/akien/dev/src/CairnCommons/slates/*.json, each carrying `written_at` as an ISO timestamp with no timezone (holding h6). TRIGGER: a consumed file whose stamp is NEWER than the stamp the probe last carried -- the probe keeps that watermark in instance-space at instance_path(\"cc\", 0) / \"probes\" / \"a_restart_leaves_a_slate_behind_it.json\" (holding h8), and an absent watermark file means every consumed file is new. It reads those folders on the beat the ground loop already runs: NO poller, and the skill pokes nothing. CARRY: the PAIRING, never a boolean -- {\"ticket\": owning_ticket(\"15b80c0c393c\"), \"consumed\": \"<flag>.<stamp>\", \"consumed_at\": \"<iso>\", \"slate\": \"<slate id>\" | None, \"slate_written_at\": \"<iso>\" | None, \"paired\": true|false} where a slate pairs with a consumed flag iff its written_at falls in the sixty seconds BEFORE the consumed stamp. An unpaired restart is carried IMMEDIATELY on the beat it is seen -- it is the failure the skill exists to prevent, and it does not wait for a third sample. ENOUGH: three consecutive consumed flags, in stamp order, each paired; at that point the probe retires. The probe carries NO AUTHORITY: it deposits and pokes, and the back-edge that re-opens this node is the owner's act (Law 6). It must be armed BEFORE the WATCHME crossing -- the emission gate resolves ARMED from the path this ticket's watchme.probe field names and refuses an unarmed one.",
+      "by": "CC",
+      "step": "D7",
+      "source": "cast"
+    }
   ]
 }

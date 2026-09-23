@@ -11,15 +11,35 @@
   "verdict": null,
   "what": "The instance wiring links every class-space verb that has no instance link yet, instead of only wiring devices whose instance bin does not exist at all -- and it wires the instance a spawn just created, not only instance 0.",
   "why": "Today 'a new verb is reachable' is enforced by whoever remembers to delete an instance bin directory or make a symlink by hand. That is policy where it should be physics (Law 4), and it bites immediately: ~/.cairn/devices/cairn/0/bin holds one hand-placed file, so the wiring skips the cairn device forever and `cairn restart` would land in a class bin nothing ever links. The same missing precision leaves `cairn cc restart spawn N` standing up a tmux session and a flags home for instance N with no ~/.cairn/devices/cc/N/bin behind them.",
-  "how": "launchers/bootstrap.sh already holds both halves. `_cairn_wire_device` mkdirs the instance bin and symlinks every executable in the class bin, but returns early when the instance bin DIRECTORY exists. `_cairn_wire_single`, ten lines away, already has the per-FILE rule: skip when that name exists, link when it does not. Move the skip from the directory into the per-script loop, keep every ln non-fatal, and keep the walk idempotent -- it runs on every bin/cairn floor check. The second half is the instance argument: `_cairn_wire_device` already takes one and only the discovery loop's constant 0 stops it being used, so cmd_spawn in cairn/devices/cc/0/bin/restart calls the wiring for the instance it just chose.",
+  "how": "launchers/bootstrap.sh already holds both halves. `_cairn_wire_device` mkdirs the instance bin and symlinks every executable in the class bin, but returns early when the instance bin DIRECTORY exists. `_cairn_wire_single`, ten lines away, already has the per-FILE rule: skip when that name exists, link when it does not. Move the skip from the directory into the per-script loop, keep every ln non-fatal, and keep the walk idempotent -- it runs on every bin/cairn floor check. The second half is the instance argument: `_cairn_wire_device` already takes one and only the discovery loop's constant 0 stops it being used, so cmd_spawn in cairn/devices/cc/0/bin/restart calls the wiring for the instance it just chose.\n\nTHE BUILD SPEC IS THE `decisions` LIST ON THIS TICKET: D1..D7, settled 2026-09-22 by CC inside the bounds already cast here, each composed from code that already stands and naming its source. A ticket is a list of one-line decisions and the rehearsal reads that list; prose in `how` is the first cut, the decisions are the build.",
   "traces_to": "Law 4 -- a rule that matters is enforced by physics, not policy. Also Law 1: the recipe was compiled once (ticket 0853294fe972 lifted it whole so it would have one address and no copy); a verb that silently fails to appear makes the next mind re-derive why.",
   "falsifier": "GREEN when a verb added to an already-wired device's class bin is reachable as `cairn <device> <verb>` after the wiring runs, with no hand symlink and no directory deleted; and when `cairn cc restart spawn N` leaves ~/.cairn/devices/cc/N/bin holding the same links instance 0 holds. RED if the walk links anything that is not an executable file in a class bin, or if re-running it churns links that already point correctly.",
   "constraints": [
-    {"text": "Nothing here may be fatal. The function's own contract is 'nothing here is fatal -- a link that cannot be made is a finding the first run prints, not an abort', so every ln stays `|| true` and the function still returns 0 against an unwritable instance root.", "source": "launchers/bootstrap.sh", "kind": "charter"},
-    {"text": "Idempotent. The walk runs on every bin/cairn floor check, so a second run over a fully wired device must churn nothing.", "source": "launchers/bootstrap.sh", "kind": "charter"},
-    {"text": "STALE LINKS ARE NOT PRUNED. This change links what is missing and removes nothing: instance-space has no undo (bin/cmd/deletegate carries the reason), and ~/.cairn/devices/cairn/0/bin/cairn is a hand-placed file a pruner would delete. A dangling link left by a deleted class file stays a known, named gap.", "source": "bin/cmd/deletegate", "kind": "charter"},
-    {"text": "The per-file rule is COPIED, not invented: `_cairn_wire_single` in the same function already implements it for superclaude, whose launcher lives outside a device bin.", "source": "launchers/bootstrap.sh", "kind": "charter"},
-    {"text": "The 'wired N skipped M' line's numbers change meaning from devices to files. Say so in the line rather than leaving the number to be misread (Law 7 at a diagnostic surface).", "source": "launchers/bootstrap.sh", "kind": "charter"}
+    {
+      "text": "Nothing here may be fatal. The function's own contract is 'nothing here is fatal -- a link that cannot be made is a finding the first run prints, not an abort', so every ln stays `|| true` and the function still returns 0 against an unwritable instance root.",
+      "source": "launchers/bootstrap.sh",
+      "kind": "charter"
+    },
+    {
+      "text": "Idempotent. The walk runs on every bin/cairn floor check, so a second run over a fully wired device must churn nothing.",
+      "source": "launchers/bootstrap.sh",
+      "kind": "charter"
+    },
+    {
+      "text": "STALE LINKS ARE NOT PRUNED. This change links what is missing and removes nothing: instance-space has no undo (bin/cmd/deletegate carries the reason), and ~/.cairn/devices/cairn/0/bin/cairn is a hand-placed file a pruner would delete. A dangling link left by a deleted class file stays a known, named gap.",
+      "source": "bin/cmd/deletegate",
+      "kind": "charter"
+    },
+    {
+      "text": "The per-file rule is COPIED, not invented: `_cairn_wire_single` in the same function already implements it for superclaude, whose launcher lives outside a device bin.",
+      "source": "launchers/bootstrap.sh",
+      "kind": "charter"
+    },
+    {
+      "text": "The 'wired N skipped M' line's numbers change meaning from devices to files. Say so in the line rather than leaving the number to be misread (Law 7 at a diagnostic surface).",
+      "source": "launchers/bootstrap.sh",
+      "kind": "charter"
+    }
   ],
   "intention": "",
   "owning_intention": "",
@@ -28,7 +48,9 @@
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260922T194036-914b799877fb.json",
   "verdict_berth": "",
   "deposits": {},
-  "linked_ideas": ["2026-09-22-so-next-we-build-that-out-cairn"],
+  "linked_ideas": [
+    "2026-09-22-so-next-we-build-that-out-cairn"
+  ],
   "children": "none, because the two halves are one defect -- the device walk skips on a DIRECTORY and passes instance 0 always, and both are the same missing precision about what the unit of wiring is. Splitting them would leave `cairn cc.1 restart` resolving to nothing even after ticket 55fc9263bf5a teaches the dispatcher to read the address.",
   "questions": "none, because nothing here is a spec choice. The rule being applied already exists in the same function (launchers/bootstrap.sh, `_cairn_wire_single`), the instance parameter already exists on `_cairn_wire_device`, and the one thing that could have been a fork -- whether stale links are pruned as well -- is settled OUT by physics rather than by taste: instance-space has no undo (bin/cmd/deletegate carries the reason).",
   "watchme": {
@@ -42,13 +64,83 @@
   },
   "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(every_class_verb_has_an_instance_link) -> PROVED",
   "links": [
-    {"id": "3264ef726e35", "what": "cairn restart cycles the system -- its verb lands in cairn/devices/cairn/0/bin, the class bin this wiring skips forever. That build makes its own link by hand; this ticket is why it should not have had to."},
-    {"id": "55fc9263bf5a", "what": "the dispatcher resolves an instance address. That ticket teaches `cairn cc.1 restart` to RESOLVE; this one makes there be something at the other end."},
-    {"id": "0853294fe972", "what": "lifted the wiring recipe whole out of bootstrap_first_run.sh so it would have one address and two callers. This ticket fixes the unit of work inside that one address."},
-    {"path": "launchers/bootstrap.sh", "what": "cairn_wire_instances -- _cairn_wire_device (the directory early return), _cairn_wire_single (the per-file rule to copy), and the discovery loop that passes 0."},
-    {"path": "cairn/devices/cc/0/bin/restart", "what": "cmd_spawn -- knows the instance number it just chose and today leaves it unwired."}
+    {
+      "id": "3264ef726e35",
+      "what": "cairn restart cycles the system -- its verb lands in cairn/devices/cairn/0/bin, the class bin this wiring skips forever. That build makes its own link by hand; this ticket is why it should not have had to."
+    },
+    {
+      "id": "55fc9263bf5a",
+      "what": "the dispatcher resolves an instance address. That ticket teaches `cairn cc.1 restart` to RESOLVE; this one makes there be something at the other end."
+    },
+    {
+      "id": "0853294fe972",
+      "what": "lifted the wiring recipe whole out of bootstrap_first_run.sh so it would have one address and two callers. This ticket fixes the unit of work inside that one address."
+    },
+    {
+      "path": "launchers/bootstrap.sh",
+      "what": "cairn_wire_instances -- _cairn_wire_device (the directory early return), _cairn_wire_single (the per-file rule to copy), and the discovery loop that passes 0."
+    },
+    {
+      "path": "cairn/devices/cc/0/bin/restart",
+      "what": "cmd_spawn -- knows the instance number it just chose and today leaves it unwired."
+    }
   ],
   "notes": [
-    {"date": "2026-09-22", "from": "cc", "text": "Found while building Akien's three restart names. MEASURED: ~/.cairn/devices/cairn/0/bin contains one hand-placed file (a shim-printing script, 338 bytes, placed 2026-09-02), and cairn/devices/cairn/0/bin does not exist in class-space at all -- so the cairn device has never been wired by the recipe and never will be while the directory-level early return stands."}
+    {
+      "date": "2026-09-22",
+      "from": "cc",
+      "text": "Found while building Akien's three restart names. MEASURED: ~/.cairn/devices/cairn/0/bin contains one hand-placed file (a shim-printing script, 338 bytes, placed 2026-09-02), and cairn/devices/cairn/0/bin does not exist in class-space at all -- so the cairn device has never been wired by the recipe and never will be while the directory-level early return stands."
+    }
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "PLACEMENT, AND THE MEASURED HOLDINGS EVERY STEP BELOW STANDS ON (measured 2026-09-22; the reader has no repository, so this paragraph IS the repository for these names). ONE FILE CHANGES: launchers/bootstrap.sh, the function `cairn_wire_instances` (it opens at line 293 with `local instance_root=\"${CAIRN_INSTANCE_ROOT:-$HOME/.cairn/devices}\"` and `local wired=0 skipped=0`). Two files are NEW: launchers/proofs/test_instance_wiring_links_every_verb.py (D5) and cairn/devices/cairn/probes/every_class_verb_has_an_instance_link.py (D6). Nothing else is touched. THE FUNCTION AS IT STANDS: it holds two nested helpers and a loop. `_cairn_wire_device device instance class_bin` computes `inst_bin=\"$instance_root/$device/$instance/bin\"`, and its FIRST act is `if [[ -d \"$inst_bin\" ]]; then skipped=$((skipped + 1)); return 0; fi` -- the whole-directory skip this ticket is about; then `mkdir -p \"$inst_bin\"`, then `if [[ -d \"$class_bin\" ]]` it loops `for script in \"$class_bin\"/*`, keeps only `[[ -f \"$script\" && -x \"$script\" ]]`, and does `ln -sf \"$script\" \"$inst_bin/$name\"` where `name=\"$(basename \"$script\")\"`, then `wired=$((wired + 1))`. `_cairn_wire_single device instance script_path` skips when `[[ -L \"$inst_bin/$name\" || -f \"$inst_bin/$name\" ]]`, else mkdir -p and ln -sf, and it is called ONCE: `_cairn_wire_single \"superclaude\" \"0\" \"$CAIRN_REPO_ROOT/launchers/superclaude\"`. The loop is `for dev_dir in \"$CAIRN_REPO_ROOT\"/cairn/devices/*/; do dev=\"$(basename \"$dev_dir\")\"; [[ -d \"$dev_dir/0/bin\" ]] && _cairn_wire_device \"$dev\" \"0\" \"$dev_dir/0/bin\"; done`, and the function ends `_cairn_boot_log \"wire: wired=$wired skipped=$skipped root=$instance_root\"`, `echo \"wired $wired skipped $skipped\"`, `return 0`. Nothing in it is fatal and nothing exits -- it is sourceable, and that stays true. THE MEASURED WORLD IT RUNS OVER, and it is the reason the order below is what it is: class-space has SIX device bins -- cairn/devices/cc/0/bin (two executables, `cc` and `restart`), codemother/0/bin (`codemother`), inference_domain/0/bin (`inference_domain`), librarian/0/bin (`librarian`), tester/0/bin (`tester`), trouble/0/bin (`trouble`). Instance-space has NINE device bins and SEVEN OF THEM ARE WHOLE-DIRECTORY SYMLINKS POINTING BACK INTO THE GIT REPO: ~/.cairn/devices/{cc,codemother,inference_domain,librarian,tester,trouble}/0/bin each -> /home/akien/dev/src/cairn/cairn/devices/<same>/0/bin, and harbor_master/0/bin -> /home/akien/dev/src/cairn/cairn/devices/cairn/machines/harbor_master/0/bin. Only TWO are real directories: cairn/0/bin, holding one hand-placed file named `cairn`, and superclaude/0/bin, holding one link named `superclaude`. There are no instances other than 0 anywhere. `[[ -d ]]` follows symlinks, so all nine read as directories today.",
+      "by": "CC",
+      "step": "D1",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "FIRST, AND IT IS FIRST FOR A MEASURED REASON: TEACH THE FUNCTION THAT AN INSTANCE BIN WHICH *IS* ITS CLASS BIN IS ALREADY WIRED, AND LEAVE IT ALONE. Before the skip moves from the directory to the file (D3), `_cairn_wire_device` grows this test immediately after computing `inst_bin`: if `inst_bin` resolves to the same path as `class_bin` -- compare with `[[ \"$(readlink -f \"$inst_bin\" 2>/dev/null)\" == \"$(readlink -f \"$class_bin\" 2>/dev/null)\" ]]`, both sides through readlink -f so a link, a link-to-a-link and the directory itself all compare equal -- then count it `skipped` and `return 0` without writing anything. THIS STEP EXISTS BECAUSE OF HOLDING (h-topology) IN D1: seven of the nine instance bins ARE the class bin, reached by a whole-directory symlink into the git repo. `ln -sf \"$script\" \"$inst_bin/$name\"` under such a bin would place `cc -> .../cc/0/bin/cc` INSIDE /home/akien/dev/src/cairn/cairn/devices/cc/0/bin -- a self-pointing symlink committed into class-space. Doing D3 before this one turns a wiring pass into a repo mutation on seven devices at once, which is why the cheap-looking order is the wrong one. Guard first, then move the skip. Note also that the comparison must be made BEFORE the `mkdir -p`, not after, and that a class_bin that does not exist makes readlink -f print empty on that side -- two empties must NOT compare equal, so the test also requires the resolved class_bin to be non-empty.",
+      "by": "CC",
+      "step": "D2",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "THE SKIP MOVES FROM THE DIRECTORY TO THE FILE. With D2's guard standing in front of it, `_cairn_wire_device` deletes its `if [[ -d \"$inst_bin\" ]]; then skipped; return 0; fi` block entirely and the per-script loop decides one link at a time, the way `_cairn_wire_single` already does for superclaude: for each `script` in `\"$class_bin\"/*` that is `[[ -f \"$script\" && -x \"$script\" ]]`, with `name=\"$(basename \"$script\")\"`, if `[[ -L \"$inst_bin/$name\" ]]` AND `[[ \"$(readlink -f \"$inst_bin/$name\" 2>/dev/null)\" == \"$(readlink -f \"$script\")\" ]]` then count it `skipped` and touch nothing -- RE-RUNNING MUST NOT CHURN A LINK THAT ALREADY POINTS CORRECTLY, which is half the ticket's RED clause. Otherwise `ln -sf \"$script\" \"$inst_bin/$name\"` and count it `wired`. A NON-LINK regular file standing where a link belongs (~/.cairn/devices/cairn/0/bin/cairn is exactly that today, hand-placed, 338 bytes) is LEFT ALONE and counted `skipped`: a hand-placed file is somebody's act and this recipe does not overwrite an act it did not make -- but it is announced, one line to stderr naming the path and saying a hand-placed file stands where the class verb would link. The `mkdir -p \"$inst_bin\"` moves to AFTER the `[[ -d \"$class_bin\" ]]` test and runs only when there is at least one executable to link, so a class device with an empty bin no longer manufactures an empty instance directory. Nothing here exits; nothing here is fatal; a failed `ln` stays `|| true` with its finding printed.",
+      "by": "CC",
+      "step": "D3",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "THE COUNTS NOW COUNT VERBS, AND THE LINE THAT PRINTS THEM SAYS SO. Because D3 made the unit a file rather than a directory, `wired=N skipped=M` silently changes meaning: it counted DEVICES and now counts LINKS, and the same words over different arithmetic is the failure mode a reader cannot see. So the printed line and the boot-log line both change to name the unit: `_cairn_boot_log \"wire: linked=$linked already=$already left=$left root=$instance_root\"` and `echo \"linked $linked already $already left $left\"`, with the three counters replacing `wired`/`skipped` -- `linked` is symlinks actually made this pass, `already` is class verbs whose instance link already pointed correctly (including every verb under a bin that IS its class bin, D2), and `left` is class verbs NOT linked because a hand-placed non-link file stands in the way (D3). The counters are named in `local` at the top of `cairn_wire_instances` in place of `local wired=0 skipped=0`, and `_cairn_wire_single` is updated to increment `linked`/`already` rather than the retired names so superclaude's one call still adds up. CALLERS: `grep -rn \"wired \\|skipped\" launchers/ bin/` finds every place that reads or echoes this line before the rename lands; launchers/bootstrap_first_run.sh and bin/cairn are the two files to check, and any string match is repointed in the same act. A caller left reading the old words is the defect this step exists to prevent.",
+      "by": "CC",
+      "step": "D4",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "THE INSTANCE ARGUMENT BECOMES REAL. `_cairn_wire_device` already takes `instance` as its second positional and already interpolates it into `inst_bin`; what is missing is a caller that passes anything but \"0\". `cairn_wire_instances` grows an optional first positional: `local only_instance=\"${1:-}\"`. When it is empty (every call today, including bin/cairn's floor check and bootstrap_first_run.sh) the behaviour is EXACTLY what it is now -- the device loop passes \"0\" -- so this step changes nothing that currently runs. When it is a non-empty string, the device loop passes that value instead of \"0\", wiring `$instance_root/$device/$only_instance/bin` from the SAME class bin (class-space has one bin per device, not one per instance -- holding D1 -- so instance N's links point at the class bin exactly as instance 0's do), and `_cairn_wire_single \"superclaude\"` likewise takes `${only_instance:-0}`. An argument that is not a non-negative decimal integer is refused loudly on stderr (`cairn_wire_instances: instance must be a non-negative integer, got '<arg>'`) and the function returns 1 WITHOUT WIRING ANYTHING -- the one place in this function where a return code is not 0, and it is a refusal to act rather than a partial act. THEN THE CALLER THAT MAKES IT MATTER: cairn/devices/cc/0/bin/restart's `cmd_spawn` (it computes `n`, then launches `( setsid \"$LAUNCHER\" --tmux \"--instance=$n\" ... & )`) sources launchers/bootstrap.sh and calls `cairn_wire_instances \"$n\"` BEFORE the launch, so instance N's bin exists before anything under it is reached. Sourcing a file that declares functions and exits never is safe inside a bash verb; the call's output is printed as one line so the operator sees what was wired for the new instance.",
+      "by": "CC",
+      "step": "D5",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "THE PROOF: launchers/proofs/test_instance_wiring_links_every_verb.py, a plain python module run as __main__ (not pytest), in the shape of launchers/proofs/test_superclaude_wire.py -- `_REPO = Path(__file__).resolve().parents[2]`, `sys.path.insert(0, str(_REPO))` so it runs bare, and a module-level `PROVES = {\"f0ffa0db0952\": {...}}` whose ticket key is a STRING LITERAL (proof_coverage.declared reads it with ast.literal_eval) mapping each falsifier clause to its tooth name. It builds a FIXTURE WORLD under cairn.devices.tester.scratch.scratch_dir -- a fake CAIRN_REPO_ROOT holding cairn/devices/<dev>/0/bin with executable files, and a fake CAIRN_INSTANCE_ROOT -- and drives the recipe by `subprocess.run([\"bash\",\"-c\",'source \"$1\"; cairn_wire_instances \"$2\"', \"_\", <bootstrap.sh>, <instance>], env=...)`, NEVER against ~/.cairn and NEVER against the live repo: a proof that wires the real instance root is a live fire inside a proof. FOUR TEETH, one per revert, and each must name a DISTINCT red so a broken tooth cannot be covered by a neighbour: (a) THE NEW VERB -- a device whose instance bin already holds a correct link for verb `alpha` gains class verb `beta`; after the run `<inst>/beta` is a symlink resolving to the class `beta` and `alpha` is UNCHANGED (compare `os.lstat().st_mtime_ns` before and after: re-running must not churn a correct link); reverting D3 reds this. (b) THE BIN THAT IS ITS CLASS BIN -- the fixture instance bin is made as `os.symlink(class_bin, inst_bin)`; after the run, `os.listdir(class_bin)` is byte-for-byte what it was and contains NO self-pointing link; reverting D2 reds this, and this is the hollow-build tooth, because a build that skips D2 still passes (a) perfectly. (c) THE HAND-PLACED FILE -- a regular non-link file named for a class verb stands in the instance bin; after the run it is still a regular file with its original bytes, it is counted in `left`, and the run printed a line naming its path; reverting D3's non-link branch reds this. (d) THE INSTANCE ARGUMENT -- `cairn_wire_instances 7` wires `<instance_root>/<dev>/7/bin` with the same names instance 0 gets and leaves instance 0 untouched, and `cairn_wire_instances notanumber` returns non-zero, prints the refusal on stderr, and creates NO directory anywhere under the instance root; reverting D5 reds this. Every tooth asserts INVARIANTS (a link resolves to its class script; a directory's contents are unchanged; a count's arithmetic adds up), never snapshot counts, because the fixture's population is the test's own and a pinned number would red on any future tooth added beside it. Run the proof twice bare before sealing, and check the clause names against proof_coverage.clauses before the first seal.",
+      "by": "CC",
+      "step": "D6",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "THE WATCHME PROBE, ARMED BEFORE THE CROSSING: cairn/devices/cairn/probes/every_class_verb_has_an_instance_link.py, a module declaring a module-level `PROBE` that is a frozen cairn.tools.base.probe.Probe built with keyword arguments why, trigger, to, verb, channel, body, carry, enough -- the shape cairn/devices/cc/probes/is_the_memory_curve_recorded.py is in, and it berths with what it watches (the cairn device, whose wiring this is) rather than with the ticket. ITS COMPARISON IS THE WIRING'S OWN, two directory reads and nothing more: for each `<repo>/cairn/devices/<dev>/0/bin/<verb>` that is an executable file, is there a `<instance root>/<dev>/0/bin/<verb>` that resolves to it? A device bin that IS its class bin answers yes for every verb by construction (D2) and is not a finding. TRIGGER: true on a beat where at least one class verb has no resolving instance link. It rides the heartbeat the ground loop already runs -- NO poller, no new clock, and nothing pokes it. CARRY: the UNLINKED VERB AND ITS DEVICE, never a boolean -- {\"ticket\": owning_ticket(\"f0ffa0db0952\"), \"device\": \"<dev>\", \"verb\": \"<verb>\", \"class_path\": \"<abs>\", \"expected_link\": \"<abs>\"} -- so the carry says WHAT was missed rather than that something was, which is this ticket's watchme `carrier` verbatim. Surfaced on the cairn device's pane, because an unreachable verb is a live trouble and not a log line. ENOUGH: THREE VERBS ADDED TO ALREADY-WIRED DEVICES AND REACHABLE WITHOUT A HAND -- the count is of verbs added, NOT of clean beats, because a quiet week proves nothing about a rule that only bites when someone adds a verb. The probe therefore keeps, in instance-space at instance_path(\"cairn\", 0) / \"probes\" / \"every_class_verb_has_an_instance_link.json\", the set of (device, verb) pairs it has ever seen in class-space; a pair not in that set is a VERB ADDED, and it counts toward `enough` only if it already resolves on the beat it is first seen. The probe carries NO AUTHORITY: it deposits and pokes, and the back-edge that re-opens this node is the owner's act (Law 6).",
+      "by": "CC",
+      "step": "D7",
+      "source": "cast"
+    }
   ]
 }
