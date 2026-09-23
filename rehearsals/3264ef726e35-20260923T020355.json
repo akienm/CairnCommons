@@ -1,0 +1,970 @@
+{
+  "ticket": "3264ef726e35",
+  "record": "rehearsals/3264ef726e35-20260923T020355.json",
+  "at": "2026-09-23T02:03:55+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "f5c3a13576481032404c1e5f1b4ca893a7feee4b208583fdd97c97800eaf760a",
+  "ticket_sha256_at_read": "f5c3a13576481032404c1e5f1b4ca893a7feee4b208583fdd97c97800eaf760a",
+  "reads": [
+    {
+      "ticket": "3264ef726e35",
+      "ticket_sha256": "f5c3a13576481032404c1e5f1b4ca893a7feee4b208583fdd97c97800eaf760a",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: create cairn/devices/cairn/0/bin/restart and hand-symlink to ~/.cairn/devices/cairn/0/bin/restart",
+          "state": "builds_under_assumption",
+          "assumption": "the builder understands 'hand-symlink into instance-space' means creating a symbolic link (ln -s) from the class-space file into the instance directory, and that this is a manual operation bypassing the wiring because the instance bin already holds a 338-byte hand-placed file",
+          "would_settle": "Decision: clarify whether the instance symlink should be created by the builder manually in the same act, or whether ticket f0ffa0db0952 (fix the wiring) must land first to make the wiring automatic",
+          "confidence": 0.87
+        },
+        {
+          "step": "unlisted: write status-reporting face showing both units' standing and the roster comparison",
+          "state": "builds_under_assumption",
+          "assumption": "the builder will examine cairn/devices/cairn/machines/ground_loop/cli.py as prior art and follow its status pattern, and will interpret 'Law 7 diagnostic surface' to mean the report must distinguish a unit that could not be queried from one that is actually down (distinct output wording for the two cases)",
+          "would_settle": "Decision: specify the exact status output format and the wording to use when a unit cannot be queried vs. is down vs. is up",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: read the device roster from liveness.json before and after the cycle, and report set membership before and after",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.92
+        },
+        {
+          "step": "unlisted: write the down-leg (stop cairn-web-server unit then cairn-ground-loop unit, checking return codes and failing fast)",
+          "state": "builds_under_assumption",
+          "assumption": "the builder will use systemctl --user stop for each unit in order, check that each succeeds before proceeding to the next, and interpret 'loudly' to mean output a clear status message naming each step; and will not delete any files or attempt to clean up state (let systemd handle cleanup)",
+          "would_settle": "Decision: whether the down-leg should wait for port 80 to actually be released by the OS after stopping the web server, or whether systemd's synchronous stop is sufficient",
+          "confidence": 0.83
+        },
+        {
+          "step": "unlisted: compose the up-leg (start ground loop via systemd-run, then web server behind ss port guard, using the reset-failed-retry-refuse ladder exactly as superclaude uses it)",
+          "state": "builds_under_assumption",
+          "assumption": "the builder will read launchers/superclaude line-for-line and copy its exact systemd-run flags, unit names, SuccessExitStatus=3, --setenv, --working-directory, reset-failed-then-retry-once-then-refuse logic, and the port guard check `ss -tlnH | grep -q ':80\\b'` exactly; and will NEVER add a setsid fallback even if systemd-run is unavailable—instead will fail loudly",
+          "would_settle": "Decision: confirm that setsid is absolutely forbidden (never a fallback, even when systemd is unavailable); and clarify the wait strategy if port 80 is not immediately released after web server start",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: write a proof that drives the verb against fixture units and asserts the contract (before-roster and after-roster match, or named difference)",
+          "state": "builds_under_assumption",
+          "assumption": "the builder can construct fixture units under an isolated CAIRN_BOOTSTRAP_HOME without interfering with the live ground loop; and will follow the proof idiom from bin/proofs/test_cairn_command.py and the fixture-unit pattern from launchers/proofs/test_ground_loop_survives_its_caller.py",
+          "would_settle": "Decision: whether fixture units can be safely created inside a proof without systemd refusing the unit names as already-held by the live singleton",
+          "confidence": 0.83
+        },
+        {
+          "step": "unlisted: declare and arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py with a frozen PROBE object carrying both enough and carry",
+          "state": "builds_under_assumption",
+          "assumption": "the restart verb will write a record (containing before-roster and after-roster or completion status) in a location the probe can find and read; the probe will read state.subscribers from liveness.json on each beat and compare it against whatever record the verb left from its restart",
+          "would_settle": "Decision: specify the record format, location, and schema that the restart verb writes, so the probe knows how to read and interpret it; and clarify whether the probe should read the record from instance-space or from the verb's own output",
+          "confidence": 0.68
+        }
+      ]
+    },
+    {
+      "ticket": "3264ef726e35",
+      "ticket_sha256": "f5c3a13576481032404c1e5f1b4ca893a7feee4b208583fdd97c97800eaf760a",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: create class-space verb file at cairn/devices/cairn/0/bin/restart",
+          "state": "builds_under_assumption",
+          "assumption": "The verb is implemented as a bash script following launchers/superclaude's pattern for systemd-run/systemctl composition, but the exact command flow, flags, and error-handling ladder are not spelled in the ticket—only implied by 'compose what already exists'",
+          "would_settle": "The verb is a bash script that calls systemctl --user to stop the web server, stop the ground loop, start the ground loop, start the web server, reads the roster before/after, and prints their comparison—using the exact reset-failed-then-retry-once-then-refuse ladder from launchers/superclaude, lines and all",
+          "confidence": 0.68
+        },
+        {
+          "step": "unlisted: symlink verb into instance-space (~/.cairn/devices/cairn/0/bin/restart)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.92
+        },
+        {
+          "step": "unlisted: implement down-leg (stop web server unit, then ground loop unit)",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows to use `systemctl --user stop <unit>` but does not know: (1) whether to wait for actual port release or assume systemd's TimeoutStopSec is synchronous enough, (2) what to do if a unit does not exist (refuse or no-op), (3) whether the reset-failed-retry ladder applies to stop as well as start",
+          "would_settle": "Specify whether stop waits on port release, how to handle missing units, and the exact systemctl flags (the ladder's own stop path, which is not shown in launchers/superclaude because that file only starts)",
+          "confidence": 0.62
+        },
+        {
+          "step": "unlisted: implement up-leg (compose proven ladder to start ground loop then web server)",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can identify the right pieces in launchers/superclaude and ground_loop/cli.py to compose, but the exact command sequence, flag ordering, and how to handle a held unit name (reset-failed-then-retry-once-then-refuse) requires reading code not quoted in the ticket—the phrase 'compose what already exists' is a direction, not a specification",
+          "would_settle": "Provide the exact sequence of calls to make: `systemctl --user reset-failed cairn-ground-loop 2>/dev/null; systemd-run --user --unit=cairn-ground-loop ... ` etc., with every flag the ladder requires",
+          "confidence": 0.64
+        },
+        {
+          "step": "unlisted: read roster before and after restart, report comparison",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows to read state.subscribers from the ground loop's liveness record, but does not know WHEN to read the after-roster. The survey lists this as an open unknown: 'CADENCE_S is 60.0, so an immediate read compares against a partial roster. Whether the wait is on a first beat, on a subscriber count reaching the BEFORE count, or on a fixed ceiling is a design choice the survey has to ground against how liveness.json is actually written'",
+          "would_settle": "Specify: read the after-roster (a) immediately after the start succeeds, (b) after a fixed delay, or (c) after liveness.read_liveness() reports a beat newer than the start time",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: implement Law-7 status output (names unit states distinctly, shows roster comparison)",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows status must show what's up and what's down, and must distinguish a unit that could not be queried from one that is down, but the exact format is not specified. The web_server charter says 'an unqueryable unit reads DIFFERENTLY' but does not prescribe the wording",
+          "would_settle": "Specify the exact status output format: e.g., 'cairn-ground-loop: active (running)\\ncairn-web-server: failed (could not query: unit does not exist)\\nRoster before: [dev-a, dev-b]\\nRoster after: [dev-a, dev-b]\\nResult: match'",
+          "confidence": 0.58
+        },
+        {
+          "step": "unlisted: write proof (fixture units, drives verb contract, not snapshot)",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows the proof must stand up fixture units, run the verb, and assert the contract (roster comes back), but the exact fixture setup, assertion pattern, and whether it can safely run against live units is not specified. The validate chart says 'fixture units under an isolated flags home' but the triage unknowns note 'whether the down-leg can be exercised at all outside a fixture, since the only live units are the ones this session is running inside'",
+          "would_settle": "Specify whether the proof runs against live units or must create fixture units, and exactly what assertions it makes (e.g., 'assert before_roster == after_roster' or 'assert no device in before_roster is missing from after_roster')",
+          "confidence": 0.63
+        },
+        {
+          "step": "unlisted: arm the WATCHME probe (at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py)",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows the probe fires on the beat and watches whether 'the roster after equals the roster before', but the exact probe code structure, the frozen PROBE module-level object, the carry format (what to deposit when rosters differ by one device), and the enough bound ('three consecutive restarts or first mismatch') are templates requiring implementation detail",
+          "would_settle": "Specify the probe class name, the exact structure of the PROBE object, and the carry format: e.g., does carry={\"before\": [...], \"after\": [...], \"missing\": [...]} or something else?",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: resolve 'cairn restart' through dispatcher to the verb file",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.88
+        }
+      ]
+    },
+    {
+      "ticket": "3264ef726e35",
+      "ticket_sha256": "f5c3a13576481032404c1e5f1b4ca893a7feee4b208583fdd97c97800eaf760a",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: create cairn/devices/cairn/0/bin/ and write restart stub file",
+          "state": "builds_under_assumption",
+          "assumption": "the restart verb file is initially created as a placeholder (stub or empty script) and is populated by the later build steps; the stub is then symlinked into ~/.cairn/devices/cairn/0/bin/restart by hand",
+          "would_settle": "D1: Specify whether the berth is created as an empty file, a no-op stub that prints status, or something else; clarify that the symlink is hand-made as a single step before the other pieces write into the file",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: write status face (Law 7 diagnostic surface)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.82
+        },
+        {
+          "step": "unlisted: read and compare roster before and after restart",
+          "state": "builds_under_assumption",
+          "assumption": "after the ground loop restarts, the builder waits for the roster to stabilize (likely one heartbeat or until subscriber count reaches pre-restart count); the exact wait strategy is implied by 'liveness.json's own write cadence' but not specified",
+          "would_settle": "D3: Specify the wait strategy after loop restart — wait one CADENCE_S beat, wait until subscribers >= pre-count, or some other bound — to determine when the 'after' roster read is taken",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: write the down-leg (stop web-server, then ground-loop)",
+          "state": "builds_under_assumption",
+          "assumption": "the down-leg uses 'systemctl --user stop' on each unit in order with error checking between them; the exact shell structure mirrors systemd-run's error-handling pattern (no setsid fallback, no re-derivation of the stop behavior)",
+          "would_settle": "D4: Clarify that the down-leg is bash using systemctl --user, not a re-derive of systemd's own refusal ladder; name the error-handling order (stop first unit, check result, stop second unit, refuse loudly on either failure)",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: compose the up-leg from the proved launcher ladder",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.82
+        },
+        {
+          "step": "unlisted: write the proof (drives verb against fixtures, asserts contract)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py",
+          "state": "builds_under_assumption",
+          "assumption": "the probe fires when the restart completes; the firing mechanism (restart verb pokes via bus, OR loop's beat detects state change, OR some other trigger) is not specified, only that it must not be a poller and must fire 'on the beat that already runs'",
+          "would_settle": "D7: Specify how the probe fires — does the restart verb poke it, or does the loop's beat detect the restart via liveness.json change — and clarify that no new poller is added",
+          "confidence": 0.6
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: arm the WATCHME probe (at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder knows the probe fires on the beat and watches whether 'the roster after equals the roster before', but the exact probe code structure, the frozen PROBE module-level object, the carry format (what to deposit when rosters differ by one device), and the enough bound ('three consecutive restarts or first mismatch') are templates requiring implementation detail"
+      ],
+      "would_settle": [
+        "Specify the probe class name, the exact structure of the PROBE object, and the carry format: e.g., does carry={\"before\": [...], \"after\": [...], \"missing\": [...]} or something else?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the probe fires when the restart completes; the firing mechanism (restart verb pokes via bus, OR loop's beat detects state change, OR some other trigger) is not specified, only that it must not be a poller and must fire 'on the beat that already runs'"
+      ],
+      "would_settle": [
+        "D7: Specify how the probe fires — does the restart verb poke it, or does the loop's beat detect the restart via liveness.json change — and clarify that no new poller is added"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: compose the up-leg (start ground loop via systemd-run, then web server behind ss port guard, using the reset-failed-retry-refuse ladder exactly as superclaude uses it)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the builder will read launchers/superclaude line-for-line and copy its exact systemd-run flags, unit names, SuccessExitStatus=3, --setenv, --working-directory, reset-failed-then-retry-once-then-refuse logic, and the port guard check `ss -tlnH | grep -q ':80\\b'` exactly; and will NEVER add a setsid fallback even if systemd-run is unavailable—instead will fail loudly"
+      ],
+      "would_settle": [
+        "Decision: confirm that setsid is absolutely forbidden (never a fallback, even when systemd is unavailable); and clarify the wait strategy if port 80 is not immediately released after web server start"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create cairn/devices/cairn/0/bin/ and write restart stub file",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the restart verb file is initially created as a placeholder (stub or empty script) and is populated by the later build steps; the stub is then symlinked into ~/.cairn/devices/cairn/0/bin/restart by hand"
+      ],
+      "would_settle": [
+        "D1: Specify whether the berth is created as an empty file, a no-op stub that prints status, or something else; clarify that the symlink is hand-made as a single step before the other pieces write into the file"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create cairn/devices/cairn/0/bin/restart and hand-symlink to ~/.cairn/devices/cairn/0/bin/restart",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the builder understands 'hand-symlink into instance-space' means creating a symbolic link (ln -s) from the class-space file into the instance directory, and that this is a manual operation bypassing the wiring because the instance bin already holds a 338-byte hand-placed file"
+      ],
+      "would_settle": [
+        "Decision: clarify whether the instance symlink should be created by the builder manually in the same act, or whether ticket f0ffa0db0952 (fix the wiring) must land first to make the wiring automatic"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create class-space verb file at cairn/devices/cairn/0/bin/restart",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The verb is implemented as a bash script following launchers/superclaude's pattern for systemd-run/systemctl composition, but the exact command flow, flags, and error-handling ladder are not spelled in the ticket—only implied by 'compose what already exists'"
+      ],
+      "would_settle": [
+        "The verb is a bash script that calls systemctl --user to stop the web server, stop the ground loop, start the ground loop, start the web server, reads the roster before/after, and prints their comparison—using the exact reset-failed-then-retry-once-then-refuse ladder from launchers/superclaude, lines and all"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: declare and arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py with a frozen PROBE object carrying both enough and carry",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the restart verb will write a record (containing before-roster and after-roster or completion status) in a location the probe can find and read; the probe will read state.subscribers from liveness.json on each beat and compare it against whatever record the verb left from its restart"
+      ],
+      "would_settle": [
+        "Decision: specify the record format, location, and schema that the restart verb writes, so the probe knows how to read and interpret it; and clarify whether the probe should read the record from instance-space or from the verb's own output"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement down-leg (stop web server unit, then ground loop unit)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder knows to use `systemctl --user stop <unit>` but does not know: (1) whether to wait for actual port release or assume systemd's TimeoutStopSec is synchronous enough, (2) what to do if a unit does not exist (refuse or no-op), (3) whether the reset-failed-retry ladder applies to stop as well as start"
+      ],
+      "would_settle": [
+        "Specify whether stop waits on port release, how to handle missing units, and the exact systemctl flags (the ladder's own stop path, which is not shown in launchers/superclaude because that file only starts)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement Law-7 status output (names unit states distinctly, shows roster comparison)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder knows status must show what's up and what's down, and must distinguish a unit that could not be queried from one that is down, but the exact format is not specified. The web_server charter says 'an unqueryable unit reads DIFFERENTLY' but does not prescribe the wording"
+      ],
+      "would_settle": [
+        "Specify the exact status output format: e.g., 'cairn-ground-loop: active (running)\\ncairn-web-server: failed (could not query: unit does not exist)\\nRoster before: [dev-a, dev-b]\\nRoster after: [dev-a, dev-b]\\nResult: match'"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement up-leg (compose proven ladder to start ground loop then web server)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder can identify the right pieces in launchers/superclaude and ground_loop/cli.py to compose, but the exact command sequence, flag ordering, and how to handle a held unit name (reset-failed-then-retry-once-then-refuse) requires reading code not quoted in the ticket—the phrase 'compose what already exists' is a direction, not a specification"
+      ],
+      "would_settle": [
+        "Provide the exact sequence of calls to make: `systemctl --user reset-failed cairn-ground-loop 2>/dev/null; systemd-run --user --unit=cairn-ground-loop ... ` etc., with every flag the ladder requires"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: read and compare roster before and after restart",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "after the ground loop restarts, the builder waits for the roster to stabilize (likely one heartbeat or until subscriber count reaches pre-restart count); the exact wait strategy is implied by 'liveness.json's own write cadence' but not specified"
+      ],
+      "would_settle": [
+        "D3: Specify the wait strategy after loop restart — wait one CADENCE_S beat, wait until subscribers >= pre-count, or some other bound — to determine when the 'after' roster read is taken"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: read roster before and after restart, report comparison",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder knows to read state.subscribers from the ground loop's liveness record, but does not know WHEN to read the after-roster. The survey lists this as an open unknown: 'CADENCE_S is 60.0, so an immediate read compares against a partial roster. Whether the wait is on a first beat, on a subscriber count reaching the BEFORE count, or on a fixed ceiling is a design choice the survey has to ground against how liveness.json is actually written'"
+      ],
+      "would_settle": [
+        "Specify: read the after-roster (a) immediately after the start succeeds, (b) after a fixed delay, or (c) after liveness.read_liveness() reports a beat newer than the start time"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write a proof that drives the verb against fixture units and asserts the contract (before-roster and after-roster match, or named difference)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the builder can construct fixture units under an isolated CAIRN_BOOTSTRAP_HOME without interfering with the live ground loop; and will follow the proof idiom from bin/proofs/test_cairn_command.py and the fixture-unit pattern from launchers/proofs/test_ground_loop_survives_its_caller.py"
+      ],
+      "would_settle": [
+        "Decision: whether fixture units can be safely created inside a proof without systemd refusing the unit names as already-held by the live singleton"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write proof (fixture units, drives verb contract, not snapshot)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder knows the proof must stand up fixture units, run the verb, and assert the contract (roster comes back), but the exact fixture setup, assertion pattern, and whether it can safely run against live units is not specified. The validate chart says 'fixture units under an isolated flags home' but the triage unknowns note 'whether the down-leg can be exercised at all outside a fixture, since the only live units are the ones this session is running inside'"
+      ],
+      "would_settle": [
+        "Specify whether the proof runs against live units or must create fixture units, and exactly what assertions it makes (e.g., 'assert before_roster == after_roster' or 'assert no device in before_roster is missing from after_roster')"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write status-reporting face showing both units' standing and the roster comparison",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the builder will examine cairn/devices/cairn/machines/ground_loop/cli.py as prior art and follow its status pattern, and will interpret 'Law 7 diagnostic surface' to mean the report must distinguish a unit that could not be queried from one that is actually down (distinct output wording for the two cases)"
+      ],
+      "would_settle": [
+        "Decision: specify the exact status output format and the wording to use when a unit cannot be queried vs. is down vs. is up"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write the down-leg (stop cairn-web-server unit then cairn-ground-loop unit, checking return codes and failing fast)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the builder will use systemctl --user stop for each unit in order, check that each succeeds before proceeding to the next, and interpret 'loudly' to mean output a clear status message naming each step; and will not delete any files or attempt to clean up state (let systemd handle cleanup)"
+      ],
+      "would_settle": [
+        "Decision: whether the down-leg should wait for port 80 to actually be released by the OS after stopping the web server, or whether systemd's synchronous stop is sufficient"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write the down-leg (stop web-server, then ground-loop)",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the down-leg uses 'systemctl --user stop' on each unit in order with error checking between them; the exact shell structure mirrors systemd-run's error-handling pattern (no setsid fallback, no re-derivation of the stop behavior)"
+      ],
+      "would_settle": [
+        "D4: Clarify that the down-leg is bash using systemctl --user, not a re-derive of systemd's own refusal ladder; name the error-handling order (stop first unit, check result, stop second unit, refuse loudly on either failure)"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: arm the WATCHME probe (at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: compose the up-leg (start ground loop via systemd-run, then web server behind ss port guard, using the reset-failed-retry-refuse ladder exactly as superclaude uses it)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: compose the up-leg from the proved launcher ladder",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create cairn/devices/cairn/0/bin/ and write restart stub file",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create cairn/devices/cairn/0/bin/restart and hand-symlink to ~/.cairn/devices/cairn/0/bin/restart",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create class-space verb file at cairn/devices/cairn/0/bin/restart",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: declare and arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py with a frozen PROBE object carrying both enough and carry",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement down-leg (stop web server unit, then ground loop unit)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement Law-7 status output (names unit states distinctly, shows roster comparison)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement up-leg (compose proven ladder to start ground loop then web server)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: read and compare roster before and after restart",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: read roster before and after restart, report comparison",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: read the device roster from liveness.json before and after the cycle, and report set membership before and after",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: resolve 'cairn restart' through dispatcher to the verb file",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: symlink verb into instance-space (~/.cairn/devices/cairn/0/bin/restart)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write a proof that drives the verb against fixture units and asserts the contract (before-roster and after-roster match, or named difference)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write proof (fixture units, drives verb contract, not snapshot)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write status face (Law 7 diagnostic surface)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write status-reporting face showing both units' standing and the roster comparison",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the down-leg (stop cairn-web-server unit then cairn-ground-loop unit, checking return codes and failing fast)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the down-leg (stop web-server, then ground-loop)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the proof (drives verb against fixtures, asserts contract)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: arm the WATCHME probe (at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the probe class name, the exact structure of the PROBE object, and the carry format: e.g., does carry={\"before\": [...], \"after\": [...], \"missing\": [...]} or something else?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D7: Specify how the probe fires — does the restart verb poke it, or does the loop's beat detect the restart via liveness.json change — and clarify that no new poller is added"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: compose the up-leg (start ground loop via systemd-run, then web server behind ss port guard, using the reset-failed-retry-refuse ladder exactly as superclaude uses it)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: confirm that setsid is absolutely forbidden (never a fallback, even when systemd is unavailable); and clarify the wait strategy if port 80 is not immediately released after web server start"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: compose the up-leg from the proved launcher ladder",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create cairn/devices/cairn/0/bin/ and write restart stub file",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D1: Specify whether the berth is created as an empty file, a no-op stub that prints status, or something else; clarify that the symlink is hand-made as a single step before the other pieces write into the file"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create cairn/devices/cairn/0/bin/restart and hand-symlink to ~/.cairn/devices/cairn/0/bin/restart",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: clarify whether the instance symlink should be created by the builder manually in the same act, or whether ticket f0ffa0db0952 (fix the wiring) must land first to make the wiring automatic"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create class-space verb file at cairn/devices/cairn/0/bin/restart",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The verb is a bash script that calls systemctl --user to stop the web server, stop the ground loop, start the ground loop, start the web server, reads the roster before/after, and prints their comparison—using the exact reset-failed-then-retry-once-then-refuse ladder from launchers/superclaude, lines and all"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: declare and arm the WATCHME probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py with a frozen PROBE object carrying both enough and carry",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: specify the record format, location, and schema that the restart verb writes, so the probe knows how to read and interpret it; and clarify whether the probe should read the record from instance-space or from the verb's own output"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement down-leg (stop web server unit, then ground loop unit)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify whether stop waits on port release, how to handle missing units, and the exact systemctl flags (the ladder's own stop path, which is not shown in launchers/superclaude because that file only starts)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement Law-7 status output (names unit states distinctly, shows roster comparison)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the exact status output format: e.g., 'cairn-ground-loop: active (running)\\ncairn-web-server: failed (could not query: unit does not exist)\\nRoster before: [dev-a, dev-b]\\nRoster after: [dev-a, dev-b]\\nResult: match'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement up-leg (compose proven ladder to start ground loop then web server)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Provide the exact sequence of calls to make: `systemctl --user reset-failed cairn-ground-loop 2>/dev/null; systemd-run --user --unit=cairn-ground-loop ... ` etc., with every flag the ladder requires"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: read and compare roster before and after restart",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D3: Specify the wait strategy after loop restart — wait one CADENCE_S beat, wait until subscribers >= pre-count, or some other bound — to determine when the 'after' roster read is taken"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: read roster before and after restart, report comparison",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify: read the after-roster (a) immediately after the start succeeds, (b) after a fixed delay, or (c) after liveness.read_liveness() reports a beat newer than the start time"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: read the device roster from liveness.json before and after the cycle, and report set membership before and after",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: resolve 'cairn restart' through dispatcher to the verb file",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: symlink verb into instance-space (~/.cairn/devices/cairn/0/bin/restart)",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write a proof that drives the verb against fixture units and asserts the contract (before-roster and after-roster match, or named difference)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: whether fixture units can be safely created inside a proof without systemd refusing the unit names as already-held by the live singleton"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write proof (fixture units, drives verb contract, not snapshot)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify whether the proof runs against live units or must create fixture units, and exactly what assertions it makes (e.g., 'assert before_roster == after_roster' or 'assert no device in before_roster is missing from after_roster')"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write status face (Law 7 diagnostic surface)",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write status-reporting face showing both units' standing and the roster comparison",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: specify the exact status output format and the wording to use when a unit cannot be queried vs. is down vs. is up"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the down-leg (stop cairn-web-server unit then cairn-ground-loop unit, checking return codes and failing fast)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: whether the down-leg should wait for port 80 to actually be released by the OS after stopping the web server, or whether systemd's synchronous stop is sufficient"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the down-leg (stop web-server, then ground-loop)",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D4: Clarify that the down-leg is bash using systemctl --user, not a re-derive of systemd's own refusal ladder; name the error-handling order (stop first unit, check result, stop second unit, refuse loudly on either failure)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the proof (drives verb against fixtures, asserts contract)",
+      "reads": [
+        3
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.17053700000000002,
+        "duration_ms": 137280,
+        "is_error": false,
+        "session_id": "31cb80f9-551d-4e5a-b8a2-ba072340c08a"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1323888,
+        "duration_ms": 84708,
+        "is_error": false,
+        "session_id": "ddd9a6b2-0fd0-4761-be27-8a1445771582"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.12430179999999999,
+        "duration_ms": 64071,
+        "is_error": false,
+        "session_id": "694355ee-778a-46a2-b99a-ce78e37d3e52"
+      }
+    ],
+    "cost_usd": 0.427228,
+    "duration_ms": 286059,
+    "rendered_chars": 127546,
+    "by": null
+  },
+  "divergence": null
+}
