@@ -1,0 +1,54 @@
+{
+  "id": "f0ffa0db0952",
+  "title": "the-wiring-links-missing-verbs-not-only-missing-directories",
+  "node_class": "code-seam",
+  "date": "2026-09-22",
+  "author": "cc",
+  "owner": "",
+  "priority": "",
+  "cast": "2026-09-22",
+  "proved": "",
+  "verdict": null,
+  "what": "The instance wiring links every class-space verb that has no instance link yet, instead of only wiring devices whose instance bin does not exist at all -- and it wires the instance a spawn just created, not only instance 0.",
+  "why": "Today 'a new verb is reachable' is enforced by whoever remembers to delete an instance bin directory or make a symlink by hand. That is policy where it should be physics (Law 4), and it bites immediately: ~/.cairn/devices/cairn/0/bin holds one hand-placed file, so the wiring skips the cairn device forever and `cairn restart` would land in a class bin nothing ever links. The same missing precision leaves `cairn cc restart spawn N` standing up a tmux session and a flags home for instance N with no ~/.cairn/devices/cc/N/bin behind them.",
+  "how": "launchers/bootstrap.sh already holds both halves. `_cairn_wire_device` mkdirs the instance bin and symlinks every executable in the class bin, but returns early when the instance bin DIRECTORY exists. `_cairn_wire_single`, ten lines away, already has the per-FILE rule: skip when that name exists, link when it does not. Move the skip from the directory into the per-script loop, keep every ln non-fatal, and keep the walk idempotent -- it runs on every bin/cairn floor check. The second half is the instance argument: `_cairn_wire_device` already takes one and only the discovery loop's constant 0 stops it being used, so cmd_spawn in cairn/devices/cc/0/bin/restart calls the wiring for the instance it just chose.",
+  "traces_to": "Law 4 -- a rule that matters is enforced by physics, not policy. Also Law 1: the recipe was compiled once (ticket 0853294fe972 lifted it whole so it would have one address and no copy); a verb that silently fails to appear makes the next mind re-derive why.",
+  "falsifier": "GREEN when a verb added to an already-wired device's class bin is reachable as `cairn <device> <verb>` after the wiring runs, with no hand symlink and no directory deleted; and when `cairn cc restart spawn N` leaves ~/.cairn/devices/cc/N/bin holding the same links instance 0 holds. RED if the walk links anything that is not an executable file in a class bin, or if re-running it churns links that already point correctly.",
+  "constraints": [
+    {"text": "Nothing here may be fatal. The function's own contract is 'nothing here is fatal -- a link that cannot be made is a finding the first run prints, not an abort', so every ln stays `|| true` and the function still returns 0 against an unwritable instance root.", "source": "launchers/bootstrap.sh", "kind": "charter"},
+    {"text": "Idempotent. The walk runs on every bin/cairn floor check, so a second run over a fully wired device must churn nothing.", "source": "launchers/bootstrap.sh", "kind": "charter"},
+    {"text": "STALE LINKS ARE NOT PRUNED. This change links what is missing and removes nothing: instance-space has no undo (bin/cmd/deletegate carries the reason), and ~/.cairn/devices/cairn/0/bin/cairn is a hand-placed file a pruner would delete. A dangling link left by a deleted class file stays a known, named gap.", "source": "bin/cmd/deletegate", "kind": "charter"},
+    {"text": "The per-file rule is COPIED, not invented: `_cairn_wire_single` in the same function already implements it for superclaude, whose launcher lives outside a device bin.", "source": "launchers/bootstrap.sh", "kind": "charter"},
+    {"text": "The 'wired N skipped M' line's numbers change meaning from devices to files. Say so in the line rather than leaving the number to be misread (Law 7 at a diagnostic surface).", "source": "launchers/bootstrap.sh", "kind": "charter"}
+  ],
+  "intention": "",
+  "owning_intention": "",
+  "chart_claim": "",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260922T193936-8872f6282105.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260922T194036-914b799877fb.json",
+  "verdict_berth": "",
+  "deposits": {},
+  "linked_ideas": ["2026-09-22-so-next-we-build-that-out-cairn"],
+  "children": "none, because the two halves are one defect -- the device walk skips on a DIRECTORY and passes instance 0 always, and both are the same missing precision about what the unit of wiring is. Splitting them would leave `cairn cc.1 restart` resolving to nothing even after ticket 55fc9263bf5a teaches the dispatcher to read the address.",
+  "questions": "none, because nothing here is a spec choice. The rule being applied already exists in the same function (launchers/bootstrap.sh, `_cairn_wire_single`), the instance parameter already exists on `_cairn_wire_device`, and the one thing that could have been a fork -- whether stale links are pruned as well -- is settled OUT by physics rather than by taste: instance-space has no undo (bin/cmd/deletegate carries the reason).",
+  "watchme": {
+    "object": "every_class_verb_has_an_instance_link",
+    "trigger": "a beat on which some class-space cairn/devices/*/0/bin/<verb> has no corresponding link in that device's instance bin. The probe fires on the heartbeat that already runs -- the comparison is two directory reads, and it is the same comparison the wiring itself makes.",
+    "enough": "three consecutive verbs added to already-wired devices that are reachable without a hand, at which point the probe retires. The count is of VERBS ADDED, not of clean beats -- a quiet week proves nothing about a rule that only bites when someone adds a verb.",
+    "carrier": "a verdict artifact against this ticket's falsifier, naming the unlinked verb and its device, so the carry says what was missed rather than that something was.",
+    "nexus": "the hypothesize tree -- an unlinked verb surviving a beat kills the hypothesis that running the recipe on every bin/cairn floor check is enough, and points at wiring from the act that adds the verb instead.",
+    "consumer": "whoever next types `cairn <device> <verb>` and gets 'no such verb' -- surfaced on the cairn device's pane, because an unreachable verb is a live trouble and not a log line.",
+    "probe": "cairn/devices/cairn/probes/every_class_verb_has_an_instance_link.py"
+  },
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(every_class_verb_has_an_instance_link) -> PROVED",
+  "links": [
+    {"id": "3264ef726e35", "what": "cairn restart cycles the system -- its verb lands in cairn/devices/cairn/0/bin, the class bin this wiring skips forever. That build makes its own link by hand; this ticket is why it should not have had to."},
+    {"id": "55fc9263bf5a", "what": "the dispatcher resolves an instance address. That ticket teaches `cairn cc.1 restart` to RESOLVE; this one makes there be something at the other end."},
+    {"id": "0853294fe972", "what": "lifted the wiring recipe whole out of bootstrap_first_run.sh so it would have one address and two callers. This ticket fixes the unit of work inside that one address."},
+    {"path": "launchers/bootstrap.sh", "what": "cairn_wire_instances -- _cairn_wire_device (the directory early return), _cairn_wire_single (the per-file rule to copy), and the discovery loop that passes 0."},
+    {"path": "cairn/devices/cc/0/bin/restart", "what": "cmd_spawn -- knows the instance number it just chose and today leaves it unwired."}
+  ],
+  "notes": [
+    {"date": "2026-09-22", "from": "cc", "text": "Found while building Akien's three restart names. MEASURED: ~/.cairn/devices/cairn/0/bin contains one hand-placed file (a shim-printing script, 338 bytes, placed 2026-09-02), and cairn/devices/cairn/0/bin does not exist in class-space at all -- so the cairn device has never been wired by the recipe and never will be while the directory-level early return stands."}
+  ]
+}
