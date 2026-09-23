@@ -1,0 +1,97 @@
+{
+  "id": "3264ef726e35",
+  "title": "cairn-restart-cycles-the-system",
+  "node_class": "code-seam",
+  "date": "2026-09-22",
+  "author": "cc",
+  "owner": "",
+  "priority": "",
+  "cast": "2026-09-22",
+  "proved": "",
+  "verdict": null,
+  "what": "A `cairn cairn restart` (shortcut `cairn restart`) that cycles the SYSTEM -- the cairn device's own machines (bus, ground_loop, harbor_master), the per-device shims, and the one web server -- down in a safe order and back up, as one verb. Distinct from `cairn cc restart`, which relaunches only a Claude Code session.",
+  "why": "The safe order to cycle this system is settled knowledge that today lives in exactly one place that cannot be invoked as an order: superclaude's start sequence, plus whoever remembers it. Re-deriving it at each restart is the defect Law 1 names, and while it is prose-and-memory rather than a verb it is an IOU, not a resting state (Law 4). The lived symptom: the operator is routinely 300 miles from this box with no working remote desktop, and the only way to cycle the system is to remember unit names and per-device verbs in the right order -- so a half-remembered order leaves orphans he cannot see or reach.",
+  "how": "Compose what already exists rather than writing a new supervisor. The order is a CONTAINMENT, not a list: the cairn device's own machines (ground_loop, harbor_master, bus -- cairn/devices/cairn/device.py:36) come up before anything that dials them; the shims are discovered rather than listed (cairn/devices/cairn/machines/ground_loop/discovery.py:device_folders, the roster that already exists); the single web server comes up last, after the panes exist to render (one web server, surfaces in the shim -- never a per-device server). Down is the reverse. superclaude already creates and names the two systemd --user units (cairn-ground-loop, cairn-web-server) and already holds the start order; `cairn groundloop stop|start|restart|status` (ticket 5ef45e513849) is the per-device face for the loop. THE START HALF DOES NOT EXIST AND THIS TICKET INHERITS IT: measured 2026-09-22, ~/.cairn/devices/cairn/0/bin/ holds exactly one file, `cairn`, 338 bytes, which prints the device id and class path and starts nothing; class-space has no cairn/devices/cairn/0/bin at all. So the build is start, then stop, then restart as their composition. The verb berths in CLASS-space at cairn/devices/cairn/0/bin/restart and is symlinked into instance-space the way cc's bin already is -- a file authored only in instance-space is in no repo, which is what the existing stub is. Verification at the end asks the ROSTER, not `ps`: a process list cannot tell a device that legitimately has no shim from one that failed to come back. First cut; the survey stage deconstructs.",
+  "traces_to": "Law 1 -- the resolver is spent on the novel, not on re-deriving the settled; the safe cycle order is settled knowledge with no address. Also Law 4 -- while the order is prose and memory rather than a verb, it is a tracked debt, not a resting state.",
+  "falsifier": {
+    "proves_red": "RED if an operator still needs raw systemd unit names or per-device verbs to cycle the system, or if a restart leaves an orphan -- a bus with no shims attached, a ground loop that lost its singleton claim, a web server holding its port against its own replacement.",
+    "proves_green": "GREEN when one verb takes the system down and back up and the device roster answering on the bus afterward is the same roster as before.",
+    "horizon": "The roster is a real instrument, not a figure of speech: discovery.device_folders enumerates it and the sleep-cycle's roster() already filters it, so 'same roster before and after' is read by code that exists today. Measured at cast: 43 probe folders on 2026-09-18."
+  },
+  "constraints": [
+    {
+      "text": "The verb berths in class-space (cairn/devices/cairn/0/bin/restart) and reaches instance-space by symlink. A file authored only under ~/.cairn is in no repo and cannot be regrown on a bare machine.",
+      "source": "CLAUDE.md, the three roots; and the measured 338-byte stub at ~/.cairn/devices/cairn/0/bin/cairn",
+      "kind": "law"
+    },
+    {
+      "text": "Verification is the roster (discovery.device_folders), never a process list -- a device that legitimately has no shim and one that failed to come back look identical to `ps`.",
+      "source": "cairn/devices/cairn/machines/ground_loop/discovery.py",
+      "kind": "charter"
+    },
+    {
+      "text": "The ground loop is heartbeat plus device list, THAT IS ALL. This verb may start and stop it; it may not add monitoring, health-checking or trouble-raising to it.",
+      "source": "Akien, standing (CC-- x4); cairn/devices/cairn/machines/ground_loop/",
+      "kind": "ruling"
+    },
+    {
+      "text": "One web server, surfaces in the shim. The restart brings up the single server, never a per-device one.",
+      "source": "design note one-web-server-surfaces-in-the-shim",
+      "kind": "ruling"
+    },
+    {
+      "text": "`cairn restart` and `cairn cc restart` are different acts and keep different addresses. Two different acts may not wear one word.",
+      "source": "Akien, 2026-09-22; cairn/devices/cc/0/bin/restart:3-9, commit da6f8b01",
+      "kind": "ruling"
+    }
+  ],
+  "intention": "",
+  "owning_intention": "",
+  "chart_claim": "",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260922T185438-c9e7a3eaf92d.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260922T185923-6d55a8104269.json",
+  "verdict_berth": "",
+  "deposits": {},
+  "linked_ideas": [],
+  "children": [],
+  "questions": [
+    "open-b5cabfa28fb6"
+  ],
+  "watchme": {
+    "object": "the_restart_brings_the_roster_back",
+    "trigger": "a restart completes -- the verb writes its close record, and the probe fires on the beat that already runs (no poller; the beat is the ground loop's own).",
+    "enough": "three consecutive restarts whose after-roster equals the before-roster, at which point the probe retires; any single mismatch is carried immediately rather than waiting for the third.",
+    "carrier": "a verdict artifact against this ticket's falsifier, naming the devices present before and absent after (or the reverse), so the carry is the difference rather than a boolean.",
+    "nexus": "the hypothesize tree -- a restart that loses a device kills the hypothesis that the shims can be cycled independently, which is this ticket's one unmeasured assumption.",
+    "consumer": "whoever runs the next restart, via the cairn device's trouble pane -- a device that did not come back is a live trouble, not a log line.",
+    "probe": "cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py"
+  },
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(the_restart_brings_the_roster_back) -> PROVED",
+  "links": [
+    {
+      "id": "5ef45e513849",
+      "what": "cairn groundloop stop|start|restart|status -- PROVED 2026-08-29. The parent: Akien's note on it dated 2026-08-31 redesigned the address to `cairn cairn start` (shortcut `cairn start`) and was never built. This ticket is that note's unbuilt half, cast where it can move."
+    },
+    {
+      "id": "da6f8b01",
+      "what": "the commit that berthed `cairn cc restart` at the cc device's address rather than as the flat `cairn restart` -- the naming correction that bore this ticket."
+    }
+  ],
+  "notes": [
+    {
+      "date": "2026-09-22",
+      "from": "Akien",
+      "text": "Cairn restart doesn't exist yet, but would likely bring down the bus, the web server, all the shims... And restart those. / So add a ticket for that."
+    },
+    {
+      "date": "2026-08-31",
+      "from": "Akien",
+      "text": "(carried from ticket 5ef45e513849, where it landed on an already-PROVED ticket and so had nowhere to move) Redesigned: the command is 'cairn cairn start' (shortcut 'cairn start'), not 'cairn groundloop'. It launches the ground loop, bus, and shims. The ground loop self-restarts on code change unless prohibited by a flag. No trouble-ticket capability in the ground loop -- it is heartbeat + device list, that is all."
+    },
+    {
+      "date": "2026-09-22",
+      "from": "cc",
+      "text": "One unmeasured assumption stands and belongs to the survey stage: that the shims can be stopped and started as independent things. The bus is a store rather than a router and each device owns its own subscription, so a shim may re-attach without being told to -- in which case 'restart the shims' is either a no-op or the hardest part of the work."
+    }
+  ]
+}
