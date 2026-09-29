@@ -1,0 +1,215 @@
+{
+  "id": "cd8096f9eeca",
+  "title": "the-librarian-answers-before-akien-is-asked",
+  "date": "2026-09-29",
+  "author": "cc",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/librarian/intention+why.json",
+  "intention": "`cairn librarian ask \"<question>\"` is the one path CC takes to a question: the librarian answers from what the system already holds, lands equivalent questions on the same answer by meaning, and only a question nothing covers reaches Akien's inbox — where his answer becomes structure the next ask finds.",
+  "why": "Akien, 2026-09-29: three of the day's questions were already answered and cast (71d1bbfa98b0, d23356c26e7d, cb97524c0e8e), and he said 'i've developed a confidence that i really am giving you the same answers each time, even if i do it with different words.' His review bandwidth is the binding constraint; every re-asked question spends it on the settled.",
+  "traces_to": "Law 1 — the resolver is spent on the novel, not on re-deriving the settled; an answered question re-asked is the defect by name. Also CP4 through Akien's bandwidth (the day job funds everything).",
+  "how": "A verb on the librarian: fold answered question records into an 'answers' tree, walk it with the existing resolve_query, judge the walk's nodes through a learning block whose constraints admit only evidenced, unrefuted, answered-question nodes above the floor, and escalate what survives nothing to `cairn question operator`. Decisions D0–D10.",
+  "falsifier": {
+    "proves_green": "GREEN when a question worded differently from an answered one resolves by walk to that answer's question id, a second identical ask spends zero inference in the answer path, an uncovered question opens exactly one operator question, and once that question is answered the same ask resolves without reaching Akien.",
+    "proves_red": "RED if an LLM-minted node or a refuted node is ever returned as the answer, if a question nothing covers resolves anyway, if the fold re-embeds records it already holds, or if over live use Akien's answers to escalated questions keep reading 'already answered'.",
+    "horizon": "the WATCHME ask_spares_akien's 30 live asks"
+  },
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> WATCHME(ask_spares_akien) -> PROVED",
+  "watchme": {
+    "object": "ask_spares_akien",
+    "trigger": "each `cairn librarian ask` run writes its learning-block state log (training trace under block 'librarian-ask'); the probe reads those records on the beat that already runs — no poller of its own.",
+    "enough": "30 ask runs; the probe retires then and carries its reading. Any escalated question Akien answers whose words the ask trace later shows RESOLVING an equivalent re-ask to a DIFFERENT question id is carried immediately.",
+    "carrier": "a verdict artifact against this ticket's falsifier: runs, resolved-by-walk count, escalated count, and for each escalation whether its eventual answer resolved a later re-ask by walk with zero inference in the answer path.",
+    "nexus": "the librarian's 'answers' tree — the reading says whether the tree is catching equivalent questions or letting them through to Akien.",
+    "consumer": "CC at session open, through the librarian device's trouble pane; and Akien, whose inbox volume is the thing it measures.",
+    "probe": "cairn/devices/librarian/probes/ask_spares_akien.py"
+  },
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260929T105828-ca661e4de1db.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260929T105526-677df3375b13.json",
+  "linked_ideas": [
+    "2026-09-29-2026-09-29-over-four-turns-answering"
+  ],
+  "links": [
+    {
+      "id": "d23356c26e7d",
+      "what": "sibling: every answered question rides the question door — the corpus feed this verb folds"
+    },
+    {
+      "id": "6b06fcb499fa",
+      "what": "codemother answers code questions — out of this verb's v1 corpus"
+    },
+    {
+      "id": "71d1bbfa98b0",
+      "what": "everything born of a test is flagged — the testing mark this verb's proof output carries"
+    },
+    {
+      "id": "71cd4a62e8c5",
+      "what": "the inference resolver's rung walk (option c, ranks instead of cuts) — the seam this verb's embed/generate ride; not the librarian walk"
+    }
+  ],
+  "questions": [],
+  "children": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE ANSWERS TREE is its own leaf table, librarian_answers (ask.ANSWERS), tree label 'answers'. In the three-table design the leaf IS the tree (trees._leaf_rows reads only the caller's leaf), so sharing librarian_nodes would let commons nodes walk as answers. Node content 'Q: <question>\\nA: <answer>' (short answers like 'yes B' are unreadable alone); vector = embed(question) so a re-ask lands by what it asks; provenance {source:'question:<id>', question, answered_by, answered_at, sha256 of the record bytes}. THE LEAF TABLE NEEDS NO REGISTRATION STEP (settled, measured): trees.deposit calls ensure_trees(table=, owner='librarian') on every write, which creates librarian_answers if absent and records it in db_domain's cairn_owned registry; no trees.py change.",
+      "by": "CC",
+      "step": "D1",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2 VERB BERTH: cairn/devices/librarian/0/bin/ask, a thin bash wrapper exec'ing `python3 -m cairn.devices.librarian.ask \"$@\"`; logic in cairn/devices/librarian/ask.py. ~/.cairn/devices/librarian/0/bin already symlinks the class-space bin, so `cairn librarian ask` resolves with no wiring change (measured: before the berth existed, `cairn librarian ask --help` fell through to the librarian's default verb and started the web surface).",
+      "by": "CC",
+      "step": "D2",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3 CORPUS v1 = answered question records only: every CairnCommons/questions/open-*.json with resolved true and a non-empty answer. Code questions stay codemother's (6b06fcb499fa); rulings, decision lines and chat answers arrive later as question records through d23356c26e7d, so this verb folds exactly one record kind. Overturnable at review.",
+      "by": "CC",
+      "step": "D3",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "D4 FOLD AT READ, no daemon: each ask first folds records new or changed since the last fold, keyed by record sha256 in a ledger at ~/.cairn/devices/librarian/0/tools/ask/learned.json ({qid: sha256}). An unanswered record is not ledgered, so it folds once answered. A second fold of an unchanged corpus deposits 0 and embeds 0.",
+      "by": "CC",
+      "step": "D4",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "D5 THE WALK: resolve_query(question, resolve=dual_seam(_wire_bus()), tree='answers', table=librarian_answers, dev=LibrarianDevice()) as live._loop wires it — the existing backfill rung is the LLM failover Akien named; a same-crossing mint never counts. WHERE IT COMES FROM (existing, measured at aa0be472): cairn/devices/librarian/live.py defines _wire_bus() (line 80) and dual_seam(bus, embed_model=DEFAULT_MODEL, generate_model=GENERATE_MODEL) (line 145); ask.py's CLI main imports them lazily ('from cairn.devices.librarian.live import _wire_bus, dual_seam') and passes resolve=dual_seam(_wire_bus()) into ask(); ask() itself takes resolve= as a parameter so a proof injects a fake seam. resolve_query and its backfill rung already exist in loop.py and are used unchanged except D7. LibrarianDevice is imported from cairn.devices.librarian.trees (class at trees.py:1244).",
+      "by": "CC",
+      "step": "D5",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "D6 THE BLOCK: cairn/devices/librarian/ask_block.json is the static spec (block 'librarian-ask'; one standing candidate nothing_on_record that always loses, so an empty walk still yields a valid spec; constraints; escalation 'operator'). ask.py prepends the walk's nodes as candidates IN WALK ORDER, each providing {not_refuted: standing != 'refuted', clears_floor: similarity >= floor, source_kind: 'answered_question' iff provenance.source starts 'question:'}. Constraints: is_not_refuted, clears_the_floor, carries_his_answer. run_block writes the training trace. No is_evidence constraint: mints die by carries_his_answer, and the evidence label is not the right judge of his answers (D7). THE SPEC SHAPE is the one cairn/machines/learning_block/engine.py run_block(spec, payload) reads (existing): top-level keys block, question, input_contract, candidates, constraints, escalation; run_block walks spec['candidates'] in order, kills each by name against spec['constraints'], and escalates to spec['escalation'] when none survive. THE SPEC, VERBATIM (each constraint's 'requires' names the field it checks in a candidate's 'provides'; a walk node provides not_refuted, clears_floor, and source_kind = 'answered_question' when its provenance.source starts 'question:', else that source string itself (or 'unknown'), so it never meets carries_his_answer): {\"block\": \"librarian-ask\", \"question\": \"which answer Akien already gave settles this question — or must it reach him?\", \"input_contract\": {\"question\": \"a run that cannot say what was asked cannot be adjudicated (CP3)\", \"floor\": \"the resolution threshold the walk was judged against — visible in every run (Law 3)\"}, \"candidates\": [{\"name\": \"nothing_on_record\", \"why\": \"the standing candidate every run carries, so a walk that returned nothing still has a loser with a named killer — it provides nothing and is always rejected\", \"provides\": {\"not_refuted\": false, \"clears_floor\": false, \"source_kind\": \"none\"}}], \"constraints\": [{\"name\": \"is_not_refuted\", \"why\": \"an answer retired as wrong never settles anything again\", \"source\": \"cairn/devices/librarian/trees.py refute\", \"requires\": {\"not_refuted\": true}}, {\"name\": \"clears_the_floor\", \"why\": \"equivalent by meaning is a measurement with its threshold visible; below the floor the walk found a neighbour, not the question\", \"source\": \"cairn/devices/librarian/loop.py RESOLUTION_FLOOR\", \"requires\": {\"clears_floor\": true}}, {\"name\": \"carries_his_answer\", \"why\": \"only an answered question record is an answer — an LLM-minted node is structure for the future, never the reply (ticket cd8096f9eeca D6)\", \"source\": \"ticket cd8096f9eeca\", \"requires\": {\"source_kind\": \"answered_question\"}}], \"escalation\": \"operator\"}",
+      "by": "CC",
+      "step": "D6",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "D7 HIS ANSWERS DO NOT DECAY: loop._label_evidence labels a node whose provenance.source starts 'question:' evidence True ('an answered question on record — his words do not decay'), AFTER the refutation and crossing-honesty checks and before age is read. Decay retires uncorroborated hypotheses; applied to his answer it would fade in DECAY_HORIZON (14 days) unasked and send the settled question back to him — the defect this ticket exists to end. Measured: with the rule reverted, the proof's decayed answer spends 2 generate rounds before resolving.",
+      "by": "CC",
+      "step": "D7",
+      "source": "cast"
+    },
+    {
+      "n": 8,
+      "text": "D8 OUTPUT: resolved prints the qid, the asked question, the question on record, his answer verbatim and the similarity; exit 0. --json prints the same minus walk/trace plus trace_id. Escalated exits 3. A run that cannot happen (host down, door refusal) exits 2, never an escalation.",
+      "by": "CC",
+      "step": "D8",
+      "source": "cast"
+    },
+    {
+      "n": 9,
+      "text": "D9 ESCALATION: `cairn question operator \"<q?>\" --ticket <id> --why \"<...>\"` on cairn/tools/question (Q.operator = open_question with source 'librarian ask'); the question door stays the lane's only writer. ask with --ticket and --why opens one record (source 'librarian ask', plus ' (testing: <mark>)' under a proof) and prints its id; without them it opens nothing and prints the ready-to-run operator command (shlex-quoted). SETTLED (existing names, new code): BUILD operator(ticket, question, why_it_blocks, *, source='librarian ask', root=None) in cairn/tools/question/question.py returning open_question(ticket, question, why_it_blocks, source=source, root=root), and wire it in cairn/tools/question/__main__.py as subparser 'operator' (positional question, --ticket, --why) calling Q.operator. The testing mark is a CALLER-SUPPLIED string: ask(..., testing=<str>) and fold(..., testing=<str>) take it as a keyword; nothing auto-detects a proof. When set it rides every folded node's provenance, the trace input, and the escalation source as 'librarian ask (testing: <mark>)'; the CLI never sets it.",
+      "by": "CC",
+      "step": "D9",
+      "source": "cast"
+    },
+    {
+      "n": 10,
+      "text": "D10 THE LOOP CLOSES: an escalated question, once answered, folds at the next ask (D4) and the equivalent re-ask resolves by walk; a follow-on takes the same path. Nothing else is needed for learning.",
+      "by": "CC",
+      "step": "D10",
+      "source": "cast"
+    },
+    {
+      "n": 11,
+      "text": "D11 PROOF cairn/devices/librarian/proofs/test_librarian_ask.py, PROVES[cd8096f9eeca]['all'] (the falsifier is unnumbered — one composite tooth): live DB on a scratch leaf (forgotten + dropped at exit), deterministic fake embed/generate seam, questions/traces/ledger in a tmp world under diagnostic artifact roots. Checks: fold deposits all then 0; paraphrase resolves to its qid with no generate; decayed answer still resolves with no generate; uncovered escalates, no-ticket opens nothing and hands back the command, with ticket opens exactly one test-marked record; answered, the re-ask resolves to it; a mint that is standing evidence on its second crossing never wins; a refuted answer never wins; all 8 traces answer the five questions; every folded node carries the testing mark; `cairn librarian ask --help` and `cairn question operator` answer. Mutants measured red: drop carries_his_answer, drop clears_the_floor, drop is_not_refuted, revert D7.",
+      "by": "CC",
+      "step": "D11",
+      "source": "cast"
+    },
+    {
+      "n": 12,
+      "text": "D12 PROVE FIRST (Akien 2026-09-29, open-e9f9b152ceff): the proof was written and run RED at aa0be472 before any build code (commit 0a5c1910: 3 failures, all absence), then the build, then green.",
+      "by": "CC",
+      "step": "D12",
+      "source": "cast"
+    },
+    {
+      "n": 13,
+      "text": "D13 A WITHDRAWN RECORD IS NEVER AN ANSWER: the fold skips a resolved record whose answer begins 'VOID' (the corpus's own withdrawal convention — 'VOID — not Akien's words: ... Re-asked whole as the spawned follow-up', measured on open-ee4a67728294 and open-bcca3badf4ae); counted in 'skipped', not ledgered. Proof tooth: a VOID fixture record folds nothing (measured red before the skip, 3 deposited).",
+      "by": "CC",
+      "step": "D13",
+      "source": "cast"
+    },
+    {
+      "n": 14,
+      "text": "D14 WHO ANSWERED RIDES THE ANSWER: a resolved ask returns answered_by verbatim from the record's provenance and the render prints it ('by:'), never a hard-coded 'Akien' — 7 records in the corpus are answered by a measurement ('measurement: <rehearsal path>'), and Law 9 settles those without him. Proof tooth: the fixture's answered_by comes back in the result and the render (measured red before).",
+      "by": "CC",
+      "step": "D14",
+      "source": "cast"
+    },
+    {
+      "n": 15,
+      "text": "D15 THE FLOOR IS THE LOOP'S, NOT THE SPEC'S: clears_the_floor judges similarity >= RESOLUTION_FLOOR = 0.65, imported from cairn/devices/librarian/loop.py (the one floor the walk everywhere is judged by — a second copy in ask_block.json could drift from it). ask.ask(floor=) overrides it per call for proofs only; the value used rides every run's trace input ('floor'), so the threshold is visible (Law 3). ask_block.json names the source, never the number. (Rehearsal gap, cd8096f9eeca-20260929T173117.) PRE-EXISTING, NOT CREATED: RESOLUTION_FLOOR = 0.65 is already a module-level constant at cairn/devices/librarian/loop.py:53 (measured at aa0be472); ask.py imports it with 'from cairn.devices.librarian.loop import RESOLUTION_FLOOR, resolve_query'. Nothing is added to loop.py for it.",
+      "by": "CC",
+      "step": "D15",
+      "source": "cast"
+    },
+    {
+      "n": 16,
+      "text": "D16 (disposes the rehearsal gap at 'D1') — folded into D1's own line, where it is read.",
+      "by": "CC",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-09-29T17:42:07+00:00"
+    },
+    {
+      "n": 17,
+      "text": "D17 (disposes the rehearsal gap at 'D15') — folded into D15's own line, where it is read.",
+      "by": "CC",
+      "step": "D15",
+      "source": "rehearsal",
+      "at": "2026-09-29T17:42:07+00:00"
+    },
+    {
+      "n": 18,
+      "text": "D18 (disposes the rehearsal gap at 'D9') — folded into D9's own line, where it is read.",
+      "by": "CC",
+      "step": "D9",
+      "source": "rehearsal",
+      "at": "2026-09-29T17:42:07+00:00"
+    },
+    {
+      "n": 19,
+      "text": "D19 (disposes the rehearsal gap at 'unlisted: Create cairn/devices/librarian/probes/ask_spares_akien.py (the WATCHME probe)') BUILD THE WATCHME PROBE cairn/devices/librarian/probes/ask_spares_akien.py: survey(trace_root=, questions_root=) reads engine_run events from instance_path('learning_block',0)/'traces'/'librarian-ask.jsonl', EXCLUDING any whose input carries 'testing'; counts runs, resolved_by_walk, resolved_with_zero_inference (input backfills == 0), escalated, and escalations whose later re-ask with the same words resolves by walk. An escalation is matched to its opened record by question text + source == 'librarian ask' under CairnCommons/questions/. BREACHES: a resolved answer that reads 'already answered', or a later ask with the same words resolving to a different qid. _trigger fires on any breach; _enough at runs >= 30 (module constant ENOUGH_RUNS = 30). PROBE = Probe(to='harbor_master', body={'nexus':'hypothesize','kind':'efficacy','object':'ask_spares_akien',...}, horizon=1000). HORIZON is cairn/tools/base/probe.py's existing Probe field (probe.py:329): how many PULSES the watch may stand without ever having fired before its own silence is a finding (surfaced at BaseShim.overdue()); 1000 pulses here. Probe, Threshold, once, owning_ticket are imported from cairn.tools.base.probe unchanged. HOW THEY REACH PROBE (existing frozen dataclass, cairn/tools/base/probe.py:303 — fields why, trigger, to, verb, channel, body, carry, while_true, enough, horizon): the module-level functions are passed as keyword arguments, PROBE = Probe(why=..., trigger=_trigger, to='harbor_master', body={...}, carry=_carry, enough=_enough, horizon=1000); nothing registers or discovers them. THE TRACES are read with the existing read_trace('librarian-ask', root=trace_root) from cairn/machines/learning_block/learning_block.py:168 — the block's own trail that run_block writes; each run is a record with event 'engine_run' and data.input (the ask's payload: question, floor, tree, verdict, reason, backfills[, testing]) and data.winner ({name, why}); the winner's why carries 'question:<qid>'. Both shapes above were READ from those two files at commit 0a5c1910 (the Probe dataclass at cairn/tools/base/probe.py:353-362, read_trace at cairn/machines/learning_block/learning_block.py:168), not assumed. THE FUNCTIONS, EXACTLY: each takes the pulse context and memoizes the reading with once(context, 'survey', survey) (cairn.tools.base.probe.once). _trigger(now, context) -> bool and _enough(context) -> bool both return bool(s['breaches']) or s['runs'] >= ENOUGH_RUNS. _carry(context) -> {'finding', 'survey', 'ticket': owning_ticket('cd8096f9eeca')}, where finding is 'SPARES — <runs> live ask(s): <resolved_by_walk> resolved by walk (<resolved_with_zero_inference> with zero inference), <escalated> escalated, <n> of those answered and then resolved by walk on a re-ask' when survey's 'holds' (no breaches) is true, else 'LETS THROUGH — <k> breach(es) over <runs> live ask(s): ' + '; '.join('<kind>: <question repr>'). The Probe's why, verbatim: 'his review bandwidth is what everything runs on, and a question he already answered spends it on the settled (Law 1); this probe watches, over 30 live asks, whether the answers tree catches equivalent questions or lets them through to him'.",
+      "by": "CC",
+      "step": "unlisted: Create cairn/devices/librarian/probes/ask_spares_akien.py (the WATCHME probe)",
+      "source": "rehearsal",
+      "at": "2026-09-29T17:42:07+00:00"
+    },
+    {
+      "n": 20,
+      "text": "D20 (disposes the rehearsal gap at 'unlisted: Update cairn/devices/librarian/intention+why.json to document the ask verb') UPDATE BOTH CHARTERS' invoke LINES through the artifact door: cairn/devices/librarian/intention+why.json gains the Ask sentence (the verb, flags, fold into tree 'answers' leaf librarian_answers, the block ask_block.json, escalation to cairn question operator, exit codes 0/3/2, and 'from cairn.devices.librarian.ask import ask, fold') and names proofs/test_librarian_ask.py among its proofs; cairn/tools/question/intention+why.json's invoke gains 'cairn question operator \"<question>\" --ticket <id> --why \"<what it blocks>\"' as the escalation door.",
+      "by": "CC",
+      "step": "unlisted: Update cairn/devices/librarian/intention+why.json to document the ask verb",
+      "source": "rehearsal",
+      "at": "2026-09-29T17:42:08+00:00"
+    },
+    {
+      "n": 21,
+      "by": "CC",
+      "step": "unlisted: Create cairn/devices/librarian/ask.py module with ask() and fold() functions",
+      "source": "rehearsal",
+      "at": "2026-09-29T18:30:29+00:00",
+      "text": "D21 THE MODULE cairn/devices/librarian/ask.py (new): constants TREE='answers', ANSWERS='librarian_answers', SPEC=<dir>/ask_block.json, SOURCE='librarian ask'. fold(*, resolve, table=ANSWERS, questions_root=None, ledger_path=None, testing=None, dev=None, conn=None) -> {deposited, attested, unchanged, skipped}: scans CairnCommons/questions/*.json, skips unresolved and VOID records (D13) and records whose sha256 matches the ledger, deposits node_content(question, answer) with provenance {source:'question:<qid>', question, answered_by, answered_at, sha256[, testing]}, then rewrites the ledger. ask(question, *, resolve, table=ANSWERS, questions_root=None, ledger_path=None, trace_root=None, ticket=None, why=None, testing=None, floor=RESOLUTION_FLOOR, dev=None, conn=None) -> dict with keys asked, outcome ('resolved'|'escalated'), qid, question, answer, answered_by, similarity, opened, operator_command, folded, verdict, reason, walk, trace: fold (D2), resolve_query walk (D5), candidates prepended to the spec's and run_block (D6), then resolved from the winner's provenance or escalated through Q.operator when ticket and why are given (D9), else operator_command(question, ticket) handed back. main(argv) parses question/--ticket/--why/--json, wires resolve=dual_seam(_wire_bus()), prints _render(r) or JSON; exit 0 resolved, 3 escalated, 2 could not run. THE RECORDS IT READS (existing, the question tool's schema, measured on open-fede931db299): keys id, question, why_it_blocks, ticket, date, raised_by, source, born_of, resolved, answer, answered_by, answered_at, spawned. The fold reads resolved (skip unless true), answer (skip VOID), question, answered_by, answered_at, id (falling back to the file stem), and hashes the record FILE'S BYTES (sha256) against the ledger. operator_command(question, ticket=None) returns exactly: 'cairn question operator ' + shlex.quote(question) + ' --ticket ' + (shlex.quote(ticket) if ticket else '<ticket-id>') + ' --why ' + shlex.quote('<what the build cannot settle without it>') — a ready-to-run line with the two placeholders the caller fills. DEV: fold() and ask() both begin 'dev = dev or LibrarianDevice()', so dev=None builds one; that dev is what resolve_query and the tree writes use."
+    }
+  ],
+  "cast": "2026-09-29",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260929T112929-0be6b386f5bd.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain 2026-09-29 (orient f0dc44f32758 .. validate 0be6b386f5bd, each learned)"
+  },
+  "rehearsal": "rehearsals/cd8096f9eeca-20260929T194024.json"
+}
