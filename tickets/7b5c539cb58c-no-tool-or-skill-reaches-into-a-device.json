@@ -1,0 +1,24 @@
+{
+  "id": "7b5c539cb58c",
+  "title": "no-tool-or-skill-reaches-into-a-device",
+  "date": "2026-09-30",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "No tool or skill reaches into a device's code: what it needs from a device it asks over the bus, and code two rungs share moves down to the rung where both can include it.",
+  "why": "The bus is the only path between components (bus charter). A tool that imports a device can only be used where that device's code sits, and it couples to that device's internals without going through its gate, which breaks Law 6. Akien closed this door for devices (2026-08-31) and for machines (2026-09-11); tools and skills are the open face.",
+  "traces_to": "Law 6 (a tool has users, not an owner; a tool that imports a device can only be used where that device is) and Law 4 (the rule becomes a sieve), via CLAUDE.md's axis ('A tool is a complete primitive') and Akien 2026-09-11 (ticket 76639374d9f9): 'the openai wire is a machine anybody can include'",
+  "how": "Measured 2026-09-30 by an AST census of cairn/tools, cairn/machines, skills and bin (proofs and probes excluded): 54 import sites on 17 edges import cairn.devices.* other than db_domain. The largest are skills/chart -> codemother.machines (15), tools/base -> tester.validation_store (8), tools/bus_client -> cairn.machines (7) and tools/base -> cairn.machines (5). Device-to-device is already physics (device_isolation_holds: 0 live violations; the one edge is in aider_shim/proofs_disabled), and so is machine-to-device (machine_imports_no_device). Add the same sieve for tool rows and skill rows, then clear each edge one of two ways: a bus verb, if the caller wants a device to DO something; or moving the code down a rung, if it is a primitive the device happens to hold. bus_client's 7 sites go with 48519f4789b1, where it becomes a socket client.",
+  "falsifier": "RED if after the build: (1) a seeded fixture tool importing cairn.devices.inference_domain is not red under the new sieve; (2) a fixture tool importing cairn.devices.db_domain is red; (3) a fixture proof or probe importing a device is red; (4) the live inspector run shows any tool (or, per open-6c699d2b81ef, skill) row importing a device, with no exemption citing an answered question; (5) the sieve's docstring provenance names anything but the 2026-09-11 machine ruling and open-6c699d2b81ef's answer. WRONG INTENT if Akien answers that tools may hold a device's code. Horizon: the first live inspector run after the build commit.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the sieve itself is the standing measurement: it runs in every build_inspector pass (cairn/machines/build_inspector/inspector.py) and a new tool-to-device import reds at that pass, with nothing further to learn",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260930T154157-80c35937b427.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T154132-b94d6d13fcdb.json",
+  "questions": [
+    "open-6c699d2b81ef"
+  ],
+  "children": [],
+  "task_or_ticket": "ticket",
+  "builder_notes": "A Haiku builder would ask: (1) Where does the sieve go? cairn/machines/build_inspector/inspector.py beside machine_imports_no_device, as `tool_imports_no_device`, registered in the same sieve table (inspector.py:3540). It fires on rows whose dir starts with 'tools/' (and 'skills/' if the answer says so) and reuses the same enumerated db_domain exemption and the same proofs/probes skip. (2) How is a skill row reached, given the census roots at cairn/? Measure whether device_census rows include skills/; if not, the sieve walks skills/ itself and says so. (3) Proof? cairn/machines/build_inspector/proofs/test_tool_imports_no_device.py with the three fixtures from the falsifier. (4) How is each of the 54 sites cleared? One commit per edge: a bus verb when the caller asks a device to act, a rung move when the code is a primitive, and the commit message names which. (5) When is it done? When the live run shows zero rows, or every remaining row carries an exemption citing an answered question.",
+  "cast": "2026-09-30"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "acb4ecd84364",
+  "title": "the-beat-spawns-its-two-listeners",
+  "date": "2026-09-30",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "Each beat, the ground loop spawns its two pulse listeners as separate processes and never waits on them: the bus's ring flush and the cairn device's away/sleep check.",
+  "why": "Akien 2026-09-30: the system is event-driven except his away windows and sleep, and nothing but messaging fires on the heartbeat. The charter says the beat SPAWNS the pulse and does not wait, so a slow or failing listener can never stall the one thing everything depends on.",
+  "traces_to": "telos aim 1 (event, not poll: one clock with exactly two users) and Law 4 (the heartbeat is physics); Akien 2026-09-30: \"this is ENTIERLY an event driven system EXCEPT: Akien can say he'll be away from x to y times. and sleep\" and \"NOTHING in the system that should fire on the heartbeat execpt the messaging\"; ground loop charter falsifier (6)",
+  "how": "A two-entry constant in cairn/devices/cairn/machines/ground_loop/__main__.py names the listeners by module: `cairn.devices.cairn.machines.bus pulse` (asks the bus process to flush its ring; 48519f4789b1 D1) and `cairn.devices.cairn pulse` (the cairn device decides whether an away window or sleep is due; 9b6b392ebcfe D1). Each beat spawns both with subprocess.Popen in their own session, stdout/stderr to a per-listener log under the loop's home, and returns at once. On the next beat it reaps finished children with a non-blocking poll and records each one's pid and exit code. A listener still running is recorded as running and not spawned again; that is reaping, not skip logic. The beat record replaces `triggers` with `spawned` and `reaped`. Built after 164da559823d (which deletes the in-process pulse calls) and after the two receivers exist: receiver first.",
+  "falsifier": "RED if after the build: (1) a beat spawns anything but the two named modules; (2) a listener stubbed to sleep 30s moves the next beat's start by more than 1s; (3) a listener stubbed to exit 3 is not recorded with rc 3 in a later beat's `reaped`; (4) after 5 beats with fast-exiting stubs, `ps --ppid <loop pid>` shows any zombie; (5) a listener still running is spawned a second time; (6) the live heartbeat stops beating on one pid (liveness.json fresh, cairn-ground-loop.service active). WRONG INTENT if either listener needs the loop's answer to act. Horizon: the first three live beats after the build commit, read from ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the falsifier is read on every beat from the heartbeat's own record ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json: `spawned` names exactly two and `reaped` carries every rc. A missing or nonzero entry is the red, and there is nothing further to learn.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260930T153725-46bfb70a022e.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T153656-490d2fbc2b34.json",
+  "questions": [],
+  "children": [],
+  "task_or_ticket": "ticket",
+  "dependencies": "Build after 164da559823d (deletes the in-process pulse calls), 48519f4789b1 (the bus process answers flush; D1) and 9b6b392ebcfe (the cairn device's pulse entry; D1). Receiver first.",
+  "builder_notes": "A Haiku builder would ask: (1) Where is the list? A module constant `LISTENERS = ((\"bus\", \"cairn.devices.cairn.machines.bus\", \"pulse\"), (\"cairn\", \"cairn.devices.cairn\", \"pulse\"))` in ground_loop/__main__.py, spawned as `[sys.executable, \"-m\", module, verb]`. (2) Where do their outputs go? Append to <home>/listeners/<name>.log, one per listener, opened per spawn. (3) What does the record look like? The beat's state gains `spawned: [{name, pid}]` and `reaped: [{name, pid, rc}]`, and loses `triggers`. (4) How do I test without the real listeners? main() takes a `listeners=` parameter (like `watch=`) so the proof passes stubs: a sleeper, an exit-3, and a fast exit. (5) Session? start_new_session=True, so that SIGTERM to the loop does not kill a flush mid-transaction. (6) Proof file: cairn/devices/cairn/machines/ground_loop/proofs/test_the_beat_spawns_its_listeners.py, sealed by the tester.",
+  "cast": "2026-09-30"
+}
