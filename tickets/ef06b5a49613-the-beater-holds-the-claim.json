@@ -24,7 +24,7 @@
   ],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [WATCHME(the_beater_holds_the_claim):waiting] -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(the_beater_holds_the_claim) -> PROVED -> [SUPERSEDED]",
   "watchme": {
     "object": "the_beater_holds_the_claim",
     "trigger": "every beat - the probe rides the pulse it is about. Two reads (a stat plus one small file) add nothing measurable to a beat that currently costs seconds, and it needs no clock of its own, which is the point of berthing it here.",
@@ -49,7 +49,7 @@
             "need": "an induced mismatch is caught naming both pids",
             "status": "DONE",
             "when": "2026-08-20",
-            "how_measured": "cairn/devices/cairn/machines/ground_loop/proofs/test_beater_holds_claim.py :: test_induced_mismatch_is_caught \u2014 a claimant that is not the beater, under an isolated instance root, produces a record naming both pids",
+            "how_measured": "cairn/devices/cairn/machines/ground_loop/proofs/test_beater_holds_claim.py :: test_induced_mismatch_is_caught — a claimant that is not the beater, under an isolated instance root, produces a record naming both pids",
             "seq": 0
           }
         ]
@@ -61,7 +61,7 @@
             "need": "a match is green",
             "status": "DONE",
             "when": "2026-08-20",
-            "how_measured": "test_match_is_green \u2014 when the holding pid matches the beating pid, the probe reports match",
+            "how_measured": "test_match_is_green — when the holding pid matches the beating pid, the probe reports match",
             "seq": 0
           }
         ]
@@ -73,7 +73,7 @@
             "need": "inability to read /proc/locks is never green",
             "status": "DONE",
             "when": "2026-08-20",
-            "how_measured": "test_no_lock_file_is_unable + test_no_liveness_is_unable \u2014 when the lock file or liveness.json is absent, the probe reports inability, not green",
+            "how_measured": "test_no_lock_file_is_unable + test_no_liveness_is_unable — when the lock file or liveness.json is absent, the probe reports inability, not green",
             "seq": 0
           }
         ]
@@ -85,7 +85,7 @@
             "need": "the beater pid is read from liveness, not os.getpid()",
             "status": "DONE",
             "when": "2026-08-20",
-            "how_measured": "test_beater_pid_reads_from_liveness_not_getpid \u2014 the probe reads the pid the beat itself wrote into liveness.json, not the probe's own pid",
+            "how_measured": "test_beater_pid_reads_from_liveness_not_getpid — the probe reads the pid the beat itself wrote into liveness.json, not the probe's own pid",
             "seq": 0
           }
         ]
@@ -95,5 +95,7 @@
   "open_at_cast": "THREE assumptions, each with a named measurement rather than an argument. (1) That /proc/locks is readable and complete for this user's own flocks - measured at n=1 on this host, unmeasured elsewhere, so the probe must REPORT inability rather than pass; a check that goes green when it cannot read is the coin-toss red. (2) That liveness.json's pid is written by the beating process ITSELF and not by a starter on its behalf - UNVERIFIED, and the FIRST thing the build establishes by reading liveness.py's writer, because getting it wrong yields a check that is green while the condition it names is live. (3) That the lock file is never replaced - guard.py's docstring asserts it in prose ('the winner's claim rides one inode for the process's whole life') and nothing enforces it; if anything ever replaced that file, a second claimant would flock a fresh inode and win, and both loops would believe they hold the claim. Measured true today (run.lock mtime 2026-08-09 11:48). The probe already reads that inode, so witnessing it is one line.",
   "deliberately_unanswered": "WHAT SHOULD HAPPEN when two loops are found. This node makes the condition loud and refuses to arbitrate, because killing the wrong one of two loops is worse than knowing there are two. If an arbiter is wanted it is a second node carrying a rule about which claim wins. FOR AKIEN.",
   "destroyed_measurement": "The MECHANISM that produced the 2026-08-18 double loop is unmeasured and stays that way - the evidence died with the process killed during the restart. Recorded as a destroyed measurement rather than replaced with a plausible story. Had the loudness this node builds existed, the cause would have been in the record, which is the argument for the node in one sentence.",
-  "sibling_note": "The two pids in the incident (4190113, 973171) are both larger than any pid alive now, so they come from an earlier boot's numbering. Recorded because a reader matching them against today's process table will find nothing and may conclude it never happened."
+  "sibling_note": "The two pids in the incident (4190113, 973171) are both larger than any pid alive now, so they come from an earlier boot's numbering. Recorded because a reader matching them against today's process table will find nothing and may conclude it never happened.",
+  "superseded_by": "bae622881f03",
+  "supersession": "SUPERSEDED by bae622881f03 (PROVED 2026-09-30): the loop no longer carries probes of its own, so this watch's probe was deleted with them; the runner now claims the flock and beats in the SAME process (claim then beat, no separate beater), and a second loop exits 3 naming the LIVE pid. Residue: loop.py/GroundLoopDevice stays importable until the sibling ticket moves bus_client/web_server off it."
 }
