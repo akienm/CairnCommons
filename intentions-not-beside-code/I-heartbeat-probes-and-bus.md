@@ -43,10 +43,10 @@ component(s)."*
 *"NOTHING IN THE GROUND LOOP EXCEPT THE PULSE, THE GROUND LOOP CONTROL FLAGS, AND THE
 DEVICES FOUND LIST. EVER."* (2026-09-06). It exists because CC once made daemons for
 everything and could not shut them down, so it is as simple as possible. Each beat it
-spawns the pulse as separate processes and does not wait on them. Three things listen:
+spawns the pulse as separate processes and does not wait on them. Two things listen:
 the bus's ring flush (*"NOTHING in the system that should fire on the heartbeat execpt
-the messaging"*, 2026-09-30), Akien's away windows, and sleep (maintenance, handed round
-the devices one at a time by the sleep-cycle token).
+the messaging"*, 2026-09-30), and the cairn device, which holds Akien's away windows and
+manages sleep — a peer handoff of maintenance, one device at a time (2026-09-30).
 
 ## The probe
 
