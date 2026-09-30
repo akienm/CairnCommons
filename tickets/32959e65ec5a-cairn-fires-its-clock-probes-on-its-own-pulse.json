@@ -10,7 +10,7 @@
   "how": "FIRST build the shared tool cairn/tools/base/beat_probes.py: BeatProbes(device_id, folder, names, bus) loads exactly the named modules' PROBE from <folder>/probes/ (re-loading one when its mtime changes), and on_pulse(now, context) fires them through a minimal concrete BaseShim (cairn/tools/base/shim.py) so crossing memory, while_true, cleared-on-enough, and loud refusal are the shim's existing semantics and are not re-derived. The heartbeat keeps pulse modules loaded between beats (heartbeat.Triggers), so a module-level BeatProbes holds that memory. The bus is injected: a pulse.py passes cairn.tools.bus_client.connect_bus(devices=[], beat=False), created once per process. Then write cairn/devices/cairn/groundloop/pulse.py: a module-level BeatProbes('cairn', <this folder>, ['history_integrity', 'trouble_panel_surfaces_live_troubles'], bus) and on_pulse(now, context) returning its pulse record. Only the named probes fire; nothing else in the folder is touched. The probe files stay where they are, unchanged.",
   "falsifier": "Proof cairn/devices/cairn/proofs/test_groundloop_pulse.py plus cairn/tools/base/proofs/test_beat_probes.py: (helper) a stub probe whose trigger stays true pokes once across two beats, a while_true one pokes each beat, a raising trigger is recorded and the rest still fire, a probe whose enough holds is cleared, and a name with no module is recorded as missing, never raised; (1) discovery.pulse_sites() lists cairn/devices/cairn/groundloop/pulse.py at class level; (2) the module's BeatProbes names exactly ['history_integrity', 'trouble_panel_surfaces_live_troubles'] and each resolves to a Probe; (3) other modules in cairn/devices/cairn/probes/ are not in its roster; (4) on_pulse(now, {}) with a recording stub bus returns a record whose fired+held entries cover exactly those probes. Live horizon: three consecutive beats of ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json list the cairn trigger ok. Wrong intent if one of these probes turns out to be event-driven rather than clock-driven.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the probes being moved ARE the watches (cairn/devices/cairn/probes/history_integrity.py, cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py), each keeping its own ticket's WATCHME, and whether they fire is read on every beat in the heartbeat's own record ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json (the cairn trigger's ok flag and pulse record).",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260930T121753-e7c401c5110b.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T121752-064038387760.json",
@@ -20,5 +20,53 @@
   "missing_check": "(a) The helper must record a named probe with no module as missing rather than raise, so a renamed probe is loud on the heartbeat's record. (b) What the pulse returns lands in liveness.json through json.dumps(default=str); the shim's pulse record is plain dicts, so this holds. (c) The nine other owner tickets depend on this one; they are cast now and wait for it at BUILDME.",
   "builder_check": "WHERE: new cairn/tools/base/beat_probes.py and its proof cairn/tools/base/proofs/test_beat_probes.py; new cairn/devices/cairn/groundloop/pulse.py and cairn/devices/cairn/proofs/test_groundloop_pulse.py. SHAPE of a pulse.py: see cairn/machines/counting_block/groundloop/pulse.py (on_pulse(now, context) -> dict). FIRING: subclass BaseShim minimally (device_id property, probes() returning the loaded list, and whatever abstract members BaseShim declares: read the class before writing), then call its on_pulse; do not copy its body. LOADING: import each <folder>/probes/<name>.py by path with a synthetic module name, read module.PROBE. BUS: from cairn.tools.bus_client import connect_bus; bus = connect_bus(devices=[], beat=False), once per process, lazily on the first beat. TESTS use a stub bus with a post() that records. DO NOT touch the heartbeat, the probe files, or other devices' folders.",
   "depends_on": [],
-  "cast": "2026-09-30"
+  "cast": "2026-09-30",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260930T122450-5d5c7375c416.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 08bffb4f4101 .. validate 5d5c7375c416, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE PROOFS FIRST, both plain scripts in the FAILURES/ok() pattern (no pytest), run bare with python3, committed and run RED before any build file exists. cairn/tools/base/proofs/test_beat_probes.py builds a temp folder with probes/ holding stub modules, each with a PROBE = Probe(...): 'standing' (trigger always True), 'chatty' (trigger True, while_true=True), 'broken' (trigger raises RuntimeError), 'done' (trigger True, enough returns True), 'needs_bus' (trigger returns context.get('bus') is not None); a stub bus class with post(**kw) that records the call and returns {'id': 'env-N'} and flush() that counts and returns {'flushed': n}. Teeth: (a) standing fires once across two beats and is held 'still true' on the second; (b) chatty fires on both beats; (c) broken is a fired entry with outcome 'refused' and the others still fire; (d) done fires once with 'cleared' and on beat two is held with a reason starting 'cleared'; (e) a name with no module lands in record['missing'] and nothing raises; (f) needs_bus fires, because the firer seeds context['bus']; (g) flush is called once per beat and its return is record['flush']; (h) a bus given as a zero-arg callable is called on the first beat only, never at construction. cairn/devices/cairn/proofs/test_groundloop_pulse.py carries the falsifier's teeth (1)-(4).",
+      "by": "cc",
+      "step": "unlisted: write both proofs first and run them red",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:25:42+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2 cairn/tools/base/beat_probes.py imports NOTHING from cairn.tools.bus_client or any device (cairn/tools/base is a gate by the determinism walk and may not reach an oracle; bus_client imports inference_domain). API: class BeatProbes(device_id: str, folder: Path, names: list[str], bus=None). names is kept as a tuple (roster()). bus is a bus object (has post) or a zero-arg callable returning one, resolved on the first on_pulse and kept; None records every fire as 'unwired' (BaseShim._fire's own behaviour). bind(bus) replaces it. Loading: <folder>/probes/<name>.py via importlib.util.spec_from_file_location under the synthetic name 'cairn._beat_probe.<device_id>.<name>', held against its st_mtime and re-loaded when it changes; module.PROBE must be a cairn.tools.base.probe.Probe or the name is missing with the reason. Firing: a private class _Firer(BaseShim) whose device_id is the given id and whose probes() returns the loaded list; its __init__ sets self._delivery_wired = True because the firer is not the device's shim and receives no mail. on_pulse(now, context=None) -> dict: context = context if a dict else {}; context.setdefault('bus', bus) when bus is not None; record = firer.on_pulse(now, context); record['missing'] = [{'name', 'reason'}]; then if the bus has flush, record['flush'] = bus.flush() (an exception becomes record['flush'] = {'error': '<Type>: <msg>'}, never raised). The heartbeat holds the pulse module, so a module-level BeatProbes keeps crossing memory between beats.",
+      "by": "cc",
+      "step": "unlisted: build beat_probes.py: load named probes, fire through a minimal BaseShim, seed the bus, flush",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:25:42+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3 cairn/devices/cairn/groundloop/pulse.py: NAMES = ('history_integrity', 'trouble_panel_surfaces_live_troubles'); FIRER = BeatProbes('cairn', Path(__file__).resolve().parent.parent, list(NAMES), bus=_bus) where _bus() does 'from cairn.tools.bus_client import reach; return reach(\"trouble\")' — reach, not connect_bus: connect_bus off the runner roster reds cairn/tools/bus_client/probes/a_client_reaches_and_never_beats.py, and the trouble panel probe asks the trouble lane over the bus, so trouble's shim must be wired on it; on_pulse(now, context=None) returns FIRER.on_pulse(now, context). Proof tooth (4) calls FIRER.bind(stub) before on_pulse so no real bus is built in the proof.",
+      "by": "cc",
+      "step": "unlisted: write cairn/devices/cairn/groundloop/pulse.py naming the two probes",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:25:42+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4 LIVE: after the build commit, the running heartbeat finds the new pulse site on its next beat (pulse_sites walks every beat); read ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json on three consecutive beats: the trigger entry with device_id 'cairn' and level 'class' has ok true and its result carries fired+held naming both probes.",
+      "by": "cc",
+      "step": "unlisted: watch three live beats list the cairn trigger ok",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:25:42+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The pattern is concrete in cairn/tools/base/proofs/test_beat_probes.py and cairn/devices/cairn/proofs/test_groundloop_pulse.py (committed red at e4f714f3): module-level FAILURES list; ok(name, passed, detail) prints '  ok   <name>' or '  RED  <name>' and appends to FAILURES on a fail, never raising; main() runs every tooth, prints the verdict, and returns 1 if FAILURES else 0; the script exits with main()'s return. Tooth names are the PROVES dict's values, printed verbatim.",
+      "by": "cc",
+      "step": "unlisted: the FAILURES/ok() proof pattern",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:40:56+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/32959e65ec5a-20260930T184823.json"
 }
