@@ -25,5 +25,95 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260930T124647-4566beebe91d.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient b06ab349743d .. validate 4566beebe91d, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The proof is written and committed red at 2a99235e: cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py (FAILURES/ok() pattern: module-level FAILURES; ok(name, passed, detail) prints '  ok   <name>' or '  RED  <name>' and appends on a fail, never raises; main() returns 1 if FAILURES else 0). Clause 1 runs the three faces in a subprocess and demands the old loop module absent from sys.modules; clause 2 demands connect_system(beat=False)'s second value answer roster() with devices == sorted(fitted_device_ids()); clause 3 demands reach('ground_loop') answer verb 'liveness' with a body carrying 'verdict'; clause 4 demands loop.py and staleness.py absent and the grep over cairn/ bin/ skills/ *.py for GroundLoopDevice | ground_loop.loop | ground_loop.staleness empty. The builder must not edit the proof.",
+      "by": "cc",
+      "step": "unlisted: the proof",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:08+00:00"
+    },
+    {
+      "n": 2,
+      "text": "New cairn/tools/bus_client/roster.py: class DeviceRoster(bus, root=None) — root defaults to bus_client._CLASS_ROOT. hold(shim) keeps a held shim, idempotent by device_id. shim_for(name) returns the held shim; else the concrete shim from bus_client._load_device_shim(name, bus); else, when name is in cairn.tools.base.deviceness.fitted_device_ids(root), a DiscoveredShim(name, str(folder), bus=bus) (cairn.devices.cairn.machines.ground_loop.discovered; folder from discovery.device_folders(root), the probes folder's parent as the loop passed it); else None — every answer found is cached as held. roster() returns {'devices': [{'device': d, 'awake': bool(getattr(held.get(d), 'running', False))} for d in sorted(fitted_device_ids(root))]} — the same dict shape server.py already reads (no 'beats' key; server.py reads only 'devices'; verify with grep before relying on it).",
+      "by": "cc",
+      "step": "unlisted: the roster",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:08+00:00"
+    },
+    {
+      "n": 3,
+      "text": "bus_client._wire(devices, beat) builds BusDevice() and DeviceRoster(bus), holds BusShim(bus, roster) (BusShim reads only heartbeat.shim_for), then for each named device holds roster.shim_for(name) when not None — no 'ground_loop' special case and no import of the old loop or discovery.discover. It returns (bus, roster). With beat=True it pulses each named shim, then the BusShim, once with datetime.now(timezone.utc) — that is the whole of 'beat' now. reach(*devices) keeps its LookupError for a name with no shim and pulses only the named shims. connect_bus returns bus; connect_system returns (bus, roster); rewrite the three docstrings to say so and drop the beat-cost history paragraphs that describe the loop. web_server/listener.py stays unchanged: 'ground_loop' now resolves through its own shim.py like any other device.",
+      "by": "cc",
+      "step": "unlisted: the three faces",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:08+00:00"
+    },
+    {
+      "n": 4,
+      "text": "The builder_check line 'DELETE shim.py' is superseded, because the Akien ruling this ticket carries says the heartbeat's web pane is a template that reads the liveness JSON, and clause 3 of the proof reaches ground_loop's own shim. Move liveness_pane_data(now, home=None) verbatim from loop.py into liveness.py. Rewrite ground_loop/shim.py as GroundLoopShim(BaseShim) with __init__(self, bus=None) (the standard loader contract, obj(bus=bus)), device_id 'ground_loop', and _start_device returning a read-only BaseDevice subclass HeartbeatPage whose declared_panes() is the one liveness pane exactly as loop.py declared it (kind 'liveness', label 'Liveness', handler lambda: liveness_pane_data(datetime.now(timezone.utc).astimezone())), declared_verbs() is {'liveness': lambda envelope: liveness_pane_data(datetime.now(timezone.utc).astimezone())}, and intention/state/settings copied from loop.py's, minus any beat or subscription claim. No probes, no bus writes, no beat.",
+      "by": "cc",
+      "step": "unlisted: the heartbeat's pane",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:08+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Delete ground_loop/loop.py, staleness.py and proofs/test_staleness.py. In proofs/test_ground_loop.py delete the teeth that construct or beat GroundLoopDevice and test_the_self_subscription_is_inert_under_the_beat; keep the liveness, guard and claim teeth (bae622881f03 clause 7 test_the_doors_loser_reports_from_the_record_and_exits_distinctly stays); re-point the pane teeth to import liveness_pane_data from liveness and write their record with write_liveness(now, {}, pid, home), and the page tooth to GroundLoopShim() with shim.active_page(). In test_discovery.py delete the loop half (_loop and the staleness tooth). Every other proof that built GroundLoopDevice(bus=bus) + subscribe + beat now pulses its shims directly (shim.on_pulse(now)), with BusShim(bus, DeviceRoster(bus)) where it needed delivery. Reword docstrings and probe prose that name the loop; drop 'GroundLoopDevice' from test_heartbeat.py's banned list (the grep would hit it). Reseal every re-pointed proof with python3 -m cairn.devices.tester.cli --seal <proof>.",
+      "by": "cc",
+      "step": "unlisted: deletions and re-pointing",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:09+00:00"
+    },
+    {
+      "n": 6,
+      "text": "After the build: restart the web server the usual way and confirm its nav renders a device list (curl the root page); ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json keeps one pid across three beats; the ground_loop page shows the Liveness pane.",
+      "by": "cc",
+      "step": "unlisted: the live check",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:09+00:00"
+    },
+    {
+      "n": 7,
+      "text": "Correction to the roster decision: the DiscoveredShim's folder is the registration folder itself — the probes/ folder path exactly as discovery.device_folders(root) yields it (str(folder)), which is what the loop passed as entry['folder'] — not its parent. Every fitted id has such a folder, because fitted_device_ids is built from that same walk.",
+      "by": "cc",
+      "step": "unlisted: the roster's folder",
+      "source": "rehearsal",
+      "at": "2026-09-30T18:51:18+00:00"
+    },
+    {
+      "n": 8,
+      "text": "This supersedes D3's 'stays unchanged' for the listener. In cairn/devices/web_server/listener.py main(), the call becomes '_bus, roster = connect_system(devices=[\"librarian\", \"trouble\"])' and 'WebServerDevice(roster, harbor_source=harbor_source(), port=args.port)', with a two-line comment above it: no device is special-cased; the roster lists every fitted device and loads a shim from disk the first time its page or its mail asks for one (ticket efb670ff1dd8). 'ground_loop' is dropped from the list because its shim now loads from disk like any other; librarian and trouble stay named so their delivery is wired at start. In server.py, only the docstring lines that call the roster source 'the ground_loop' are reworded to 'a DeviceRoster'; no logic changes.",
+      "by": "cc",
+      "step": "unlisted: listener.py device list edit",
+      "source": "rehearsal",
+      "at": "2026-09-30T19:00:09+00:00"
+    },
+    {
+      "n": 9,
+      "text": "DeviceRoster.pulse(now, context=None) pulses the HELD shims in the order they were held. _wire holds BusShim(bus, roster) first and then each named device's shim, so with beat=True the BusShim is pulsed first, as the old loop did. This supersedes D3's 'named shims first, then BusShim'. A shim that raises gives {\"device\": id, \"outcome\": \"refused\", \"error\": \"<Type>: <msg>\"}, and the others are still pulsed. The return value is {\"pulsed\": [held ids in order], \"pulses\": [each shim's on_pulse return]}.",
+      "by": "cc",
+      "step": "unlisted: the pulse order",
+      "source": "rehearsal",
+      "at": "2026-09-30T19:00:09+00:00"
+    },
+    {
+      "n": 10,
+      "text": "write_liveness(now, state, pid, home) already exists at cairn/devices/cairn/machines/ground_loop/liveness.py (line 60) and is unchanged. In proofs/test_ground_loop.py KEEP, re-pointed from GroundLoopDevice(liveness_home=home).beat(now=T) to write_liveness(T, {\"beats\": n}, os.getpid(), home): test_the_stamp_advances_across_beats_and_pid_and_state_ride (state asserted == {\"beats\": 2}), test_the_instance_dir_is_born_on_first_write, test_dead_on_stale_live_on_fresh_dead_on_absent_or_torn, test_the_pane_renders_what_the_record_says_and_never_derives (liveness_pane_data imported from liveness). KEEP unchanged: test_a_reader_never_sees_a_torn_record, the four guard teeth (test_two_claimants_exactly_one_wins_and_the_loser_refuses_loudly, test_a_sigkilled_winner_leaves_no_stale_claim, test_the_held_claim_survives_the_records_churn, test_the_doors_loser_reports_from_the_record_and_exits_distinctly), test_an_absent_record_renders_the_named_lack_never_blank. test_the_page_assembles_through_the_standard_machinery builds GroundLoopShim() with no argument. DELETE: test_a_beat_pulses_every_shim_in_order, test_the_firing_is_the_shims_not_the_heartbeats, test_subscribe_is_idempotent_and_typed, test_one_shim_raising_cannot_stop_the_beat, test_the_executor_goof_is_gone, test_the_roster_is_the_nav_published_at_all_times, test_the_crossings_are_no_longer_silent, test_it_is_a_device, test_a_homeless_device_writes_nothing, test_the_self_subscription_is_inert_under_the_beat, and the _SpyBus/_Shim/_AngryShim fixtures. In proofs/test_discovery.py the teeth call discover(root=root, cache=ProbeCache()) directly instead of a loop; the two staleness teeth and test_a_hand_subscribed_shim_is_not_double_pulsed_by_discovery are deleted. Every other file to re-point is exactly what 'grep -rlE \"GroundLoopDevice|ground_loop.loop|ground_loop.staleness\" --include=*.py cairn bin skills' lists; the new proof's clause 4 runs that grep.",
+      "by": "cc",
+      "step": "unlisted: the ground_loop proof teeth",
+      "source": "rehearsal",
+      "at": "2026-09-30T19:00:09+00:00"
+    },
+    {
+      "n": 11,
+      "text": "The web server runs as the user unit cairn-web-server.service, launched by launchers/superclaude (_sc_web_start). After the build commit, cc restarts it: 'systemctl --user stop cairn-web-server.service; systemctl --user reset-failed cairn-web-server.service 2>/dev/null; systemd-run --user --quiet --unit cairn-web-server --working-directory ~/dev/src/cairn --setenv=HOME=$HOME --setenv=PATH=$PATH -p StandardOutput=append:$HOME/.cairn/logs/web_server.log -p StandardError=append:$HOME/.cairn/logs/web_server.log -- python3 ~/dev/src/cairn/cairn/devices/web_server/listener.py'. Then 'curl -s http://localhost/' lists the fitted devices in its nav, and 'curl -s http://localhost/device/ground_loop' shows the Liveness pane. The builder does not restart anything; D6 is cc's.",
+      "by": "cc",
+      "step": "unlisted: restarting the web server for the live check",
+      "source": "rehearsal",
+      "at": "2026-09-30T19:00:09+00:00"
+    }
+  ]
 }
