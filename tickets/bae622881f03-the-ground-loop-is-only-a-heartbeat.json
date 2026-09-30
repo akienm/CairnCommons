@@ -1,0 +1,103 @@
+{
+  "id": "bae622881f03",
+  "title": "the-ground-loop-is-only-a-heartbeat",
+  "date": "2026-09-30",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "The ground loop is only a heartbeat: it restarts itself when its own files change, calls every groundloop/pulse.py trigger each beat, and writes one JSON saying what it did.",
+  "why": "The lived symptom: the heartbeat was not beating. It restarted itself 61 times, marked itself stale after beat 1 on Python 3.14, and burned 53 CPU-seconds and 1 GB on a beat that swept 111 probes. Anything hung on the pulse (codemother's commit watch, counting_block) went quiet. Akien, 2026-09-30: 'Not everything we MIGHT need, everything we KNOW WE NEED.'",
+  "traces_to": "Telos aim 1 via Law 1 (the one permitted periodic pulse exists so nothing else polls; a 53 CPU-second beat re-evaluating 111 probes is the clock spending compute on non-events) and Law 4 (restart-on-change is physics: mtime compare, not a 476-line bytecode heuristic that Python 3.14 fooled into 61 restarts)",
+  "how": "Rewrite the runner: record mtimes of the loop's own .py files at start; each beat compare, os.execv on change unless COMMAND_DO_NOT_RESTART, stop on COMMAND_EXIT; find class- and instance-level groundloop/pulse.py, call each, list the ones called; write one JSON (beat time, pid, recorded + current mtimes, triggers called). Keep the flock singleton (second loop exits). Web pane = a template reading that JSON. Delete bus handoff, probes/ discovery, DiscoveredShim, bytecode staleness, takeover/kill arbitration, diagnostic emission, the loop's own probes. Builder detail: see builder_check on the sorted berth.",
+  "falsifier": "Falsifier: a proof (proofs/test_heartbeat.py, run against temp homes and temp pulse trees, never live) shows: (1) an unchanged file set gives changed=[] across beats, on this box's Python 3.14; (2) touching a watched file gives changed=[that file] and the runner execs; (3) COMMAND_DO_NOT_RESTART suppresses the exec; (4) COMMAND_EXIT ends the loop; (5) every pulse.py present at class and instance level is called once per beat and listed, and a raising one is listed with its error without stopping the rest; (6) the JSON is written each beat carrying last_run, pid, recorded_mtimes, current_mtimes, triggers; (7) a second runner exits 3 while the first holds the claim and is LIVE; (8) the loop's own probes/ folder carries no probes; (9) the charter parses, cites this ticket, and no longer describes the roster/subscription/probe loop. Live horizon: after deploy, the resident loop's liveness.json beat count passes 3 with the same pid and no restart. Wrong intent if a device turns out to need the beat for anything beyond its trigger file.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "watchme": "none, because the live answer is the loop's own record, ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json (beat count, pid, changed, triggers), read on every render of its pane and by `cairn groundloop status`. The only clock-independent watcher would be the missed-pulse probe on the cairn device, which Akien ruled not needed now (2026-09-30, in session; recorded on intent berth /home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T102827-63b77c8d6ae6.json).",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260930T103233-4140f1be6119.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T102827-63b77c8d6ae6.json",
+  "questions": [],
+  "task_or_ticket": "ticket",
+  "assumption_check": "(1) 'Its own files' means the .py files in cairn/devices/cairn/machines/ground_loop/ that the runner imports (__main__.py, heartbeat.py, guard.py, liveness.py, discovery.py). A change to cairn/tools/base does not restart the loop. After the rewrite the runner imports only address.py from base, so this holds by construction. (2) Restart is os.execv of the same interpreter with the same module. The flock fd is O_CLOEXEC (PEP 446), so the claim drops at exec and the new image re-claims. If another starter wins that race, the new image exits 3 and the winner runs; that is the singleton contract, not a defect. (3) 'Running and ok' = the flock is held AND read_liveness says LIVE (record younger than STALENESS_THRESHOLD_S=300s). A lock holder whose record is DEAD is hung: the newcomer SIGTERMs the recorded pid and re-claims. That is the not-ok branch Akien's sentence implies. (4) A pulse.py exposes on_pulse(now, context) -> dict. Both existing sites (codemother, counting_block) have that shape. A module is loaded once and re-loaded when its mtime changes, because pulse modules keep module-level state (codemother's _last_head).",
+  "missing_check": "(a) The in-process GroundLoopDevice in loop.py is NOT the resident loop, but cairn/tools/bus_client/bus_client.py _wire/connect_system builds one privately for the CLI bus path, and the web server uses it as its roster and pane source (listener.py:113, server.py:54,68). This ticket leaves loop.py, discovered.py, shim.py and staleness.py in place for those callers, and only __main__.py stops using them. Moving those callers off a private ground loop is the sibling (first-cut name: the-cli-and-web-server-reach-devices-without-a-private-ground-loop). (b) The pane already reads the record from disk (loop.py liveness_pane_data -> read_liveness), so it is already a template over the JSON; it will show the new fields with no pane change. (c) With probes no longer swept on the beat, clock-type probes go quiet until the group-2 tickets move them into their owners' pulse.py (Akien 2026-09-30). Door/gate/mail probes were never the beat's to fire (same ruling). (d) The six loop probes in ground_loop/probes/ are deleted; ef06b5a49613 (WATCHME the_beater_holds_the_claim) loses its probe. Its intention (beater == claim holder) is proved by this ticket's single-process flock proof, and ef06's disposition is handled at PROVED with that cited. (e) read_liveness consumers (tools/base/shim.py ensure_ground_loop, cli.py status) read last_run and pid, which the new record keeps. cli.py status reads state.beats and state.subscribers: beats is kept; subscribers becomes triggers.",
+  "builder_check": "What a Haiku builder needs, answered here. WHERE: a new module cairn/devices/cairn/machines/ground_loop/heartbeat.py with pure functions own_files(), mtimes(paths), changed(recorded, current), and fire_triggers(now, sites, cache). __main__.py is rewritten to: claim -> record mtimes -> loop {beat; write JSON; check COMMAND_EXIT; if changed and not COMMAND_DO_NOT_RESTART: os.execv} with stop.wait(CADENCE_S=60). REUSE: guard.claim_singleton, liveness.write_liveness/read_liveness (the state dict carries beat, recorded_mtimes, current_mtimes, changed, triggers), discovery.pulse_sites + discovery.load_pulse. TRIGGER CALL: module.on_pulse(now, {}); record {device_id, level, path, ok, result|error}; catch Exception per trigger. FLAGS: menu in <home>/flags/, active = file of that name in <home>. DO NOT touch loop.py, bus_client, web_server or the bus proofs. DELETE (one list, the same as D4): ground_loop/probes/*.py; proofs test_stale_restart.py, test_second_loop_arbitration.py, test_pulse_service.py, test_a_beat_costs_what_changed.py and test_beater_holds_claim.py, which test the old runner or its probes, with their validations/*.json removed through `cairn artifact remove <path> --why '...'`. KEEP test_ground_loop, test_discovery, test_staleness, test_cli, test_stop_is_prompt: they test loop.py, staleness.py, discovery, the CLI and the stop, all still standing for bus_client and web_server. staleness.py stays while loop.py imports it. CHARTER: intention+why.json is rewritten with `cairn artifact write <path> --verb cast --why '...' --from <file>` (the Bash artifactgate refuses a direct write), then the model is refreshed by running the shell script cairn/tools/intentions_model_compiler/recompile_gate.sh with no arguments. DEFAULTS: watch=None means heartbeat.HERE (the ground_loop package folder); roots=None means the pulse instance home is None (discovery's own default, ~/.cairn/devices); flags are zero-byte files named COMMAND_EXIT.flag / COMMAND_DO_NOT_RESTART.flag in <home>, home = ~/.cairn/devices/cairn/0/machines/ground_loop. RELOAD: no importlib.reload — Triggers holds {path: (mtime, module)} and calls discovery.load_pulse(path) afresh only when the file's st_mtime differs from the held one, so an unchanged module keeps its module-level state between beats. PROOF PATTERN: proofs/test_stop_is_prompt.py's shape — a module-level FAILURES list, ok(name, cond, detail) appends on red and prints ok/RED, the script exits 1 if FAILURES else 0; no pytest. DEPLOY: systemctl --user stop/start cairn-ground-loop, or spawn exactly as superclaude does (systemd-run --user --unit cairn-ground-loop ... python3 -m cairn.devices.cairn.machines.ground_loop).",
+  "cast": "2026-09-30",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260930T103845-665116ee721a.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain 2026-09-30 (orient 798022ab7670 .. validate 665116ee721a, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE PROOF FIRST: cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py, a plain script in the FAILURES/ok() pattern of proofs/test_stop_is_prompt.py (no pytest), run bare with python3; committed and run RED before any build file exists — every failure an absence.",
+      "by": "cc",
+      "step": "unlisted: write the proof first and run it red",
+      "source": "rehearsal",
+      "at": "2026-09-30T16:50:50+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2 heartbeat.py, pure, no clock: own_files(folder=this folder) -> sorted top-level *.py; mtimes(paths) -> {str(path): st_mtime}; changed(recorded, current) -> sorted paths added, removed or differing; class Triggers with fire(now, sites) -> [{device_id, level, path, ok, result|error}], sites from discovery.pulse_sites(class_root, instance_home), each module loaded once via discovery.load_pulse and reloaded when its mtime changes, on_pulse(now, {}) called inside try/except Exception so one raising trigger never stops the rest.",
+      "by": "cc",
+      "step": "unlisted: build heartbeat.py with pure functions for own-file mtimes, change detection, and trigger firing",
+      "source": "rehearsal",
+      "at": "2026-09-30T16:50:50+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3 __main__.main(home=None, roots=None, *, cadence=CADENCE_S, watch=None, class_root=None): claim_singleton(home); on ClaimRefused read_liveness -> LIVE exits 3, DEAD (holder hung) SIGTERMs the recorded pid and re-claims once; record mtimes of own_files(watch); write a beat-0 record at once; loop: current mtimes, changed, Triggers.fire, write_liveness(now, state, pid, home) with state {beats, started, recorded_mtimes, current_mtimes, changed, triggers}; COMMAND_EXIT in home -> return 0; changed and no COMMAND_DO_NOT_RESTART -> os.execv(sys.executable, sys.orig_argv) (the flock fd is non-inheritable, so the new image re-claims); stop = threading.Event set by SIGTERM/SIGINT, stop.wait(cadence). Instance home for pulse sites = roots['instance']/devices when roots is given.",
+      "by": "cc",
+      "step": "unlisted: rewrite __main__.py to claim, record mtimes, beat, write JSON, check flags, and exec on change",
+      "source": "rehearsal",
+      "at": "2026-09-30T16:50:50+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4 CLEANUP: delete ground_loop/probes/*.py; delete proofs that test only the old runner (test_stale_restart, test_second_loop_arbitration, test_pulse_service, test_a_beat_costs_what_changed, test_beater_holds_claim) with their validations; keep test_ground_loop, test_discovery, test_staleness, test_cli, test_stop_is_prompt where they test loop.py/discovery still used in-process; staleness.py stays while loop.py imports it; cli.py status prints triggers in place of subscribers; the charter intention+why.json is rewritten through the artifact door and recompile_gate.sh is poked.",
+      "by": "cc",
+      "step": "unlisted: delete probes and old-runner proofs, conditionally delete staleness.py, update cli.py status",
+      "source": "rehearsal",
+      "at": "2026-09-30T16:50:50+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5 DEPLOY: stop any live loop with cairn groundloop stop (or systemctl --user stop cairn-ground-loop), start with cairn groundloop start (same systemd-run unit superclaude uses); read cairn groundloop status three times over ~3 minutes: beats >= 3, one pid, changed [] each beat, codemother and counting_block triggers listed ok.",
+      "by": "cc",
+      "step": "unlisted: deploy and verify the live loop beats past 3 with stable pid and correct triggers",
+      "source": "rehearsal",
+      "at": "2026-09-30T16:50:51+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D2 TRIGGER RECORD FIELDS: device_id and level are not derived by heartbeat.py — they are copied verbatim from each site dict discovery.pulse_sites returns ({device_id, level: 'class'|'instance', path}); pulse_sites derives device_id from the parent folder (class level) or the first segment under the instance devices root (instance level).",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-09-30T17:08:04+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D3 STARTED IS CONSTANT: state['started'] is the runner's one-time start timestamp (ISO, set once before the first beat, the same on every beat of that image; a re-exec sets a new one — which is how the proof sees the restart). The per-beat time is the record's own last_run, which write_liveness stamps from its now argument.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-09-30T17:08:04+00:00"
+    },
+    {
+      "n": 8,
+      "text": "D4 CHARTER CONTENT: the builder authors it from this ticket, nothing supplied separately — what = the ticket's intention with D2/D3's mechanism named (claim, own-file mtimes, pulse triggers, one JSON, the two flags, re-exec) and 'no bus, no probes, no shims, no web server launch, no import checks'; why = one heartbeat devices hang clock work on, kept small because the Python 3.14 staleness misfire restarted it 61 times; invoke = the runner, cairn groundloop status|start|stop|restart, the flags, where a pulse.py goes; falsifier = the teeth of proofs/test_heartbeat.py; proof and gates name test_heartbeat.py; filed_edges name the sibling ticket (bus_client/web_server off loop.py) and clock probes moving to owning devices; learns and how_it_learns carry ONE identical answer ('It does not; it is the heartbeat').",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-09-30T17:20:14+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D3 CADENCE: CADENCE_S = 60.0 seconds is a module constant in __main__.py (the ruled once-a-minute beat, Akien 2026-08-22) and main()'s cadence parameter defaults to it; proofs pass a shorter cadence explicitly.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-09-30T17:32:23+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/bae622881f03-20260930T180053.json"
+}
