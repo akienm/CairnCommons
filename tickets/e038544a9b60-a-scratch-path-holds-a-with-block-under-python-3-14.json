@@ -1,0 +1,61 @@
+{
+  "id": "e038544a9b60",
+  "title": "a-scratch-path-holds-a-with-block-under-python-3-14",
+  "date": "2026-10-01",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "cairn.devices.tester.scratch.scratch_dir hands back a path that a `with` block can hold under Python 3.14, so the 27 `with scratch_dir(...) as root:` sites in four build_inspector proofs run again, unchanged.",
+  "why": "Measured 2026-10-01 by the pre-commit reseal of commit 4a38b2ed: three build_inspector proofs sealed red with TypeError: 'pathlib.PosixPath' object does not support the context manager protocol, because ~/.cairn/venv moved to Python 3.14.4. The lived symptom: every commit touching build_inspector's imports reseals four proofs red and files troubles for a change nobody made.",
+  "traces_to": "Law 9: a seal earned green on 2026-09-18 is red today because the interpreter moved under it, not because the code changed; Law 8: the build_inspector proofs are what make its sieves trustworthy, and they cannot run. RULE 1: the fix lives in the component whose contract moved (tester's scratch door), so no proof's bytes move.",
+  "how": "In cairn/devices/tester/scratch.py, scratch_dir returns a ScratchPath — a subclass of type(Path()) whose __enter__ returns itself and whose __exit__ does nothing, exactly the contract Path carried before 3.13; removal stays with the atexit sweep, as the module docstring says. Proved by a new tooth in cairn/devices/tester/proofs/test_scratch.py that enters `with scratch_dir(...)` in a dead process and finds the directory gone after exit.",
+  "falsifier": "RED if: (1) `with scratch_dir('x') as d:` raises under the venv interpreter; (2) d is not a pathlib Path usable as before (is_dir, /, write_text); (3) the directory survives its process after a with-block; (4) test_component_color, test_history_integrity or test_inspector still fail with the context-manager TypeError. Horizon: the tester seal.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the consumer is the pre-commit reseal itself (cairn/devices/tester/cli.py --reseal), which reruns every proof a staged change touches and seals red when scratch_dir breaks again",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T173927-cba92e9ed5f7.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T173831-1d622e18ab39.json",
+  "questions": [],
+  "children": "none, because the change is one class in cairn/devices/tester/scratch.py plus one tooth",
+  "task_or_ticket": "ticket",
+  "builder_notes": "A Haiku builder would ask: (1) The class? `class ScratchPath(type(Path())):` with `def __enter__(self): return self` and `def __exit__(self, *exc): return None`, and a docstring naming the 3.13 removal. (2) scratch_dir? `d = ScratchPath(tempfile.mkdtemp(prefix=prefix))`, the rest unchanged. (3) The tooth? test_a_with_block_holds_the_scratch: in _in_a_dead_process, `with scratch_dir('scratch-proof-with-') as d: (d/'f').write_text('x'); print(d)` and assert the path is gone afterward; added to the proof's runner list.",
+  "cast": "2026-10-01",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T174312-49a5646d277b.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient c2b516b730aa .. validate 49a5646d277b, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1, the red tooth. In cairn/devices/tester/proofs/test_scratch.py add, after test_the_scratch_is_gone_once_the_process_is: def test_a_with_block_holds_the_scratch(): body = (\"from cairn.devices.tester.scratch import scratch_dir\\n\" \"with scratch_dir('scratch-proof-with-') as d:\\n\" \"    (d / 'a_file').write_text('x')\\n\" \"    assert d.is_dir()\\n\" \"print(d)\\n\"); path, _ = _in_a_dead_process(body); assert not Path(path).exists(), f'the with-block scratch {path} outlived its process'. Register it in the file's runner list beside the other teeth. Before ScratchPath exists the child raises TypeError at the with-line, its exit code is 1, and _in_a_dead_process's own first assert (returncode == 0, naming the child's stderr) fails — that IS the red, by design of the existing helper; nothing about the helper changes. Run the proof and record the red.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:49:06+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the build. In cairn/devices/tester/scratch.py, above scratch_dir: class ScratchPath(type(Path())): with a docstring saying Python 3.13 removed pathlib.Path.__enter__/__exit__ (they returned self and did nothing since 3.9), that 27 sealed with-sites in build_inspector's proofs hold a scratch path that way, and that removal stays with the atexit sweep; def __enter__(self): return self; def __exit__(self, *exc): return None. Then scratch_dir's first line becomes d = ScratchPath(tempfile.mkdtemp(prefix=prefix)); its return annotation stays Path (ScratchPath is one). Nothing else in scratch.py moves. Run test_scratch.py green twice, then run cairn/machines/build_inspector/proofs/test_component_color.py, test_history_integrity.py and test_inspector.py and record that none fails with the context-manager TypeError (they are not this ticket's proofs and are resealed by the pre-commit hook).",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:49:06+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D1 registration, measured 2026-10-01: test_scratch.py is not pytest-discovered; it runs as a script (python3 cairn/devices/tester/proofs/test_scratch.py) whose _main() at line 171 holds an explicit list named checks (five entries, last test_a_worktree_is_made_even_when_the_caller_lives_inside_a_git_hook) and calls each, printing PASS per tooth. Register by appending test_a_with_block_holds_the_scratch as the sixth entry of that checks list. Define the function above _main, beside the other teeth.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:55:44+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D2 imports, measured 2026-10-01: cairn/devices/tester/scratch.py line 54 already has 'from pathlib import Path' and line 53 'import tempfile'; no import is added. ScratchPath is defined at module level after the imports, before scratch_dir.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:55:44+00:00"
+    }
+  ]
+}

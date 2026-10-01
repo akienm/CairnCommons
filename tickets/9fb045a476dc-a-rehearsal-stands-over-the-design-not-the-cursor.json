@@ -1,0 +1,22 @@
+{
+  "id": "9fb045a476dc",
+  "title": "a-rehearsal-stands-over-the-design-not-the-cursor",
+  "date": "2026-10-01",
+  "owner": "CC",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "A clean rehearsal record stands over the ticket's DESIGN, so the cursor moving through the workflow does not make it stale; any edit to the design still does.",
+  "why": "Measured three times (2026-09-17, 09-24, 10-01): the BUILDME crossing's cursor write stales the clean rehearsal that admitted it, so the crossing out of BUILDME refuses until a second cold read of the unchanged design. The lived symptom: every voyage stalls at BUILDME for 5-12 minutes and pays twice for the same reading.",
+  "traces_to": "Law 1: re-reading a design whose bytes did not change is re-deriving the settled. Akien's review bandwidth and cost (memory akiens-review-bandwidth-is-the-binding-constraint): every voyage pays a duplicate cold read today. The entry gate's purpose (ticket buildme-rides-the-rehearsal): the design was rehearsed clean over the bytes the build reads; the cursor is not something the build reads.",
+  "how": "In cairn/machines/rehearsal/rehearsal.py add design_sha(blob): the sha256 of the ticket JSON with its workflow_and_state and rehearsal keys removed, serialized with sort_keys. A clean record carries design_sha256 beside ticket_sha256. standing() is ok when the record's design_sha256 equals design_sha of the live bytes, or (for records written before this) when ticket_sha256 equals the whole-bytes sha as today. Proved by a new proof cairn/machines/rehearsal/proofs/test_design_sha.py over a fixture commons.",
+  "falsifier": "RED if over a fixture commons: (1) a clean record goes stale when only workflow_and_state changes; (2) it stays ok when any other field (a decision, the how) changes; (3) a pre-change record whose ticket_sha256 matches the live bytes stops standing; (4) a clean pass's record lacks design_sha256. Horizon: the tester seal.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the consumer is the BUILDME entry lane buildme_rides_the_rehearsal in cairn/machines/build_inspector/inspector.py, which reads standing() at every crossing into and out of BUILDME",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T175210-afed640df7ce.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T175210-e5b787ed34bf.json",
+  "questions": [],
+  "children": "none, because the change is one helper and one comparison in cairn/machines/rehearsal/rehearsal.py plus its proof",
+  "task_or_ticket": "ticket",
+  "builder_notes": "A Haiku builder would ask: (1) design_sha? def design_sha(blob: bytes) -> str: doc = json.loads(blob); doc.pop('workflow_and_state', None); doc.pop('rehearsal', None); return _sha(json.dumps(doc, sort_keys=True, ensure_ascii=False).encode('utf-8')). (2) Where written? In the clean branch after the pointer write, record['design_sha256'] = design_sha(live); for an unclean pass, design_sha of the bytes read. (3) standing()? after the clean check: if rec.get('design_sha256'): stale iff it != design_sha(blob); else fall back to the ticket_sha256 compare unchanged; the stale lack text is kept. (4) Proof? a fixture commons dir with tickets/<id>-x.json and rehearsals/<rec>.json written by hand, standing(id, root=fixture) asserted per tooth.",
+  "cast": "2026-10-01"
+}
