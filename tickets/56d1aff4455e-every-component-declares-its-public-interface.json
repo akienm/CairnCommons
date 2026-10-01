@@ -25,5 +25,84 @@
   "supersedes": [
     "7b5c539cb58c"
   ],
-  "cast": "2026-10-01"
+  "cast": "2026-10-01",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T170656-0985b69c1164.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 76cf5d4b3a2d .. validate 0985b69c1164, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1 — the proof, first, run red. File cairn/machines/build_inspector/proofs/test_encapsulation_holds.py, shaped like its sibling test_machine_imports_no_device.py: sys.path gets parents[4]; the subject is resolved LATE through that file's _Late class pattern (copy the 10-line class) so a hollow revert prints red teeth instead of dying at import; named teeth def test_*(), _main() prints '  PASS  <name>' per tooth and 'green — ...', exit 0, and a failing tooth prints '  FAIL  <name>: <why>' and exit 1. Fixture: _repo(files: dict[str,str]) writes a scratch repo under tempfile.mkdtemp(prefix='encapsulation_fixture_holds_') whose files live under cairn/ (charters are intention+why.json JSON text; every fixture charter carries public_interface unless the tooth is about its absence). The subject call is inspector.encapsulation_breaches(repo_root: str) -> list[dict], each {file,line,module,source,target,reason} with source/target the repo-relative component dirs and reason one of 'undeclared'|'into_device'|'missing_field'. Teeth = the intent's RED clauses: (1) cairn/tools/t imports cairn.devices.d.internal (d declares public_interface []) -> one breach reason into_device; (2) skills/s imports cairn.tools.t.priv with t declaring ['cairn.tools.t.pub'] -> breach undeclared; rewrite t's charter to declare priv -> no breach; (3) cairn/tools/t/proofs/test_x.py imports cairn.devices.d.internal -> breach (proofs are not skipped); (4) cairn/devices/d/tools/client declares published_by_device true and public_interface ['cairn.devices.d.tools.client.client'], cairn/tools/t imports that module -> no breach, and importing cairn.devices.d.tools.client.other -> breach undeclared; (5) a charter with no public_interface -> breach missing_field for that component; (6) 'device_isolation_holds' and 'machine_imports_no_device' are not keys of inspector.SIEVES and 'encapsulation_holds' is; plus (7) old-sieve fixtures stay red: cairn/devices/a importing cairn.devices.b.x, and cairn/machines/m importing cairn.devices.db_domain.store, both breach into_device (the db_domain exemption is gone). Run at the pre-build commit: every tooth FAILs on the missing name.",
+      "by": "cc",
+      "step": "unlisted: write cairn/machines/build_inspector/proofs/test_encapsulation_holds.py first and run it red",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:07:36+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2 — the sieve. In cairn/machines/build_inspector/inspector.py, replacing _DEVICE_ISOLATION, device_isolation_holds, _MACHINE_ISOLATION and machine_imports_no_device in place: (a) encapsulation_breaches(repo_root: str) -> list[dict]: components = sorted dirs (repo-relative) holding intention+why.json found by os.walk with import_sieve.SKIP_DIRS pruned; comp_of(path) = the longest component dir that is a parent of path (None if none); charter(c) = json of c/intention+why.json ({} if unreadable); device_of(c) = 'cairn/devices/<d>' when c starts with 'cairn/devices/<d>' else None. For every component whose charter lacks public_interface as a list of str: one breach {source:c, target:c, reason:'missing_field', file:c+'/intention+why.json', line:0, module:None}. For each site in import_sieve.import_sites(repo_root) with a target: S=comp_of(site file), T=comp_of(target); skip if S is None or T is None or S==T; M=import_sieve.module_name(target); if device_of(T) and device_of(T)!=device_of(S) and not (T!=device_of(T) and charter(T).get('published_by_device') is True): reason 'into_device'; elif M not in (charter(T).get('public_interface') or []): reason 'undeclared'; else no breach. Sites of kind 'opaque' are counted in the return's sibling, never breached. (b) a module-level _BREACH_CACHE dict keyed by repo_root, cleared at the top of inspect(); _breaches(root) fills it once per pass. (c) encapsulation_holds(row, comp_dir): repo_root = the parent of the census root (the dir that holds the 'cairn' package); here = 'cairn/'+row['dir']; returns one _finding('encapsulation_holds', row['component'], '<file>:<line> imports <module> — <reason>: <target>', expected=True, actual=False, file=..., source=..., target=..., reason=...) per breach whose source == here, plus per breach whose source is not a census row ('cairn/'+r['dir'] over device_census rows, computed once) and whose target == here. (d) inspect() gains key 'encapsulation_outside_census' on the whole-repo sweep: breaches where neither source nor target is a census row; 'clean' also requires it empty. (e) SIEVES: drop the two old names, add 'encapsulation_holds'. New declaration sieves/encapsulation_holds.json = {\"name\":\"encapsulation_holds\",\"band\":1,\"band_name\":\"record\",\"dials\":{}}. The old sieve's declaration json, its proof test_machine_imports_no_device.py and its seal go to bin/cmd/trash (never rm). Corrected count: 83 charters repo-wide (63 under cairn/: the 62 census rows plus devices/codemother/0/tools/charter), not 97.",
+      "by": "cc",
+      "step": "unlisted: write encapsulation_holds and its cached scan into inspector.py; retire the two isolation sieves",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:08:00+00:00"
+    },
+    {
+      "n": 3,
+      "text": "STEP 3 — the baseline. finding_baseline.json: drop the one 'known' entry (method machine_imports_no_device at machines/build_inspector, ticket 135a905eac3c) leaving \"known\": [] and \"updated\": the build date. In proofs/test_finding_baseline_reconcile.py change _COVERED's method to \"encapsulation_holds\" (the reconcile proof only needs a method name that exists in SIEVES); run it green.",
+      "by": "cc",
+      "step": "unlisted: retire the baseline entry and repoint the reconcile proof's fixture",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:08:20+00:00"
+    },
+    {
+      "n": 4,
+      "text": "STEP 4 — the first declarations, measured. A one-shot script in the session scratchpad (never committed) runs AFTER step 2 is in the tree: it computes, from inspector.encapsulation_breaches(repo_root) before any field exists, per target component T, sorted(set(module of every breach with reason 'undeclared')) — only the legal-kind edges; 'into_device' breaches are excluded by construction and stay red. Devices and every other component with no such importer get []. For each of the 83 charters: read the text; if it already carries \"public_interface\", leave it and print it; else insert the field textually, never re-serializing: replace the text's final \"\\n}\" with \",\\n  \\\"public_interface\\\": <json.dumps(list)>\\n}\" and write it through cairn.tools.artifact.artifact.write(path, text, verb=\"charter\", why=\"56d1aff4455e: first public_interface declaration, measured (RULE 1)\"). Then openai_wire's charter: its falsifier clause (a) text \"the machine_imports_no_device sieve says so\" becomes \"the encapsulation_holds sieve says so\" through the same door, same verb. Re-run encapsulation_breaches: zero 'undeclared' and zero 'missing_field' remain.",
+      "by": "cc",
+      "step": "unlisted: write each charter's first public_interface, measured, through the artifact door; rename openai_wire's clause (a)",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:08:20+00:00"
+    },
+    {
+      "n": 5,
+      "text": "STEP 5 — the live horizon. Commit, then run PYTHONPATH=. python3 -m cairn.machines.build_inspector.inspector and, independently, re-run the census script (scratchpad census.py, its from-import double count fixed by reading import_sites) over the same commit. The set of (file, line, target component) of encapsulation_holds findings with reason into_device must equal the census's into-device edge set exactly; record both counts and the equality on the ticket as measured_at_build. A difference is a red, investigated, never explained.",
+      "by": "cc",
+      "step": "unlisted: run the inspector live and record the counts against a fresh census",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:08:20+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D1 addendum: the _Late class is verbatim at cairn/machines/build_inspector/proofs/test_machine_imports_no_device.py lines 22-35 (an __init__ storing the dotted module name, a __getattr__ that importlib.import_module()s it and getattr()s the name), bound as _inspector = _Late(\"cairn.machines.build_inspector.inspector\"); copy it and the _tooth(name, fn) runner from test_finding_baseline_reconcile.py (prints '  green <name>' or '  RED   <name>: <exc>'). The retired proof carries PROVES = {\"76639374d9f9\": {\"a\": \"a_machine_importing_a_device_reds_by_file_and_module\"}} for PROVED ticket 76639374d9f9 (openai_wire); the new proof carries that same PROVES key and names its old-sieve tooth (7b, cairn/machines/m importing a device) exactly a_machine_importing_a_device_reds_by_file_and_module, so the coverage the PROVED ticket leans on moves with the rule rather than vanishing; the new proof's own clauses go under PROVES[\"56d1aff4455e\"] keyed \"1\"..\"6\" to the tooth names.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:23:21+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D2 addendum: the census rows come from 'from cairn.tools.orient.orient import device_census' (already imported by inspector.py; device_census(root=root)[\"measured\"][\"components\"]). repo_root is the repository checkout directory (the parent of the 'cairn' package dir; inspect()'s root is <repo_root>/cairn). Retired files are removed with git rm (the cairn repo is git; bin/cmd/trash is only for ~/.cairn). encapsulation_breaches returns only the breach list; opaque sites are not returned by it at all — a second function encapsulation_opaque(repo_root) -> list[dict] returns the import_sites records of kind 'opaque' whose file sits in a component, and inspect() reports its length as 'encapsulation_opaque_sites' (a count, never a red) on the whole-repo sweep.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:23:21+00:00"
+    },
+    {
+      "n": 8,
+      "text": "D3 addendum: _COVERED is a module-level dict at cairn/machines/build_inspector/proofs/test_finding_baseline_reconcile.py line 36: _COVERED = {\"method\": \"machine_imports_no_device\", \"at\": \"machines/build_inspector\"}; the edit replaces the method string only, giving {\"method\": \"encapsulation_holds\", \"at\": \"machines/build_inspector\"}.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:23:21+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D5 addendum: the independent census is the scratch script census_check.py (scratchpad, never committed): for each import_sieve.import_sites(repo_root) site with a target, S/T = innermost dir holding intention+why.json for file/target, keep when S != T and T starts with 'cairn/devices/<d>' and S does not start with that same 'cairn/devices/<d>'; collect the set of (file, line, T). The inspector side is the same triple from each encapsulation_holds finding with reason 'into_device' plus encapsulation_outside_census entries of that reason. The ticket gains, through cairn artifact write --verb cast, measured_at_build = {\"commit\": <sha>, \"inspector_into_device\": N, \"census_into_device\": N, \"equal\": true|false, \"at\": <ISO time>}; false is a red.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:23:21+00:00"
+    }
+  ]
 }

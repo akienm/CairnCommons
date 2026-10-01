@@ -10,7 +10,7 @@
   "how": "Add import_sites(repo_root) to cairn/tools/import_sieve/sieve.py and export it from the package: one AST pass per .py yielding {file, line, module, target} where target is the repo-relative file the dotted name resolves to EXACTLY (name.py or name/__init__.py); `from pkg import mod` lands on mod's file when mod is a module and on pkg's file when it is a name; relative imports resolve against the file's package; literal-string importlib.import_module / __import__ calls count as sites (kind dynamic), computed ones are returned as opaque sites with target null. Stdlib and third-party names resolve to nothing and are not returned.",
   "falsifier": "RED if over scratch trees: (1) `from p import m` with m a module does not land on p/m.py; (2) `from p import name` with name a function does not land on p/__init__.py; (3) a relative import does not resolve; (4) `importlib.import_module('p.m')` is not a site; (5) a computed import_module(x) is silently dropped rather than returned opaque; (6) a stdlib import is returned. Horizon: the tester seal.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the function's only consumer is the encapsulation sieve (ticket 1b, cast beside this one under parent CairnCommons/tickets/8e3474a6ae43-rule-1-encapsulation.json), which reads it on every build_inspector pass; a wrong resolution shows there as a finding that disagrees with the file",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T165051-59ef21ad1854.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T164854-e06eb794ed63.json",
@@ -19,5 +19,45 @@
   "task_or_ticket": "ticket",
   "parent": "8e3474a6ae43",
   "builder_notes": "A Haiku builder would ask: (1) Signature? import_sites(repo_root: str) -> list[dict] with keys file (repo-relative), line (int), module (dotted, or None if opaque), target (repo-relative .py path or None), kind ('import'|'from'|'dynamic'|'opaque'). (2) Exact resolution? _resolve(root, dotted): return 'a/b.py' if root/a/b.py is a file, else 'a/b/__init__.py' if that is a file, else None — no prefix walking. (3) from-imports? For `from M import n1, n2`: for each n, if _resolve(M+'.'+n) hits, that is the site's target; else _resolve(M). Relative level k: base = the file's package parts minus (k-1). (4) Which names? Only those resolving to a file under repo_root; everything else is dropped silently because it is not in-tree. (5) Dynamic? ast.Call to importlib.import_module or __import__ (attribute or name): a str Constant first arg resolves like an import (kind dynamic); anything else is kind opaque with module and target None. (6) Walk? reuse walk_py (SKIP_DIRS). (7) Proof? cairn/tools/import_sieve/proofs/test_import_sites.py builds scratch trees in tempfile.mkdtemp() named encapsulation_fixture_*, one tooth per falsifier clause, printing 'green <tooth>' lines.",
-  "cast": "2026-10-01"
+  "cast": "2026-10-01",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T165400-30ca2121d912.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 5cb245a495f5 .. validate 30ca2121d912, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1 — the proof, written first and run red. File cairn/tools/import_sieve/proofs/test_import_sites.py, shaped like its sibling test_import_sieve.py: _REPO_ROOT = Path(__file__).resolve().parents[4] on sys.path; 'from cairn.tools.import_sieve import sieve'; plain functions named test_*, each asserting, run by _main() which prints '  PASS  <name>' per tooth and a final 'green — ...' line, exit 0. Fixture helper _tree(files: dict[str,str]) -> str writes each relpath->source under tempfile.mkdtemp(prefix='encapsulation_fixture_import_sites_') and returns the root; each tooth calls sieve.import_sites(root) and selects the site by file and line. Teeth (one per falsifier clause): (1) p/__init__.py empty, p/m.py, a.py 'from p import m' -> one site file 'a.py' line 1 module 'p.m' target 'p/m.py' kind 'from'. (2) p/__init__.py 'X = 1', a.py 'from p import X' -> target 'p/__init__.py' module 'p'. (3) p/__init__.py, p/q.py, p/r.py with 'from . import q' and 'from .q import Y' -> both target 'p/q.py'. (4) a.py 'import importlib\\nimportlib.import_module(\"p.m\")' -> site line 2 kind 'dynamic' target 'p/m.py'. (5) a.py 'import importlib\\nimportlib.import_module(name)' -> kind 'opaque' module None target None. (6) a.py 'import os, json\\nfrom collections import deque' -> no site whose file is a.py. Run at the pre-build commit: every tooth fails with AttributeError (no import_sites).",
+      "by": "cc",
+      "step": "unlisted: write cairn/tools/import_sieve/proofs/test_import_sites.py and run it red",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:02:06+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2 — the build. In cairn/tools/import_sieve/sieve.py after import_graph add _resolve(root: str, dotted: str) -> str|None: parts=dotted.split('.'); f=os.path.join(root,*parts)+'.py' -> return the repo-relative path if os.path.isfile; else os.path.join(root,*parts,'__init__.py') likewise; else None (exact, no prefix walk). Then import_sites(repo_root: str) -> list[dict]: for abs_path in walk_py(repo_root) (walk_py(root) is a generator of absolute .py paths, SKIP_DIRS applied inside; it takes no other argument); rel=os.path.relpath; ast.parse (SyntaxError -> skip file); file_imports=imports_in(src). ast.Import: per alias, t=_resolve(alias.name), if t append {file:rel,line:node.lineno,module:alias.name,target:t,kind:'import'}. ast.ImportFrom: base = node.module if level==0 else '.'.join(pkg_parts[:len(pkg_parts)-(level-1)] + ([node.module] if node.module else [])) where pkg_parts = module_name(rel).split('.') minus the last part unless rel ends in __init__.py; per alias: sub=base+'.'+alias.name, t=_resolve(sub) -> module sub; else t=_resolve(base) -> module base; append if t, kind 'from'. Then for d in _dynamic_imports_in(tree, file_imports): if d['opaque'] append {module:None,target:None,kind:'opaque',line:d['line'],file:rel}; else t=_resolve(d['module']) and append kind 'dynamic' if t. Return sites sorted by (file,line). Export import_sites in cairn/tools/import_sieve/__init__.py's import list (alphabetical). Run the proof: six PASS lines and green.",
+      "by": "cc",
+      "step": "unlisted: write import_sites(repo_root) function and export it",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:02:06+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Dynamic detection reuses the EXISTING private helper _dynamic_imports_in(tree, file_imports) at cairn/tools/import_sieve/sieve.py:272 (same file, so no boundary is crossed); it returns [{module, opaque, line}] and is called unchanged — no new helper, no inline copy.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:09:33+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Reading mirrors import_graph exactly: src = open(abs_path, encoding='utf-8', errors='replace').read() (OSError -> skip the file); tree = ast.parse(src) (SyntaxError -> skip); file_imports = imports_in(src), which takes the source string.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-01T23:16:34+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/a907458344ba-20261001T232251.json"
 }
