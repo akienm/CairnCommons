@@ -1,0 +1,72 @@
+{
+  "id": "054bcbe02f12",
+  "title": "the-hollow-measures-at-the-seals-depth",
+  "date": "2026-10-02",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The hollow measures each proof at the isolation its standing seal was taken under, so a proof sealed inside a network seal is reverted and re-run inside one, and a tooth that needs a namespace is never measured at a depth where the host refuses to cut it.",
+  "why": "c54d744aa9ac's hollow (2026-10-02, HEAD 5a58b1a8) read two teeth of cairn/devices/tester/proofs/test_a_seal_inside_a_seal_inherits.py red AT HEAD and refused to attribute, though the proof is sealed green under netns and passes bare: the hollow runs it in an instance-only sandbox where a nested network seal is refused by the host. A hollow that cannot measure a proof at its sealed depth leaves that ticket unprovable (Law 8).",
+  "traces_to": "Law 3 (nothing is known until measured — a measurement taken at a depth the subject cannot run at is not a measurement of the subject) and Law 8 (the hollow is the instrument that keeps a hollow build out of proven-space; it must be able to read every sealed proof); the c54d744aa9ac build ('one sandbox, never a sandbox inside a sandbox')",
+  "how": "cairn/devices/tester/hollow.py measure() runs every named proof with tester.run_proof(..., isolation=\"none\"), and run_proof still binds the instance seal. Inside that instance-only sandbox a proof that cuts a network seal of its own (test_a_seal_inside_a_seal_inherits.py, whose outer branch wraps a nested `cairn test --netns` run) asks bwrap for a namespace inside a namespace, which this host refuses (measured c54d744aa9ac, 79b8be96). So the hollow reads those teeth red at HEAD and refuses to attribute anything. The fix: before the runs, measure() reads each proof's standing validation (validations/<stem>.json, last entry) and passes isolation=\"netns\" when evidence.seal.verdict is \"sealed\", \"none\" otherwise (absent validation reads \"none\", as today). The reading names the isolation used per proof, so the record says at which depth each tooth was measured.",
+  "falsifier": "RED if after the build: (1) `bin/cairn test --hollow c54d744aa9ac` at HEAD does not read all three teeth of cairn/devices/tester/proofs/test_a_seal_inside_a_seal_inherits.py green in its HEAD run; (2) a proof whose standing seal reads evidence.seal.verdict == 'sealed' is run by measure() with isolation other than 'netns', or a proof without such a seal is run with isolation other than 'none'; (3) the hollow reading does not name, per proof, the isolation it ran under. WRONG INTENT if the HEAD failure was not the namespace refusal but a real defect in c54d's build. Horizon: c54d744aa9ac's hollow sealed after this build.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the falsifier is read by `bin/cairn test --hollow c54d744aa9ac` (bin/cmd/test) at c54d744aa9ac's PROVEME, and the reading lands as evidence.hollow on cairn/devices/tester/validations/test_a_seal_inside_a_seal_inherits.json — an existing record; nothing further to learn after that one reading.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T145113-44a6cff65841.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T145045-2c7fc609cfc7.json",
+  "questions": [],
+  "children": "none, because the change is one function and one call site inside hollow.py plus a print line in cli.py.",
+  "task_or_ticket": "ticket",
+  "builder_notes": "A Haiku builder would ask: (1) Which function? cairn/devices/tester/hollow.py measure(), its inner run_all(), the tester.run_proof call at line 621 that passes isolation=\"none\". (2) How is the depth chosen? a new module function `seal_isolation(proof: Path) -> str` reads proof.parent.parent / 'validations' / (proof.stem + '.json'), takes the last entry, and returns 'netns' if entry['evidence']['seal']['verdict'] == 'sealed' else 'none'; any missing file, key or unparseable JSON returns 'none'. It reads the LIVE repo's validation (repo_root / rel), not the worktree's. (3) Where is it reported? measure() returns finding['isolation'] = {rel: depth} and cli._hollow_run prints one line `  isolation: <rel> <depth>` per proof. (4) What proves it? a new proof cairn/devices/tester/proofs/test_the_hollow_measures_at_the_seals_depth.py: seal_isolation over a temp validations file with seal 'sealed' reads 'netns', with none reads 'none', missing reads 'none'; measure() with run_proof stubbed records the isolation each proof was asked for; and the live c54d hollow is clause (1), read at PROVEME.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the builder does NOT write the proof. cairn/devices/tester/proofs/test_the_hollow_measures_at_the_seals_depth.py was committed red at 389defbf (3/3 red at HEAD) before this rehearsal; its PROVES keys 1, 2, 3 follow the falsifier's markers, and its bytes are the spec the build answers. The builder runs it, edits it not at all, and the build is done when it exits 0.",
+      "by": "cc",
+      "step": "the proof already stands",
+      "source": "rehearsal",
+      "at": "2026-10-02T21:02:08+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: add to cairn/devices/tester/hollow.py, just above def measure, a module function seal_isolation(proof: Path) -> str that returns 'netns' when cairn.tools.validation_store.validation_store.standing_seal(str(proof)) == SEALED (import SEALED and standing_seal from that tool, its declared public_interface), else 'none'; any OSError/ValueError/TypeError/AttributeError/IndexError/KeyError returns 'none'. Only 'sealed' maps to netns, per falsifier (2); indeterminate/breached/open/absent all read 'none'.",
+      "by": "cc",
+      "step": "seal_isolation in hollow.py",
+      "source": "rehearsal",
+      "at": "2026-10-02T21:02:08+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: in measure(), right after wt = scratch_worktree(...), compute depth = {rel: seal_isolation(repo_root / rel) for rel in proofs} — the LIVE repo's path, never the worktree's (the fixture's validations are untracked so a worktree read reds tooth 2). In run_all(), the tester.run_proof call passes isolation=depth[rel] instead of isolation=\"none\". The returned finding dict gains the key \"isolation\": depth, placed after \"silent_proofs\". Nothing else in measure changes.",
+      "by": "cc",
+      "step": "measure runs each proof at its depth",
+      "source": "rehearsal",
+      "at": "2026-10-02T21:02:08+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: in cairn/devices/tester/cli.py _hollow_run, immediately before the loop `for line in finding[\"reasons\"]:`, add `for rel, depth in finding[\"isolation\"].items(): print(f\"  isolation: {rel} {depth}\")` (two-space indent, as the reasons lines). No other output changes.",
+      "by": "cc",
+      "step": "the command names the depth",
+      "source": "rehearsal",
+      "at": "2026-10-02T21:02:08+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: after D2-D4, run `python3 cairn/devices/tester/proofs/test_the_hollow_measures_at_the_seals_depth.py`; it exits 0 with 3 teeth green (tooth 1 runs the real c54d744aa9ac hollow and takes minutes). Also run cairn/devices/tester/proofs/test_hollow.py and confirm it stays green. Commit with subject '054bcbe02f12: build — ...'.",
+      "by": "cc",
+      "step": "run the proof",
+      "source": "rehearsal",
+      "at": "2026-10-02T21:02:08+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6: NOT a builder step. Sealing the proof (bin/cairn test --seal), the PROVEME crossing, and `bin/cairn test --hollow c54d744aa9ac --seal` are CC's acts after the build commit. The builder stops at D5's commit.",
+      "by": "cc",
+      "step": "verify c54d's hollow",
+      "source": "rehearsal",
+      "at": "2026-10-02T21:02:08+00:00"
+    }
+  ],
+  "cast": "2026-10-02"
+}
