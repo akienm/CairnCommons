@@ -199,5 +199,20 @@
     "rendered_chars": 36213,
     "by": null
   },
-  "divergence": null
+  "divergence": {
+    "steps_unproved": [
+      "D1 THE RECEIPT: in cairn/devices/cairn/machines/bus/bus.py, Bus.request gains one private helper, _taken(self, reply, sender), which calls self.record_delivery(reply['id'], to=sender, by=sender) when reply['id'] is not in self._ring_delivered, and returns reply. Each of request's three return statements (the ring hit `return ring_replies[0]`, the store hit `return replies[0]` before the loop, and the poll hit `return replies[0]` inside the loop) becomes `return self._taken(<that reply>, sender)`. Nothing else in request changes; its timeout path still raises.",
+      "D2 THE DOCSTRING: Bus.request's docstring gains one paragraph: the reply request() returns is in the requester's hand, so request() writes its receipt (ticket 6b1e13704e17; measured 2026-10-02, 2791 trouble->cairn replies stood undelivered because nothing receipted them), unless the poke chain already receipted it for a wired requester, which the _ring_delivered guard reads.",
+      "D3 WHY THE RING GUARD SUFFICES: a wired requester's hook receipts the reply inside post()'s poke chain, which completes before post() returns to request(), so the reply id is in _ring_delivered when request() reads it; flush() clears the ring only on the beat, never inside request(). A receipt for a reply first read from the store after a flush is a new receipt for mail no hook took.",
+      "D4 THE DRAIN, once, after the build commit and before the seal. It is a throwaway script, never in the repo, because the bus store is instance-space and the drain runs once: the builder creates it with `f=$(mktemp --suffix=_drain_trouble_replies.py)` (no environment variable is involved; mktemp picks the path), writes the body below into $f, and runs `PYTHONPATH=. python3 $f` from the repo root. Its whole body: `from collections import Counter; from cairn.devices.cairn.machines.bus.bus import BusDevice; b = BusDevice(); rows = [e for e in b.undelivered(to='cairn', limit=100000) if e.get('sender') == 'trouble' and e.get('reply_to')]; [b.record_delivery(e['id'], to='cairn', by='drain-a-requester-takes-its-reply') for e in rows]; b.flush(); print(len(rows)); print(Counter((e['sender'], e['addressee']) for e in b.undelivered(limit=100000)).most_common())`. Nothing else is drained: the tester's codemother replies belong to ticket cff5a197b3c4.",
+      "D5 THE HISTORY ENTRY: one object appended to cairn/devices/cairn/machines/bus/history.json by these steps: read the existing history.json (a JSON array), append the object as its last element, json.dump the whole array to a file made by `mktemp --suffix=.json` (outside the repo), and pass that file to `cairn artifact write <abs path> --verb append --why 'the one-time drain of answered trouble replies, ticket 6b1e13704e17' --from <that file>`. The object has exactly these keys: seq (the last existing entry's seq + 1; the charter projector reads it), at (ISO time with offset), act 'measured', actor 'CC', ticket '6b1e13704e17', standing 'BUILDME', why (one sentence: N trouble->cairn replies already read through Bus.request were receipted by drain-a-requester-takes-its-reply, and the census after was <the printed Counter>). N and the census are the drain script's two printed lines, copied verbatim.",
+      "D6 PROOF: cairn/devices/cairn/machines/bus/proofs/test_a_requester_takes_its_reply.py already exists at HEAD (committed red at 061e6d72: teeth 1 and 3 red, tooth 2 the green double-receipt guard), PROVES keys 1-3. The build does not edit it; the builder runs it bare after D1-D3 and reads 3 passed."
+    ],
+    "teeth_unforeseen": [],
+    "matched": [],
+    "proofs": [
+      "cairn/devices/cairn/machines/bus/proofs/test_a_requester_takes_its_reply.py"
+    ],
+    "at": "2026-10-02T19:28:00+00:00"
+  }
 }
