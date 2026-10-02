@@ -10,7 +10,7 @@
   "how": "Measured 2026-10-02: cairn/devices/tester/reseal.py ruling_refusal() reads only cairn.machines.ruling.load_all() — 83 records in CairnCommons/decisions/, 69 confirmed, newest 2026-09-13-records-of-truth-change-only-through-the-artifact-door. Since ticket 9adc6fddf185 (2026-09-14) a decision is an answered question and `cairn ruling open` refuses, so no new id can ever satisfy rung 4: zero seals in the repo carry evidence.reseal_ruling. The door is unreachable for every decision made after 09-13. The fix: ruling_refusal(id) asks cairn.tools.question.question.read(id) (that tool's declared public_interface) when the id carries the question prefix; None when resolved and answered_by starts with 'Akien'; a sentence naming the lack otherwise (open, answered by a measurement, unknown id). A legacy confirmed ruling id still lifts it (decisions/ stays read-only and citable). An answer by measurement does NOT lift rung 4: 'the proof's claim no longer matches the spec' is a spec question, and the spec is his head.",
   "falsifier": "RED if: (1) ruling_refusal returns a refusal for a resolved question answered by Akien; (2) it returns None for an open question, for a question answered by a measurement, or for an id that resolves to nothing; (3) a confirmed legacy ruling id no longer lifts rung 4. Horizon: the tester seal of the new proof.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the reseal door (cairn/devices/tester/reseal.py) runs from the git pre-commit hook every time a proof's closure is staged; a regression shows as a refused rung-4 reseal printed by that hook, so no runtime behaviour is left for a probe to watch",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T033029-a659fef88dca.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T033029-2f7570c7ac89.json",
@@ -19,5 +19,45 @@
   "task_or_ticket": "ticket",
   "parent": "8e3474a6ae43",
   "builder_notes": "A Haiku builder would ask: (1) Where? cairn/devices/tester/reseal.py, ruling_refusal(ruling_id). (2) What? if the id starts with 'open-', read it through `from cairn.tools.question import question` (question.read); refuse unless record['resolved'] and str(record['answered_by']).startswith('Akien'), each lack in its own sentence; otherwise fall through to the existing ruling-store lookup unchanged. (3) Proof? cairn/devices/tester/proofs/test_rung_4_lifts_for_an_answered_question.py, PROVES keys 1, 2, 3 matching the falsifier clauses, red first, using question records in a scratch root.",
-  "cast": "2026-10-02"
+  "cast": "2026-10-02",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T033454-0eda82770902.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 9c1a0a8cefa7 .. validate 0eda82770902, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "BUILD in cairn/devices/tester/reseal.py: change the signature to ruling_refusal(ruling_id: str, *, question_root: Path | None = None) -> str | None. After the empty-id check, if ruling_id.startswith('open-'): lazily import 'from cairn.tools.question import question as question_mod' (its charter public_interface is cairn.tools.question.question; read(qid, root=None) at question.py:146 returns the record dict and raises question_mod.Refused when the file is absent); call question_mod.read(ruling_id, root=question_root); on Refused return a sentence naming the id and saying no such question exists; if not record.get('resolved') return a sentence naming the id and saying the question is still open; if not str(record.get('answered_by') or '').startswith('Akien') return a sentence naming the id and saying it was answered by a measurement or someone other than Akien, and a spec change is his; else return None. Every other id falls through to the existing ruling_mod.load_all() loop, byte-for-byte unchanged. Update the docstring to name both stores.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T09:40:51+00:00"
+    },
+    {
+      "n": 2,
+      "text": "PROOF already written and committed red at cairn/devices/tester/proofs/test_rung_4_lifts_for_an_answered_question.py (commit dd8596f8): it writes fixture question JSON files (the record shape question.answer writes: id, resolved, answered_by, ...) directly into scratch_dir('cairn-rung4-') and passes that directory as question_root=, so question.read(id, root=question_root) finds them and the live CairnCommons/questions/ is never read; no env var. PROVES 37ddc47686c2 keys 1, 2, 3 = the three teeth. Run: python3 cairn/devices/tester/proofs/test_rung_4_lifts_for_an_answered_question.py; it reads 3 failed before the build (TypeError on question_root) and must read 3 passed after.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T09:40:51+00:00"
+    },
+    {
+      "n": 3,
+      "text": "NO other file changes: cairn/tools/question/question.py is used through its declared module cairn.tools.question.question and not edited; cairn/machines/ruling is read-only. After the build: seal with 'cairn test --netns --seal --timeout 600 cairn/devices/tester/proofs/test_rung_4_lifts_for_an_answered_question.py', then 'cairn test --reseal --timeout 900 cairn/devices/tester/proofs/test_reseal_door.py' (its rung-4 tooth calls ruling_refusal with one positional argument, which still works).",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T09:40:51+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Measured 2026-10-02 at cairn/devices/tester/reseal.py:181-204: ruling_refusal today does 'from cairn.machines.ruling import ruling as ruling_mod', then 'if not (ruling_id or \"\").strip(): return \"no ruling id was given\"', then loops ruling_mod.load_all() matching record['id'] (NOT CONFIRMED sentence / None), then returns the 'no ruling ... in store_dir()' sentence. The question branch goes between the empty-id check and that loop.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T09:47:15+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/37ddc47686c2-20261002T095341.json"
 }
