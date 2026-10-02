@@ -1,0 +1,27 @@
+{
+  "id": "60cc220da787",
+  "title": "a-bounce-answers-the-request-that-bore-it",
+  "date": "2026-10-02",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A bounce answers the request that bore it: when a shim bounces mail it cannot handle (an undeclared verb, no receive()), the bounce it posts back to the sender carries reply_to = the bounced envelope's id, so a synchronous bus.request to that verb returns the bounce at once — is_bounce and the reason in its body — instead of raising TimeoutError after the whole timeout.",
+  "why": "a bus request to a verb its target does not declare hangs for the whole timeout though the target answered at once, so the asker learns nothing for 30-180 seconds and then blames the wrong party",
+  "traces_to": "CP1 / Law 7 (an error is loud at the diagnostic surface: the asker is told NOW why nothing answered, not left to infer it from a timeout that blames the target for not replying when it did reply); ticket 4a105acd1190 undeliverable-mail-returns-to-sender, whose bounce this makes reach a synchronous asker; RULE 1, because a device's public interface is the bus, and an interface that answers a wrong question with silence is not usable through that interface alone.",
+  "how": "Measured 2026-10-02: reach('tester').request(verb='no_such_verb', timeout=30) raised TimeoutError after 30.2s although the tester's shim bounced the envelope within milliseconds. Cause: cairn/tools/base/shim.py BaseShim._bounce_to_sender posts the bounce with no reply_to, and Bus.request (cairn/devices/cairn/machines/bus/bus.py:444) returns only a message whose reply_to equals the request envelope's id — the same correlation every verb reply already uses (shim.py:751 posts the handler result with reply_to=envelope['id']). The fix is one argument: _bounce_to_sender passes reply_to=envelope.get('id') to self._bus.post. Every other field of the bounce is unchanged, so handle_bounce, the is_bounce loop guard and the bounce-blame probe read it as before.",
+  "falsifier": "RED if (1) the envelope _bounce_to_sender posts lacks reply_to or carries one other than the bounced envelope's id; (2) a live bus request to a running device for an undeclared verb raises TimeoutError, takes more than 10 seconds, or returns a body without is_bounce True and a reason naming the verb. Horizon: the tester seal of cairn/tools/base/proofs/test_a_bounce_answers_the_request_that_bore_it.py.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the bounce path is exercised by every bus request to an undeclared verb, and constrain's chart floor (cairn/devices/codemother/machines/constrain/constrain.py _run_instrument) and the hollow's reverted-tree readings both ask the tester over the bus; a regression returns as a TimeoutError in their own records, so no further behaviour is left for a probe to learn",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T053558-3683694b9cff.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T053533-0ab3e7de4479.json",
+  "questions": [],
+  "children": "none, because the edit is one argument in one function (BaseShim._bounce_to_sender in cairn/tools/base/shim.py) plus one proof",
+  "task_or_ticket": "ticket",
+  "builder_notes": "A Haiku builder would ask: (1) Where? cairn/tools/base/shim.py, BaseShim._bounce_to_sender — add reply_to=envelope.get(\"id\") to the self._bus.post(...) call; nothing else changes. (2) Proof file? cairn/tools/base/proofs/test_a_bounce_answers_the_request_that_bore_it.py with PROVES {ticket: {\"1\": envelope tooth, \"2\": live tooth}}. Tooth 1: a BaseShim subclass declaring one verb, wired to a spy bus recording post kwargs; deliver an envelope {id:'env-bnc', sender:'alice', verb:'nope'}; assert the posted bounce has reply_to=='env-bnc'. Tooth 2: from cairn.tools.bus_client.bus_client import reach; reach('tester').request(sender='a_bounce_answers', to='tester', verb='no_such_verb_<ticket>', why=..., body={}, timeout=30) — assert it returns in under 10s and reply['body'] has is_bounce True and the verb name in reason. (3) Red first: run tooth 1 and 2 before the edit and see them red (tooth 2 times out at 30s). (4) The proof lives in tools/base because the shim is that component's; the tester is reached only by its bus interface (RULE 1).",
+  "cast": "2026-10-02",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T053749-1f6ff2a51b53.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient f1c6c939486e .. validate 1f6ff2a51b53, each learned)"
+  }
+}
