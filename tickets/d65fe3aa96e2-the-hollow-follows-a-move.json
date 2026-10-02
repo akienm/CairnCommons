@@ -1,0 +1,79 @@
+{
+  "id": "d65fe3aa96e2",
+  "title": "the-hollow-follows-a-move",
+  "date": "2026-10-01",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The hollow measures a writes_to file that the build moved at its successor: when a declared file is absent at HEAD and build_inspector's resolves_to (the ticket's forwarding order first, git's rename record second) names a successor present at HEAD, the hollow reverts that successor to the pre-build commit and reads the proof, instead of skipping the file as 'not present at HEAD — the build is not committed'.",
+  "why": "A hollow that cannot see a move reads every move-only build as unmeasured; 9245b9cbce53's PROVEME stands behind it.",
+  "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build couldn't pass) — a hollow that cannot see a move reads every move-only build as unmeasured, and a lucky co-listed file reads it as measured; Law 7 (the skip reason must be true); RULE 1 (build_inspector's public_interface publishes cairn.machines.build_inspector.inspector, so resolves_to is reached through the declared interface); parent 9245b9cbce53 whose PROVEME it stands in front of.",
+  "how": "Measured 2026-10-02: `cairn test --hollow 9245b9cbce53` skipped cairn/devices/tester/scratch.py with the reason 'not present at HEAD — the build is not committed, so there is nothing to revert from' though the build WAS committed (2aa6bc4f) and git records the file moved to cairn/tools/scratch/scratch.py; inspector.resolves_to('cairn/devices/tester/scratch.py', '9245b9cbce53') returns 'cairn/tools/scratch/scratch.py'. The skip reason is false for a move, and the same shape made 4cbf6e28126e's hollow measure only its charter while skipping store.py. The skip lives at cairn/devices/tester/hollow.py inside measure()'s per-file loop (`if why is None and not (wt / rel).is_file()`). The fix: before skipping, ask resolves_to(rel, ticket_id, repo_root=repo_root); if it names a path present in the worktree, measure that path (its _revert removes a file absent before the build, which is the counterfactual 'the move had not happened'); report the measured entry under the successor with the source it came from. The charted berth door stays flat by design (survey.py validate_survey_at_deposit docstring), so a re-chart naming the destinations is not the route.",
+  "falsifier": "RED if: (1) in a fixture repo where the build commit git-mv's a declared writes_to file and a proof's declared tooth imports it at the new path, `hollow.measure` skips that file instead of measuring it at its successor and reading the tooth red; (2) a declared file that is absent at HEAD with NO successor is not skipped, or is skipped with a reason other than one naming the absence; (3) `cairn test --hollow 9245b9cbce53` against the live repo reports 0 files measured. WRONG INTENT if resolves_to cannot be reached from tester code without reaching past build_inspector's public_interface. Horizon: the tester seal of the new proof.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
+  "watchme": "none, because the hollow (cairn/devices/tester/hollow.py) runs at every PROVEME crossing that names a proof; a regression shows as a skipped moved file in the next move-bearing ticket's hollow evidence, read by the clearance gate, so no runtime behaviour is left for a probe to watch",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T013145-cf5e058d8f7f.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T013145-38359d4aaf4d.json",
+  "questions": [],
+  "children": "none, because the edit is one branch in hollow.measure's per-file loop plus one import and one proof",
+  "task_or_ticket": "ticket",
+  "parent": "9245b9cbce53",
+  "builder_notes": "A Haiku builder would ask: (1) Where? cairn/devices/tester/hollow.py, measure(), the loop `for rel in files:` — where `not (wt / rel).is_file()` sets the skip reason. (2) What? before skipping, call `resolves_to(rel, ticket_id, repo_root=str(repo_root))` imported from cairn.machines.build_inspector.inspector; if it returns a path s with (wt / s).is_file(), set rel = s for the revert/measure, and record the source in the report entry ('moved_from'). If not, keep the skip, with the reason 'not present at HEAD and no recorded successor'. (3) Proof? cairn/devices/tester/proofs/test_hollow_follows_a_move.py, PROVES keys 1, 2, 3 matching the falsifier clauses, red first.",
+  "cast": "2026-10-02",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T013421-9851875a2cf0.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient fb5b5a097b1a .. validate 9851875a2cf0, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1 — the proof, already written red and committed at cairn/devices/tester/proofs/test_hollow_follows_a_move.py (commit c2c176fa; do not rewrite it). PROVES = {\"d65fe3aa96e2\": {\"1\": ..., \"2\": ..., \"3\": ...}} at module level, one key per falsifier clause, run through print_teeth_main(__file__). Its fixture is a two-commit git repo under scratch_dir whose build commit git-mv's old/subject.py to new/subject.py (VALUE 1 -> 2), a decompose berth naming writes_to [\"old/subject.py\"] (tooth 2 adds \"never/was.py\"), a BUILDME crossing in history.json naming proofs/test_fixture.py. Teeth: (1) measure() reports measured[\"new/subject.py\"] == [\"test_the_moved_value_is_two\"], hollow == [], old/subject.py not skipped, result[\"moved\"][\"new/subject.py\"] == \"old/subject.py\"; (2) never/was.py is skipped once with a reason containing \"no recorded successor\" and not \"not committed\"; (3) hollow.moved_to(\"cairn/devices/tester/scratch.py\", \"9245b9cbce53\", repo_root=REPO, worktree=REPO) returns a path, not the source, that is a file. Red now: 0/3.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T07:42:43+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2 — in cairn/devices/tester/hollow.py add the import `from cairn.machines.build_inspector.inspector import resolves_to` (build_inspector's public_interface names cairn.machines.build_inspector.inspector) and a module-level function placed just above proven_by: `def moved_to(rel: str, ticket_id: str, *, repo_root: Path, worktree: Path) -> str | None`. Body: root = Path(repo_root); succ = resolves_to(rel, ticket_id, repo_root=str(root), exists=lambda a: (Path(a) if Path(a).is_absolute() else root / a).exists()); return None if not succ; succ = _inside(succ, root); return succ if succ != rel and (Path(worktree) / succ).is_file() else None. The exists= argument makes the existence check read THIS repo, so a fixture repo is not judged by the live tree.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T07:42:43+00:00"
+    },
+    {
+      "n": 3,
+      "text": "STEP 3 — in measure()'s per-file loop (`for rel in files:`), declare `moved: dict[str, str] = {}` before the loop. Where a file passes _classify but `not (wt / rel).is_file()`: call succ = moved_to(rel, tid, repo_root=repo_root, worktree=wt). If succ is None, set why = \"not present at HEAD and no recorded successor — there is nothing to revert\" (the skip path, unchanged otherwise). If succ is already in measured or moved, or _classify(succ) is not None, `continue`. Otherwise set source, rel = rel, succ and moved[rel] = source. After `how = _revert(wt, commit, rel, ...)`, when source is set also call _revert(wt, commit, source, ...) so the source stands where it stood pre-build, and set how = f\"{how}; moved from {source}, restored there\". In the finally after run_all(): after _restore(wt, rel), if source is set and (wt / source).exists(), unlink it (it is absent at HEAD; checkout cannot restore an absence).",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T07:42:43+00:00"
+    },
+    {
+      "n": 4,
+      "text": "STEP 4 — add \"moved\": moved to the dict measure() returns (beside \"unchanged\"). Then run python3 cairn/devices/tester/proofs/test_hollow_follows_a_move.py (expect 3/3) and python3 cairn/devices/tester/proofs/test_hollow.py (expect every tooth still green — 27 passed). No other file changes.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-02T07:42:43+00:00"
+    },
+    {
+      "n": 5,
+      "text": "ADDENDUM to D2 — _inside(f, repo_root) ALREADY EXISTS in cairn/devices/tester/hollow.py (measure() calls it as `files = [_inside(f, repo_root) for f in writes_to(...)]`): it returns a path inside the repo as the repo-relative string and leaves anything else as it came. moved_to uses it unchanged; do not define it.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T07:48:59+00:00"
+    },
+    {
+      "n": 6,
+      "text": "ADDENDUM to D3 — the exact existing call shapes in measure(): `how = _revert(wt, commit, rel, repo_root=repo_root)` and `_restore(wt, rel)`; the source revert is `_revert(wt, commit, source, repo_root=repo_root)`. `tid` is already a local in measure(): `tid = str(ticket.get(\"id\") or ticket_id)`. The skip condition to extend is literally `if why is None and not (wt / rel).is_file():`.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T07:48:59+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/d65fe3aa96e2-20261002T075550.json"
+}
