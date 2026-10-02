@@ -3,14 +3,14 @@
   "title": "the-aider-venv-imports-on-its-own-interpreter",
   "date": "2026-10-01",
   "owner": "CC",
-  "owning_intention": "CairnCommons/tickets/d7b4019d2407-aider-shim.json",
+  "owning_intention": "cairn/devices/aider_shim/intention+why.json",
   "intention": "The aider_shim venv imports on the interpreter it was built with: pydub's audioop comes from the audioop-lts backport when Python is 3.13 or newer, and verify() goes red when a stated package is present on disk but fails to import, instead of passing on find_spec alone.",
   "why": "test_driver reds 21 teeth: the apprentice cannot drive one edit because aider will not import in its own venv, and the venv's verify read green over it",
   "traces_to": "Law 7 and Law 3 via the device's host-seam: verify() is the re-runnable half whose whole job is to go red when the venv drifts with nothing in git changing, and here it read green over a venv where aider cannot import, because find_spec measures that a file exists and not that it runs (structure measured when behaviour meant). The red at test_driver is the lived symptom: the apprentice cannot drive a single edit.",
   "how": "In cairn/devices/aider_shim/venv.py: (1) add \"audioop-lts==0.2.2; python_version >= '3.13'\" to the stated set, as a tuple of its own (INTERPRETER_BACKFILL) with the why spelled beside it: pydub 0.25.1 imports audioop unconditionally, and Python 3.13 removed audioop from the stdlib (PEP 594); build() installs it with the rest. (2) verify()'s probe imports every name with importlib.import_module and reports failures under a new key unimportable_required as {name: 'ExcType: message'}; ok needs it empty. find_spec stays, under missing_required. Then re-run the host-seam apply (python3 -m cairn.devices.aider_shim.venv) so the live venv gains the backport, and run test_driver.py.",
   "falsifier": "RED if: (1) verify(), pointed at a scratch venv holding a stated package whose import raises, returns ok True or does not name that package under unimportable_required; (2) the set build() installs carries no audioop-lts requirement marked python_version >= '3.13'; (3) after the apply, cairn/devices/aider_shim/proofs/test_driver.py on the live venv still reds with ModuleNotFoundError for audioop or pyaudioop. Horizon: the tester seal of the new proof plus the live verify() reading ok.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
   "watchme": "none, because verify() in cairn/devices/aider_shim/venv.py is itself the re-runnable watch over the venv, and the import-for-real probe is what this ticket adds to it",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T182840-b19f7640bfce.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T182840-4488840792f1.json",
@@ -72,6 +72,15 @@
       "step": "D6",
       "source": "rehearsal",
       "at": "2026-10-02T01:03:30+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D3's probe wiring, measured 2026-10-01 at cairn/devices/aider_shim/venv.py verify(): the probe script already reads required = json.loads(sys.argv[1]) and absent = json.loads(sys.argv[2]), and the parent passes them as argv: subprocess.run([str(python()), '-c', probe, json.dumps(import_names), json.dumps(sorted(ABSENT))]). Keep that exact mechanism: the only change is that the local name import_names, which today is assigned the hard-coded list, is now the function parameter defaulted to list(IMPORT_NAMES) — so required inside the probe IS import_names via sys.argv[1], unchanged. The new broken-dict loop goes inside the probe string after the missing line, and the probe's print gains the third key.",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:11:14+00:00"
     }
-  ]
+  ],
+  "rehearsal": "rehearsals/a1a2156a2a17-20261002T014638.json"
 }

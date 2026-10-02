@@ -10,7 +10,7 @@
   "how": "In cairn/tools/base/device.py BaseDevice.receive: when type(self).RECORDER_ON_READ is None, skip the DataRecorder write (the 'received' emit and the accepted reply stay — the sender still learns the mail arrived). A device that wants its mail kept declares RECORDER_ON_READ ('drain' or 'hold') and RECORDER_READ_FREQUENCY_SECONDS, exactly the declaration ticket a4c2be029f49 already defined; the comment above the two class attributes says that undeclared now means unkept, citing the ruling 'if it's not consumed, it's trash' (2026-09-30, CairnCommons/intentions-not-beside-code/I-heartbeat-probes-and-bus.md). Apply, once, after the build is sealed: for every ~/.cairn/devices/*/*/tools/data_recorder/inbound whose reading.json reads on_read null, remove the directory (records.jsonl and reading.json) — the records were never read and by the ruling are trash; removing reading.json lets the a4c2be029f49 probe reconcile its recorder-declares-no-reader troubles away. Proved by a new cairn/tools/base/proofs/test_unread_mail_is_not_kept.py over a fixture BaseDevice whose _recorder is preset to a scratch DataRecorder.",
   "falsifier": "RED if: (1) a fixture BaseDevice with RECORDER_ON_READ None, its _recorder preset to a scratch DataRecorder, receives one envelope and the scratch recorder then holds any record; (2) the same fixture with RECORDER_ON_READ 'hold' and RECORDER_READ_FREQUENCY_SECONDS 60 receives one envelope and the scratch recorder does not hold exactly one record carrying that envelope's id; (3) either fixture's receive does not return accepted True. Horizon: the tester seal of the new proof.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because cairn/devices/tester/proofs/test_isolation.py is the receiver: its disk_bytes bound reds at every reseal while instance-space carries unread mail, and the build gate reads it at every PROVED crossing in the tester component",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T190348-caa081211e57.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T190347-e4526f231878.json",
@@ -48,6 +48,39 @@
       "step": "D3",
       "source": "rehearsal",
       "at": "2026-10-02T01:07:22+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D3's measurements are recorded in the WHY text of the BUILDME->PROVEME crossing, the one free-text argument of that crossing, which the transition journals verbatim into cairn/tools/base/history.json. The builder writes that text as: 'disk_bytes before=<du -sb ~/.cairn excluding logs and venvs, taken before the drain> after=<the same du after the drain>; drained=<count of inbound dirs removed>; test_isolation <green|red>'. No other file or field records it; there is no separate note command.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:13:27+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Settles D2's docstring, D3's line and D4's mechanism. (a) D2: receive's docstring gains exactly this sentence: 'The envelope is kept in the inbound DataRecorder only when this device's class declares RECORDER_ON_READ; a device that declares no reader keeps none of its mail (ticket ae8d2bfb08e2), and the reply is the same either way.' The guard tests RECORDER_ON_READ alone (D2's if); RECORDER_READ_FREQUENCY_SECONDS is still passed to the recorder as today. (b) D3's 'disk_bytes line' is the line test_isolation.py prints that begins '  scratch: ' and reads '<n>MB disk, <m> entries' (printed at cairn/devices/tester/proofs/test_isolation.py:315, the per-proof sandbox size, asserted under 150MB at line 317); the builder copies the <n>MB figure from it, plus the final green/red line. (c) D4's crossing is made by the builder's crossing script, which calls cairn.tools.base.transitions.emit(ticket_state, 'PROVEME', history_path=cairn/tools/base/history.json, state_path=cairn/tools/base/state.json, ticket='ae8d2bfb08e2', actor='cc', proven_by=['cairn/tools/base/proofs/test_unread_mail_is_not_kept.py']) and writes the new state back through the artifact door with that crossing's why text; the why text is D4's line with 'sandbox=<n>MB' appended.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:18:35+00:00"
+    },
+    {
+      "n": 6,
+      "text": "CORRECTS D4 and D5, measured 2026-10-01 at cairn/tools/base/transitions.py:1940: emit(workflow_str, target, *, history_path=None, state_path=None, node_class_root=..., **journal_extra) has no why parameter of its own; every extra keyword is journal_extra and is written into the crossing's record in history.json (the records there already carry ticket, actor, proven_by that way). So the PROVEME crossing passes the measurement line as why=<line>: emit(t['workflow_and_state'], 'PROVEME', history_path='cairn/tools/base/history.json', state_path='cairn/tools/base/state.json', ticket='ae8d2bfb08e2', actor='cc', proven_by=['cairn/tools/base/proofs/test_unread_mail_is_not_kept.py'], why=<line>), where t is the ticket JSON read from CairnCommons/tickets/ae8d2bfb08e2-*.json and the returned string is written back to that file through cairn.tools.artifact.artifact.write(path, text, verb='cast', why=<the same line>). D3's order is: (1) du -sb --exclude=logs --exclude='*venv*' ~/.cairn = before; (2) the drain; (3) the same du = after; (4) test_isolation.py.",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:29:18+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D1's import placement, measured 2026-10-01 in the proof as written (cairn/tools/base/proofs/test_unread_mail_is_not_kept.py): the helper is def _fire(cls): at line 51 and its FIRST line, line 52, is DataRecorder = importlib.import_module('cairn.tools.data_recorder.data_recorder').DataRecorder — the import is inside _fire's body, so every tooth that calls _fire (lines 62, 67, 74) has it in scope, and a module that fails to import reds the tooth that fires, not the file.",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:37:11+00:00"
     }
-  ]
+  ],
+  "rehearsal": "rehearsals/ae8d2bfb08e2-20261002T014748.json"
 }

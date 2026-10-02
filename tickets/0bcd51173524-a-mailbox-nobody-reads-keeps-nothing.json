@@ -10,7 +10,7 @@
   "how": "In cairn/devices/cairn/machines/ground_loop/discovered.py _FeedbackDevice.receive: when type(self).RECORDER_ON_READ is None, skip the DataRecorder write and return the same accepted reply. Update the comment above RECORDER_READ_FREQUENCY_SECONDS/RECORDER_ON_READ: undeclared now means unkept, citing the ruling 'if it's not consumed, it's trash' (2026-09-30, CairnCommons/intentions-not-beside-code/I-heartbeat-probes-and-bus.md) and the sibling ae8d2bfb08e2. Proved by a new cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py over a _FeedbackDevice whose _recorder is preset to a scratch DataRecorder. The one-time drain of already-filled undeclared inbound recorders is the sibling's apply, not repeated here.",
   "falsifier": "RED if: (1) a _FeedbackDevice with RECORDER_ON_READ None, its _recorder preset to a scratch DataRecorder, receives one envelope and the scratch recorder then holds any record; (2) a _FeedbackDevice subclass declaring RECORDER_ON_READ 'hold' and RECORDER_READ_FREQUENCY_SECONDS 60 receives one envelope and the scratch recorder does not hold exactly one record carrying that envelope's id; (3) either receive does not return accepted True with the device id. Horizon: the tester seal of the new proof.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because cairn/devices/tester/proofs/test_isolation.py is the receiver: its disk_bytes bound reds at every reseal while instance-space carries unread mail, and the build gate reads it at every PROVED crossing in the tester component",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T190641-bb1d6a447dfb.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T190641-205cd2a7c3f1.json",
@@ -23,5 +23,32 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T190731-642c698f2c20.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 4a3540f8cee1 .. validate 642c698f2c20, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1, the red proof. Write cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py, runnable as a script, ending with if __name__ == '__main__': from cairn.tools.proof_coverage import print_teeth_main; raise SystemExit(print_teeth_main(__file__)) (the runner cairn/tools/base/proofs/test_fixme.py uses at line 145). Put sys.path.insert(0, str(Path(__file__).resolve().parents[6])) at the top so the repo root imports when run as a script (the file sits six levels below the repo: cairn/devices/cairn/machines/ground_loop/proofs/). PROVES = {'0bcd51173524': {'1': 'test_an_undeclared_mailbox_keeps_no_mail', '2': 'test_a_declared_mailbox_keeps_exactly_the_mail_it_got', '3': 'test_both_mailboxes_accept_the_mail'}}. Resolve inside each tooth: D = importlib.import_module('cairn.devices.cairn.machines.ground_loop.discovered'); DR = importlib.import_module('cairn.tools.data_recorder.data_recorder').DataRecorder; scratch_dir from cairn.devices.tester.scratch (a plain function returning a fresh Path, cairn/devices/tester/scratch.py:73). A helper _fire(declared: bool): cls = D._FeedbackDevice if not declared else type('_Declared', (D._FeedbackDevice,), {'RECORDER_ON_READ': 'hold', 'RECORDER_READ_FREQUENCY_SECONDS': 60}); dev = cls('mailbox_fixture'); dev._recorder = DR(scratch_dir('mailbox_fixture_') / 'inbound', expected_read_frequency_seconds=cls.RECORDER_READ_FREQUENCY_SECONDS, on_read=cls.RECORDER_ON_READ); reply = dev.receive({'id': 'env-fixture-1', 'sender': 'proof', 'why': 'fixture mail', 'verb': '', 'body': {'k': 1}}); return reply, dev._recorder.read(). Tooth 1: _fire(False) records == []. Tooth 2: _fire(True) records has length 1 and records[0]['envelope_id'] == 'env-fixture-1'. Tooth 3: both replies == {'accepted': True, 'device': 'mailbox_fixture'}. Run it: tooth 1 red before the build, 2 and 3 green. Commit it red.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:09:25+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the build in cairn/devices/cairn/machines/ground_loop/discovered.py _FeedbackDevice.receive (line ~116): wrap the self._get_recorder().write({...}) call in if type(self).RECORDER_ON_READ is not None:, leaving return {'accepted': True, 'device': self._device_id} unconditional. Rewrite the comment above RECORDER_READ_FREQUENCY_SECONDS (line ~98): a discovered device declares nothing about reading its mail, so it keeps none — undeclared means unkept (ruling 'if it's not consumed, it's trash', 2026-09-30, CairnCommons/intentions-not-beside-code/I-heartbeat-probes-and-bus.md; ticket 0bcd51173524, sibling ae8d2bfb08e2 for BaseDevice); a device that adds a mail_probe (cairn/tools/base/mail_probe.py answers_mail) must declare RECORDER_ON_READ on its holder or its probe sees no mail. Run the proof green twice, then every cairn/devices/cairn/machines/ground_loop/proofs/test_*.py, which must stay green; commit (pre-commit reseal in the background); seal with python3 -m cairn.devices.tester.cli --seal cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py; commit.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:09:25+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Measured 2026-10-01 at cairn/tools/data_recorder/data_recorder.py: DataRecorder.__init__(self, base_dir, *, expected_read_frequency_seconds=None, on_read=None) (line 54; on_read must be one of ON_READ or None, else ValueError — 'hold' is accepted) and DataRecorder.read(self) -> list[dict] (line 153). The proof calls exactly that interface: DataRecorder(scratch_dir(...) / 'inbound', expected_read_frequency_seconds=..., on_read=...) and dev._recorder.read().",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:16:13+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/0bcd51173524-20261002T012828.json"
 }

@@ -18,5 +18,28 @@
   "children": "none, because the change is one block in cairn/tools/ticket_inspector/inspector.py and its proof",
   "task_or_ticket": "ticket",
   "builder_notes": "A Haiku builder would ask: (1) Where is the block? cairn/tools/ticket_inspector/inspector.py lines 159-181, '# --- WATCHME ---'. (2) What fixture state? 'code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> WATCHME(x) -> PROVED', the one test_watchme_present already uses. (3) Clause 3's tooth: assert '\"carrier\"' not in Path(inspector.py).read_text(). (4) PROVES = {ticket: {'1':..., '2':..., '3':...}}; the file already runs through print_teeth_main.",
-  "cast": "2026-10-01"
+  "cast": "2026-10-01",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "ORDER: this ticket crosses BUILDME only after fa4a411c96be's build commit has landed (watchme_spec_error must already require a receiver, or the text tooth has no receiver fault to compare). STEP 1, the red teeth in cairn/tools/ticket_inspector/proofs/test_inspector.py (it runs through print_teeth_main(__file__), which discovers every test_* function; no list to register in). (a) test_watchme_with_spec_is_clean (line 143): add receiver={'what': 'w', 'in': 'cairn/tools/base'} to its watchme dict. (b) New tooth test_watchme_present_carries_the_spec_rule_text: t = dict(CLEAN_TICKET, workflow_and_state='code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> WATCHME(x) -> PROVED', watchme={'object': 'x', 'trigger': 't', 'enough': 'e', 'carrier': 'c', 'nexus': 'n', 'consumer': 'u', 'probe': 'p'}); from cairn.tools.base.watchme_spec import watchme_spec_error inside the tooth; want = watchme_spec_error(t); assert want and 'receiver' in want; texts = [f['finding'] for f in inspect_ticket(t) if f['check'] == 'watchme_present']; assert texts == [want], texts. (Measure the finding dict's text key first: print one finding from test_watchme_present and use whatever key holds the message; the tooth must use that key.) (c) New tooth test_the_inspector_spells_no_watchme_field_list: src = (Path(__file__).resolve().parents[1] / 'inspector.py').read_text(); assert '\"carrier\"' not in src. (d) PROVES = {'de9e31ef104c': {'1': 'test_watchme_present_carries_the_spec_rule_text', '2': 'test_watchme_with_spec_is_clean', '3': 'test_the_inspector_spells_no_watchme_field_list'}} at module level (merge into an existing PROVES dict if the file has one). Run red: (b) and (c) fail. Commit red.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:09:54+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the build in cairn/tools/ticket_inspector/inspector.py. Add from cairn.tools.base.watchme_spec import watchme_spec_error beside the module's other imports. Replace the body of the 'if \"WATCHME\" in state:' block (lines 160-181) with: err = watchme_spec_error(t) followed by if err: finding('watchme_present', err, {}). Before deleting the 'none without a because' branch, measure: watchme_spec_error({'workflow_and_state': 'code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> WATCHME(x) -> PROVED', 'watchme': 'none'}); if it returns None, keep that branch after the call (elif-free: a separate if over isinstance(wm, str)); if it returns a message, delete the branch. Run test_inspector.py green twice, then every cairn/tools/ticket_inspector/proofs/test_*.py; commit (pre-commit reseal in the background); seal with python3 -m cairn.devices.tester.cli --seal cairn/tools/ticket_inspector/proofs/test_inspector.py; commit.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:09:55+00:00"
+    }
+  ],
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T191020-e186ca041303.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient ea8bf35a20b7 .. validate e186ca041303, each learned)"
+  }
 }
