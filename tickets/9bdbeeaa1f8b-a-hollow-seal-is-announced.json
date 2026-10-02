@@ -24,5 +24,19 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T092341-fe9363dad643.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 63591a211f7d .. validate fe9363dad643, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE ANNOUNCEMENT: in cairn/devices/tester/cli.py _hollow_run, inside `if args.seal:`, build `landed_green: list[tuple[Path, dict]] = []`. In the existing loop over finding['proofs'], when `record_hollow(...)` returns True, read the standing record back with `read_validations(str(REPO_ROOT / rel))[-1]` (import read_validations from cairn.tools.validation_store.validation_store) and, if `record.get('verdict') == 'green'`, append `(REPO_ROOT / rel, record)`. After the SEALED print line, call `_announce_seals(TesterDevice(), landed_green)` ONCE with the whole list. `_announce_seals(tester, sealed_green)` at cli.py:272 already takes exactly this shape (a list of (proof_path, record) tuples, the same one the batch path builds at cli.py:511), returns at once on an empty list, posts one verb='sealed' envelope per tuple with proof/verdict/source_fingerprint/validations_path, flushes, and wraps every failure in a tester.emit so the seal stands. _hollow_run constructs its own TesterDevice() because main() returns into _hollow_run before the batch path's `tester = TesterDevice()`; construct it only when landed_green is non-empty. A diagnostic run (no --seal) never reaches this code. A red hollow verdict still announces when the standing seal is green (973574dddb77 routes the real lack to FIXME)."
+    },
+    {
+      "n": 2,
+      "text": "D2 THE PROOF: cairn/devices/tester/proofs/test_a_hollow_seal_is_announced.py, already written and committed red (de1fb794). One tooth per falsifier clause; a scratch bus via BusDevice.scratch, bus_client.reach and cairn.devices.tester.hollow.measure substituted; the CLI, record_hollow and _announce_seals are the real ones. Not edited by the build."
+    },
+    {
+      "n": 3,
+      "text": "D3 THE CHARTER: cairn/devices/tester/intention+why.json 'how' gains one sentence: a `cairn test --hollow <ticket> --seal` run that lands evidence on a proof whose standing seal is green announces that seal to codemother exactly as a sealing run does (ticket 9bdbeeaa1f8b), because the hollow reading is the last evidence the PROVED rung needs. Landed through `bin/cairn artifact write <abs path> --verb charter --why '<why>' --from <draft>`."
+    }
+  ]
 }

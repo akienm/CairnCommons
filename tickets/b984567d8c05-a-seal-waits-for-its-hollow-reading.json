@@ -19,5 +19,32 @@
   "questions": [],
   "task_or_ticket": "ticket",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T092122-fd1ed0f14cc1.json",
-  "cast": "2026-10-02"
+  "cast": "2026-10-02",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE ROW CARRIES ITS CLASS: in cairn/devices/codemother/shim.py _boats_named_on, each dict it appends gains \"node_class\": str(ticket.get(\"node_class\") or \"\"), read from the same load_tickets row already in hand. No other change to that function."
+    },
+    {
+      "n": 2,
+      "text": "D2 THE WAIT: in _handle_sealed, initialise `crossed, refused, awaiting_hollow = [], [], []`. At the top of the per-boat loop, before `self._handle_cross(...)`: unless `boat['node_class']` folds to 'concept-piece' (i.e. not is_word(boat['node_class'], 'concept-piece'), with is_word imported from cairn.tools.system_word.system_word, as every system word is compared), build `waiting_on = [p for p in boat['proven_by'] if (seal := latest_seal(_resolved(p), artifact=False)) is not None and not isinstance(((seal.get('evidence') or {}).get('hollow') or {}).get(boat['ticket']), dict)]`, importing latest_seal from cairn.tools.base.validation inside the function. If waiting_on is non-empty, append `{'ticket': boat['ticket'], 'waiting_on': waiting_on}` to awaiting_hollow and `continue` — no crossing, no refusal, no journal write. A proof with NO seal at all is not waiting; it falls through to the harbor, which already refuses it."
+    },
+    {
+      "n": 3,
+      "text": "D3 THE ANSWER SAYS SO: the returned dict carries 'awaiting_hollow': awaiting_hollow beside 'crossed' and 'refused'; the red-seal early return also carries 'awaiting_hollow': []. A second self.emit('sealed_heard', pointer=proof, values={'crossed': len(crossed), 'refused': len(refused), 'awaiting_hollow': len(awaiting_hollow)}) fires after the loop so the trail shows what the seal did."
+    },
+    {
+      "n": 4,
+      "text": "D4 THE PROOF: section 15 of cairn/devices/codemother/proofs/test_codemother.py (three teeth, the hollow= parameter on _the_boat_is_covered), already written and committed red (59eba7a3). Not edited by the build."
+    },
+    {
+      "n": 5,
+      "text": "D5 THE CHARTER: cairn/devices/codemother/intention+why.json 'how' gains one sentence: a green seal whose standing record carries no hollow reading for a boat holds that boat at PROVEME, listed as awaiting_hollow, because the reading can only be taken after the seal and its absence is a measurement still to come (ticket b984567d8c05). Landed through `bin/cairn artifact write <abs path> --verb charter --why '<why>' --from <draft>`."
+    }
+  ],
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T093514-aa2dc6370a7d.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 800d45de7e64 .. validate aa2dc6370a7d, each learned)"
+  }
 }
