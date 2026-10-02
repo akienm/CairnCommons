@@ -1,0 +1,25 @@
+{
+  "id": "ff881672ac57",
+  "title": "the-logs-tree-forgets-past-30-days",
+  "date": "2026-10-02",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "One function on the address tool, address.sweep_logs(older_than_days=30, roots=None), deletes every regular file under <instance root>/logs/ whose mtime is older than the cutoff, then removes directories left empty. It returns {'deleted': n, 'bytes': b, 'kept': k}. It never follows a symlink out of the root and never touches anything outside logs/. One caller fires it on the event Akien names.",
+  "why": "36719 of the 228531 files under ~/.cairn/logs (988M) are past 30 days and nothing deletes there; the logs root exists so one deletion can forget them",
+  "traces_to": "Law 5 (the address carries what a mind needs now); Law 6 (one machine-scoped root, one deletion, nobody's gate); the three retention classes (logging: 30 days, disposable; Akien 2026-09-15); Akien 2026-08-18 on the logs root.",
+  "how": "Measured 2026-10-02: ~/.cairn/logs holds 228531 files, 988M, and 36719 of them are older than 30 days (find -type f -mtime +30). Nothing deletes there: no mtime-age deletion exists anywhere under cairn/ (grep, 2026-10-02), and breadcrumb_log.py records the sweep as deliberately absent until records existed. They do now, at 07f415c15970's 280 inference tickets a day among them. address.log_path (cairn/tools/base/address.py:148) carries the why: one root is one deletion crossing nobody's gate (Law 6), ruled 'agree' 2026-08-18. Build: sweep_logs in cairn/tools/base/address.py beside log_path. os.walk(topdown=False) under resolve('instance/logs', roots); unlink files with lstat().st_mtime < cutoff, skipping symlinks (unlink the link itself if old, never its target); rmdir directories left empty below the root (never the root). The caller and its firing event are settled by the question bound to this ticket. The first run is the one-time drain, and its counts go on the verdict.",
+  "falsifier": "RED if, under a temp roots table: (1) a file under logs/ with mtime 31 days old survives sweep_logs(); (2) a file with mtime 29 days old is deleted; (3) any file outside logs/ (a sibling under the temp instance root, or a symlink target outside logs/ reached through a link inside it) is deleted or changed; (4) a directory left empty below logs/ survives, or logs/ itself is removed; (5) the returned 'deleted' count differs from the number of files that left disk. WRONG INTENT if anything under ~/.cairn/logs must live past 30 days. Horizon: the tester seal of cairn/tools/base/proofs/test_the_logs_tree_forgets_past_30_days.py.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the sandbox bound in cairn/devices/tester/proofs/test_isolation.py and the proof beside cairn/tools/base/address.py red at every reseal if the sweep stops holding",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T114315-7ef0a3cacf6d.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T114315-f2d7f12a3e6c.json",
+  "questions": [
+    "open-9d9c0b1ac3a9"
+  ],
+  "children": "none, because the function, its one caller and the first drain are one build",
+  "task_or_ticket": "ticket",
+  "parent": "c6017f156442",
+  "builder_notes": "A Haiku builder would ask: (1) Where? cairn/tools/base/address.py, sweep_logs beside log_path. (2) What deletes? Files under logs/ with lstat mtime past the cutoff, then empty dirs below the root. (3) Who calls it? The caller the answered question names. (4) Proof? cairn/tools/base/proofs/test_the_logs_tree_forgets_past_30_days.py, PROVES keys 1-5, red first, under a temp roots table.",
+  "cast": "2026-10-02"
+}
