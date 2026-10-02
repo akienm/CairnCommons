@@ -23,5 +23,23 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T180001-ca33d6408aaf.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient cc1e0e507686 .. validate ca33d6408aaf, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1, the red proof, measured 2026-10-01. Write cairn/machines/rehearsal/proofs/test_design_sha.py, runnable as a script. Fixtures are NOT re-invented: import World, Stub, CLEAN_TREE, TID and _kw from the sibling proof (from cairn.machines.rehearsal.proofs.test_rehearsal import ...; proofs/ has no __init__.py and imports as a namespace package). World() builds a scratch commons (scratch_dir('rehearsal-proof-')) with tickets/, rehearsals/, questions/ and the fixture ticket TID, and points the artifact door at it; w.close() in finally. Resolve the machine as R = importlib.import_module('cairn.machines.rehearsal.rehearsal') INSIDE each tooth, and read design_sha via getattr(R, 'design_sha') there, so a reverted build reds teeth instead of crashing the import. Each tooth first makes a clean record with rec = R.rehearse(TID, reader=Stub([CLEAN_TREE]), **_kw(w)) and asserts R.standing(TID, w.commons)['ok']. Teeth: test_a_cursor_move_leaves_the_record_standing (rewrite the ticket through door.write(str(w.ticket), ..., verb='cast', why='fixture cursor move') with only workflow_and_state changed from [BUILDME:waiting] to [PROVEME]: standing ok stays True); test_a_design_edit_makes_the_record_stale (same, but append a decision {'n': 3, 'text': 'a new decision', 'by': 'the proof'}: standing ok is False and its lack is 'the ticket was edited after its rehearsal — rehearse again'); test_a_pre_change_record_still_stands_on_the_whole_bytes (load the record at w.commons / rec['record'], drop design_sha256, write it back through door.write(..., verb='rehearse', why='fixture pre-change record'): standing ok is True while the ticket bytes are unchanged, and False after a workflow_and_state-only edit, because an old record falls back to the whole-bytes compare); test_a_clean_record_carries_design_sha256 (rec['design_sha256'] == R.design_sha(w.ticket.read_bytes())). PROVES = {'9fb045a476dc': {'1': 'test_a_cursor_move_leaves_the_record_standing', '2': 'test_a_design_edit_makes_the_record_stale', '3': 'test_a_pre_change_record_still_stands_on_the_whole_bytes', '4': 'test_a_clean_record_carries_design_sha256'}}. main() runs every tooth whatever the one before did and prints PASS/FAIL lines, exactly as test_rehearsal.py main() does. Run red: teeth 1 and 4 fail; 2 and 3 may pass before the build, which is expected.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:29:39+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the build in cairn/machines/rehearsal/rehearsal.py. (a) Beside _sha (line 118): def design_sha(blob: bytes) -> str: doc = json.loads(blob); doc.pop('workflow_and_state', None); doc.pop('rehearsal', None); return _sha(json.dumps(doc, sort_keys=True, ensure_ascii=False).encode('utf-8')). (b) In the record-writing block (line ~480): in the clean branch, after live = _write_ticket(...), design = design_sha(live); in the unclean branch design = design_sha of the bytes read (the blob whose sha is sha_at_read); the record dict gains 'design_sha256': design right after 'ticket_sha256_at_read'. (c) In standing() (line 558), replace the single ticket_sha256 compare with: if rec.get('design_sha256'): stale = rec['design_sha256'] != design_sha(blob) else: stale = rec.get('ticket_sha256') != _sha(blob); on stale return the same dict as today (same lack text, ticket_sha256 and live_sha256 keys); on ok return today's dict plus 'design_sha256': rec.get('design_sha256'). Update standing()'s docstring to say design, not bytes. (d) Run test_design_sha.py green twice, then test_rehearsal.py, which must stay green (its tooth 3 asserts a stale hash reds — check it edits a design field; if it edits only workflow_and_state, that tooth's fixture edit moves to a decision field in the same build, because it is this component's proof). build_inspector's docstring at cairn/machines/build_inspector/inspector.py:2139 says ticket_sha256: another component, not edited here (RULE 1); its sieve reads R.standing and keeps working because the return keys are unchanged.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:29:40+00:00"
+    }
+  ]
 }

@@ -23,5 +23,47 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T175910-2bde01e3e9f6.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 07d22a2721f1 .. validate 2bde01e3e9f6, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1, the red teeth, measured 2026-10-01. (a) In cairn/tools/base/proofs/test_watchme_spec.py: the _spec helper (line 51) gains a default 'receiver': {'what': 'the owner reads the verdict', 'in': 'cairn/tools/base'} so every existing fixture stays a complete spec. Add four teeth above the TESTS list and append them to it (the file runs as a script over TESTS, printing ok/FAIL): test_a_spec_without_a_receiver_is_refused (_spec(obj) with receiver popped, inside {'workflow_and_state': _V2_WATCH, 'watchme': spec}: watchme_spec_error returns text containing 'receiver'); test_a_receiver_outside_a_component_is_refused (receiver in='cairn/no_such_component': text contains 'receiver'); test_a_receiver_naming_nothing_is_refused (receiver what='': text contains 'receiver'); test_a_valid_receiver_passes (the default _spec: watchme_spec_error is None). (b) Narrow test_the_real_ticket_corpus_is_not_retro_redded (line 154): red = rows whose error, split on '; ', has any part not containing 'names no receiver' — so a missing receiver is allowed and every other fault still reds; the backfill ticket's work list is re-derived by running python3 cairn/tools/base/watchme_spec.py, whose __main__ already prints every red row, so nothing is written to a file. (c) In cairn/tools/ticket_inspector/proofs/test_inspector.py: test_watchme_with_spec_is_clean (line 143) adds receiver={'what': 'w', 'in': 'cairn/tools/base'} to its spec; add test_watchme_present_carries_the_spec_rule_text: CLEAN_TICKET with the same WATCHME(x) workflow and that spec minus receiver; the watchme_present finding's 'finding' text equals watchme_spec_error of the ticket (import watchme_spec_error from cairn.tools.base.watchme_spec inside the tooth). That file runs through print_teeth_main(__file__), which discovers test_* functions, so no list to register in. (d) Add PROVES = {'fa4a411c96be': {'1': 'test_a_spec_without_a_receiver_is_refused', '2': 'test_a_receiver_outside_a_component_is_refused', '3': 'test_a_receiver_naming_nothing_is_refused', '4': 'test_a_valid_receiver_passes', '6': 'test_the_real_ticket_corpus_is_not_retro_redded'}} to test_watchme_spec.py and PROVES = {'fa4a411c96be': {'5': 'test_watchme_present_carries_the_spec_rule_text'}} to test_inspector.py. Run both red: (a)'s three refusal teeth and (c)'s text tooth fail; the valid tooth and the sweep pass before the build, which is expected.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:21:53+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the build. In cairn/tools/base/watchme_spec.py, beside BERTH_FIELD: RECEIVER_FIELD = 'receiver'. In watchme_spec_error, in the per-object loop after the berth check: rec = spec.get(RECEIVER_FIELD); if not a dict -> fault 'WATCHME(%s) spec names no receiver — a probe with nothing that USES its data is trash (Akien, 2026-10-01); give receiver: {\"what\": <the code that receives>, \"in\": <component dir>}'; else if rec.get('what') is not a non-empty str -> fault 'WATCHME(%s) receiver names no what'; else if 'in' is not a non-empty str or not (_REPO_ROOT / rec['in'] / 'intention+why.json').is_file() -> fault 'WATCHME(%s) receiver in=%r is not a component (no intention+why.json there)'. All three contain the word receiver; only the first contains 'names no receiver', which is the one fault the narrowed sweep allows. In cairn/tools/ticket_inspector/inspector.py replace the whole 'if \"WATCHME\" in state:' block's dict/list field loops with: from cairn.tools.base.watchme_spec import watchme_spec_error (module-level import beside the others); err = watchme_spec_error(t); if err: finding('watchme_present', err, {}). Keep the 'no watchme field' finding text only as what watchme_spec_error already says (it reports a carried WATCHME with no spec). Run both proofs green twice.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:21:53+00:00"
+    },
+    {
+      "n": 3,
+      "text": "STEP 3, the other readers, measured 2026-10-01 by grep for '\"nexus\"' in proofs: cairn/tools/base/proofs/test_emission_gate.py (same component — its fixtures gain a receiver in this build), and in OTHER components skills/sorted/proofs/test_sorted_door.py, cairn/machines/skill_block/proofs/test_skill_block.py, cairn/devices/cairn/machines/bus/proofs/test_first_rider.py, cairn/devices/codemother/machines/verdict/proofs/test_chart_verdict.py. After the build run all five. Any of the four other-component proofs that reds only because its fixture spec lacks a receiver is NOT edited here (RULE 1): it is cast as its own ticket at that component before this ticket crosses PROVEME, and the red is named in this ticket's PROVEME note. skills/sorted/door.py line 153 spells its own missing-field list for its message; it still refuses through watchme_spec_error at line 144, so its message under-reports and that is the same other-component ticket.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:21:53+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D1 measured 2026-10-01: in cairn/tools/base/proofs/test_watchme_spec.py, _spec(obj, **over) at line 51 builds a dict with keys object, trigger, enough, carrier, nexus, consumer, probe, then s.update(over) and returns s. Add one key to that literal: \"receiver\": {\"what\": \"the owner reads the verdict\", \"in\": \"cairn/tools/base\"} — every existing caller gets a complete spec, and a tooth that needs it missing calls s = _spec(obj); s.pop('receiver'), or overrides it with receiver={...}. TESTS is the plain list at line 214 (TESTS = [ ... ] ending at line 229); define the four new teeth as module-level functions above it and append their names as the last four entries. Each tooth is a plain assert, the same shape as test_a_spec_with_no_berth_cannot_be_gated: err = ws.watchme_spec_error({'workflow_and_state': _V2_WATCH, 'watchme': spec}); assert err and 'receiver' in err, err (or assert err is None for the valid one). The object passed to _spec is 'does-the-emission-gate-fire-in-anger', the WATCHME carried by _V2_WATCH.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:29:59+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D3's method, deterministic: after D2 is built, run each of the five proofs with python3 <path>. A proof that was green at HEAD before the build (run it once before building and keep the output) and reds after it is caused by this build, whatever its text says — this build changed nothing else. If that proof is in cairn/tools/base (test_emission_gate.py), fix its fixture spec in this build by adding receiver={'what': ..., 'in': 'cairn/tools/base'}; if it is in another component, cast it as its own ticket (mkticket via /intent and /sorted, owning intention this ticket) naming the failing tooth and the output line, and name that ticket id in this ticket's PROVEME note. A proof red at HEAD before the build is not this build's red and is left as it stood.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:29:59+00:00"
+    }
+  ]
 }

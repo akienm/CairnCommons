@@ -23,5 +23,39 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T175541-36cf232980dd.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient fe26250bc0c8 .. validate 36cf232980dd, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1, the red proof, measured 2026-10-01. Write cairn/tools/base/proofs/test_fixme.py, run as a script through print_teeth_main(__file__) from cairn.tools.proof_coverage (discovers test_* functions). Fixtures: a node-class root = scratch_dir('fixme_fixture_node_classes_') holding a copy of the live CairnCommons/node_classes/code-seam.json whose workflow_versions.v2 gains 'repair_summons': {'FIXME': 'BUILDME'} (set in the copy, so the proof does not depend on the live write); a ticket corpus repointed the way test_emission_gate.py's _Corpus does (save transitions._TICKETS, set it to a scratch_dir holding <name>.json, restore in finally); a component address = scratch_dir(...)/comp with history.json/state.json paths passed to emit (nested one level, as test_emission_gate's _cross explains). Resolve emit, parse_workflow, legal_targets, load_class_def and FixmeGateRed from cairn.tools.base.transitions INSIDE each tooth, so a reverted build reds teeth instead of crashing the import. Teeth: test_a_back_edge_lands_at_fixme_before_buildme (emit('code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME] -> PROVED', 'FIXME', history_path, state_path, node_class_root=root, ticket=name, missing=['the receiver is unnamed']): parse_workflow(new).here == 'FIXME', its path index is path.index('BUILDME') - 1, and the last history entry's 'missing' equals the list); test_fixme_refuses_exit_while_an_entry_is_unanswered (fixture ticket with fixme=['a','b'] and decisions=[{'step':'FIXME 1','text':'answered'}]: emit of the FIXME-carrying string at [FIXME] to 'BUILDME' with ticket=name raises FixmeGateRed); test_fixme_admits_exit_once_every_entry_is_answered (decisions for FIXME 1 and FIXME 2 with text: transitions._fixme_gate(name) returns (note, record) without raising — called directly because the BUILDME entry gate behind it reds any fixture ticket that has no chart); test_a_v2_string_without_fixme_is_unchanged (for every cursor position of the plain v2 path, legal_targets under the fixture class def equals legal_targets under a deepcopy with repair_summons removed, and both conform). PROVES = {'72d2f79daf0a': {'1': 'test_a_back_edge_lands_at_fixme_before_buildme', '2': 'test_fixme_refuses_exit_while_an_entry_is_unanswered', '3': 'test_fixme_admits_exit_once_every_entry_is_answered', '4': 'test_a_v2_string_without_fixme_is_unchanged'}}. Run red: teeth 1-3 fail (FIXME is not in the vocabulary / no _fixme_gate); tooth 4 may pass before the build, which is expected.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:23:47+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the declaration. The value is the DICT form {'FIXME': 'BUILDME'} (builder_notes (1)); the how's list form ['FIXME'] is superseded by this decision, because the anchor is a fact the grammar needs and a list cannot carry it. Write it into the live CairnCommons/node_classes/code-seam.json under workflow_versions.v2 as 'repair_summons': {'FIXME': 'BUILDME'} through the artifact door: a scratchpad .py that loads the JSON, sets the key, and calls cairn.tools.artifact.artifact.write(path, json.dumps(doc, indent=1, ensure_ascii=False) + '\\n', verb='cast', why='72d2f79daf0a: code-seam v2 declares FIXME as a repair summons anchored before BUILDME (Akien 2026-10-01, foreground item 1: no migration, no ticket is at FIXME)'). Match the file's existing indent (read it first and keep it). Akien approved adding FIXME to v2 in place: no ticket stands at FIXME, so no instance changes shape.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:23:47+00:00"
+    },
+    {
+      "n": 3,
+      "text": "STEP 3, the build in cairn/tools/base/transitions.py, measured 2026-10-01 (Workflow is a frozen dataclass at line 533; _conform at 639; emit at 1875; gates declared at 1055-1059). (a) class FixmeGateRed(IllegalTransition) beside the other *Red classes; FIXME_GATE = TransitionGate('fixme_gate', exception_class=FixmeGateRed) beside the other gates. (b) _conform: repair = reg.get('repair_summons', {}); for each state, anchor in repair.items(): hits = positions of state in wf.path; more than one -> MalformedWorkflow naming it; one hit whose next state is not anchor -> MalformedWorkflow naming the anchor; the backbone comprehension also drops states in repair. (c) emit, right after canon_target: reg = _registered_workflow(class_def, wf.version); repair = reg.get('repair_summons', {}); target = canon(target, list(repair)) or target; if target in repair and target not in wf.path: a = wf.path.index(repair[target]); if wf.cursor < a raise IllegalTransition(f'{target} is entered from {repair[target]} or later'); pad objects to len(path) with None, then wf = dataclasses.replace(wf, path=wf.path[:a] + (target,) + wf.path[a:], objects=objs[:a] + (None,) + objs[a:], cursor=wf.cursor + 1). Then, if target in repair and resolve_target(wf, target) < wf.cursor: missing = journal_extra.get('missing'); unless it is a non-empty list of non-empty str raise IllegalTransition('entering FIXME needs missing=[...] — the list of what the design lacks'). Validation, render and the back-edge record then proceed unchanged, and journal_extra carries missing into the record. (d) inspect_fixme(ticket) -> list[dict]: one _lane('every_fixme_entry_is_answered', expected='every fixme entry 1..N has a decision with step FIXME <n> and non-empty text', actual= the same string when true, else a string naming the ticket-not-found, the empty/absent fixme list, or the unanswered entry numbers, code='transitions.py::inspect_fixme', ticket=ticket, unanswered=[...]). It reads the ticket via _find_ticket(ticket) (None ticket or no file is a red, never a pass). _fixme_gate(ticket) = FIXME_GATE.run(inspect_fixme(ticket), note=None). (e) In emit's gated branch, BEFORE the 'if target == \"BUILDME\"' entry block: if wf.here in repair and target_idx > wf.cursor: fixme_note, _rec = _fixme_gate(journal_extra.get('ticket')); proved += _rec; and the record gains **({'fixme_gate': fixme_note} if fixme_note else {}). Import dataclasses and canon (canon is already imported for canon_target; check) at module top. Run test_fixme.py green twice, then run cairn/tools/base/proofs/test_emission_gate.py and test_transitions*.py in cairn/tools/base/proofs to confirm no other tooth moved.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:23:47+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D3(e)'s target_idx is emit's existing local, measured 2026-10-01 at cairn/tools/base/transitions.py:1915: target_idx = resolve_target(wf, target), computed in the gated branch before every gate check (lines 1940-2061 all read it). The FIXME block is written after that line and after the FIXME insertion of (c), so it reads the same local; it computes nothing new.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:36:53+00:00"
+    }
+  ]
 }
