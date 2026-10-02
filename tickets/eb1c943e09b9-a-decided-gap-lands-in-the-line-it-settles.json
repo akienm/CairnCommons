@@ -5,7 +5,7 @@
   "owner": "CC",
   "author": "cc",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> WATCHME(decide_lands_in_its_line) -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> WATCHME(decide_lands_in_its_line) -> PROVED",
   "watchme": {
     "trigger": "each rehearsal record written after the build lands; the probe reads CairnCommons/rehearsals/ on the beat that already runs",
     "enough": "10 tickets rehearsed to clean after the landing, with at least 3 that carried a --decide line",
@@ -26,7 +26,8 @@
   "how": "render() hands the reader a decisions view in which every decision's text starts with its D<n> and every rehearsal-sourced decision's text is also appended inside the line its step names. The ticket bytes and their hash are unchanged; only the rendered view changes.",
   "falsifier": {
     "proves_green": "GREEN when render() shows each decision as 'D<n> ...', a rehearsal-sourced decision's text appears inside the line of the decision its step names, the 'missing D<n>' refusal from decide lines cannot recur, and median passes-to-clean over the next 10 tickets rehearsed is at or below the standing median.",
-    "wrong_intent": "WRONG INTENT if readers keep re-flagging a step whose answer is rendered inside it — then the reader is the defect, not the render."
+    "wrong_intent": "WRONG INTENT if readers keep re-flagging a step whose answer is rendered inside it — then the reader is the defect, not the render.",
+    "proves_red": "DONE when, over a scratch commons ticket (never the live corpus): (1) render() shows every decision's text beginning 'D<n> ' with its own n, including a decision whose stored text carries no label; (2) a decision with source 'rehearsal' and step 'D<m>' appears inside D<m>'s rendered text as '[settled by D<n>: <its text>]', and stays in the list labeled; (3) render() still returns the sha256 of the ticket file bytes; (4) the ticket file's bytes are unchanged by render(). RED before the build: the render pastes the file verbatim, so (1) and (2) fail."
   },
   "links": [
     {
@@ -59,7 +60,7 @@
     },
     {
       "n": 4,
-      "text": "D4 THE BASELINE: before the build lands, measure passes-to-clean per ticket over CairnCommons/rehearsals/*.json (records carry ticket, pass, clean): for each ticket that reached clean, the pass number of its first clean record. Write the median and the population into the proof's docstring as the standing baseline with its date.",
+      "text": "D4 THE BASELINE: before the build lands, measure passes-to-clean per ticket over CairnCommons/rehearsals/*.json as the NUMBER OF RECORDS for the ticket, in 'at' order, up to and including its first clean one. NOT the record's 'pass' field: it restarts after every --decide (measured 2026-10-02: its median over first-clean records is 1, while the record count's is 4). Measured 2026-10-02: 77 tickets rehearsed, 71 reached clean, median 4 records to clean, mean 4.15. Write the median, the population and the date into the proof's docstring as the standing baseline.",
       "by": "cc",
       "source": "cast"
     },
@@ -68,8 +69,30 @@
       "text": "D5 THE PROOF: cairn/machines/rehearsal/proofs/test_decide_lands_in_its_line.py, prove-first: a scratch commons ticket with decisions D1 (no label in text), D2, and a rehearsal entry D3 with step 'D1'; teeth — (1) rendered text contains 'D1 ' at the start of D1's text; (2) D1's rendered line contains '[settled by D3: ' and D3's text; (3) the returned sha equals sha256 of the file bytes; (4) the file bytes are unchanged after render. Every output marked testing.",
       "by": "cc",
       "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "The population is both numbers, named: 77 tickets rehearsed, of which 71 reached clean; the median (4) and mean (4.15) are over the 71. The proof docstring states it so (already written at cairn/machines/rehearsal/proofs/test_decide_lands_in_its_line.py).",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-02T13:56:24+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The proof is a plain python script (exit 0 = green), already written and committed red at cairn/machines/rehearsal/proofs/test_decide_lands_in_its_line.py. The testing mark: its fixture ticket id and title carry 'testing-eb1c943e09b9', and its scratch commons comes from cairn.tools.scratch.scratch.scratch_dir('testing-eb1c943e09b9-decide-lands-') and is removed with shutil.rmtree when the run ends. Nothing is written to the live commons.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-02T13:56:24+00:00"
     }
   ],
   "linked_ideas": [],
-  "cast": "2026-09-29"
+  "cast": "2026-09-29",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T074834-e4a07e6acf9f.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient c24712ea5946 .. validate e4a07e6acf9f, each learned)"
+  },
+  "rehearsal": "rehearsals/eb1c943e09b9-20261002T140243.json"
 }
