@@ -1,0 +1,15 @@
+{
+  "id": "open-8fee7c432219",
+  "date": "2026-10-01",
+  "ticket": "c54d744aa9ac",
+  "question": "Under the tester's own seal, should test_instance_seal check the inherited seal (writes in the outer swap, swap is a mount, reads SEALED) and leave the host check to bare runs (a, recommended), or should a nested run snapshot and restore the shared swap so the host checks hold at any depth (b)?",
+  "why_it_blocks": "Measured 2026-10-01: cairn/devices/tester/proofs/test_instance_seal.py is green bare and red under the tester's own seal (seals at af913030 and 302eefc5, same line: 'a proof's write reached the LIVE instance root'). Under the seal it runs TesterDevice().run_proof in-process; on this host a nested bwrap is refused, so the run takes c54d's inherited branch and the fixture's writes land in ~/.cairn — which at that depth IS the outer throwaway swap. The real host is never touched (the outer seal reads SEALED). c54d's own falsifier (2) says a nested subject's writes STAY in the outer swap, so the proof and c54d disagree. (a) Under a seal, test_instance_seal asserts what it can see — the writes are measured, landed in the inherited swap, the swap is a mount point, the inherited seal reads SEALED — and its host witness runs only bare (c54d's new proof already does this). (b) A nested run copies the shared swap first (~150MB after the mail drain) and restores it afterwards, so the bare assertions hold at depth too; c54d's falsifier (2) flips. I recommend (a): the host guarantee is the outer seal's, and it is measured on every run.",
+  "raised_by": "cc",
+  "born_of": null,
+  "source": null,
+  "resolved": false,
+  "answer": null,
+  "answered_by": null,
+  "answered_at": null,
+  "spawned": null
+}
