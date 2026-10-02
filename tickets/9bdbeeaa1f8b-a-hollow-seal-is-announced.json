@@ -1,0 +1,23 @@
+{
+  "title": "a-hollow-seal-is-announced",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "When `cairn test --hollow <ticket> --seal` lands a hollow reading on a proof's standing validation whose verdict is green, the tester announces that seal to codemother: one `sealed` message per landed proof, the same four-field message a sealing run posts. The one seal that can actually clear the boat is then heard, and the automatic crossing fires on it.",
+  "why": "Measured 2026-10-02: _hollow_run (cairn/devices/tester/cli.py) lands evidence.hollow through record_hollow and announces nothing, while the plain sealing run announces through _announce_seals. Codemother hears only the seal that comes BEFORE the hollow reading can exist, never the one that completes it, so the automatic crossing always fires on the incomplete record.",
+  "traces_to": "Law 1 (a mind should not re-fire a crossing whose last input just landed). Ticket 1accdc1781aa's aim: a decision with no judgment left in it does not wait for a person. Law 7: the seal is the record of truth, and the telling can never cost it.",
+  "how": "In cairn/devices/tester/cli.py _hollow_run, inside `if args.seal:`, collect each proof for which record_hollow(...) returned True. Read its standing record back (read_validations(path)[-1], from the validation_store tool) and keep (Path(path), record) where record.get('verdict') == 'green'. After the SEALED line, call the existing _announce_seals(tester, landed_green). That function already reaches codemother and harbor_master, posts verb='sealed' with proof, verdict, source_fingerprint and validations_path, flushes the ring, and wraps every failure so the seal stands. _hollow_run obtains the `tester` handle the same way the batch path does (read how the batch path near cli.py line 588 gets `tester`, and do the same). A diagnostic run (no --seal) announces nothing. A red hollow verdict still announces when the standing seal is green, because the reading itself is what the PROVED rung judges; codemother's crossing then refuses, and FIXME holds the real lack (973574dddb77).",
+  "falsifier": "RED if: (1) a `--hollow --seal` run that lands evidence on a proof whose standing validation is green posts no `sealed` message to codemother naming that proof, with the same four body fields the sealing run posts (proof, verdict, source_fingerprint, validations_path); (2) a `--hollow` run without --seal, or one whose record_hollow lands nothing, posts any sealed message; (3) with codemother unwired, the hollow evidence does not stand after the run. Horizon: the tester seal.",
+  "watchme": "none, because codemother's own trail already records every sealed message she hears (emit 'sealed_heard' in cairn/devices/codemother/shim.py _handle_sealed), so a hollow seal that announces shows up there, and a boat still waiting at PROVEME after a hollow seal shows in the session banner's PROVEME:waiting lane and in `cairn whatsnext`",
+  "builder_notes": "A Haiku builder would ask: (1) Where? Only cairn/devices/tester/cli.py _hollow_run, plus a new proof cairn/devices/tester/proofs/test_a_hollow_seal_is_announced.py. (2) How to test without a live hollow run? Call cli._hollow_run(args) with measure stubbed (patch the name where _hollow_run looks it up: it imports measure from cairn.devices.tester.hollow inside the function, so patch cairn.devices.tester.hollow.measure) returning a fixed finding over a scratch proof whose validation is seeded green under scratch roots, and the bus reached through a recorder. Model it on cairn/devices/tester/proofs/test_the_seal_announces_itself.py, which already measures the sealing run's announcement and the unwired case. (3) What counts as landed? record_hollow's True return. (4) Charter: cairn/devices/tester/intention+why.json 'how' gains one sentence naming the hollow announcement, landed through `cairn artifact write <abs path> --verb charter --why '<why>' --from <draft>`.",
+  "dependencies": "none; ticket b984567d8c05 (a-seal-waits-for-its-hollow-reading) builds after it, since a boat held at PROVEME needs this announcement to cross",
+  "children": [],
+  "id": "9bdbeeaa1f8b",
+  "date": "2026-10-02",
+  "owner": "CC",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T091853-f9a8a0d5f503.json",
+  "questions": [],
+  "task_or_ticket": "ticket",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T092122-6f9f728ce085.json",
+  "cast": "2026-10-02"
+}
