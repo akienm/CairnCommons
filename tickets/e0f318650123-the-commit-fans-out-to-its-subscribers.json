@@ -26,6 +26,94 @@
       "step": "decompose piece 2",
       "source": "rehearsal",
       "at": "2026-10-02T20:19:41+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2 THE FAN-OUT (cairn/tools/post_commit/fanout.py, new; empty cairn/tools/post_commit/__init__.py beside it). Constants: REPO_ROOT = Path(__file__).resolve().parents[3]; HOOK_SOURCE = Path(__file__).parent / 'hooks' / 'post-commit'; OWN_HOOK = 'cairn/tools/post_commit/hooks/post-commit'; _MARK = 'cairn-post-commit-fanout'; _PREDECESSOR = 'cairn-counting-block-door'. `subscribers(repo=None) -> list[Path]` runs `git -C <repo> ls-files -z -- '*/hooks/post-commit'` and returns the repo-relative paths sorted, OWN_HOOK excluded (RuntimeError if git fails). `fire(repo=None, *, timeout_s=600.0) -> list[dict]` runs each subscriber once as `subprocess.run(['bash', str(repo/rel)], cwd=repo, capture_output=True, text=True, timeout=timeout_s)` in subscribers() order and returns [{'subscriber': str(rel), 'exit': returncode, 'stderr': last 2000 chars}], echoing each subscriber's stdout; TimeoutExpired records exit 'timeout' and OSError records exit 'unspawnable', and the next subscriber still runs — fire never raises for a subscriber. `hook_path`, `install_hook`, `verify_hook` are COPIED IN SHAPE from cairn/machines/counting_block/hook.py (never imported): hook_path through `rev-parse --path-format=absolute --git-common-dir`; install_hook refuses an existing hook that carries neither _MARK nor _PREDECESSOR (Law 6), says 'already installed, unchanged' for an identical one, else writes HOOK_SOURCE's body and chmods 0o755; verify_hook is green only if the installed hook exists, carries _MARK, is executable and equals HOOK_SOURCE byte for byte.",
+      "by": "cc",
+      "step": "build the fan-out tool",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:55+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3 THE CLI AND THE INSTALLED HOOK. cairn/tools/post_commit/__main__.py: argparse `action` in {fire, install-hook, verify-hook} plus `--repo` (default None = this repo). fire calls fanout.fire(repo), prints `post-commit subscriber <path> exited <exit>: <stderr tail>` to stderr for each non-zero exit, and returns 0 ALWAYS — also when subscribers() itself raises, which is printed and swallowed (the commit has landed; Law 7 loud, never blocking). install-hook / verify-hook print and return exactly as counting_block/__main__.py does. cairn/tools/post_commit/hooks/post-commit is the counting block's hook body with three changes: the first comment line carries `cairn-post-commit-fanout`, the presence guard is `[ -f \"$REPO/cairn/tools/post_commit/fanout.py\" ] || exit 0`, and the run line is `PYTHONPATH=... \"$PY\" -m cairn.tools.post_commit fire || true`; it keeps the main-tree-only guard (git-dir == git-common-dir), the bootstrap.sh python, and ends `exit 0`.",
+      "by": "cc",
+      "step": "build the fan-out tool",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:55+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4 THE CHARTER (cairn/tools/post_commit/intention+why.json) takes the shape of cairn/tools/scratch/intention+why.json, key for key: component 'post_commit', runtime_role 'tool', role 'charter', node_class 'tool', public_interface ['cairn.tools.post_commit.fanout'], what, why (git runs one installed post-commit and the counting block held it, so a second listener could only poll HEAD on the beat), entry, invoke (the three CLI actions and the proof command), state_and_history ('A TOOL HOLDS NO STATE OF ITS OWN (Law 6)'), proof, gates, falsifier (this ticket's (1) and (3)), learns and how_it_learns as ONE answer ('It does not; it is a fixed primitive'), traces_to (RULE 1, Law 4, Law 6), owner ('None — a tool has users'), gated_by ['CC']. state.json and history.json beside it come from the crossing door (the BUILDME crossing writes them), never by hand.",
+      "by": "cc",
+      "step": "build the fan-out tool",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:55+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5 THE COUNTING BLOCK HANDS THE INSTALL TO THE FAN-OUT BY IMPORT of its declared public interface (a machine may use a tool; RULE 1 allows exactly cairn.tools.post_commit.fanout). cairn/machines/counting_block/hook.py keeps REPO_ROOT, HOOK_SOURCE and _MARK (they describe its SUBSCRIBER body, which stays at hooks/post-commit, unchanged). Its three functions stay as thin delegations, so callers and test_counting_block.py's tooth (lines 327-351) keep working: hook_path(root) -> fanout.hook_path(root); install_hook(root) -> fanout.install_hook(root); verify_hook(root) -> red with why 'the subscriber body is missing' if HOOK_SOURCE is not a file, else fanout.verify_hook(root). The module docstring says the installed hook is now the fan-out's. counting_block/__main__.py's usage text names the fan-out as the installer; its install-hook/verify-hook actions are unchanged. test_counting_block.py changes its tooth comments only (lines 327 and 335 say the install goes through the fan-out).",
+      "by": "cc",
+      "step": "modify cairn/machines/counting_block to delegate install-hook and verify-hook",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:55+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6 CODEMOTHER'S SUBSCRIBER. cairn/devices/codemother/post_commit.py: `read_commit(repo=None) -> {'hash', 'files', 'message'}` from `git rev-parse HEAD`, `git diff-tree --no-commit-id --name-only -r --root <hash>` (sorted) and `git log -1 --format=%s`. `announce(bus, *, commit, files, message)` calls `bus.post(sender='codemother', to='codemother', channel='personal', verb='commit', why=f'commit {commit[:12]} landed', body={'hash': commit, 'files': list(files), 'message': message})` — the signature at cairn/devices/cairn/machines/bus/bus.py:361 — then `bus.flush()`. main() does `from cairn.tools.bus_client import reach; announce(reach('codemother'), **read_commit())` (reach at cairn/tools/bus_client/bus_client.py:71 pulses codemother's shim, so post fires _handle_commit -> watch.on_commit in-process). It appends one JSON line {at, hash, outcome} to log_path('codemother') / 'post_commit.jsonl' (cairn.tools.base.address.log_path) and returns 0 if posted, else 1. The precedent for reach+post+flush from a short-lived process is tester/cli.py:293-345 (_announce_seals). cairn/devices/codemother/hooks/post-commit is a bash subscriber with the counting block's guards and bootstrap python; it runs `setsid \"$PY\" -m cairn.devices.codemother.post_commit </dev/null >/dev/null 2>&1 &` and ends `exit 0`. It detaches because on_commit spreads activations through inference and `git commit` waits on its hook.",
+      "by": "cc",
+      "step": "build codemother's post-commit subscriber",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:55+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D7 THE POLLER GOES (per D1). Delete cairn/devices/codemother/groundloop/ (pulse.py and its __pycache__). In cairn/devices/codemother/proofs/test_watch.py delete class TestPulse (lines 152-209, the three teeth that patch cairn.devices.codemother.groundloop.pulse), and make the module docstring name watch.py and post_commit.py instead of groundloop/pulse.py. In cairn/devices/codemother/probes/commit_fires_activations.py make the docstring say the commit reaches on_commit through hooks/post-commit -> post_commit.py -> the `commit` verb; its code is unchanged.",
+      "by": "cc",
+      "step": "build codemother's post-commit subscriber",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:55+00:00"
+    },
+    {
+      "n": 8,
+      "text": "D8 THE APPLY, AFTER THE BUILD COMMIT: `python3 -m cairn.tools.post_commit install-hook` replaces the installed counting-block hook (it carries _PREDECESSOR), and `python3 -m cairn.tools.post_commit verify-hook` plus `python3 -m cairn.machines.counting_block verify-hook` must both read green. The next commit is the live fire: counting_block's fold line prints and ~/.cairn/logs/codemother/0/post_commit.jsonl gains a line with that commit's hash.",
+      "by": "cc",
+      "step": "install",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:30:56+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D31 (settles the D3 gaps): THE HOOK IS GIVEN WHOLE. cairn/tools/post_commit/hooks/post-commit is exactly these bytes (newlines shown as ⏎):⏎#!/usr/bin/env bash⏎# cairn-post-commit-fanout — the one installed post-commit; runs every component's own (e0f318650123).⏎#⏎# Source: cairn/tools/post_commit/hooks/post-commit  (tracked; installed by⏎#         `python3 -m cairn.tools.post_commit install-hook`, verified by `... verify-hook`)⏎#⏎# A component subscribes to the commit by carrying a tracked <component>/hooks/post-commit; the⏎# fan-out finds them with `git ls-files` and runs each once. It never blocks: the commit has⏎# already landed, and a failing subscriber is printed by name and does not stop the next.⏎set -uo pipefail⏎⏎REPO=\"$(git rev-parse --show-toplevel 2>/dev/null)\" || exit 0⏎[ -n \"$REPO\" ] || exit 0⏎[ \"$(git rev-parse --git-dir)\" = \"$(git rev-parse --git-common-dir)\" ] || exit 0⏎[ -f \"$REPO/cairn/tools/post_commit/fanout.py\" ] || exit 0⏎⏎BOOTSTRAP=\"$REPO/launchers/bootstrap.sh\"⏎PY=\"python3\"⏎if [ -r \"$BOOTSTRAP\" ]; then⏎  # shellcheck source=/dev/null⏎  . \"$BOOTSTRAP\" && PY=\"$(cairn_python)\"⏎fi⏎⏎cd \"$REPO\" || exit 0⏎PYTHONPATH=\"$REPO${PYTHONPATH:+:$PYTHONPATH}\" \"$PY\" -m cairn.tools.post_commit fire || true⏎exit 0⏎ — written with real newlines, mode 0755. THE CLI OUTPUT IS GIVEN WHOLE. install-hook: print(('installed ' if got['installed'] else 'not installed ') + got['path']); print(f\"  {got['why']}\"); return 0 if got['installed'] or 'already installed' in got['why'] else 1. verify-hook: print(('green  ' if got['green'] else 'RED    ') + got.get('path', '')); print(f\"  {got['why']}\"); return 0 if got['green'] else 1. These are the bytes of counting_block/__main__.py's two branches, and fanout's install_hook/verify_hook return the same dict keys {installed|green, path, why} as counting_block/hook.py.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:39:25+00:00"
+    },
+    {
+      "n": 10,
+      "text": "D32 (settles the D4 gap): cairn/tools/post_commit/intention+why.json is a JSON object with exactly these keys, in this order: component ('post_commit'), runtime_role ('tool'), role ('charter'), schema_version (the same string cairn/tools/scratch/intention+why.json carries), node_class ('tool'), node_class_role ('host-seam primitive'), public_interface (['cairn.tools.post_commit.fanout']), what, why, entry, invoke, state_and_history, proof, gates, falsifier, learns, how_it_learns (identical text to learns: 'It does not; it is a fixed primitive.'), traces_to (list: RULE 1, Law 4, Law 6), owner ('None — a tool has users (Law 6)'), gated_by (['CC']), claim_provenance ({role, what, why, public_interface: 'cc-read', traces_to: 'akien'}). All other values are prose strings the builder writes from this ticket's clauses; cairn/tools/scratch/intention+why.json is committed at HEAD as the worked example.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:39:25+00:00"
+    },
+    {
+      "n": 11,
+      "text": "D33 (settles the D6 gaps): main() never unpacks read_commit with **. It calls c = read_commit() and then announce(reach('codemother'), commit=c['hash'], files=c['files'], message=c['message']); read_commit keeps returning {hash, files, message}. The trail line is {at, hash, outcome}: at = UTC ISO-8601 to the second; hash = c['hash'] (absent if read_commit itself raised); outcome is exactly 'posted' when announce returned, otherwise 'failed: <ExceptionType>: <message>' (also printed to stderr). main returns 0 on 'posted', 1 otherwise; the hook detaches it, so the code never reaches the commit.",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:39:25+00:00"
+    },
+    {
+      "n": 12,
+      "text": "D34 (settles both unlisted proof steps): the two proofs are NOT written by the build. cairn/tools/post_commit/proofs/test_the_commit_fans_out_to_its_subscribers.py (teeth 1, 1b, 3) and cairn/devices/codemother/proofs/test_a_commit_reaches_the_watcher.py (teeth 2, 2b, 2c, 4) were committed red at a5ce4acc before this rehearsal, and their bytes are the spec the build answers. The builder runs each, edits neither, and the build is done when both exit 0 and are sealed (bin/cairn test --seal <proof>).",
+      "by": "cc",
+      "step": "the proofs already stand",
+      "source": "rehearsal",
+      "at": "2026-10-02T20:47:36+00:00"
     }
   ],
   "cast": "2026-10-02",
