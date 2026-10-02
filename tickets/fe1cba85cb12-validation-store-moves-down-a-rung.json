@@ -10,7 +10,7 @@
   "how": "Measured 2026-10-02 (encapsulation_breaches('.') in cairn/machines/build_inspector/inspector.py): 214 rows, 27 of them module cairn.devices.tester.validation_store, from cairn/tools/base/validation.py (7), cairn/tools/base/transitions.py (4), and proofs in cairn/tools/base, cairn/tools/artifact, cairn/tools/question, cairn/devices/cairn/machines/harbor_master and cairn/devices/codemother. The store imports exactly two things from the tester: GREEN and VALIDATION_FIELDS from cairn/devices/tester/device.py and SEALED/OPEN/INDETERMINATE/BREACHED from cairn/devices/tester/isolation.py — record vocabulary, not tester state; no component outside the tester imports cairn.devices.tester.isolation. So the store and that vocabulary move to cairn/tools/validation_store/validation_store.py, device.py and isolation.py import the names from the tool (a device using a tool through its declared interface), and every importer of the old dotted path is rewritten. The tester keeps running proofs and sealing; only the record format and its reader/writer move.",
   "falsifier": "RED if: (1) the live encapsulation_breaches('.') carries any row whose module is cairn.devices.tester.validation_store; (2) any .py file or bin/ command names cairn.devices.tester.validation_store, or cairn/devices/tester/validation_store.py exists; (3) cairn/tools/validation_store/intention+why.json does not declare public_interface exactly ['cairn.tools.validation_store.validation_store'], or that module imports anything from cairn.devices, or it does not expose standing, persist_validation, record_hollow, read_validations, source_fingerprint and VALIDATION_FIELDS. WRONG INTENT if the store turns out to hold tester state that a tool cannot carry. Horizon: the tester seal of cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the encapsulation_holds sieve in cairn/machines/build_inspector/inspector.py reds any new import of a device's internals at the next inspect, and the store has no runtime behaviour beyond the seal reads and writes every proof run already exercises",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T021225-d62ec6efcb22.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T021225-67b46e331067.json",
@@ -24,5 +24,56 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T021343-1e1da9d1a76e.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 8d9ddcdd4948 .. validate 1e1da9d1a76e, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE MOVE: git mv cairn/devices/tester/validation_store.py cairn/tools/validation_store/validation_store.py and create an EMPTY cairn/tools/validation_store/__init__.py (zero bytes, as every other tool package, e.g. cairn/tools/scratch/__init__.py). In the moved file, replace its two tester imports (from cairn.devices.tester.device import GREEN, VALIDATION_FIELDS / from cairn.devices.tester.isolation import BREACHED, INDETERMINATE, OPEN, SEALED) with the definitions themselves: GREEN = 'green', RED = 'red', VALIDATION_FIELDS = the same eight-name tuple device.py holds (claim, caller, date, method, verdict, evidence, falsifier, horizon), and SEALED/OPEN/INDETERMINATE/BREACHED = 'sealed'/'open'/'indeterminate'/'breached'. Then in cairn/devices/tester/device.py replace GREEN = \"green\" / RED = \"red\" and the VALIDATION_FIELDS tuple with from cairn.tools.validation_store.validation_store import GREEN, RED, VALIDATION_FIELDS, and in cairn/devices/tester/isolation.py replace the four verdict assignments with from cairn.tools.validation_store.validation_store import BREACHED, INDETERMINATE, OPEN, SEALED. The charter: copy the field set of cairn/tools/scratch/intention+why.json (component, runtime_role tool, role, schema_version, node_class, public_interface, what, why, entry, invoke, state_and_history, proof, gates, falsifier, learns, how_it_learns, traces_to, owner, gated_by, claim_provenance), set public_interface to exactly [\"cairn.tools.validation_store.validation_store\"], write the JSON to a scratch file and land it with: cairn artifact write cairn/tools/validation_store/intention+why.json --verb charter --why '<one line>' --from <file> (non-interactive; the door refuses a hand write).",
+      "by": "cc",
+      "step": "unlisted: move validation_store.py and vocabulary, write tool charter",
+      "source": "rehearsal",
+      "at": "2026-10-02T08:22:16+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2 THE REWRITE: a plain text replacement in Python (re.sub over every *.py under the repo and every file under bin/, skipping .git and __pycache__ and the proof file itself), three patterns: cairn\\.devices\\.tester\\.validation_store(?!\\w) -> cairn.tools.validation_store.validation_store; from cairn\\.devices\\.tester import validation_store\\b -> from cairn.tools.validation_store import validation_store; cairn/devices/tester/validation_store\\.py -> cairn/tools/validation_store/validation_store.py. Done when grep -rn 'tester.validation_store\\|tester import validation_store' --include=*.py . bin returns nothing outside the proof.",
+      "by": "cc",
+      "step": "unlisted: rewrite all imports of cairn.devices.tester.validation_store to cairn.tools.validation_store.validation_store",
+      "source": "rehearsal",
+      "at": "2026-10-02T08:22:16+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3 THE PROOF IS ALREADY WRITTEN AND COMMITTED RED (0/3, commit 5cbe9b45): cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py, PROVES {fe1cba85cb12: {1: nothing_reaches_into_the_tester_for_the_store, 2: the_old_address_is_gone, 3: the_tool_stands}}. The builder does not write or edit it; after D1 and D2 it runs python3 cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py and expects exit 0 with 3/3 ok, plus python3 cairn/devices/tester/proofs/test_tester.py and test_validation_store.py still exit 0.",
+      "by": "cc",
+      "step": "unlisted: write and run proof test_validation_store_is_a_tool.py that PROVES keys 1, 2, 3 red first",
+      "source": "rehearsal",
+      "at": "2026-10-02T08:22:16+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D1's charter, every field verbatim — write exactly this JSON (no other field, no inference) to a scratch file and land it through the door: {\"component\": \"validation_store\", \"runtime_role\": \"tool\", \"role\": \"charter\", \"schema_version\": \"v0 — component-charter shape; migrates into the intention envelope when MAP.md Q6 lands\", \"node_class\": \"tool\", \"node_class_role\": \"record store\", \"public_interface\": [\"cairn.tools.validation_store.validation_store\"], \"what\": \"The VALIDATION record's reader and writer: a proof at <component>/proofs/<stem>.py seals into <component>/validations/<stem>.json, one current record per proof. standing(proof) says whether a proof's code is in proven-space right now (its seal's source_fingerprint still matches the tree); persist_validation is the one door a seal is written through, announcing a verdict change as a trouble before the replace lands; record_hollow lands hollow evidence on the standing seal; read_validations, validations_path_for, source_fingerprint, directory_fingerprint and sealed_fingerprint_now are the reads every gate composes. It carries the record vocabulary: GREEN, RED, VALIDATION_FIELDS and the isolation verdicts SEALED, OPEN, INDETERMINATE, BREACHED.\", \"why\": \"Every proven-space gate reads seals, and 27 encapsulation rows reached into the tester device to do it (measured 2026-10-02). RULE 1 lets a component reach another only through its public interface, and a device's is the bus; the store is a file reader/writer over each component's own validations/ and took nothing from the tester but record vocabulary, so it moved down a rung to a tool every user reaches the same way (ticket fe1cba85cb12). The tester still runs proofs and seals them; it does so through this tool like everyone else.\", \"entry\": \"GRAFTED by git mv from cairn/devices/tester/validation_store.py, ticket fe1cba85cb12, 2026-10-02. The module's bytes moved unchanged but for its own address and the vocabulary that came with it from cairn/devices/tester/device.py and isolation.py; every caller's dotted path was rewritten.\", \"invoke\": \"from cairn.tools.validation_store import validation_store as vs; vs.standing(proof_path). Gates outside the tester usually reach it through cairn/tools/base/validation.py. Prove: python3 cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py (exit 0 = green); the store's behaviour is proved where it is used, by cairn/devices/tester/proofs/test_validation_store.py.\", \"state_and_history\": \"A TOOL HOLDS NO STATE OF ITS OWN (Law 6): the seals it writes live in each component's validations/, gated by that component's holder. Its prior history rides cairn/devices/tester/history.json; this move rides ticket fe1cba85cb12.\", \"proof\": \"proofs/test_validation_store_is_a_tool.py — three teeth for fe1cba85cb12: nothing reaches into the tester for the store; no code names the old address and the old file is gone; this charter declares exactly its module, the module imports nothing from cairn.devices, and it exposes the store's surface and vocabulary.\", \"gates\": \"Import gate — encapsulation_holds in build_inspector (RULE 1, ticket 56d1aff4455e) reds any reach landing off this tool's declared module. Seal: the tester seals the proof into validations/ beside it.\", \"falsifier\": \"Red if any import lands on cairn.devices.tester.validation_store, if any code names that address, if this module imports device code, or if this charter stops declaring exactly cairn.tools.validation_store.validation_store.\", \"learns\": \"It does not; it is a fixed record format and its door.\", \"how_it_learns\": \"It does not; it is a fixed record format and its door.\", \"traces_to\": [\"RULE 1 (encapsulation — reach another component only through its public interface)\", \"Law 5 (a proof's seal sits beside the proof)\", \"Law 6 (a tool has users, not an owner)\", \"Law 8 (the seal is what every proven-space gate reads)\"], \"owner\": \"None — a tool has users (Law 6): the tester, which seals through it, and every gate that reads a seal. CC gates writes to its code and proofs.\", \"gated_by\": [\"CC\"], \"claim_provenance\": {\"role\": \"cc-read\", \"what\": \"cc-read\", \"why\": \"cc-read\", \"public_interface\": \"cc-read\", \"traces_to\": \"akien\"}}",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T08:29:00+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D3's tester proofs, full paths: cairn/devices/tester/proofs/test_tester.py and cairn/devices/tester/proofs/test_validation_store.py (both exist, measured 2026-10-02); run each as python3 <path> from the repo root, expect exit 0.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T08:29:00+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D1's charter write, the exact --why text: --why 'fe1cba85cb12: the validation store moves down a rung to a tool (RULE 1)'",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T08:37:46+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/fe1cba85cb12-20261002T084902.json"
 }
