@@ -1,0 +1,27 @@
+{
+  "id": "0bcd51173524",
+  "title": "a-mailbox-nobody-reads-keeps-nothing",
+  "date": "2026-10-01",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "A discovered device's mailbox keeps no mail it has no reader for: _FeedbackDevice.receive writes to the inbound DataRecorder only when RECORDER_ON_READ is declared, and still accepts the mail.",
+  "why": "Measured 2026-10-01: test_isolation reds at 273MB against its 150MB bound, blocking every tester PROVED crossing; discovered devices' mailboxes keep inbound mail no reader opens. Lived symptom: no tester ticket can reach PROVED.",
+  "traces_to": "Law 9 and Law 7: test_isolation reds because instance-space is inflated by mail nobody reads, and that red blocks every PROVED crossing in the tester component. The ruling 'if it's not consumed, it's trash' (2026-09-30).",
+  "how": "In cairn/devices/cairn/machines/ground_loop/discovered.py _FeedbackDevice.receive: when type(self).RECORDER_ON_READ is None, skip the DataRecorder write and return the same accepted reply. Update the comment above RECORDER_READ_FREQUENCY_SECONDS/RECORDER_ON_READ: undeclared now means unkept, citing the ruling 'if it's not consumed, it's trash' (2026-09-30, CairnCommons/intentions-not-beside-code/I-heartbeat-probes-and-bus.md) and the sibling ae8d2bfb08e2. Proved by a new cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py over a _FeedbackDevice whose _recorder is preset to a scratch DataRecorder. The one-time drain of already-filled undeclared inbound recorders is the sibling's apply, not repeated here.",
+  "falsifier": "RED if: (1) a _FeedbackDevice with RECORDER_ON_READ None, its _recorder preset to a scratch DataRecorder, receives one envelope and the scratch recorder then holds any record; (2) a _FeedbackDevice subclass declaring RECORDER_ON_READ 'hold' and RECORDER_READ_FREQUENCY_SECONDS 60 receives one envelope and the scratch recorder does not hold exactly one record carrying that envelope's id; (3) either receive does not return accepted True with the device id. Horizon: the tester seal of the new proof.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because cairn/devices/tester/proofs/test_isolation.py is the receiver: its disk_bytes bound reds at every reseal while instance-space carries unread mail, and the build gate reads it at every PROVED crossing in the tester component",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T190641-bb1d6a447dfb.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T190641-205cd2a7c3f1.json",
+  "questions": [],
+  "children": "none, because the change is one guard in _FeedbackDevice.receive in cairn/devices/cairn/machines/ground_loop/discovered.py",
+  "task_or_ticket": "ticket",
+  "builder_notes": "A Haiku builder would ask: (1) How is the fixture built? from cairn.devices.cairn.machines.ground_loop.discovered import _FeedbackDevice resolved inside each tooth; dev = _FeedbackDevice('mailbox_fixture'); dev._recorder = DataRecorder(scratch_dir('mailbox_fixture_') / 'inbound', expected_read_frequency_seconds=..., on_read=...). (2) The declared case: a subclass class _Declared(_FeedbackDevice): RECORDER_ON_READ = 'hold'; RECORDER_READ_FREQUENCY_SECONDS = 60. (3) Envelope: {'id': 'env-fixture-1', 'sender': 'proof', 'why': 'fixture mail', 'verb': '', 'body': {'k': 1}}. (4) scratch_dir comes from cairn.devices.tester.scratch. (5) PROVES = {ticket: {'1':..., '2':..., '3':...}}.",
+  "cast": "2026-10-01",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T190731-642c698f2c20.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 4a3540f8cee1 .. validate 642c698f2c20, each learned)"
+  }
+}

@@ -23,5 +23,55 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261001T183633-bbed7363b57b.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient e2b448956339 .. validate bbed7363b57b, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "STEP 1, the red proof. Write cairn/devices/aider_shim/proofs/test_venv_imports.py with PROVES = {'a1a2156a2a17': {'1': 'test_a_present_but_broken_package_reds_verify', '2': 'test_the_stated_set_carries_the_audioop_backport'}} and a _main that runs both teeth and exits 1 on any failure. Resolve venv via importlib.import_module('cairn.devices.aider_shim.venv') INSIDE each tooth. Tooth 1: root = scratch_dir('aider_venv_fixture_') / 'venv'; subprocess.run([sys.executable, '-m', 'venv', '--without-pip', str(root)], check=True); site = next(root.glob('lib/python*/site-packages')); write site/cairn_fixture_raises/__init__.py containing raise ImportError('fixture: present but broken'); save v.VENV, set v.VENV = root, call out = v.verify(import_names=['cairn_fixture_raises']), restore v.VENV in finally; assert out['ok'] is False, 'cairn_fixture_raises' in out['unimportable_required'] with 'fixture: present but broken' in its value, and 'cairn_fixture_raises' not in out['missing_required']. Tooth 2: hits = [p for p in v.packages() if p.startswith('audioop-lts') and \"python_version >= '3.13'\" in p]; assert len(hits) == 1. Run python3 on it: both teeth red (TypeError for the unknown keyword import_names; AttributeError: no packages). Commit it red.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:54:27+00:00"
+    },
+    {
+      "n": 2,
+      "text": "STEP 2, the stated set, in cairn/devices/aider_shim/venv.py (measured 2026-10-01: REQUIRED at line 64, FUNCTIONAL at 90, CAIRN_RUNTIME at 102, build() at 220 builds pkgs = list(REQUIRED) + list(FUNCTIONAL) + list(CAIRN_RUNTIME)). Add after CAIRN_RUNTIME: INTERPRETER_BACKFILL = (\"audioop-lts==0.2.2; python_version >= '3.13'\",) with a comment saying Python 3.13 removed stdlib audioop (PEP 594) and pydub 0.25.1 imports it unconditionally, so the backport is what lets pydub import on 3.13+ (the marker keeps it out on older interpreters). Add def packages() -> list[str]: return list(REQUIRED) + list(FUNCTIONAL) + list(CAIRN_RUNTIME) + list(INTERPRETER_BACKFILL). In build(), replace the pkgs line with pkgs = packages(). pip accepts the marker string as one argv element.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:54:27+00:00"
+    },
+    {
+      "n": 3,
+      "text": "STEP 3, verify's probe, in cairn/devices/aider_shim/venv.py verify() (line 234). Signature becomes def verify(import_names: list[str] | None = None) -> dict. Move the hard-coded list to a module constant IMPORT_NAMES (same 23 names, same comment) and use import_names = list(IMPORT_NAMES) if import_names is None else list(import_names). In the probe script keep missing (find_spec is None) and present, then add: broken = {}; for m in required: if m in missing: continue; try: importlib.import_module(m) except Exception as e: broken[m] = f'{type(e).__name__}: {e}'; and print the JSON with a third key unimportable_required: broken. The ok line gains 'and not out[\"unimportable_required\"]'. _import_aider_in_venv still runs after; over a scratch venv it reports ok False with its detail, which is fine — the tooth asserts only ok False and the named package. Update the docstring's 'Three questions' sentence: 'is every required package importable' now means imported for real, not found on disk (find_spec answers is there a file; a present-but-broken package passed it, measured 2026-10-01 with pydub on 3.14).",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:54:27+00:00"
+    },
+    {
+      "n": 4,
+      "text": "STEP 4, green and the host-seam apply. Run python3 cairn/devices/aider_shim/proofs/test_venv_imports.py green twice, commit (the pre-commit reseal can take over 10 minutes; run it in the background), seal it with python3 -m cairn.devices.tester.cli --seal cairn/devices/aider_shim/proofs/test_venv_imports.py, commit. Then the apply: python3 -m cairn.devices.aider_shim.venv (its __main__ runs build() then verify() and prints both); the live verify must print ok true with unimportable_required empty. Then run python3 cairn/devices/aider_shim/proofs/test_driver.py and record whether any line mentions audioop; if test_driver reds for a reason other than audioop, that is not this ticket's red — cast it as its own ticket naming the failing tooth and output line, and cite it in the PROVEME note. The PROVEME crossing names cairn/devices/aider_shim/proofs/test_venv_imports.py.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-02T00:54:27+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D1's scratch_dir, exact import: from cairn.devices.tester.scratch import scratch_dir (measured 2026-10-01: defined at cairn/devices/tester/scratch.py:73 as def scratch_dir(prefix: str) -> Path — it creates and returns a fresh directory whose name starts with prefix; it is the tester's published door for proof scratch space, ticket e038544a9b60). Call it as a plain function, not a context manager and not a pytest fixture: root = scratch_dir('aider_venv_fixture_') / 'venv'.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:03:30+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D4's apply needs no new code: cairn/devices/aider_shim/venv.py already ends with if __name__ == '__main__': which, without --verify, prints json.dumps(build(upgrade='--upgrade' in sys.argv)) then json.dumps(verify()) (measured 2026-10-01, lines 311-316). Run it as python3 -m cairn.devices.aider_shim.venv from the repo root.",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-02T01:03:30+00:00"
+    }
+  ]
 }
