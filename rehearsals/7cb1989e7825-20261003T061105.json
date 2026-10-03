@@ -1,0 +1,717 @@
+{
+  "ticket": "7cb1989e7825",
+  "record": "rehearsals/7cb1989e7825-20261003T061105.json",
+  "at": "2026-10-03T06:11:05+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "20879ef93e114a5c87df8c6f1332b39394683425300a842061c617f5a3ddc1bd",
+  "ticket_sha256_at_read": "20879ef93e114a5c87df8c6f1332b39394683425300a842061c617f5a3ddc1bd",
+  "design_sha256": "03c41f961123bd47ec78bda62348b5e4ee949bf811c20e17d5cf8175202513d3",
+  "reads": [
+    {
+      "ticket": "7cb1989e7825",
+      "ticket_sha256": "20879ef93e114a5c87df8c6f1332b39394683425300a842061c617f5a3ddc1bd",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: the bus answers its health query",
+          "state": "builds_under_assumption",
+          "assumption": "the heartbeat argument that BusShim.__init__ requires can be obtained from within the bus instance, or BusShim's constructor should not require it from the roster",
+          "would_settle": "Whether to refactor BusShim.__init__ to accept an optional heartbeat, or to pass the ground loop's heartbeat at wiring time, or to move heartbeat ownership elsewhere in the bus process",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: a post with no wired receiver wakes the addressee's shim",
+          "state": "builds_under_assumption",
+          "assumption": "when BusDevice.post pokes an addressee's delivery hook (cairn/devices/cairn/machines/bus/bus.py:~420) and the shim has no handler yet, the shim can be woken by calling its _start_device or equivalent before _check_mail runs",
+          "would_settle": "Exactly where in the bus process (bus.py? server.py? both?) the addressee's shim is woken on an incoming personal post, and whether a NotImplementedError from DiscoveredShim._start_device should fall through to the bounce path",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: mail no shim can take returns to its sender",
+          "state": "builds_under_assumption",
+          "assumption": "after a shim._check_mail returns no_receiver or raises NotImplementedError, the bus can detect this failure and post a return-to-sender envelope to the sender's announce feed with is_bounce=True, and the existing BaseShim._bounce_to_sender and reply_to field support the mechanics",
+          "would_settle": "The exact code site where the bus detects 'cannot deliver' and the call sequence to emit a bounce: does bus.post() handle this directly, or does BusServer._check_mail() call it, or does the shim return a flag that triggers it",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: handle_bounce raises a trouble",
+          "state": "builds_under_assumption",
+          "assumption": "the trouble identity format is `mail-<addressee>-...` where addressee is the unreachable device's name, and BaseShim.handle_bounce can extract it from the envelope's `to` field and call raise_trouble with by='cc' (a measured clear, per ticket constraint)",
+          "would_settle": "The exact trouble identity string format (is it `mail-<to>`, `mail-<to>-no-receiver`, or something else?), and whether to include the bounce reason in the identity or in the trouble's why/detail fields",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: a shim that takes mail clears its trouble",
+          "state": "builds_under_assumption",
+          "assumption": "after BaseShim._check_mail delivers an envelope successfully (outcome != no_receiver and not is_bounce), the shim can reconstruct its own mail-<self>-... trouble identity and call clear_trouble, and the trouble device's fold will accept the clear because the identity exists and is currently LIVE",
+          "would_settle": "How the shim knows what trouble identity to clear (does it construct mail-<self> by name, or is there a pre-computed identity field, or does it read the identity format established in step 4?), and whether this clear should only fire for non-bounce deliveries (confirmed by checking envelope.is_bounce before the emit)",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: the mail-lane WATCHME probe does-the-mail-lane-get-worked",
+          "state": "builds_under_assumption",
+          "assumption": "by the time this probe runs, the health query has established a cadence that fires an event (not a poll) when a mail-* trouble is raised or cleared; the probe berthed at cairn/tools/base/probes/does_the_mail_lane_get_worked.py can read the trouble store (via bus request or direct db_domain access), filter to mail-* troubles raised after the PROVED era_floor of this ticket, count raised/cleared, and compute ages and prior_attempts",
+          "would_settle": "At what cadence the health query asks every device (every beat? on demand? per-device? system-wide?), and whether that cadence fires an event the probe should listen to, since the ticket explicitly left this question open and passed it to the successor node",
+          "confidence": 0.65
+        }
+      ]
+    },
+    {
+      "ticket": "7cb1989e7825",
+      "ticket_sha256": "20879ef93e114a5c87df8c6f1332b39394683425300a842061c617f5a3ddc1bd",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: the bus answers its health query",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: a post with no receiver wakes the addressee",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: mail no shim can take returns to its sender",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: the sender raises the mail trouble",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: a shim that takes mail clears its trouble",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: the mail-lane WATCHME probe",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.75
+        }
+      ]
+    },
+    {
+      "ticket": "7cb1989e7825",
+      "ticket_sha256": "20879ef93e114a5c87df8c6f1332b39394683425300a842061c617f5a3ddc1bd",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: the-bus-answers-its-health-query",
+          "state": "builds_under_assumption",
+          "assumption": "how BusShim is modified to accept the heartbeat it is constructed with and to answer get status through the bus server's verbs op; whether that heartbeat comes from the bus process or is passed to the roster shim constructor",
+          "would_settle": "D1: BusShim constructor accepts heartbeat parameter; bus server's verbs op handles device='bus' by instantiating and waking BusShim",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: a-post-with-no-receiver-wakes-the-addressee",
+          "state": "builds_under_assumption",
+          "assumption": "where in the bus post and server wiring flow the addressee's shim is woken (and whether the wake is already called and this is a test, or is new code that must be added)",
+          "would_settle": "D2: bus.post or server._wire calls the addressee's shim _start_device (or wake equivalent) before checking if the shim can handle the envelope",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: mail-with-no-receiver-returns-to-sender",
+          "state": "builds_under_assumption",
+          "assumption": "which code path in bus post/server wiring detects an addressee that cannot be woken or has no shim, and calls BaseShim._bounce_to_sender; and how standing backlog-at-start is handled (timing: startup path vs. normal post path)",
+          "would_settle": "D3: When bus.post/server._wire cannot wake or hold the addressee's shim, route through BaseShim._bounce_to_sender to return to sender's announce feed; run the same path once at bus start for standing undelivered",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: the-sender-raises-a-mail-trouble",
+          "state": "builds_under_assumption",
+          "assumption": "exact format of the trouble identity (mail-<addressee>-<what?>) and the why/detail dict structure that handle_bounce raises, given the constrain says 'naming the addressee's defect' but doesn't specify the suffix",
+          "would_settle": "D4: BaseShim.handle_bounce emits raise_trouble(identity='mail-<addressee>-unreachable', why='<bounce_reason>', detail={'sender':<sender_id>, 'receiver':<addressee_id>})",
+          "confidence": 0.72
+        },
+        {
+          "step": "unlisted: a-shim-clears-its-trouble-when-it-takes-mail",
+          "state": "builds_under_assumption",
+          "assumption": "in which shim method/code path (BaseShim._check_mail? deliver's success case?) the clear_trouble call is added, and the guard that prevents clearing on bounced deliveries",
+          "would_settle": "D5: After BaseShim.deliver succeeds (outcome != no_receiver, not is_bounce), emit clear_trouble(identity='mail-<own_id>-unreachable') once per process",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: the-mail-lane-watchme-probe-does-the-mail-lane-get-worked",
+          "state": "builds_under_assumption",
+          "assumption": "implementation details: how the probe listens for the mail-* trouble raised/cleared event (hook into trouble device? poll?), how it queries the trouble store with era filtering, how it computes 'rising median age', and how it writes the verdict artifact",
+          "would_settle": "D6: Create cairn/tools/base/probes/does_the_mail_lane_get_worked.py: Probe(trigger=on_mail_trouble_event) that reads trouble store post-era mail-*, counts raised/cleared/ages/prior_attempts, fires on (live>14d OR live>20 with rising median), writes verdict via chart.verdict.write_verdict when enough-condition met (8+ raised, 6+ cleared, max_live_age≤14d)",
+          "confidence": 0.63
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: a post with no wired receiver wakes the addressee's shim",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "when BusDevice.post pokes an addressee's delivery hook (cairn/devices/cairn/machines/bus/bus.py:~420) and the shim has no handler yet, the shim can be woken by calling its _start_device or equivalent before _check_mail runs"
+      ],
+      "would_settle": [
+        "Exactly where in the bus process (bus.py? server.py? both?) the addressee's shim is woken on an incoming personal post, and whether a NotImplementedError from DiscoveredShim._start_device should fall through to the bounce path"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: a shim that takes mail clears its trouble",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "after BaseShim._check_mail delivers an envelope successfully (outcome != no_receiver and not is_bounce), the shim can reconstruct its own mail-<self>-... trouble identity and call clear_trouble, and the trouble device's fold will accept the clear because the identity exists and is currently LIVE"
+      ],
+      "would_settle": [
+        "How the shim knows what trouble identity to clear (does it construct mail-<self> by name, or is there a pre-computed identity field, or does it read the identity format established in step 4?), and whether this clear should only fire for non-bounce deliveries (confirmed by checking envelope.is_bounce before the emit)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: a-post-with-no-receiver-wakes-the-addressee",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "where in the bus post and server wiring flow the addressee's shim is woken (and whether the wake is already called and this is a test, or is new code that must be added)"
+      ],
+      "would_settle": [
+        "D2: bus.post or server._wire calls the addressee's shim _start_device (or wake equivalent) before checking if the shim can handle the envelope"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: a-shim-clears-its-trouble-when-it-takes-mail",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "in which shim method/code path (BaseShim._check_mail? deliver's success case?) the clear_trouble call is added, and the guard that prevents clearing on bounced deliveries"
+      ],
+      "would_settle": [
+        "D5: After BaseShim.deliver succeeds (outcome != no_receiver, not is_bounce), emit clear_trouble(identity='mail-<own_id>-unreachable') once per process"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: handle_bounce raises a trouble",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the trouble identity format is `mail-<addressee>-...` where addressee is the unreachable device's name, and BaseShim.handle_bounce can extract it from the envelope's `to` field and call raise_trouble with by='cc' (a measured clear, per ticket constraint)"
+      ],
+      "would_settle": [
+        "The exact trouble identity string format (is it `mail-<to>`, `mail-<to>-no-receiver`, or something else?), and whether to include the bounce reason in the identity or in the trouble's why/detail fields"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: mail no shim can take returns to its sender",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "after a shim._check_mail returns no_receiver or raises NotImplementedError, the bus can detect this failure and post a return-to-sender envelope to the sender's announce feed with is_bounce=True, and the existing BaseShim._bounce_to_sender and reply_to field support the mechanics"
+      ],
+      "would_settle": [
+        "The exact code site where the bus detects 'cannot deliver' and the call sequence to emit a bounce: does bus.post() handle this directly, or does BusServer._check_mail() call it, or does the shim return a flag that triggers it"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: mail-with-no-receiver-returns-to-sender",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "which code path in bus post/server wiring detects an addressee that cannot be woken or has no shim, and calls BaseShim._bounce_to_sender; and how standing backlog-at-start is handled (timing: startup path vs. normal post path)"
+      ],
+      "would_settle": [
+        "D3: When bus.post/server._wire cannot wake or hold the addressee's shim, route through BaseShim._bounce_to_sender to return to sender's announce feed; run the same path once at bus start for standing undelivered"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: the bus answers its health query",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the heartbeat argument that BusShim.__init__ requires can be obtained from within the bus instance, or BusShim's constructor should not require it from the roster"
+      ],
+      "would_settle": [
+        "Whether to refactor BusShim.__init__ to accept an optional heartbeat, or to pass the ground loop's heartbeat at wiring time, or to move heartbeat ownership elsewhere in the bus process"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: the mail-lane WATCHME probe does-the-mail-lane-get-worked",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "by the time this probe runs, the health query has established a cadence that fires an event (not a poll) when a mail-* trouble is raised or cleared; the probe berthed at cairn/tools/base/probes/does_the_mail_lane_get_worked.py can read the trouble store (via bus request or direct db_domain access), filter to mail-* troubles raised after the PROVED era_floor of this ticket, count raised/cleared, and compute ages and prior_attempts"
+      ],
+      "would_settle": [
+        "At what cadence the health query asks every device (every beat? on demand? per-device? system-wide?), and whether that cadence fires an event the probe should listen to, since the ticket explicitly left this question open and passed it to the successor node"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: the-bus-answers-its-health-query",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "how BusShim is modified to accept the heartbeat it is constructed with and to answer get status through the bus server's verbs op; whether that heartbeat comes from the bus process or is passed to the roster shim constructor"
+      ],
+      "would_settle": [
+        "D1: BusShim constructor accepts heartbeat parameter; bus server's verbs op handles device='bus' by instantiating and waking BusShim"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: the-mail-lane-watchme-probe-does-the-mail-lane-get-worked",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "implementation details: how the probe listens for the mail-* trouble raised/cleared event (hook into trouble device? poll?), how it queries the trouble store with era filtering, how it computes 'rising median age', and how it writes the verdict artifact"
+      ],
+      "would_settle": [
+        "D6: Create cairn/tools/base/probes/does_the_mail_lane_get_worked.py: Probe(trigger=on_mail_trouble_event) that reads trouble store post-era mail-*, counts raised/cleared/ages/prior_attempts, fires on (live>14d OR live>20 with rising median), writes verdict via chart.verdict.write_verdict when enough-condition met (8+ raised, 6+ cleared, max_live_age≤14d)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: the-sender-raises-a-mail-trouble",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "exact format of the trouble identity (mail-<addressee>-<what?>) and the why/detail dict structure that handle_bounce raises, given the constrain says 'naming the addressee's defect' but doesn't specify the suffix"
+      ],
+      "would_settle": [
+        "D4: BaseShim.handle_bounce emits raise_trouble(identity='mail-<addressee>-unreachable', why='<bounce_reason>', detail={'sender':<sender_id>, 'receiver':<addressee_id>})"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: a post with no receiver wakes the addressee",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: a post with no wired receiver wakes the addressee's shim",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: a shim that takes mail clears its trouble",
+      "reads": [
+        3
+      ],
+      "present_in": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: a-post-with-no-receiver-wakes-the-addressee",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: a-shim-clears-its-trouble-when-it-takes-mail",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: handle_bounce raises a trouble",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: mail no shim can take returns to its sender",
+      "reads": [
+        3
+      ],
+      "present_in": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: mail-with-no-receiver-returns-to-sender",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the bus answers its health query",
+      "reads": [
+        3
+      ],
+      "present_in": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the mail-lane WATCHME probe",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the mail-lane WATCHME probe does-the-mail-lane-get-worked",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the sender raises the mail trouble",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the-bus-answers-its-health-query",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the-mail-lane-watchme-probe-does-the-mail-lane-get-worked",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the-sender-raises-a-mail-trouble",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: a post with no receiver wakes the addressee",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: a post with no wired receiver wakes the addressee's shim",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Exactly where in the bus process (bus.py? server.py? both?) the addressee's shim is woken on an incoming personal post, and whether a NotImplementedError from DiscoveredShim._start_device should fall through to the bounce path"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: a shim that takes mail clears its trouble",
+      "reads": [
+        1,
+        2
+      ],
+      "would_settle": [
+        "How the shim knows what trouble identity to clear (does it construct mail-<self> by name, or is there a pre-computed identity field, or does it read the identity format established in step 4?), and whether this clear should only fire for non-bounce deliveries (confirmed by checking envelope.is_bounce before the emit)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: a-post-with-no-receiver-wakes-the-addressee",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D2: bus.post or server._wire calls the addressee's shim _start_device (or wake equivalent) before checking if the shim can handle the envelope"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: a-shim-clears-its-trouble-when-it-takes-mail",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D5: After BaseShim.deliver succeeds (outcome != no_receiver, not is_bounce), emit clear_trouble(identity='mail-<own_id>-unreachable') once per process"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: handle_bounce raises a trouble",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "The exact trouble identity string format (is it `mail-<to>`, `mail-<to>-no-receiver`, or something else?), and whether to include the bounce reason in the identity or in the trouble's why/detail fields"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: mail no shim can take returns to its sender",
+      "reads": [
+        1,
+        2
+      ],
+      "would_settle": [
+        "The exact code site where the bus detects 'cannot deliver' and the call sequence to emit a bounce: does bus.post() handle this directly, or does BusServer._check_mail() call it, or does the shim return a flag that triggers it"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: mail-with-no-receiver-returns-to-sender",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D3: When bus.post/server._wire cannot wake or hold the addressee's shim, route through BaseShim._bounce_to_sender to return to sender's announce feed; run the same path once at bus start for standing undelivered"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the bus answers its health query",
+      "reads": [
+        1,
+        2
+      ],
+      "would_settle": [
+        "Whether to refactor BusShim.__init__ to accept an optional heartbeat, or to pass the ground loop's heartbeat at wiring time, or to move heartbeat ownership elsewhere in the bus process"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the mail-lane WATCHME probe",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the mail-lane WATCHME probe does-the-mail-lane-get-worked",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "At what cadence the health query asks every device (every beat? on demand? per-device? system-wide?), and whether that cadence fires an event the probe should listen to, since the ticket explicitly left this question open and passed it to the successor node"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the sender raises the mail trouble",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the-bus-answers-its-health-query",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D1: BusShim constructor accepts heartbeat parameter; bus server's verbs op handles device='bus' by instantiating and waking BusShim"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the-mail-lane-watchme-probe-does-the-mail-lane-get-worked",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D6: Create cairn/tools/base/probes/does_the_mail_lane_get_worked.py: Probe(trigger=on_mail_trouble_event) that reads trouble store post-era mail-*, counts raised/cleared/ages/prior_attempts, fires on (live>14d OR live>20 with rising median), writes verdict via chart.verdict.write_verdict when enough-condition met (8+ raised, 6+ cleared, max_live_age≤14d)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the-sender-raises-a-mail-trouble",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D4: BaseShim.handle_bounce emits raise_trouble(identity='mail-<addressee>-unreachable', why='<bounce_reason>', detail={'sender':<sender_id>, 'receiver':<addressee_id>})"
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.13211799999999999,
+        "duration_ms": 98744,
+        "is_error": false,
+        "session_id": "37e0cec0-8987-4038-bd58-6134c2056da1"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [
+          "nodes[0].step: 'D1' names a decision the ticket does not carry (it has [])",
+          "nodes[1].step: 'D2' names a decision the ticket does not carry (it has [])",
+          "nodes[2].step: 'D3' names a decision the ticket does not carry (it has [])",
+          "nodes[3].step: 'D4' names a decision the ticket does not carry (it has [])",
+          "nodes[4].step: 'D5' names a decision the ticket does not carry (it has [])",
+          "nodes[5].step: 'D6' names a decision the ticket does not carry (it has [])"
+        ],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.17276599999999998,
+        "duration_ms": 180334,
+        "is_error": false,
+        "session_id": "90397816-0a23-436e-9867-12ec90f52ebd"
+      },
+      {
+        "attempt": 2,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.16076459999999998,
+        "duration_ms": 149094,
+        "is_error": false,
+        "session_id": "5a974fd4-2ffa-462c-adfc-53c62e7bb5b1"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1277486,
+        "duration_ms": 113873,
+        "is_error": false,
+        "session_id": "4d27df35-d76b-49c1-8f62-6e8e7074ea7b"
+      }
+    ],
+    "cost_usd": 0.593397,
+    "duration_ms": 542045,
+    "rendered_chars": 88634,
+    "by": null
+  },
+  "divergence": null
+}
