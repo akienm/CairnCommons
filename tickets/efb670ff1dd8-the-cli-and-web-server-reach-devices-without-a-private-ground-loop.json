@@ -8,9 +8,9 @@
   "why": "bae622881f03 (PROVED 2026-09-30) made the ground loop a heartbeat and nothing else, but left loop.py standing because bus_client._wire still builds a GroundLoopDevice for every client: connect_bus, connect_system (the web server's listener) and reach. So there are still two ground loops: the resident heartbeat, and a private in-process one inside each client, which on connect_system fires one full beat of every probe on the tree at web-server start. The lived symptom: a mind reading 'ground loop' finds two meanings, and the web server's start pays a whole old-style beat.",
   "traces_to": "Law 1 and Law 6 via ticket bae622881f03 (PROVED 2026-09-30): the ground loop is only a heartbeat, one process, and Akien ruled 'the web server launch should be from the web server shim ... same with bus handling ... each device should check for mail ... in the device, not the ground loop'. A second in-process GroundLoopDevice inside every client is a second ground loop.",
   "how": "bus_client's three faces (connect_bus, connect_system, reach) stop constructing GroundLoopDevice in _wire: they build a BusDevice, load each named device's shim from disk (_load_device_shim, unchanged) and pulse only those shims to wire delivery, as reach already does. The web server's roster source (server.py:68 calls roster_source.roster()) becomes a small roster object over the device list on disk (cairn.tools.base.deviceness), not a loop. The 'ground_loop' special case in _wire goes, with ground_loop/shim.py. Then delete ground_loop/loop.py and staleness.py, and the proofs that exist only to test them (ground_loop/proofs/test_ground_loop.py's GroundLoopDevice teeth, test_discovery.py's loop half), and re-point the bus/web_server/system_rackmount proofs that construct GroundLoopDevice(bus=bus) at the loop-free wiring.",
-  "falsifier": "Proof cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py: (1) importing bus_client and calling reach/connect_bus/connect_system never imports cairn.devices.cairn.machines.ground_loop.loop (sys.modules check in a subprocess); (2) connect_system returns a roster whose device list equals deviceness membership; (3) reach('<a device with shim>') wires delivery so request() answers, not a timeout; (4) loop.py and staleness.py do not exist, and grep for GroundLoopDevice|ground_loop.loop|ground_loop.staleness over cairn/ bin/ skills/ *.py is empty. Live horizon: the web server starts via its shim and its nav renders devices; the heartbeat's liveness.json stays one pid.",
+  "falsifier": "Proof cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py: (1) importing bus_client and calling reach/connect_bus/connect_system never imports cairn.devices.cairn.machines.ground_loop.loop (sys.modules check in a subprocess); (2) connect_system returns a roster whose device list equals deviceness membership; (3) reach('<a device with shim>') wires delivery so request() answers, not a timeout; (4) loop.py and staleness.py do not exist, and grep for GroundLoopDevice|ground_loop.loop|ground_loop.staleness over cairn/ bin/ skills/ *.py is empty; (5) the web server's start (listener.main) holds no ground_loop shim in its own roster — a held shim is pulsed with the roster, so holding it would run a private heartbeat inside the web server. Live horizon: the web server starts via its shim and its nav renders devices; the heartbeat's liveness.json stays one pid.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [FIXME:waiting] -> BUILDME -> PROVEME -> PROVED",
   "watchme": "none, because the standing watcher is cairn/tools/bus_client/probes/a_client_reaches_and_never_beats.py, re-aimed by this ticket at the loop-free wiring, and the heartbeat's own record ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json shows one pid.",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260930T121642-65006af2f6dc.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T121642-97f05c0c5336.json",
@@ -434,6 +434,14 @@
       "step": "unlisted: verify git commits 4313a42d and c2d2fedf are present in working tree history",
       "source": "rehearsal",
       "at": "2026-10-02T22:27:13+00:00"
+    },
+    {
+      "n": 52,
+      "text": "The fix is proof-only: cairn/devices/web_server/listener.py at HEAD b906bb26 already calls connect_system(devices=[\"librarian\", \"trouble\"]) (built in 4313a42d) and stays as it is. The proof cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py gains tooth 5, PROVES key \"5\": \"the web server's start holds no heartbeat shim of its own\" — a subprocess imports cairn.devices.web_server.listener, replaces listener.connect_system with a recorder that calls the real one with beat=False, prints 'HELD' plus sorted(roster.held) (held is a property), and raises SystemExit(0) before uvicorn starts; the tooth is green when the child exits 0, printed exactly one HELD line, and that line does not contain 'ground_loop'. Measured 2026-10-03: green at HEAD (HELD ['bus', 'librarian', 'trouble']), red with listener.py reverted to 4313a42d^ (HELD ['bus', 'ground_loop', 'librarian', 'trouble']). The tooth is committed red-tested before the crossing; no code file changes in this repair, so the build commit for FIXME 2 is the proof commit itself, subject 'efb670ff1dd8: FIXME 2 — tooth 5: the web server's start holds no heartbeat shim of its own'. After it the proof exits 0 with 5 of 5 teeth green.",
+      "by": "cc",
+      "step": "FIXME 2",
+      "source": "rehearsal",
+      "at": "2026-10-03T01:03:37+00:00"
     }
   ],
   "rehearsal": "rehearsals/efb670ff1dd8-20261002T225121.json",
@@ -442,6 +450,11 @@
       "n": 1,
       "kind": "hollow",
       "missing": "ground_loop has no tracked registration folder, so discovery cannot see it in a clean checkout and reach('ground_loop') raises LookupError once efb drops the special name"
+    },
+    {
+      "n": 2,
+      "kind": "hollow",
+      "missing": "cairn/devices/web_server/listener.py's change (connect_system no longer names ground_loop) is measured by no tooth. Measured 2026-10-03 by the repaired hollow (e08c996f939c, HEAD b906bb26, anchor 1923f254): listener.py reverted, no declared tooth redded. Reverted, the web server's start holds ground_loop's shim in its own roster (HELD ['bus', 'ground_loop', 'librarian', 'trouble']) and a held shim is pulsed with the roster — a private heartbeat loop inside the web server, the thing this ticket removes. Tooth 5 'the web server's start holds no heartbeat shim of its own' runs listener.main in a subprocess with connect_system recorded (beat=False) and reds on that list; green at HEAD."
     }
   ]
 }
