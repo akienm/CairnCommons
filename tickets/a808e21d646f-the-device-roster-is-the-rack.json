@@ -84,7 +84,84 @@
       "step": "unlisted: write test_the_roster_is_the_rack.py with proofs for 8 falsifier clauses",
       "source": "rehearsal",
       "at": "2026-10-03T01:57:45+00:00"
+    },
+    {
+      "n": 9,
+      "text": "RULE 1 (a proof measures only its component), measured by tooth 7 itself: the rack proof importing the bus and sleep_cycle.token read as two into_device breaches from cairn/tools/rack. So clause 5 is proved by test_the_sleep_roster_is_the_rack_devices_whose_latest_menu_carries_sleep in cairn/devices/cairn/machines/sleep_cycle/proofs/test_token_rotation.py (PROVES a808e21d646f 5, same scenario), clause 6 by the tooth 'the beat record's device list is the rack' in cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py (PROVES a808e21d646f 6, a two-folder fixture rack under the runner's class root), and the rack proof keeps clauses 1-4, 7, 8. The crossing names all three proofs. cairn/devices/cairn/machines/ground_loop/probes/__init__.py (efb's registration folder) is deleted: with the roster read from the rack and mail resolved by rack.shim_of, reach('ground_loop') answers without it (test_the_wiring_needs_no_loop green, measured), and its presence redded test_heartbeat clause 8 'the loop carries no probes of its own'.",
+      "by": "cc",
+      "step": "unlisted: where clauses 5 and 6 are proved, and the ground loop's registration folder",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:12:07+00:00"
+    },
+    {
+      "n": 10,
+      "text": "The bus API, measured at cairn/devices/cairn/machines/bus/bus.py:433: bus.read(*, to=None, channel=None, reply_to=None) -> list[dict] — every record addressed to 'to' on 'channel', flushed DB rows first then ring rows, insertion order preserved, so the LAST element is the newest. Each record is a dict with a 'body' key (a dict, or a JSON string after a DB round-trip — json.loads it when str). 'announce' is a declared channel; bus.post(sender=d, to=d, channel='announce', why=..., body={'verbs': [...]}) writes one, which is exactly what BaseShim._announce_menu (cairn/tools/base/shim.py) posts at wiring and what the proof's scratch bus (BusDevice.scratch) posts. So token.roster walks bus.read(to=d, channel='announce') in reverse, takes the first record whose body carries a list 'verbs', and includes d when 'sleep' is in it; records with no 'verbs' list (hands, closes) are skipped.",
+      "by": "cc",
+      "step": "unlisted: implement token.roster(bus) to read sleep verbs from announced menus",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:18:26+00:00"
+    },
+    {
+      "n": 11,
+      "text": "Addresses at cairn 5c257ede: cairn/tools/base/deviceness.py:122 def claims_device_by_inheritance and :134 def has_fitted_shim_class each import repo_root deferred from cairn.devices.cairn.machines.ground_loop.discovery (lines 128 and 142, then 'root = Path(root) if root is not None else repo_root()'); both imports become 'from cairn.tools.rack.rack import repo_root', nothing else in those functions changes.",
+      "by": "cc",
+      "step": "unlisted: move deviceness.fitted_device_ids caller to use rack()",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:26:49+00:00"
+    },
+    {
+      "n": 12,
+      "text": "Addresses at cairn 5c257ede: _CLASS_ROOT is cairn/tools/bus_client/bus_client.py:23, Path(__file__).resolve().parents[3] (the repo root, same value as rack.repo_root()); _device_shim_module is line 150. DiscoveredShim is an existing class, cairn/devices/cairn/machines/ground_loop/discovered.py:44 (a BaseShim subclass), imported deferred inside DeviceRoster._discovered at cairn/tools/bus_client/roster.py:60/66 and constructed DiscoveredShim(name, probes_dir, bus=self._bus); that construction and import stay, only the folder it is handed comes from rack().",
+      "by": "cc",
+      "step": "unlisted: update shim_of() callers in probescan and bus_client",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:26:49+00:00"
+    },
+    {
+      "n": 13,
+      "text": "Address at cairn 5c257ede: bin/cmd/probescan:72 def probe_modules(root: Path) -> list[Path] returns the probe .py paths under every probes/ folder; a probe's owner is p.parent.parent.name (the folder holding probes/), as scan_probes at :117/122 already uses it. scan() builds devices = {p.parent.parent.name for p in probe_modules(root)} | set(rack_ids(root)).",
+      "by": "cc",
+      "step": "unlisted: Refactor device_folders() callers to use rack() instead",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:26:49+00:00"
+    },
+    {
+      "n": 14,
+      "text": "Addresses at cairn 5c257ede in cairn/devices/cairn/machines/sleep_cycle/token.py: SLEEP_PROBE is the module constant at line 45 ('sleeps_when_the_token_arrives.py'), used only by roster() at :62-66 and named in the docstring at :22; it is deleted and replaced by SLEEP_VERB = 'sleep'. roster(root=None) at :62 becomes roster(bus, root=None). mint already exists in token.py and takes the bus first; its one roster call passes the bus it already holds: roster(bus, roster_root).",
+      "by": "cc",
+      "step": "unlisted: implement token.roster(bus) to read sleep verbs from announced menus",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:26:49+00:00"
+    },
+    {
+      "n": 15,
+      "text": "Addresses at cairn 5c257ede in cairn/devices/cairn/machines/ground_loop/__main__.py: class_root is main()'s keyword parameter (line 83, default None = the repo, already handed to pulse_sites at :110); the state dict is built twice — once before the loop at :99 (state = {\"beats\": 0, ...}) and once per beat at :111 (state = {\"beats\": state[\"beats\"] + 1, ...}); each gains \"devices\": rack_ids(class_root).",
+      "by": "cc",
+      "step": "unlisted: add devices list to ground_loop beat record",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:26:50+00:00"
+    },
+    {
+      "n": 16,
+      "text": "Addresses at cairn 5c257ede: the RETIRED paragraph is cairn/devices/cairn/machines/ground_loop/discovery.py:19-22 ('RETIRED 2026-09-30 — the next paragraph is CC's gloss...'); the rack sentences are inserted before its 'Probes do not ride the beat' sentence. deviceness.py's gap paragraph begins at line 12 ('below still reads membership from ground_loop discovery — the probes/ rule') and is rewritten to say membership is the rack since a808e21d646f; the THIS COMPOSES paragraph at line 24 names cairn.tools.rack instead of ground_loop.discovery.",
+      "by": "cc",
+      "step": "unlisted: Update docstrings in discovery.py (RETIRED paragraph) and deviceness.py (module docstring)",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:26:50+00:00"
+    },
+    {
+      "n": 17,
+      "text": "The tooth structure is each host proof's own, already standing: PROVES is a module-level literal dict {ticket_id: {clause_key: tooth_name}} read by proof_coverage.declared with ast.literal_eval, and a clause is covered when the seal shows that tooth_name printed green. test_token_rotation.py names a FUNCTION (its _run_all calls globals()[name]() and prints '  PASS  <name>'), so clause 5 adds 'a808e21d646f': {'5': 'test_the_sleep_roster_is_the_rack_devices_whose_latest_menu_carries_sleep'} and a def of that name asserting roster == ['alpha'], and _run_all iterates every ticket in PROVES; test_heartbeat.py names a printed LINE (its ok(name, passed, detail) prints '  ok   <name>'), so clause 6 adds 'a808e21d646f': {'6': \"the beat record's device list is the rack\"} and one ok() of that name inside teeth_runner, beside the existing record teeth.",
+      "by": "cc",
+      "step": "unlisted: where clauses 5 and 6 are proved, and the ground loop's registration folder",
+      "source": "rehearsal",
+      "at": "2026-10-03T02:34:59+00:00"
     }
   ],
-  "rehearsal": "rehearsals/a808e21d646f-20261003T020308.json"
+  "rehearsal": "rehearsals/a808e21d646f-20261003T024205.json",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T200541-b25e4fcde49f.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 46bb61497880 .. validate b25e4fcde49f, each learned)"
+  }
 }
