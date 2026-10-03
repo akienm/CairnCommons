@@ -98,10 +98,34 @@
       "step": "FIXME 1",
       "source": "rehearsal",
       "at": "2026-10-02T23:47:29+00:00"
+    },
+    {
+      "n": 11,
+      "text": "In cairn/devices/tester/hollow.py, _revert's removal branch (the 'if probe.returncode != 0:' block, which today unlinks target if it exists and returns 'removed (absent before the build)') gains, after the unlink and before the return, a walk up from target.parent toward the worktree root: for each directory d strictly inside the worktree, stop if d is not a directory, or os.listdir(d) is non-empty, or git -C repo_root cat-file -e '{commit}:{d relative to worktree, as posix}' returns 0 (the anchor had that directory); otherwise d.rmdir() and continue with d.parent. The worktree root itself is never removed. The return string stays 'removed (absent before the build)'. _restore needs no change: 'git checkout -- rel' recreates parent directories. Tooth 5 (test_a_removed_file_takes_its_empty_directory_with_it) is the arbiter; teeth 1-4 must stay green. This lands in the same build commit as D10, subject 'e08c996f939c: FIXME 1+2 — a directory expands to the ticket's own build files; a removed file takes its empty directory with it'; D10's own subject line is superseded by this one.",
+      "by": "cc",
+      "step": "FIXME 2 — the removal branch prunes the directories it emptied",
+      "source": "rehearsal",
+      "at": "2026-10-02T23:50:10+00:00"
+    },
+    {
+      "n": 12,
+      "text": "Quoted from cairn/devices/tester/hollow.py at HEAD 8674dec2: measure(ticket_id, *, repo_root, commons, berths_root, timeout, tester, log) already binds 'tid = str(ticket.get(\"id\") or ticket_id)' near its top, before the anchor is computed, so D10's call '_expand_dirs(files, commit, repo_root, tid=tid)' uses that existing local. D2-D5 describe the FIRST build (bce2f865, already committed, sealed 4/4 then); they are history, not steps to redo. The FIXME build is exactly D10 + D11 applied on top of HEAD, and its pass-state is the proof's FIVE teeth (1-5) green — D5's '4 of 4' was the first build's count and is superseded by '5 of 5'.",
+      "by": "cc",
+      "step": "FIXME — what tid is and which decisions the repair supersedes",
+      "source": "rehearsal",
+      "at": "2026-10-02T23:58:45+00:00"
+    },
+    {
+      "n": 13,
+      "text": "D10 and D11 land together as one repair in one commit; after both, the proof cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py exits 0 with 5 of 5 teeth green. Any '4 of 4' in D10's text is superseded by '5 of 5'. In D11 the directory's path for git is computed as d.relative_to(worktree).as_posix(), where worktree is _revert's first parameter, and probed with subprocess.run(['git', '-C', str(repo_root), 'cat-file', '-e', f'{commit}:{that path}'], capture_output=True, text=True, env=git_env()) — returncode 0 means the anchor had the directory and the walk stops.",
+      "by": "cc",
+      "step": "FIXME — expected pass state and the exact path computation",
+      "source": "rehearsal",
+      "at": "2026-10-03T00:07:50+00:00"
     }
   ],
   "cast": "2026-10-02",
-  "rehearsal": "rehearsals/e08c996f939c-20261002T232324.json",
+  "rehearsal": "rehearsals/e08c996f939c-20261003T001642.json",
   "fixme": [
     {
       "n": 1,
