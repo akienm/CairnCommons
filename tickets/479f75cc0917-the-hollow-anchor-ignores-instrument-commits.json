@@ -10,7 +10,7 @@
   "how": "In cairn/devices/tester/hollow.py build_anchor, filter the files handed to _build_commits through the same _classify the reversion loop uses (keep only files it would measure — not proofs/, not records, not outside), so the bound and the first-build-commit see only build code. Teeth in tester/proofs over a scratch repo: build commit, PROVEME->BUILDME back-edge, proofs-only repair commit -> anchor is the build's parent, not the repair's.",
   "falsifier": "Falsifier: RED if (1) a scratch repo with a build commit, a PROVEME->BUILDME back-edge and a later commit naming the ticket that changes only proofs/ + validations/ anchors at that repair's parent instead of the build commit's parent; (2) a later commit naming the ticket that changes a source file in writes_to still bounds (anchors after the back-edge) — the rebuild rule kept; (3) test_hollow_anchors_before_the_build_that_stands.py, test_the_hollow_measures_the_repaired_build.py or test_hollow.py turns red. Horizon: `cairn test --hollow 7cb1989e7825` takes a reading after this build (anchor ab8d52d3, rule first-build-commit).",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the falsifier is read by `bin/cairn test --hollow 7cb1989e7825` (bin/cmd/test) at 7cb1989e7825's PROVEME, and the reading lands as evidence.hollow on cairn/tools/base/validations/test_bounce_raises_the_mail_trouble.json, an existing record; nothing further to learn after that one reading.",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261003T010841-47976d912098.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261003T010803-fe7d328aef5d.json",
@@ -18,5 +18,32 @@
   "children": "none, because the change is one filter inside hollow.build_anchor.",
   "questions": [],
   "builder_notes": "A Haiku builder would ask: (1) Which line? cairn/devices/tester/hollow.py build_anchor: `builds = _build_commits(tid, files, repo_root)` becomes `builds = _build_commits(tid, [f for f in files if _classify(f) is None], repo_root)` with a comment naming 7cb1989e7825 and c3f72a3f; extend the docstring's THE RULE paragraph by one sentence. (2) What proves it? a new proof cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py on the scratch-repo fixture pattern of test_hollow_anchors_before_the_build_that_stands.py (scratch_dir + git_env + a history.json journal + a decompose berth), PROVES {'<id>': {'1': ..., '2': ...}} matching falsifier markers (1) and (2), teeth a_proofs_only_repair_does_not_bound_the_anchor and a_source_rebuild_still_bounds_the_anchor. (3) Live reading: cairn test --hollow 7cb1989e7825 --seal.",
-  "cast": "2026-10-03"
+  "cast": "2026-10-03",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The builder does NOT write the proof. cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py was committed red at 1a36a822 with THREE teeth whose PROVES keys 1-3 follow the falsifier's numbered clauses: test_a_proofs_only_repair_does_not_bound_the_anchor (red at HEAD: HollowUnmeasurable 'the anchor ... postdates the build'), test_a_source_rebuild_still_bounds_the_anchor (green) and test_the_anchor_and_hollow_proofs_stay_green (green; runs test_hollow_anchors_before_the_build_that_stands.py, test_the_hollow_measures_the_repaired_build.py, test_hollow.py). Its fixture is copied from test_the_hollow_measures_the_repaired_build.py. The builder runs it and edits it not at all; the build is done when it exits 0.",
+      "by": "cc",
+      "step": "the proof already stands",
+      "source": "rehearsal",
+      "at": "2026-10-03T07:42:33+00:00"
+    },
+    {
+      "n": 2,
+      "text": "In cairn/devices/tester/hollow.py build_anchor, the line `builds = _build_commits(tid, files, repo_root)` becomes `builds = _build_commits(tid, [f for f in files if _classify(f) is None], repo_root)`. Directly above it, this comment, verbatim: '# A build commit changes a file this run would MEASURE. A commit that names the ticket but' / '# touches only instruments or records (whatever _classify skips) is a repair of the proof,' / '# not a new build, so it neither bounds nor anchors (ticket 479f75cc0917, measured on' / '# 7cb1989e7825: its proofs-only repair c3f72a3f anchored the hollow after the build).'. In the docstring's THE RULE paragraph, the bullet ending 'and changes a writes_to file.' becomes 'and changes a writes_to file — one ``_classify`` measures, never an instrument or a record (ticket 479f75cc0917).' (wrapped to two lines at the bullet's indent). Nothing else in hollow.py changes; _classify is untouched; files is already repo-relative (measure maps it through _inside before build_anchor).",
+      "by": "cc",
+      "step": "filter the build commits through _classify",
+      "source": "rehearsal",
+      "at": "2026-10-03T07:42:33+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Done when `python3 cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py` exits 0 (3 passed; the third tooth takes ~5 minutes because it runs the three sibling hollow proofs). Sealing (`cairn test --seal --netns <proof>`), the PROVEME crossing and the live reading `cairn test --hollow 7cb1989e7825 --seal` (expected: anchor ab8d52d3 by rule first-build-commit, no file HOLLOW) are CC's acts after the build, not the builder's.",
+      "by": "cc",
+      "step": "how the build is checked",
+      "source": "rehearsal",
+      "at": "2026-10-03T07:42:33+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/479f75cc0917-20261003T074816.json"
 }
