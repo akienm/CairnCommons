@@ -3,15 +3,15 @@
   "title": "the-logs-tree-forgets-past-30-days",
   "date": "2026-10-02",
   "owner": "CC",
-  "owning_intention": "cairn/tools/base/intention+why.json",
-  "intention": "One function on the address tool, address.sweep_logs(older_than_days=30, roots=None), deletes every regular file under <instance root>/logs/ whose mtime is older than the cutoff, then removes directories left empty. It returns {'deleted': n, 'bytes': b, 'kept': k}. It never follows a symlink out of the root and never touches anything outside logs/. One caller fires it on the event Akien names.",
+  "owning_intention": "cairn/devices/cairn/intention+why.json",
+  "intention": "The cairn device forgets its logs past 30 days in its own sleep cycle: when a sleep rotation it runs closes (every rack device on the roster has answered, or the roster was empty), the device runs sweep_logs(older_than_days=30, roots) from cairn/devices/cairn/logs_sweep.py. The sweep deletes every regular file under <instance root>/logs/ whose lstat mtime is older than the cutoff, then removes directories left empty below logs/. It returns {'deleted': n, 'bytes': b, 'kept': k}, never follows a symlink out of the root, and never touches anything outside logs/.",
   "why": "36719 of the 228531 files under ~/.cairn/logs (988M) are past 30 days and nothing deletes there; the logs root exists so one deletion can forget them",
   "traces_to": "Law 5 (the address carries what a mind needs now); Law 6 (one machine-scoped root, one deletion, nobody's gate); the three retention classes (logging: 30 days, disposable; Akien 2026-09-15); Akien 2026-08-18 on the logs root.",
-  "how": "Measured 2026-10-02: ~/.cairn/logs holds 228531 files, 988M, and 36719 of them are older than 30 days (find -type f -mtime +30). Nothing deletes there: no mtime-age deletion exists anywhere under cairn/ (grep, 2026-10-02), and breadcrumb_log.py records the sweep as deliberately absent until records existed. They do now, at 07f415c15970's 280 inference tickets a day among them. address.log_path (cairn/tools/base/address.py:148) carries the why: one root is one deletion crossing nobody's gate (Law 6), ruled 'agree' 2026-08-18. Build: sweep_logs in cairn/tools/base/address.py beside log_path. os.walk(topdown=False) under resolve('instance/logs', roots); unlink files with lstat().st_mtime < cutoff, skipping symlinks (unlink the link itself if old, never its target); rmdir directories left empty below the root (never the root). The caller and its firing event are settled by the question bound to this ticket. The first run is the one-time drain, and its counts go on the verdict.",
-  "falsifier": "RED if, under a temp roots table: (1) a file under logs/ with mtime 31 days old survives sweep_logs(); (2) a file with mtime 29 days old is deleted; (3) any file outside logs/ (a sibling under the temp instance root, or a symlink target outside logs/ reached through a link inside it) is deleted or changed; (4) a directory left empty below logs/ survives, or logs/ itself is removed; (5) the returned 'deleted' count differs from the number of files that left disk. WRONG INTENT if anything under ~/.cairn/logs must live past 30 days. Horizon: the tester seal of cairn/tools/base/proofs/test_the_logs_tree_forgets_past_30_days.py.",
+  "how": "Measured 2026-10-02: ~/.cairn/logs holds 228531 files, 988M, and 36719 of them are older than 30 days (find -type f -mtime +30). Nothing deletes there: no mtime-age deletion exists anywhere under cairn/ (grep, 2026-10-02), and breadcrumb_log.py records the sweep as deliberately absent until records existed. They do now, at 07f415c15970's 280 inference tickets a day among them. address.log_path (cairn/tools/base/address.py:148) carries the why: one root is one deletion crossing nobody's gate (Law 6), ruled 'agree' 2026-08-18. Build (re-pointed 2026-10-04 by open-9d9c0b1ac3a9's answer, see decisions): sweep_logs in cairn/devices/cairn/logs_sweep.py, a module inside the cairn device. os.walk(topdown=False) under resolve('instance/logs', roots); unlink files with lstat().st_mtime < cutoff, skipping symlinks (unlink the link itself if old, never its target); rmdir directories left empty below the root (never the root). The caller is cairn/devices/cairn/device.py: _handle_sleep_cycle (act mint) and _handle_sleep_token each run the sweep through one helper when the cycle they return is closed, put the counts on the verb result under 'logs', and emit('logs_swept', values=counts) to the device's own trail. The first run is the one-time drain, and its counts go on the verdict.",
+  "falsifier": "RED if, under a temp roots table: (1) a file under logs/ with mtime 31 days old survives sweep_logs(); (2) a file with mtime 29 days old is deleted; (3) any file outside logs/ (a sibling under the temp instance root, or a symlink target outside logs/ reached through a link inside it) is deleted or changed; (4) a directory left empty below logs/ survives, or logs/ itself is removed; (5) the returned 'deleted' count differs from the number of files that left disk; (6) a CairnDevice at those roots whose sleep rotation closes (sleep-cycle mint over an empty roster) leaves a 31-day file under logs/, or its verb result carries no 'logs' counts. WRONG INTENT if anything under ~/.cairn/logs must live past 30 days. Horizon: the tester seal of cairn/devices/cairn/proofs/test_the_logs_tree_forgets_past_30_days.py.",
   "node_class": "code-seam",
   "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
-  "watchme": "none, because the sandbox bound in cairn/devices/tester/proofs/test_isolation.py and the proof beside cairn/tools/base/address.py red at every reseal if the sweep stops holding",
+  "watchme": "none, because the proof cairn/devices/cairn/proofs/test_the_logs_tree_forgets_past_30_days.py reds at every reseal if the sweep stops holding, and the sweep's every run lands on the cairn device's own trail as a logs_swept record (cairn/tools/base/diagnostic.py emit); the firing event is the rotation close, whose cadence is ticket 9b6b392ebcfe's idle trigger",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261002T114315-7ef0a3cacf6d.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261002T114315-f2d7f12a3e6c.json",
   "questions": [
@@ -20,6 +20,119 @@
   "children": "none, because the function, its one caller and the first drain are one build",
   "task_or_ticket": "ticket",
   "parent": "c6017f156442",
-  "builder_notes": "A Haiku builder would ask: (1) Where? cairn/tools/base/address.py, sweep_logs beside log_path. (2) What deletes? Files under logs/ with lstat mtime past the cutoff, then empty dirs below the root. (3) Who calls it? The caller the answered question names. (4) Proof? cairn/tools/base/proofs/test_the_logs_tree_forgets_past_30_days.py, PROVES keys 1-5, red first, under a temp roots table.",
-  "cast": "2026-10-02"
+  "builder_notes": "A Haiku builder would ask: (1) Where? cairn/devices/cairn/logs_sweep.py (sweep_logs) and two handlers in cairn/devices/cairn/device.py; nothing outside the cairn device changes (RULE 1). (2) What deletes? Files under resolve('instance/logs', roots) with lstat mtime past the cutoff, a symlink unlinked as itself, then empty dirs below the root. (3) Who calls it? The cairn device when a sleep cycle it returns is closed. (4) Proof? cairn/devices/cairn/proofs/test_the_logs_tree_forgets_past_30_days.py, PROVES keys 1-6, red first, under a temp roots table; (6) drives CairnDevice(bus=<post-recording stand-in>, roots, roster_root=<empty tmp>) through sleep-cycle mint, which closes at once over an empty roster.",
+  "cast": "2026-10-02",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "akien",
+      "step": "D1",
+      "date": "2026-10-04",
+      "text": "D1: SETTLED by open-9d9c0b1ac3a9, Akien verbatim: \"cairn device's sleep cycle should be where that cleanup happens.\" Placement under RULE 1 (one component per ticket): the sweep berths INSIDE the cairn device (cairn/devices/cairn/logs_sweep.py), not on the address tool, so the build, its caller and its proof share one component; owning_intention moves to cairn/devices/cairn/intention+why.json. The event is the close of a rotation the cairn device runs (token.py closes a cycle in mint over an empty roster and in receive_answer after the last device): the hub sweeps after every rack device has done its own maintenance. The cairn device does NOT join its own roster: it is the hub, and a verb-less hand to itself would need a mail probe whose handle cannot see the roots. Measured 2026-10-04: nothing mints a cycle yet except the operator verb sleep-cycle mint (grep over bin/, skills/, hooks, crontab, systemd: zero); the idle trigger that will mint on its own is ticket 9b6b392ebcfe, BUILDME queued, and this ticket does not build it."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-04",
+      "text": "D2: sweep_logs(older_than_days=30, roots=None, now=None) -> {'deleted', 'bytes', 'kept'} in cairn/devices/cairn/logs_sweep.py. The root is cairn.tools.base.address.resolve('instance/logs', roots) (address is in base's declared public_interface). now defaults to time.time(); cutoff = now - older_than_days*86400. A missing logs root returns all three counts 0 and creates nothing."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-04",
+      "text": "D3: The walk is os.walk(root, topdown=False, followlinks=False). Every entry in filenames, and every symlink in dirnames (os.walk lists a link to a directory there and never descends it), is judged by its own os.lstat: st_mtime < cutoff -> os.unlink(path) (a link is removed as itself, its target is never touched), add lstat st_size to 'bytes', count 'deleted'; otherwise count 'kept'. Then each real directory below the root (never the root itself) that os.listdir finds empty is os.rmdir'd. FileNotFoundError on any entry, and ENOTEMPTY from an rmdir whose directory a writer filled after the listdir, are skipped (a writer raced the walk); any other OSError raises, loud (Law 7)."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-04",
+      "text": "D4: MEASURED COMPLETE SET of callers, cairn/devices/cairn/device.py, 2026-10-04: a cycle closes in exactly two places, token.mint (empty roster -> 'nothing to visit') and token.receive_answer (last device answered -> 'rotation complete'). So exactly two handlers call the sweep, through one private helper _forget_logs(): _handle_sleep_cycle act 'mint' when the returned cycle's closed_at is not None, and _handle_sleep_token when its result carries closed True. The helper runs sweep_logs(roots=self._roots), emits self.emit('logs_swept', values=counts), and the handler returns the counts under the key 'logs' beside its existing keys. act 'show', a refused answer, and an answer that hands onward run no sweep."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-04",
+      "text": "D5: The proof cairn/devices/cairn/proofs/test_the_logs_tree_forgets_past_30_days.py: keys 1-5 call sweep_logs on a tempfile.TemporaryDirectory roots table {'repo','commons','instance'} with files aged by os.utime (31 and 29 days); key 3 plants a sibling file at <instance>/other.txt and a file outside logs/ reached through a symlink inside logs/ whose link is old, and asserts both survive byte-identical while the link is gone. Key 6 builds CairnDevice(bus=<a stand-in whose post() appends to a list and whose read() returns []>, roots=<the table>, roster_root=<an empty temp dir>), calls its sleep-cycle verb handler with body {'act': 'mint'}, and asserts the 31-day file is gone and result['logs']['deleted'] >= 1. The stand-in is not a scratch bus: an empty roster makes token.py call only bus.post (the close announce), and no bus row is written anywhere live. PROVES is a literal dict with keys '1'..'6' naming one test function each; the proof runs as a script, exit 0 = green, red first before logs_sweep.py exists."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-04",
+      "text": "D6: Hollow-revertable build files: cairn/devices/cairn/logs_sweep.py (new) and cairn/devices/cairn/device.py (edited). Neither is under proofs/. With both reverted the proof's import of logs_sweep fails, so every key reds."
+    },
+    {
+      "n": 7,
+      "by": "cc",
+      "step": "D7",
+      "date": "2026-10-04",
+      "text": "D7: The live first run is the one-time drain (~36719 files, measured 2026-10-02). It happens the first time anyone mints a cycle after the build (today only the operator verb `sleep-cycle mint`; the idle trigger is ticket 9b6b392ebcfe). The builder fires one live mint after PROVEME through the bus (sender cc, verb sleep-cycle, body act mint) and records the returned 'logs' counts on the verdict."
+    },
+    {
+      "n": 8,
+      "text": "SETTLED: both handlers already exist in cairn/devices/cairn/device.py (measured 2026-10-04): _handle_sleep_token at line 55, whose result from token.receive_answer carries 'closed', and _handle_sleep_cycle at line 64, whose act 'mint' branch returns {'cycle': token.mint(...)}. The sweep hooks in after each of those two calls returns, before the handler returns.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-04T20:58:48+00:00"
+    },
+    {
+      "n": 9,
+      "text": "SETTLED: the live first run's 'logs' counts (deleted, bytes, kept) are recorded in two places: the ticket's measured_at_build field (written through the artifact door) and the PROVED verdict's measurement text that the builder hands harbor_master at the PROVED crossing, both naming the date and the live mint's cycle_id.",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-04T20:58:48+00:00"
+    },
+    {
+      "n": 10,
+      "text": "SETTLED: both handlers already exist in cairn/devices/cairn/device.py at lines 55 (_handle_sleep_token) and 64 (_handle_sleep_cycle), with the return patterns and role contexts specified: _handle_sleep_token returns token.receive_answer's dict ({'accepted', 'cycle_id', 'position', 'closed'} when accepted; {'accepted': False, 'reason', ...} when refused), and the sweep adds 'logs' only when 'closed' is True. _handle_sleep_cycle's act 'mint' branch returns {'cycle': <the cycle dict, whose closed_at is None while open>}, and the sweep adds 'logs' beside 'cycle' only when closed_at is not None; act 'show' returns {'cycle': token.standing(...)} unchanged; any other act returns {'accepted': False, 'reason': ...} unchanged.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-04T21:07:58+00:00"
+    },
+    {
+      "n": 11,
+      "text": "SETTLED: the signature of bus.post is keyword-only, as token.py calls it: post(sender=..., to=..., channel=..., verb=..., why=..., body=<dict>); the close announce token._announce posts is post(sender='cairn', to='cairn', channel='announce', verb='', why='sleep token', body={'cycle_id', 'event': 'closed', 'device': None, 'position', 'of'}). The stand-in's post(**kw) appends kw to a list and returns {'id': 'proof-logs-sweep-<n>'}; token.py ignores the return. read(**kw) returns [] and is never reached over an empty roster (rack_ids on an empty roster_root yields nothing). The proof asserts nothing about the announce's fields.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-04T21:16:08+00:00"
+    },
+    {
+      "n": 12,
+      "text": "SETTLED: emit() already exists on CairnDevice — inherited from BaseDevice (cairn/tools/base/diagnostic.py:272) — with exact signature emit(gate, *, pointer=None, values=None, now=None); the builder creates nothing, and _forget_logs calls self.emit('logs_swept', values=counts).",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-04T21:27:35+00:00"
+    },
+    {
+      "n": 13,
+      "text": "SETTLED: CairnDevice already supports these constructor parameters — cairn/devices/cairn/device.py defines __init__(self, bus=None, roots=None, roster_root=None); the builder adds nothing and the proof constructs CairnDevice(bus=_PostOnlyBus(), roots=<tmp roots>, roster_root=<empty tmp dir>).",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-04T21:27:35+00:00"
+    },
+    {
+      "n": 14,
+      "text": "SETTLED: the exact API for the live first-run mint is the bus client: from cairn.tools.bus_client.bus_client import reach; reply = reach('cairn').request(sender='cc', to='cairn', verb='sleep-cycle', why='ff881672ac57 first live sweep', body={'act': 'mint'}, timeout=120) — the same shape constrain.py:371 uses for the tester; the counts are reply['body']['logs'] and the cycle id reply['body']['cycle']['cycle_id']. bin/cairn cairn takes no verb args (its launcher only prints the header), so the CLI is not the mechanism.",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-04T21:27:35+00:00"
+    }
+  ],
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261004T144412-51956f801f05.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 65ec26d7db89 .. validate 51956f801f05, each learned)"
+  },
+  "rehearsal": "rehearsals/ff881672ac57-20261004T213531.json"
 }
