@@ -1,0 +1,66 @@
+{
+  "id": "b5871526384a",
+  "title": "tester-hollow-sends-the-unseen-to-the-operator",
+  "date": "2026-10-04",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's hollow run turns a file whose revert redded no declared tooth into one operator notice (the file plus its diff) instead of a red, seals that file as {\"notified\": <notice id>}, keeps its notices under its own instance address, and answers `notices` (the unseen ones plus the rate) and `notice-seen` on the bus.",
+  "why": "Akien, open-ed0a56ce6357: a green the measurement cannot vouch for completes AND notifies him, \"because the repo has the whole history anyway, we can back out a part if needed\". Today a hollow file reds the hollow run, so the crossing he ruled must complete is refused; and the rate he asked for has no instrument.",
+  "traces_to": "parent df05d93da4c0 falsifier (a); Akien's answer to open-ed0a56ce6357; Law 6 (the tester measured it, the tester owns the notices); RULE 1 (the inbox reads the verb, never the store); Law 3 (the rate is measured from the first notice)",
+  "how": "New cairn/devices/tester/notices.py (the store under instance_path('tester', 0)/notices). hollow.measure drops the 'hollow:' red reason and carries unseen = {file: diff}. cli._hollow_run --seal posts one notice per unseen file and seals {'notified': id}. TesterDevice gains the `notices` and `notice-seen` verbs. test_hollow.py's d0f2b03952e3 tooth 2 is rewritten to the answered intention. The decisions D1-D6 carry every detail.",
+  "falsifier": "(1) hollow.measure over the test_hollow fixture (unchecked.py redded no tooth) returns verdict green, hollow == ['unchecked.py'], no reason naming unchecked.py, and unseen['unchecked.py'] is the pre-build-to-HEAD diff of that file. (2) cli.main(['--hollow', FIXTURE, '--seal']) posts exactly one notice naming unchecked.py with that diff, seals {'subject.py': ['test_value_is_two'], 'unchecked.py': {'notified': <that id>}} and returns 0; a second identical run leaves one notice. (3) cli.main without --seal posts nothing, prints unchecked.py as unseen and returns 0. (4) the `notices` verb returns the unseen notices and a rate with total, first, days and per_day; `notice-seen` with an id takes it out of the unseen list; an unknown id is refused by name. (5) a file whose proof printed no teeth seals as {'unreadable': [...]} with no notice and the run returns 1; a run that measured nothing still reds. WRONG INTENT if Akien is inundated (his words: \"if i get inundated, we'll change it\"). Horizon: this child PROVED.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the rate this child builds is itself the standing measurement, read by the operator inbox lane (child 3 of df05d93da4c0, CairnCommons/tickets/df05d93da4c0-an-unvouched-green-completes-and-notifies.json) and reported to the foreground per ~/.cairn/foreground-decisions.md item 6",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261004T161520-f80fcfdab5cd.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261004T161425-cd76235dc950.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the store, the seal path and the verbs are one component's build and one proof",
+  "questions": [],
+  "parent": "df05d93da4c0",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-04",
+      "text": "D1: SETTLED: new module cairn/devices/tester/notices.py. Module global HOME: Path | None = None (a proof points it at a scratch dir). home() -> HOME or cairn.tools.base.address.instance_path('tester', 0) / 'notices'. notice_id(ticket, file, diff) -> 'n-' + sha256(f'{ticket}\\0{file}\\0{diff}'.encode()).hexdigest()[:12]. post(ticket, file, diff, *, now=None) -> id: if home()/f'{id}.json' exists return id unchanged (a re-seal tells the operator once); else mkdir parents and write json {id, ticket, file, line, diff, posted_at (UTC ISO seconds), seen_at: None} where line = f'{ticket}: {file} reverted and no declared tooth redded — check the diff against the component\\'s intention'. unseen() -> the records with seen_at None, sorted by posted_at. seen(nid, *, now=None) -> the updated record, or None when no such file. rate(*, now=None) -> {'total': n, 'first': earliest posted_at or None, 'days': whole days from first to now rounded up, minimum 1 (0 when total is 0), 'per_day': round(total / days, 2) (0.0 when total is 0)}. Writes are plain file writes under the tester's own instance address (Law 6: the tester is the owner of its notices)."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-04",
+      "text": "D2: SETTLED: in hollow.measure (cairn/devices/tester/hollow.py, the block after `hollow_files = [f for f, teeth in measured.items() if not teeth]`): delete the loop that appends f'hollow: {f} reverted, no declared tooth redded' to reasons; compute unseen = {f: git diff for f in hollow_files if f not in unran}, where the diff is subprocess.run(['git', '-C', str(repo_root), 'diff', commit, 'HEAD', '--', f] + ([moved[f]] if f in moved else []), capture_output=True, text=True, env=git_env()).stdout; add 'unseen': unseen to the returned dict. A comment cites df05d93da4c0 and Akien's answer to open-ed0a56ce6357 (complete AND notify). The 'hollow' list, the unwritten, unreadable and measured-nothing reasons and the verdict rule (red iff any reason) are unchanged."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-04",
+      "text": "D3: SETTLED: in cli._hollow_run (cairn/devices/tester/cli.py), after the lines that set reading[f] = {'unreadable': ...} for unran files and before record_hollow: from cairn.devices.tester import notices (imported inside the function); for f, diff in sorted(finding.get('unseen', {}).items()): nid = notices.post(finding['ticket'], f, diff); reading[f] = {'notified': nid}; print(f'  NOTIFIED {f} -> {nid} (operator inbox: the tester\\'s notices verb)'). In the non-seal branch, before the NOTHING WAS SEALED line, print f'  unseen   {f} — --seal sends it to the operator' for each unseen file. The return stays `1 if finding['verdict'] == 'red' else 0`."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-04",
+      "text": "D4: SETTLED: TesterDevice.declared_verbs (cairn/devices/tester/device.py) returns {**super().declared_verbs(), 'run': self._handle_run, 'notices': self._handle_notices, 'notice-seen': self._handle_notice_seen}. _handle_notices(envelope) -> {'unseen': notices.unseen(), 'rate': notices.rate()}. _handle_notice_seen(envelope): id = str((envelope.get('body') or {}).get('id') or ''); rec = notices.seen(id); return {'seen': id} if rec else {'refused': f'no notice {id!r} — nothing was marked'}. notices is imported inside each handler. The declared_verbs docstring names the two new verbs and cites df05d93da4c0."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-04",
+      "text": "D5: SETTLED: test_hollow.py tooth d0f2b03952e3 key 2 is renamed test_the_same_run_names_the_hollow_file_and_the_verb_completes (PROVES map, function, its checks-list entry and the docstring mention near line 403 all renamed). Its assertions become: f['verdict'] == 'green'; no reason contains 'unchecked.py'; f['hollow'] == ['unchecked.py']; the CLI child returns 0 and its stdout names unchecked.py. Its docstring gains a paragraph: superseded 2026-10-04 by Akien's answer to open-ed0a56ce6357 (ticket b5871526384a) — a hollow file completes and notifies; it no longer exits non-zero."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-04",
+      "text": "D6: SETTLED: the proof is cairn/devices/tester/proofs/test_an_unseen_revert_notifies_the_operator.py, written FIRST and run red. _REPO_ROOT = Path(__file__).resolve().parents[4] on sys.path. It loads test_hollow.py by importlib.util.spec_from_file_location (proofs/ is not a package) and reuses its _fixture, _berths_root and FIXTURE. PROVES = {'b5871526384a': {'1': 'test_measure_carries_the_unseen_file_and_its_diff_and_stays_green', '2': 'test_the_seal_posts_one_notice_and_seals_it_notified', '3': 'test_a_run_without_seal_posts_nothing', '4': 'test_the_notices_verbs_list_mark_and_rate', '5': 'test_the_hard_reds_stand'}}. Every tooth imports cairn.devices.tester.notices / hollow / cli / device INSIDE its body (so a reverted or absent module reds a tooth rather than breaking the import) and points notices.HOME at a fresh scratch dir, restoring it after. Teeth 2, 3 and 5 call cli.main in-process with hollow.measure wrapped by functools.partial(commons=..., berths_root=...) and cli.REPO_ROOT set to the fixture repo, and cli.record_hollow replaced by a recorder that captures the reading and returns False; all three patches are restored in finally. Tooth 5 replaces hollow.measure with a stub returning a finding with measured {'x.py': []}, hollow ['x.py'], unran {'x.py': ['p.py']}, unseen {}, verdict 'red', reasons ['unreadable: x.py ...'] and asserts the sealed reading is {'x.py': {'unreadable': ['p.py']}}, no notice exists and the return is 1; it also asserts the records-only fixture (test_hollow's measured-nothing case rebuilt) still reds. main() runs each PROVES tooth, prints '  ok   <name>' or '  FAIL <name>: <exc>', then GREEN or RED, exit 1 on any fail. After the build run it, test_hollow.py and test_cli.py green, then seal the tester's proofs."
+    }
+  ],
+  "cast": "2026-10-04"
+}
