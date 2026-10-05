@@ -17,5 +17,61 @@
   "task_or_ticket": "ticket",
   "children": "none, because the change is one sieve function, its registration, and one proof in build_inspector",
   "questions": "none, because the scope choice (rule literals only, not every exemption construct) is settled by the docstring at cairn/machines/build_inspector/inspector.py ('nothing here discovers an exemption site nobody entered') and build-minimal; general discovery stays 892a0f9cd925's recorded residue",
-  "cast": "2026-10-05"
+  "cast": "2026-10-05",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T012133-7945e35d0613.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 179af0a067de .. validate 7945e35d0613, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: SETTLED: In cairn/machines/build_inspector/inspector.py insert the following function verbatim immediately after the function every_exemption_cites_a_ruling_or_an_impossibility ends (after its final 'return findings', before 'def question_links_agree'), separated by two blank lines. json, Path and _finding are already in that module's scope; ast is imported inside the function.\ndef sole_path_admissions_are_entered(row: dict, comp_dir: Path) -> list[dict]:\n    \"\"\"A sole-path rule's single-file admission with no exemption entry at its seat reds.\n\n    Provenance: ticket b364df579e49. The sieve above checks set->code: an entry resolves and\n    its symbol stands at its path. Its own docstring names what it cannot see, \"nothing here\n    discovers an exemption site nobody entered\", and measurement bore that out on 2026-10-05.\n    A clone of 6b3e185b with the three bus_client admission entries removed reddened no sieve.\n\n    This one covers code->set for the one construct that can be found mechanically: a dict\n    literal carrying both 'modules' and 'only' (an import_sieve rule). A member that ends in\n    '/' is the door's own directory and needs no entry. Any other member admits a single file\n    past the door, and it counts as entered only when some entry's path is that literal's file\n    (repo-relative posix) and the member's text appears in that entry's symbol. The match is\n    seat + member, never a count. Rules assembled at runtime and rule literals under fixtures/\n    are out of reach by construction.\n    \"\"\"\n    if row[\"component\"] != \"exemptions\":\n        return []\n    try:\n        eset = json.loads((comp_dir / \"exemption_set.json\").read_text(encoding=\"utf-8\"))\n    except (json.JSONDecodeError, OSError):\n        return []  # the sieve above already reds an absent or unreadable set\n    entries = [e for e in (eset.get(\"exemptions\") or []) if isinstance(e, dict)] \\\n        if isinstance(eset, dict) else []\n    import ast\n    repo_root = comp_dir\n    while repo_root.name and not (repo_root / \".git\").exists():\n        repo_root = repo_root.parent\n    findings = []\n    for py in sorted(repo_root.rglob(\"*.py\")):\n        rel = py.relative_to(repo_root)\n        if {\"fixtures\", \".git\"} & set(rel.parts):\n            continue\n        try:\n            tree = ast.parse(py.read_text(encoding=\"utf-8\", errors=\"replace\"))\n        except (SyntaxError, ValueError, OSError):\n            continue\n        seat = rel.as_posix()\n        for node in ast.walk(tree):\n            if not isinstance(node, ast.Dict):\n                continue\n            keys = [k.value if isinstance(k, ast.Constant) else None for k in node.keys]\n            if \"modules\" not in keys or \"only\" not in keys:\n                continue\n            try:\n                only = ast.literal_eval(node.values[keys.index(\"only\")])\n            except (ValueError, SyntaxError, TypeError):\n                continue\n            if isinstance(only, str):\n                only = (only,)\n            if not (isinstance(only, tuple) and all(isinstance(m, str) for m in only)):\n                continue\n            for member in only:\n                if member.endswith(\"/\"):\n                    continue\n                if any(e.get(\"path\") == seat and member in str(e.get(\"symbol\", \"\"))\n                       for e in entries):\n                    continue\n                findings.append(_finding(\n                    \"sole_path_admissions_are_entered\", row[\"component\"],\n                    \"admission entered: %s::%s\" % (seat, member),\n                    expected=True, actual=False, seat=seat, member=member,\n                    lack=\"add an exemption_set entry with path %s and a symbol \"\n                         \"containing %s\" % (seat, member),\n                ))\n    return findings",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-05T07:24:09+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: SETTLED: Register it in the SIEVES dict of cairn/machines/build_inspector/inspector.py by adding the line '    \"sole_path_admissions_are_entered\": sole_path_admissions_are_entered,' directly after the two-line entry '\"every_exemption_cites_a_ruling_or_an_impossibility\":\\n        every_exemption_cites_a_ruling_or_an_impossibility,'. No other table needs the name: SIEVES is the only registry inspect() reads.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-05T07:24:09+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: SETTLED: Create cairn/machines/build_inspector/proofs/test_an_unentered_admission_reds.py with exactly this content; its PROVES maps clauses 1-5 of the falsifier to the five teeth in order:\n\"\"\"A sole-path file admission with no exemption entry at its seat reds (ticket b364df579e49).\n\nsole_path_admissions_are_entered reads every import_sieve rule literal (a dict carrying\n'modules' and 'only') and needs an exemption_set entry, matched on seat path + member text,\nfor each member that admits a single file past the door. Four teeth seed tmp roots and call\nthe sieve directly; the fifth runs inspect(component='exemptions') over the live repo. The\ninspector is imported inside each tooth, so a reverted inspector.py reds a tooth instead of\nbreaking the file.\n\"\"\"\nfrom __future__ import annotations\n\nimport json\nimport sys\nfrom pathlib import Path\n\n_REPO_ROOT = Path(__file__).resolve().parents[4]\nsys.path.insert(0, str(_REPO_ROOT))\n\nfrom cairn.tools.scratch.scratch import scratch_dir  # noqa: E402\n\nPROVES = {\"b364df579e49\": {\n    \"1\": \"test_an_unentered_file_admission_reds_once\",\n    \"2\": \"test_an_entry_at_the_seat_clears_it\",\n    \"3\": \"test_a_directory_member_needs_no_entry\",\n    \"4\": \"test_a_rule_under_fixtures_is_skipped\",\n    \"5\": \"test_the_live_repo_reads_clean\",\n}}\n\n_SEAT = \"tools/x/rules.py\"\n\n\ndef _seed(only: str, entries: list[dict], seat: str = _SEAT) -> Path:\n    root = scratch_dir(\"cairn-unentered-admission-\")\n    (root / \".git\").mkdir()\n    (root / seat).parent.mkdir(parents=True, exist_ok=True)\n    (root / seat).write_text('RULE = {\"modules\": (\"socket\",), \"only\": %s}\\n' % only)\n    comp = root / \"cairn\" / \"machines\" / \"exemptions\"\n    comp.mkdir(parents=True)\n    (comp / \"exemption_set.json\").write_text(json.dumps({\"exemptions\": entries}))\n    return comp\n\n\ndef _run(comp: Path) -> list[dict]:\n    from cairn.machines.build_inspector import inspector\n    return inspector.sole_path_admissions_are_entered({\"component\": \"exemptions\"}, comp)\n\n\ndef test_an_unentered_file_admission_reds_once():\n    found = _run(_seed(\"('x_domain/', 'tools/y/z.py')\", []))\n    abouts = [f.get(\"about\", \"\") for f in found]\n    assert len(found) == 1 and _SEAT in abouts[0] and \"tools/y/z.py\" in abouts[0], abouts\n\n\ndef test_an_entry_at_the_seat_clears_it():\n    found = _run(_seed(\"('x_domain/', 'tools/y/z.py')\",\n                       [{\"id\": \"x-admits-z\", \"path\": _SEAT, \"symbol\": '\"tools/y/z.py\"'}]))\n    assert found == [], [f.get(\"about\") for f in found]\n\n\ndef test_a_directory_member_needs_no_entry():\n    found = _run(_seed(\"('x_domain/',)\", []))\n    assert found == [], [f.get(\"about\") for f in found]\n\n\ndef test_a_rule_under_fixtures_is_skipped():\n    found = _run(_seed(\"('x_domain/', 'tools/y/z.py')\", [], seat=\"tools/fixtures/rules.py\"))\n    assert found == [], [f.get(\"about\") for f in found]\n\n\ndef test_the_live_repo_reads_clean():\n    from cairn.machines.build_inspector import inspector\n    assert \"sole_path_admissions_are_entered\" in inspector.SIEVES\n    report = inspector.inspect(component=\"exemptions\")\n    mine = [f for f in report[\"findings\"] if f.get(\"method\") == \"sole_path_admissions_are_entered\"]\n    assert mine == [], [f.get(\"about\") for f in mine]\n\n\ndef main() -> int:\n    fails = 0\n    for name in PROVES[\"b364df579e49\"].values():\n        try:\n            globals()[name]()\n            print(f\"  ok   {name}\")\n        except Exception as exc:  # noqa: BLE001 — every tooth reports, none hides\n            fails += 1\n            print(f\"  FAIL {name}: {type(exc).__name__}: {exc}\")\n    print(\"RED\" if fails else \"GREEN\")\n    return 1 if fails else 0\n\n\nif __name__ == \"__main__\":\n    sys.exit(main())",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-05T07:24:10+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: SETTLED: Order. Write the proof (D3) first and seal it red with 'bin/cairn test --seal --timeout 900 cairn/machines/build_inspector/proofs/test_an_unentered_admission_reds.py' before any inspector.py edit; all five teeth red then because inspector has no attribute sole_path_admissions_are_entered. Commit. Then apply D1 and D2, run the proof (expect GREEN, 5 ok), and commit; the pre-commit reseal door reseals it green.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-05T07:24:10+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: SETTLED: Nothing else changes. exemption_set.json gains no entry (the three live file admissions, cairn/machines/build_inspector/inspector.py (bus_client/remote.py), cairn/devices/inference_domain/proofs/test_host.py and cairn/tools/import_sieve/proofs/test_import_sieve.py, are all entered already, census 2026-10-05: 769 files, 10 rule literals, 3 file members). sieve.py, test_exemption_set.py and corrosion's constraint_set.json are untouched.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-05T07:24:10+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6: SETTLED: The mechanics D4 names. 'bin/cairn test --seal --timeout 900 <proof>' runs the proof file as a subprocess and writes its verdict to the matching validations/<proof-stem>.json beside the proofs/ folder; the proof prints one line per tooth, 'ok' or 'FAIL', then RED (any tooth failed, exit 1) or GREEN (all passed, exit 0). Before D1+D2 the expected print is five FAIL lines (AttributeError: module has no attribute 'sole_path_admissions_are_entered') then RED, and the seal records verdict red. Commit with 'git add <proof> <validation json> && git commit -m \"b364df579e49: proof sealed red\"' from ~/dev/src/cairn. After D1+D2 run 'python3 <proof>' and expect five ok lines then GREEN; then 'git add cairn/machines/build_inspector/inspector.py && git commit -m \"b364df579e49: build\"'. The pre-commit hook (the reseal door) sees that the proof's source fingerprint moved and re-runs the seal itself, staging the green validation into the same commit; no hand action is needed for it. If that hook times out, run the seal by hand with --timeout 900 and commit the validation.",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-05T07:28:00+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/b364df579e49-20261005T073201.json"
 }
