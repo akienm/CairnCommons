@@ -1,0 +1,63 @@
+{
+  "id": "8383a32d20c5",
+  "title": "a-proof-declares-its-own-time-limit",
+  "date": "2026-10-04",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Each proof declares its own time limit (a top-level PROOF_TIMEOUT_S integer), every tester run of that proof (hand seal, the pre-commit reseal door, the hollow) uses the declared limit whatever budget the caller passed, and a change of timeout alone no longer counts as a changed measurement condition, so a red-to-green flip only the timeout explains posts no notice.",
+  "why": "Every commit touching the tester reseals four proofs that time out at the reseal door's 120s budget (test_hollow, test_the_hollow_anchor_ignores_instrument_commits, test_the_hollow_measures_the_repaired_build, and build_inspector's test_inspector), and each must be resealed at 900s by hand. The budget is the caller's choice, not a property of the code, yet f0aad0cd0f56 records it as a measurement condition, so the hand reseal posts Akien a changed-conditions notice (measured: ~/.cairn/devices/tester/0/notices/n-daf1b756e369.json, diff 'timeout: 900 -> 120'). Akien, relayed by akiendelllinux_cc_0 on 2026-10-04: 'lets go ahead and do per proof next on the builder's side'.",
+  "traces_to": "Akien's direction relayed 2026-10-04; his answer to CairnCommons/questions/open-ed0a56ce6357.json (notify when the conditions of measurement moved: a caller's budget is not one once the proof owns it); Law 3; Law 1; RULE 1 (inside cairn/devices/tester)",
+  "how": "device.py gains declared_timeout(proof_path) (AST read, never import) and run_proof uses it over the caller's timeout; a bad declaration reds the run. conditions.changed() ignores 'timeout'. reseal.py, hollow.py and cli.py name the budget actually used. The tester's three slow proofs declare PROOF_TIMEOUT_S = 900. f0aad0cd0f56's proof retargets its two timeout teeth to a fixture-bytes change. One new proof.",
+  "falsifier": "GREEN when (1) a proof declaring PROOF_TIMEOUT_S = 7 that sleeps 2s, run through run_proof with timeout=1, goes green and records conditions.timeout == 7; (2) an undeclared proof run with timeout=61 records 61; (3) declarations \"9\", 0, True and 60 * 15 each make the run red with 'PROOF_TIMEOUT_S' in stderr_tail; (4) conditions.changed() over records differing only in timeout is [], and a sealed green over a standing red differing only in timeout carries no conditions_moved and posts no notice; (5) declared_timeout reads 900 from each of the three slow tester proofs; (6) test_a_green_over_a_red_under_other_conditions_notifies stays green with its teeth 2 and 7 retargeted to fixtures. RED if any fails. WRONG INTENT if a caller's budget can still override a declared one (the condition moves again), or if 'timeout' leaves the record itself. Horizon: PROVED, and at the build commit the reseal door's 120s default times out on none of the three slow tester proofs.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because ticket 3dfceaa272ec (CairnCommons/tickets/3dfceaa272ec-a-timeout-is-not-a-red.json) carries WATCHME(timeout_is_not_a_red), which counts standing reds whose stderr_tail begins 'timed out after' — the reading this ticket moves",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261004T222706-3c1a1b7a7d92.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261004T222639-474b863c6473.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because every edit lies inside cairn/devices/tester: one override in run_proof, one line in conditions.changed, three message sites, three constants, two retargeted teeth and one new proof",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-04",
+      "text": "D1: SETTLED: in cairn/devices/tester/device.py add a module-level function `declared_timeout(proof_path) -> int | None` above the TesterDevice class: read the file's text, `ast.parse` it (on SyntaxError or OSError return None: the run itself will red on the import), walk ONLY `tree.body` (top level), and take the LAST statement that is an `ast.Assign` whose `targets` is exactly one `ast.Name` with id 'PROOF_TIMEOUT_S', or an `ast.AnnAssign` whose target is that Name and whose value is not None. None found returns None. Found: if the value is an `ast.Constant` whose value is an int, not a bool, and > 0, return it; otherwise raise ValueError(f\"PROOF_TIMEOUT_S must be a positive integer literal at the top level of the proof; got {ast.unparse(value)!r}\"). Import ast at the top of the module if absent. In run_proof, immediately after `proof_path = Path(proof_path).resolve()`, add: `bad_budget = None` then `try: declared = declared_timeout(proof_path)` / `except ValueError as exc: declared, bad_budget = None, str(exc)` / `if declared is not None: timeout = declared`, with a comment citing this ticket and Akien's words ('each proof declares its own time limit'). Nothing else changes before the run, so conditions.measure and the TimeoutExpired arm both see the effective timeout. Inside the existing `try:` that runs the subject, make the first statement `if bad_budget: raise _BadBudget(bad_budget)` (define `class _BadBudget(Exception): pass` at module level beside declared_timeout), and add an arm `except _BadBudget as exc:` beside `except subprocess.TimeoutExpired:` that sets `verdict = RED` and `evidence = {\"returncode\": None, \"stdout_tail\": \"\", \"stderr_tail\": f\"refused to run: {exc}\", \"teeth_green\": [], \"teeth_red\": [], **base_evidence}` — the same shape as the timeout arm, so a bad declaration is a red record, never a crash of the notary and never a silent fall back to the caller's budget."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-04",
+      "text": "D2: SETTLED: in cairn/devices/tester/conditions.py, changed() becomes `return sorted(k for k in before.keys() & after.keys() if k != \"timeout\" and before[k] != after[k])`, and its docstring gains one sentence: the timeout is recorded but never compared, because under ticket 8383a32d20c5 a proof's budget is its own PROOF_TIMEOUT_S, which moves only with the proof's bytes (already compared as 'proof'), and an undeclared proof's budget is the caller's choice, not a condition of the code (Akien, 2026-10-04: per-proof limits, so a timeout-only flip does not notify). measure() is unchanged: 'timeout' stays in the record. The module docstring's sentence about the 120s/900s measurement gains: 'ticket 8383a32d20c5 moved the budget into the proof and stopped comparing it.'"
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-04",
+      "text": "D3: SETTLED: the three timeout sentences name the budget the run actually used. (a) cairn/devices/tester/reseal.py, in the `if timed_out:` block: first line `budget = (evidence.get(\"conditions\") or {}).get(\"timeout\", timeout)`, and every `{timeout}` / `timeout` inside that block's raise_trouble why, its detail dict's \"timeout\" value, and the returned \"why\" uses `budget`; the why's last sentence becomes 'Declare PROOF_TIMEOUT_S in the proof (ticket 8383a32d20c5), or re-run an undeclared proof with a bigger --timeout, to learn what the proof actually says.' (b) cairn/devices/tester/hollow.py, in the `if rc is None:` branch: compute `budget = (ev.get(\"conditions\") or {}).get(\"timeout\", timeout)` and the sentence's tail becomes f\"Declare PROOF_TIMEOUT_S in the proof, or re-run with a larger --timeout (this run's budget: {budget}s).\" (c) cairn/devices/tester/cli.py near line 253: the summary becomes f\"reseal: {len(timeouts)} proof(s) could not be reproven inside their budgets — a proof that declares PROOF_TIMEOUT_S runs at that budget whatever --timeout says; declare one, or re-run an undeclared proof with a bigger --timeout.\" The --timeout help string becomes \"per-proof timeout in seconds for proofs that declare no PROOF_TIMEOUT_S (default 120)\"."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-04",
+      "text": "D4: SETTLED: (a) each of cairn/devices/tester/proofs/test_hollow.py, test_the_hollow_anchor_ignores_instrument_commits.py and test_the_hollow_measures_the_repaired_build.py gains, on the line right after `sys.path.insert(0, str(_REPO_ROOT))`, a blank line and `PROOF_TIMEOUT_S = 900  # measured 2026-10-04: times out at the reseal door's 120s, green at 900s (ticket 8383a32d20c5)`. build_inspector's test_inspector.py is NOT edited (RULE 1: it is another component's proof; its own ticket declares it). (b) cairn/devices/tester/proofs/test_a_green_over_a_red_under_other_conditions_notifies.py encodes the old rule that a timeout-only change notifies, which Akien's direction retires; its claim (a green over a red under other conditions notifies) stands, so its two timeout teeth retarget to a fixture-bytes change: tooth '2' is renamed test_a_green_over_a_red_under_other_fixtures_posts_one_notice (PROVES entry and function name both), builds `red = _red_like(first, fixtures=\"0\" * 64)`, runs at timeout=60 both times, and asserts `moved[\"changed\"] == [\"fixtures\"]` and `\"fixtures: \" + \"0\" * 64 in n[\"diff\"]` and `\"fixtures\" in n[\"line\"]` in place of the timeout assertions; tooth '7' builds `red = _red_like(first, fixtures=\"0\" * 64)`, asserts `moved[\"changed\"] == [\"fixtures\"]` and `\"fixtures: \" + \"0\" * 64 in ...[\"diff\"]`. Teeth 5 and 6 keep `_red_like(first, timeout=30)` (they assert nothing posts either way). The module docstring gains: 'Since ticket 8383a32d20c5 the timeout is recorded but not compared; the teeth move fixtures instead.'"
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-04",
+      "text": "D5: SETTLED: new proof cairn/devices/tester/proofs/test_a_proof_declares_its_own_time_limit.py, the shape of test_a_green_over_a_red_under_other_conditions_notifies.py (docstring citing this ticket; `_REPO_ROOT = Path(__file__).resolve().parents[4]` — cairn/devices/tester/proofs is four levels below the repo; sys.path insert; `from cairn.tools.scratch.scratch import scratch_dir`; PROVES = {\"8383a32d20c5\": {\"1\": ..., \"5\": ...}}; main() running each tooth, printing '  ok   <name>' or '  FAIL <name>: ...', then GREEN/RED, exit 1 on any fail). Every tooth imports the tester INSIDE its body. A helper `_proof(prefix, header)` writes scratch_dir(prefix)/fixture_component/proofs/test_fixture.py whose text is `header` followed by a one-tooth body (`import time` then `time.sleep(2)` then `print(\"ok   test_fixture_tooth\")`, PROVES = {\"aaaaaaaaaaaa\": {\"1\": \"test_fixture_tooth\"}}). Runs use `TesterDevice().run_proof(proof, sink=\"none\", caller=\"proof-fixture\", timeout=T, isolation=\"none\")`. Teeth: '1' test_a_declared_limit_beats_the_callers_budget: header `PROOF_TIMEOUT_S = 7`, timeout=1 -> verdict green and evidence.conditions.timeout == 7. '2' test_an_undeclared_proof_takes_the_callers_budget: no header, timeout=61 -> green and conditions.timeout == 61. '3' test_a_bad_declaration_reds_the_run: for each header in ('PROOF_TIMEOUT_S = \"9\"', 'PROOF_TIMEOUT_S = 0', 'PROOF_TIMEOUT_S = True', 'PROOF_TIMEOUT_S = 60 * 15'), timeout=30 -> verdict red and 'PROOF_TIMEOUT_S' in evidence.stderr_tail. '4' test_a_timeout_alone_is_not_a_changed_condition: `conditions.changed({\"timeout\": 30, \"proof\": \"a\"}, {\"timeout\": 900, \"proof\": \"a\"}) == []`; then with the store stand-in copied from the f0aad0cd0f56 proof (`_store`, notices.HOME in scratch), a first sink='none' run at timeout=60 (no header), a red built from it with conditions.timeout = 30, and a sink='validations' run (scratch_sweep={\"skipped\": \"proof fixture\"}) at timeout=60 over that standing red -> green, 'conditions_moved' not in evidence, no n-*.json under the scratch notices home. '5' test_the_slow_tester_proofs_declare_a_limit: declared_timeout(p) == 900 for the three proofs D4(a) names (paths from _REPO_ROOT). Validation berths at cairn/devices/tester/validations/ through the tester seal."
+    }
+  ],
+  "cast": "2026-10-04",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261004T222914-fefaea16f308.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 78bd10118f2b .. validate fefaea16f308, each learned)"
+  }
+}
