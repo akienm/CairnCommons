@@ -1,0 +1,88 @@
+{
+  "id": "f0aad0cd0f56",
+  "title": "a-proof-run-records-its-conditions",
+  "date": "2026-10-04",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Every sealed proof run records the conditions it was measured under (proof bytes, fixture bytes, interpreter, isolation, timeout, CAIRN_* environment as digests), and a green seal that replaces a red recorded under different conditions completes and posts one operator notice naming each changed condition.",
+  "why": "Akien's answer to open-ed0a56ce6357: a change can pass \"the before test before, and the after test after, but only because the conditions of measurment have changed ... that's probably an item to check with operator\" — \"we let it complete AND notify me\". Measured 2026-10-04: three tester proofs sealed red at the 120s timeout and green at 900s; nothing on record said the green ran under other conditions than the red, so a reader saw only red-then-green and leaned on it.",
+  "traces_to": "parent df05d93da4c0 falsifier (b); Akien's answer to open-ed0a56ce6357; Law 3 (the conditions are measured, never assumed equal); Law 8 (a green whose red ran elsewhere is not vouched); RULE 1 (built inside cairn/devices/tester; validation_store and proof_coverage reached through their declared public interfaces)",
+  "how": "A new module cairn/devices/tester/conditions.py holds measure() (the conditions dict) and compare() (the standing-red comparison and the notice). run_proof in cairn/devices/tester/device.py puts measure()'s result into evidence['conditions'] on every run, and when sink is 'validations' and the verdict is green calls compare() just before persist_validation. cairn/devices/tester/notices.py gains post_conditions(). One new proof, cairn/devices/tester/proofs/test_a_green_over_a_red_under_other_conditions_notifies.py. Decisions D1-D5 carry every detail.",
+  "falsifier": "(1) a sealed run's evidence.conditions carries exactly proof, fixtures, interpreter, isolation, timeout, env; env values are 12-hex sha256 digests and no raw CAIRN_* value appears anywhere in the record. (2) a green sealed over a standing red whose conditions differ only in timeout (30 then 60) posts exactly one notice whose diff carries 'timeout: 30 -> 60', seals green with evidence.conditions_moved {notified, changed: ['timeout']}, and a second identical green posts nothing new. (3) a green over a red with identical conditions posts nothing. (4) a green over a red that carries no conditions posts nothing and records conditions_compared naming the red as predating the instrument. (5) a red never posts. (6) with sink 'none' nothing is posted and nothing persisted. WRONG INTENT if Akien is inundated (the notices rate on the operator inbox, ticket 81c41e528d6f). Horizon: this child PROVED.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the notices rate the operator inbox renders (cairn/tools/operator_inbox/inbox.py, ticket 81c41e528d6f) is the standing measurement of whether Akien is inundated; it is reported to the foreground under parent CairnCommons/tickets/df05d93da4c0-an-unvouched-green-completes-and-notifies.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261004T191553-1f67e1166dd9.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261004T191533-680194c7fcf8.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the conditions record, the comparison and the notice kind are one component's build (cairn/devices/tester) and one proof",
+  "questions": [],
+  "parent": "df05d93da4c0",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-04",
+      "text": "D1: SETTLED: new file cairn/devices/tester/conditions.py with a module docstring citing this ticket and Akien's answer to open-ed0a56ce6357. Imports: hashlib, os, sys, pathlib.Path. Function measure(proof_path, *, iso_name: str, seal_verdict: str, instance_seal_verdict: str, timeout, env: dict) -> dict returns exactly six keys: 'proof': hashlib.sha256(Path(proof_path).read_bytes()).hexdigest(); 'fixtures': _tree_digest(Path(proof_path).parent / 'fixtures') — a sha256 fed, for every file under that directory in sorted order of its POSIX path relative to the directory and skipping any path with a '__pycache__' part, the relative path encoded utf-8, a b'\\0', the file's bytes, a b'\\0'; None when the directory does not exist; 'interpreter': f\"{sys.executable} {sys.version.split()[0]}\"; 'isolation': f\"{iso_name} seal={seal_verdict} instance-seal={instance_seal_verdict}\"; 'timeout': timeout (the int as passed); 'env': {k: hashlib.sha256(v.encode()).hexdigest()[:12] for k, v in sorted(env.items()) if k.startswith('CAIRN_')} — digests only, so no raw value ever enters a validation. Function changed(before: dict, after: dict) -> list[str] returns sorted(k for k in before.keys() & after.keys() if before[k] != after[k]) — only keys on both sides are compared, so a condition key added later never notifies by itself; for 'env' (a dict) the comparison is the whole dict, and the diff line (D3) names which CAIRN_* keys differ."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-04",
+      "text": "D2: SETTLED: in run_proof (cairn/devices/tester/device.py), compute the pinned env ONCE as pinned = _env_pinned_to(proof_path) just before argv is built, pass env=pinned to subprocess.run, and add to base_evidence the key 'conditions': measure(proof_path, iso_name=iso.name, seal_verdict=seal.verdict, instance_seal_verdict=instance_seal.verdict, timeout=timeout, env=pinned) (import measure and compare from cairn.devices.tester.conditions at the top of device.py). base_evidence already rides both the normal and the TimeoutExpired branch, so a timed-out red records its conditions too — the motivating case. Then in the `if sink == \"validations\":` block, immediately BEFORE the lazy persist_validation import and call, add: if verdict == GREEN: compare(record, proof_path). compare runs for no other sink and no other verdict. Inside evidence only — never a ninth field (the eight are ratified)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-04",
+      "text": "D3: SETTLED: compare(record: dict, proof_path) -> None in conditions.py mutates record['evidence'] only. Body: from cairn.tools.validation_store import validation_store as vs; from cairn.tools.proof_coverage.proof_coverage import declared; from cairn.devices.tester import notices — all three imported INSIDE the function body and the store reached as the module attribute vs.read_validations (never `from ... import read_validations`), so a proof can stand recorders in for the store. standing = vs.read_validations(str(proof_path)); if not standing: return. last = standing[-1]; if last.get('verdict') != 'red': return. before = (last.get('evidence') or {}).get('conditions'); if not before: record['evidence']['conditions_compared'] = 'the standing red predates the conditions instrument (ticket f0aad0cd0f56) — nothing to compare, nothing posted'; return. after = record['evidence']['conditions']; keys = changed(before, after); if not keys: return. diff = '\\n'.join(one line per key in keys order): for a non-env key f\"{k}: {before[k]} -> {after[k]}\"; for 'env' f\"env: {', '.join(sorted(n for n in before['env'].keys() | after['env'].keys() if before['env'].get(n) != after['env'].get(n)))} differ\". ticket = ','.join(sorted(declared(proof_path))) or 'none'. nid = notices.post_conditions(ticket, str(proof_path), diff, keys). record['evidence']['conditions_moved'] = {'notified': nid, 'changed': keys}."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-04",
+      "text": "D4: SETTLED: notices.py gains post_conditions(ticket: str, file: str, diff: str, changed: list, *, now=None) -> str, beside post(). It shares post()'s store, id and idempotence: nid = notice_id(ticket, file, diff); if home()/f'{nid}.json' exists return nid without writing; otherwise write the same JSON shape post() writes (id, ticket, file, line, diff, posted_at, seen_at None) with line = f\"{ticket}: {file} sealed green over a red measured under other conditions ({', '.join(changed)}) — check that the green answers the component's intention, not the changed measurement\". Refactor so post() and post_conditions() share one private _write(nid, ticket, file, line, diff, now) rather than duplicating the write; post()'s line text and behaviour stay byte-identical. unseen(), seen() and rate() need no change: a conditions notice is a notice, counted in the same rate the inbox shows. Update notices.py's module docstring with one sentence naming the second notice kind and this ticket."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-04",
+      "text": "D5: SETTLED: the proof is cairn/devices/tester/proofs/test_a_green_over_a_red_under_other_conditions_notifies.py, written red before the build from the scratch draft (CC holds it; PROVES {'f0aad0cd0f56': keys '1'..'6'} mapping falsifier clauses 1-6 to teeth test_a_sealed_run_records_its_conditions_with_env_as_digests, test_a_green_over_a_red_under_another_timeout_posts_one_notice, test_a_green_over_a_red_under_the_same_conditions_posts_nothing, test_a_red_that_predates_the_instrument_compares_nothing, test_a_red_never_posts, test_an_unsealed_run_never_posts). It drives the REAL TesterDevice().run_proof(..., isolation='none') over a one-tooth fixture proof written into a scratch_dir component (proofs/test_fixture.py plus proofs/fixtures/data.txt; a RED marker file makes it exit 1). Standing records are injected by replacing validation_store's read_validations and persist_validation module attributes with recorders inside a context manager that restores them (so no seal touches any repo validations file or the artifact journal); notices.HOME points at scratch. The standing red is built from a first real run's record with verdict set to 'red' and its conditions edited (timeout 30), so the comparison sees real measured conditions. Tooth 1 sets a CAIRN_CONDPROOF_MARK env var for one run and asserts its 12-hex digest appears and its raw value appears nowhere in the record. Every tooth imports the tester inside its body. main() prints '  ok   <tooth>' / '  FAIL <tooth>: ...', then GREEN or RED, exit 0/1. Long runs: seal it with --seal --timeout 900 (each run_proof call snapshots instance space)."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-04",
+      "text": "D6: SETTLED: the charter cairn/devices/tester/intention+why.json gains one sentence (in its `what` or equivalent prose field, wherever the notices of b5871526384a are described; if none, append to `what`): 'Every sealed run records the conditions it was measured under in evidence.conditions (proof, fixtures, interpreter, isolation, timeout, CAIRN_* digests), and a green that replaces a red measured under other conditions posts one operator notice naming what changed (ticket f0aad0cd0f56).' The edit is made on a scratch copy outside the repo (string replace, every other byte unchanged, json.loads must still parse it), then written with: cairn artifact write cairn/devices/tester/intention+why.json --verb cast --why 'tester records proof-run conditions and notifies on a moved green (ticket f0aad0cd0f56)' --from <scratch copy>; then run cairn/tools/intentions_model_compiler/recompile_gate.sh. Existing tester proofs (test_tester.py and siblings) must stay green; run test_tester.py after the build."
+    },
+    {
+      "n": 7,
+      "text": "D2 detail: _env_pinned_to(proof_path) already exists in cairn/devices/tester/device.py at module level, about line 177; it returns dict(os.environ) with the subject checkout prepended to PYTHONPATH, the full environment and not only CAIRN_* keys. Today run_proof calls it inline as env=_env_pinned_to(proof_path) inside subprocess.run. D2 hoists exactly that one call into a local variable named pinned, assigned just before argv is built, and passes the same dict to subprocess.run(env=pinned) and to measure(env=pinned). measure() filters to CAIRN_* keys itself. Do not write or change _env_pinned_to.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-05T01:28:11+00:00"
+    },
+    {
+      "n": 8,
+      "text": "D4 detail: notice_id(ticket, file, diff) already exists in cairn/devices/tester/notices.py and returns n- plus the first 12 hex of sha256 over ticket, NUL, file, NUL, diff. post() today computes nid = notice_id(ticket, file, diff), returns nid early if home()/(nid + .json) exists, else mkdirs home() and writes the JSON {id, ticket, file, line, diff, posted_at: _stamp(now), seen_at: None} with indent=2, ensure_ascii=False and a trailing newline. The new private _write(ticket, file, line, diff, now) is exactly that body with the line text as a parameter; post() and post_conditions() each call _write with their own line text.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-05T01:28:11+00:00"
+    }
+  ],
+  "cast": "2026-10-04",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261004T191957-e4ab02a1c430.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient db764ed973f4 .. validate e4ab02a1c430, each learned)"
+  },
+  "rehearsal": "rehearsals/f0aad0cd0f56-20261005T020258.json"
+}
