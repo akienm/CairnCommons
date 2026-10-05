@@ -1,0 +1,72 @@
+{
+  "id": "3e80b61b7acf",
+  "title": "a-change-reseals-only-its-own-components-proofs",
+  "date": "2026-10-05",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The pre-commit reseal door re-runs only the proofs of the component that owns each staged file — never the proofs of components that merely import it, and never a holder's proofs for its nested machine's change.",
+  "why": "Akien answered 2026-10-05, verbatim: \"tool proofs: agreed\" — option 1 of \"when a tool changes, should the proofs of components that use it re-run?\": no, only the tool's own proofs (~/.cairn/foreground-decisions.md item 7, relayed by the peer akiendelllinux_cc_0). MEASURED: one line in liveness.py re-ran 55 proofs across 19 components (b9a7d9e5); a diagnostic.py commit reached 64 components and ran past a 30-minute limit without landing (be4a7b3c7caa, 2026-10-05). Every commit that touches a tool pays for proofs that prove other components.",
+  "traces_to": "~/.cairn/foreground-decisions.md item 7; Law 1; Law 8; RULE 1 (Akien 2026-10-01)",
+  "how": "cairn/devices/tester/reseal.py proofs_touching: compute owners = {component_of(root/s) for s in staged} - {None} once (cairn.tools.base.address.component_of, the deepest component ancestor, already in cairn/tools/base public_interface), and return each census row's proof whose component resolves into owners. The closure recipe and the directory recipe are both dropped from this door; closure_of stays imported (line 583 still reads it). One import added. The exact diff rides this ticket's build_patch field. One new proof, cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py, already written red.",
+  "falsifier": "GREEN when cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py passes all four teeth: (1) a tester proof whose seal closure names cairn/tools/base/diagnostic.py is not returned for a staged diagnostic.py; (2) it is returned for a staged cairn/devices/tester/reseal.py under a closure seal and a pre-closure seal; (3) a cairn-device proof is not returned for a staged cairn/devices/cairn/machines/bus/bus.py; (4) on the live census every proof returned for a staged diagnostic.py belongs to cairn/tools/base; and test_reseal_door.py and test_reseal_stages_clean_seals.py stay green. RED if any fails. WRONG INTENT if a commit touching only a tool still re-runs another component's proof.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the reach is measured on every commit by the pre-commit hook's own report (cairn/devices/tester/hooks/pre-commit), and tooth 4 of cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py re-asks it over the live census on every reseal",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T135040-9cee14059e4b.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T135040-f04a0858f643.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one function and one import plus its one proof, already on disk at cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-05",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits cairn/devices/tester/reseal.py only: proofs_touching's body and docstring, and one import line `from cairn.tools.base.address import component_of`."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-05",
+      "text": "D2: SETTLED: the proof cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py already stands on disk, written first as this ticket's red-first step and measured red 1/4 at HEAD 94334efb (2026-10-05: tooth 1 returned test_reseal_door.py for a staged diagnostic.py; tooth 3 returned test_cairn_device.py for a staged bus.py; tooth 4 found 64 other components reached; tooth 2 green as the guard). It is committed before the BUILDME crossing; D1 turns it green and does not edit it."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-05",
+      "text": "D3: SETTLED: after D1 run `python3 cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py` (exit 0, '4 passed'), `python3 cairn/devices/tester/proofs/test_reseal_door.py` and `python3 cairn/devices/tester/proofs/test_reseal_stages_clean_seals.py` (each exit 0, as at HEAD). Measured so on a prototype of D1, 2026-10-05 (4/4, 9 passed, 6 passed)."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-05",
+      "text": "D4: SETTLED: commit cairn/devices/tester/reseal.py with message '3e80b61b7acf: a change reseals only its own component's proofs' and the two trailer lines 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>' and 'Claude-Session: https://claude.ai/code/session_01JrhBQALF5qFBEVqQJUsXUu'. No file outside cairn/devices/tester changes."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-05",
+      "text": "D5: SETTLED: scope. This door decides only what a commit RE-RUNS. A user's seal still records its import closure, and cairn.tools.validation_store.sealed_fingerprint_now (and so component_color) still reads a tool's change as moving that seal; whether a user's seal should stop reading its tools' changes is a different component (validation_store) and is raised with the peer akiendelllinux_cc_0, not built here (RULE 1)."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-05",
+      "text": "D6: SETTLED: the answer that sets this behaviour is Akien answered 2026-10-05, verbatim: \"tool proofs: agreed\" — option 1 of \"when a tool changes, should the proofs of components that use it re-run?\": no, only the tool's own proofs (~/.cairn/foreground-decisions.md item 7, relayed by the peer akiendelllinux_cc_0). It is a measurement-free spec choice already answered; no question is opened."
+    }
+  ],
+  "build_patch": "diff --git a/cairn/devices/tester/reseal.py b/cairn/devices/tester/reseal.py\nindex 5d6e10ef..4e810159 100644\n--- a/cairn/devices/tester/reseal.py\n+++ b/cairn/devices/tester/reseal.py\n@@ -81,6 +81,7 @@ from pathlib import Path\n from cairn.devices.tester.conditions import compare\n from cairn.devices.tester.device import GREEN, TesterDevice\n from cairn.devices.tester.scratch_sweep import sweep as sweep_scratch\n+from cairn.tools.base.address import component_of\n from cairn.tools.validation_store.validation_store import (\n     closure_of,\n     component_root_for,\n@@ -269,27 +270,25 @@ def staged_files(root: Path | None = None) -> list[str]:\n \n def proofs_touching(staged: list[str], *, root: Path | None = None,\n                     rows: list[dict] | None = None) -> list[Path]:\n-    \"\"\"Which censused proofs a staged change could have moved the ground under.\n-\n-    ASKED PER SEAL, UNDER THAT SEAL'S OWN RECIPE — the same rule ``sealed_fingerprint_now``\n-    settled for the fingerprint itself. A seal carrying an import closure is touched when a\n-    staged file is IN that closure; a seal predating closures was taken over its component\n-    directory and is touched when a staged file is under that directory. Mixing the two\n-    would re-red the 2026-09-08 wall: one edit to ``transitions.py`` reaching 60 seals that\n-    never imported it.\"\"\"\n+    \"\"\"Which censused proofs a staged change re-runs: the proofs of the component that OWNS\n+    a staged file, and no one else's.\n+\n+    AKIEN'S ANSWER, 2026-10-05 (~/.cairn/foreground-decisions.md item 7): \"tool proofs:\n+    agreed\" — when a tool changes, the proofs of the components that use it do not re-run;\n+    only the tool's own do. This door used to ask each seal under its own recipe — touched\n+    when a staged file sat in its import closure, or under its directory for a pre-closure\n+    seal — and both crossed components: one line in liveness.py re-ran 55 proofs across 19\n+    components (b9a7d9e5), and a diagnostic.py commit reached 64 components and ran past 30\n+    minutes without landing (be4a7b3c7caa). The owner of a path is the deepest component\n+    ancestor (``component_of``), so a nested machine's change does not reach its holder\n+    either. A user whose ground did move is still told by ``component_color`` reading its\n+    seal; this door only decides what the commit re-runs.\"\"\"\n     base = Path(root or REPO_ROOT)\n-    want = set(staged)\n+    owners = {component_of(base / s) for s in staged} - {None}\n     out = []\n     for row in (rows if rows is not None else census(base)):\n-        proof, comp, seal = row[\"proof\"], row[\"component\"], row[\"seal\"]\n-        closure = closure_of(seal)\n-        if closure:\n-            if want & set(closure):\n-                out.append(proof)\n-            continue\n-        comp_rel = str(comp.relative_to(base)) if comp.is_relative_to(base) else str(comp)\n-        if any(s == comp_rel or s.startswith(comp_rel + \"/\") for s in want):\n-            out.append(proof)\n+        if Path(row[\"component\"]).resolve() in owners:\n+            out.append(row[\"proof\"])\n     return out\n \n \n",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T135610-67443dfce97d.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient c2a81a838598 .. validate 67443dfce97d, each learned)"
+  },
+  "cast": "2026-10-05",
+  "rehearsal": "rehearsals/3e80b61b7acf-20261005T195921.json"
+}
