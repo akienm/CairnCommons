@@ -1,0 +1,72 @@
+{
+  "id": "184d211153ff",
+  "title": "a-seals-closure-stops-at-its-own-component",
+  "date": "2026-10-05",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/validation_store/intention+why.json",
+  "intention": "A seal's import closure records only the files the proof's own component owns, plus the proof itself, so a change to a tool a component imports no longer moves that component's seal.",
+  "why": "Akien answered 2026-10-05, verbatim: \"tool proofs: agreed\" (~/.cairn/foreground-decisions.md item 7); the peer akiendelllinux_cc_0 directed this sibling 2026-10-05, deriving it from RULE 1 and Akien's \"then what files changed elsewhere doesn't matter one whit\": with only the reseal door narrowed (3e80b61b7acf), a tool's edit moves every user's seal and nothing re-runs them — a red with no path to green. MEASURED 2026-10-05: 336 of 342 standing seals carry a closure naming files owned by another component, 7,543 entries in all.",
+  "traces_to": "~/.cairn/foreground-decisions.md item 7; RULE 1 (Akien 2026-10-01); Law 9; sibling ticket 3e80b61b7acf",
+  "how": "cairn/tools/validation_store/validation_store.py repo_relative_closure: after the repo filter, keep the proof and only those closure files whose owner (cairn.tools.base.address.component_of, the deepest component ancestor, a leaf importing only pathlib) equals the proof's owner; a proof under no component keeps the whole closure; component_of is asked only of files beside the proof, so the reader's repo_relative_closure([], proof) pays nothing. sealed_fingerprint_now is untouched: a seal is re-read under the closure it recorded, so standing seals keep their wider closures until resealed and nothing expires at once. The exact diff rides this ticket's build_patch field. One new proof, cairn/tools/validation_store/proofs/test_a_seal_reads_only_its_own_components_files.py, already written red.",
+  "falsifier": "GREEN when cairn/tools/validation_store/proofs/test_a_seal_reads_only_its_own_components_files.py passes all four teeth: (1) a closure taken for a tester proof over a raw list naming cairn/tools/base/diagnostic.py does not contain it; (2) it keeps cairn/devices/tester/reseal.py and the proof; (3) a closure taken for a cairn-device proof drops cairn/devices/cairn/machines/bus/bus.py; (4) a seal whose recorded closure names a foreign file is re-taken over exactly that closure; and cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py, cairn/devices/tester/proofs/test_validation_store.py and test_reseal_stages_clean_seals.py stay green. RED if any fails. WRONG INTENT if a seal taken after the build expires when only a file another component owns changes.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because component_color in cairn/machines/build_inspector/inspector.py re-reads every seal on each inspector pass, and the one-shot reseal task (D5) re-measures the crossing count",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T140217-ca4c1a5e4e1e.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T140217-d938cbe19d79.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one helper and one return line plus its one proof, already on disk at cairn/tools/validation_store/proofs/test_a_seal_reads_only_its_own_components_files.py",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-05",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits cairn/tools/validation_store/validation_store.py only: repo_relative_closure's return passes through a new helper _owned_by_the_proofs_component."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-05",
+      "text": "D2: SETTLED: the proof cairn/tools/validation_store/proofs/test_a_seal_reads_only_its_own_components_files.py already stands on disk, written first as this ticket's red-first step and measured red 2/4 at HEAD 94334efb (2026-10-05: tooth 1 kept cairn/tools/base/diagnostic.py; tooth 3 kept machines/bus/bus.py; teeth 2 and 4 green as guards). It is committed before the BUILDME crossing; D1 turns it green and does not edit it."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-05",
+      "text": "D3: SETTLED: after D1 run `python3 cairn/tools/validation_store/proofs/test_a_seal_reads_only_its_own_components_files.py` (exit 0, '4 passed'), `python3 cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py` (3 passed), `PYTHONPATH=. python3 cairn/devices/tester/proofs/test_validation_store.py` and `python3 cairn/devices/tester/proofs/test_reseal_stages_clean_seals.py` (each exit 0, as at HEAD). Measured so on a prototype of D1, 2026-10-05."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-05",
+      "text": "D4: SETTLED: commit cairn/tools/validation_store/validation_store.py with message '184d211153ff: a seal's closure stops at its own component' and the two trailer lines 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>' and 'Claude-Session: https://claude.ai/code/session_01JrhBQALF5qFBEVqQJUsXUu'. No file outside cairn/tools/validation_store changes."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-05",
+      "text": "D5: SETTLED: scope. Standing seals are not rewritten: a seal is never written without a run in the same act (cairn/devices/tester/proofs/test_reseal_door.py, test_no_rung_writes_a_seal_without_a_run_in_the_same_act). MEASURED 2026-10-05: 336 of 342 standing seals carry a closure naming files owned by another component (7,543 entries). Each narrows the next time it is resealed; resealing the 336 at once is a one-shot task cast after this ticket is PROVED, not this ticket's."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-05",
+      "text": "D6: SETTLED: the answer that sets this behaviour is Akien answered 2026-10-05, verbatim: \"tool proofs: agreed\" (~/.cairn/foreground-decisions.md item 7); the peer akiendelllinux_cc_0 directed this sibling 2026-10-05, deriving it from RULE 1 and Akien's \"then what files changed elsewhere doesn't matter one whit\": with only the reseal door narrowed (3e80b61b7acf), a tool's edit moves every user's seal and nothing re-runs them — a red with no path to green. No question is opened."
+    }
+  ],
+  "build_patch": "diff --git a/cairn/tools/validation_store/validation_store.py b/cairn/tools/validation_store/validation_store.py\nindex eb827885..996b799e 100644\n--- a/cairn/tools/validation_store/validation_store.py\n+++ b/cairn/tools/validation_store/validation_store.py\n@@ -347,7 +347,31 @@ def repo_relative_closure(files, proof_path: str) -> list[str]:\n             continue\n         if rel.endswith(\".py\"):\n             out.add(rel)\n-    return sorted(out)\n+    return sorted(_owned_by_the_proofs_component(out, proof_path))\n+\n+\n+def _owned_by_the_proofs_component(rels: set, proof_path: str) -> set:\n+    \"\"\"Keep only the closure files the proof's own component owns, and the proof itself.\n+\n+    AKIEN'S ANSWER, 2026-10-05 (~/.cairn/foreground-decisions.md item 7): \"tool proofs:\n+    agreed\" — a tool's change re-runs only the tool's own proofs (ticket 3e80b61b7acf). A seal\n+    whose closure still named the tool's files would expire on that change with nothing to\n+    re-run it, so the closure stops at the component boundary (ticket 184d211153ff): a file\n+    another component owns is that component's proofs' business (RULE 1). Measured before the\n+    build: 336 of 342 standing seals named foreign files, 7,543 entries. The owner is the\n+    deepest component ancestor (``component_of``), so a holder's closure drops its nested\n+    machines too. Only the files BESIDE the proof are asked, so the reader's\n+    ``repo_relative_closure([], proof)`` pays nothing; a proof under no component keeps the\n+    whole closure rather than guessing.\"\"\"\n+    from cairn.tools.base.address import component_of\n+    mine = os.path.relpath(os.path.realpath(str(proof_path)), _REPO_ROOT)\n+    others = rels - {mine}\n+    if not others:\n+        return rels\n+    owner = component_of(os.path.join(_REPO_ROOT, mine))\n+    if owner is None:\n+        return rels\n+    return {mine} | {r for r in others if component_of(os.path.join(_REPO_ROOT, r)) == owner}\n \n \n def standing(proof_path: str) -> dict:\n",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T140305-ad72816e8b48.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient f578a12b9a5c .. validate ad72816e8b48, each learned)"
+  },
+  "cast": "2026-10-05",
+  "rehearsal": "rehearsals/184d211153ff-20261005T200809.json"
+}
