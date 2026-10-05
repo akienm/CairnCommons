@@ -1,0 +1,60 @@
+{
+  "id": "80434313b6de",
+  "title": "the-bus-client-declares-the-modules-it-publishes",
+  "date": "2026-10-05",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "The bus client's charter declares the two modules it publishes and every caller already uses, cairn.tools.bus_client.remote (RemoteBus, ensure_bus, exchange) and cairn.tools.bus_client.roster (DeviceRoster), so the 24 'undeclared' encapsulation findings against it clear.",
+  "why": "Measured 2026-10-05: encapsulation_breaches('.') returns 115 rows, 24 of them 'undeclared' on cairn/tools/bus_client (18 roster, 6 remote). Both modules were built on 2026-10-02 to be imported (roster.py by efb670ff1dd8's build 4313a42d for the web server and CLI; remote.py by 48519f4789b1's build 1a141757 for every shim), a day after 56d1aff4455e's first declarations (5eabc693), and neither build declared them. The lived symptom: whoever changes remote.py or roster.py sees no declared caller, so a change reaches 24 sites in 10 components it never said it touched, which is exactly what RULE 1 exists to stop.",
+  "traces_to": "RULE 1 (encapsulation, CairnCommons/intentions-not-beside-code/I-rule-1-encapsulation.md); Law 4 (encapsulation_holds is the physics; the declaration catches up to it). Child of 8e3474a6ae43 (rule-1-encapsulation), falsifier (3).",
+  "how": "One charter edit through the artifact door: cairn/tools/bus_client/intention+why.json's public_interface becomes [\"cairn.tools.bus_client\", \"cairn.tools.bus_client.bus_client\", \"cairn.tools.bus_client.remote\", \"cairn.tools.bus_client.roster\"]. A new proof cairn/tools/bus_client/proofs/test_the_bus_client_declares_what_it_publishes.py reads the charter and the live encapsulation_breaches, sealed red before the edit and green after. The two device reaches inside bus_client (roster.py:67 -> ground_loop.discovered, bus_client.py:93 -> harbor_master.voyage) are not touched and stay red under the ground-loop-discovery child of 8e3474a6ae43.",
+  "falsifier": "GREEN when (1) cairn/tools/bus_client/intention+why.json's public_interface contains 'cairn.tools.bus_client.remote' and 'cairn.tools.bus_client.roster', and (2) cairn.machines.build_inspector.inspector.encapsulation_breaches(<repo root>) returns no row with target 'cairn/tools/bus_client' and reason 'undeclared'. RED if either fails. WRONG INTENT if any importer reaches a device's internals through either module. Horizon: PROVED, then the next live inspector pass shows 0 undeclared rows on bus_client.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because encapsulation_holds runs inside build_inspector (cairn/machines/build_inspector/inspector.py) at every PROVEME of every component, and its findings ARE the report",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T041326-79aea8f8a1e4.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T041256-25791b8c95b3.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one charter field and one proof",
+  "questions": [],
+  "cast": "2026-10-05",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T041446-5fdaf9a89d30.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 83addbaaf22a .. validate 5fdaf9a89d30, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: SETTLED: Create cairn/tools/bus_client/proofs/test_the_bus_client_declares_what_it_publishes.py with exactly this content. Its PROVES maps falsifier clause 1 to tooth the_charter_declares_both and clause 2 to tooth nothing_reaches_bus_client_undeclared. Measured at HEAD before the charter edit: both teeth RED, tooth 1 naming the two missing modules and tooth 2 counting 24 undeclared reaches:\n\"\"\"Proof for ticket 80434313b6de — the bus client declares the modules it publishes.\n\nRULE 1 (Akien, 2026-10-01): a component is reached only through its DECLARED public interface.\nroster.py (efb670ff1dd8's build 4313a42d) and remote.py (48519f4789b1's build 1a141757) were born\non 2026-10-02 to be imported by the CLI, the web server and every shim — a day after\n56d1aff4455e's first declarations — and neither build declared them. Measured before this\nticket: 24 encapsulation_breaches rows 'undeclared' on cairn/tools/bus_client (18 roster, 6\nremote).\n\nOne tooth per numbered falsifier clause, over the LIVE repo (invariants, never snapshots):\n\n  1. THE CHARTER DECLARES BOTH. public_interface contains cairn.tools.bus_client.remote and\n     cairn.tools.bus_client.roster.\n  2. NOTHING REACHES BUS_CLIENT UNDECLARED. No encapsulation_breaches row has target\n     cairn/tools/bus_client and reason 'undeclared'.\n\n    python3 cairn/tools/bus_client/proofs/test_the_bus_client_declares_what_it_publishes.py   # exit 0 = green\n\"\"\"\nimport json\nimport sys\nfrom pathlib import Path\n\n_REPO_ROOT = Path(__file__).resolve().parents[4]\nif str(_REPO_ROOT) not in sys.path:\n    sys.path.insert(0, str(_REPO_ROOT))\n\n\nclass _Late:\n    \"\"\"The inspector resolves AT CALL TIME, so `cairn test --hollow` reads as red teeth\n    rather than an import that never ran.\"\"\"\n\n    def __init__(self, module):\n        self._module = module\n\n    def __getattr__(self, name):\n        import importlib\n        return getattr(importlib.import_module(self._module), name)\n\n\n_inspector = _Late(\"cairn.machines.build_inspector.inspector\")\n\nPROVES = {\"80434313b6de\": {\"1\": \"the_charter_declares_both\",\n                           \"2\": \"nothing_reaches_bus_client_undeclared\"}}\n\nTOOL_DIR = _REPO_ROOT / \"cairn\" / \"tools\" / \"bus_client\"\nPUBLISHED = (\"cairn.tools.bus_client.remote\", \"cairn.tools.bus_client.roster\")\n\nPASS = 0\nFAIL = 0\n\n\ndef _tooth(name, fn):\n    global PASS, FAIL\n    try:\n        fn()\n    except Exception as exc:  # noqa: BLE001 — a proof reports, never hides\n        FAIL += 1\n        print(f\"  RED   {name}: {type(exc).__name__}: {exc}\")\n    else:\n        PASS += 1\n        print(f\"  ok    {name}\")\n\n\ndef the_charter_declares_both():\n    charter = json.loads((TOOL_DIR / (\"intention+\" + \"why.json\")).read_text(encoding=\"utf-8\"))\n    declared = charter.get(\"public_interface\") or []\n    missing = [m for m in PUBLISHED if m not in declared]\n    assert not missing, f\"public_interface does not declare {missing}: {declared}\"\n\n\ndef nothing_reaches_bus_client_undeclared():\n    rows = [r for r in _inspector.encapsulation_breaches(str(_REPO_ROOT))\n            if r[\"target\"] == \"cairn/tools/bus_client\" and r[\"reason\"] == \"undeclared\"]\n    assert not rows, f\"{len(rows)} undeclared reach(es) into bus_client: \" \\\n        f\"{sorted({r['module'] for r in rows})} from {sorted({r['file'] for r in rows})[:6]}\"\n\n\nTEETH = [the_charter_declares_both, nothing_reaches_bus_client_undeclared]\n\nif __name__ == \"__main__\":\n    for fn in TEETH:\n        _tooth(fn.__name__, fn)\n    print(f\"{PASS} passed, {FAIL} failed out of {PASS + FAIL}\")\n    sys.exit(1 if FAIL else 0)",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:16:22+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: SETTLED: The whole charter change is one line of /home/akien/dev/src/cairn/cairn/tools/bus_client/intention+why.json: '\"public_interface\": [\"cairn.tools.bus_client\", \"cairn.tools.bus_client.bus_client\"]' becomes '\"public_interface\": [\"cairn.tools.bus_client\", \"cairn.tools.bus_client.bus_client\", \"cairn.tools.bus_client.remote\", \"cairn.tools.bus_client.roster\"]'. Mechanics: save this script to the scratchpad as charter_bcdecl.py, run 'python3 <scratchpad>/charter_bcdecl.py /home/akien/dev/src/cairn <scratchpad>/bc_charter_new.json', then in a separate command 'bin/cairn artifact write /home/akien/dev/src/cairn/cairn/tools/bus_client/intention+why.json --verb charter --why \"80434313b6de: declare the two modules bus_client publishes (56d1aff4455e declaration rule)\" --from <scratchpad>/bc_charter_new.json'. A heredoc, sed or write_text at the charter path is refused by artifactgate:\n\"\"\"80434313b6de: write bus_client's charter with remote and roster declared, to argv[2], read from argv[1]'s repo root.\n\nOne line changes: the public_interface line, in the charter's own one-line style.\"\"\"\nimport json, sys\nfrom pathlib import Path\nsrc = Path(sys.argv[1]) / \"cairn\" / \"tools\" / \"bus_client\" / \"intention+why.json\"\ntext = src.read_text(encoding=\"utf-8\")\nold = '\"public_interface\": [\"cairn.tools.bus_client\", \"cairn.tools.bus_client.bus_client\"]'\nnew = ('\"public_interface\": [\"cairn.tools.bus_client\", \"cairn.tools.bus_client.bus_client\", '\n       '\"cairn.tools.bus_client.remote\", \"cairn.tools.bus_client.roster\"]')\nassert text.count(old) == 1, \"the public_interface line is not the one this script was written against\"\nout = text.replace(old, new)\njson.loads(out)\nPath(sys.argv[2]).write_text(out, encoding=\"utf-8\")\nprint(src)",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:16:22+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: SETTLED: Order and mechanics. (1) Write the proof (D1) and seal it red: 'bin/cairn test --seal --timeout 900 cairn/tools/bus_client/proofs/test_the_bus_client_declares_what_it_publishes.py'; commit the proof and its validation in cairn. (2) Apply D2 and run 'python3 cairn/tools/bus_client/proofs/test_the_bus_client_declares_what_it_publishes.py': expect '2 passed, 0 failed out of 2' (measured in a detached worktree of HEAD with D2 applied), and 'python3 -c \"from cairn.machines.build_inspector.inspector import encapsulation_breaches as e; print(len(e(\\\".\\\")))\"' from the cairn root prints 91 (115 before; measured in the same worktree). (3) Seal the proof green with the same 'bin/cairn test --seal' command and commit the charter and the validation in cairn. Run each cairn commit in the background and never wrap it in timeout: the pre-commit reseal door reseals bus_client's proofs. Any proof the door times out is resealed by hand with 'bin/cairn test --seal --timeout 2400 <proof>' and committed.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:16:22+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: SETTLED: Nothing else changes. remote.py, roster.py, bus_client.py and __init__.py keep their code. The two into_device reaches from bus_client (roster.py:67 -> cairn.devices.cairn.machines.ground_loop.discovered, bus_client.py:93 -> cairn.devices.cairn.machines.harbor_master.voyage), the system_word row (cairn/devices/codemother/shim.py:326) and the librarian row (cairn/devices/librarian/tools/trees/proofs/test_trees_is_a_published_tool.py:131) stay red and are out of this ticket. The 24 importing files are untouched. build_inspector's encapsulation_breaches is untouched.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:16:22+00:00"
+    }
+  ]
+}
