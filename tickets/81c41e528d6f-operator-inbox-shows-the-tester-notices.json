@@ -1,0 +1,73 @@
+{
+  "id": "81c41e528d6f",
+  "title": "operator-inbox-shows-the-tester-notices",
+  "date": "2026-10-04",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/operator_inbox/intention+why.json",
+  "intention": "The operator inbox gains a NOTICES lane that asks the tester's `notices` verb over the bus and shows each unseen notice (its line and the head of its diff) with the notices-per-day rate, says loudly when the tester could not be asked, and lets the operator mark one seen with `cairn operator notice-seen <id>`, which asks the tester's `notice-seen` verb.",
+  "why": "Akien, open-ed0a56ce6357: a green the measurement cannot vouch for completes AND notifies him, and \"if i get inundated, we'll change it\". The tester now posts those notices (b5871526384a), but nothing puts them in front of him, so the notify half does not happen and the rate that would tell him he is inundated is visible nowhere he looks.",
+  "traces_to": "parent df05d93da4c0 falsifier (c); Akien's answer to open-ed0a56ce6357; RULE 1 (the inbox asks the tester's verb, never its store); Law 7 (a tester that could not be asked is loud, never a quiet zero); Law 3 (every figure on the lane is a live measurement)",
+  "how": "cairn/tools/operator_inbox/inbox.py gains read_notices (asks the tester's `notices` verb through cairn.tools.bus_client.reach), a 'notices' key in gather_all, 'notices' in SECTION_ORDER after 'questions', a NOTICES lane in format_inbox after QUESTIONS, an unseen count and rate in format_summary, and a `notice-seen <id>` word in main backed by mark_notice_seen (asks the tester's `notice-seen` verb). test_operator_inbox.py's test_section_order_is_ruled gains 'notices'. The charter's `what` and `invoke` name the lane and the word. The decisions D1-D7 carry every detail.",
+  "falsifier": "(1) read_notices() with no ask calls cairn.tools.bus_client.reach('tester') and request(sender='operator_inbox', to='tester', verb='notices', ...), and returns {'unseen': the reply body's unseen, 'count': its length, 'rate': the body's rate, 'error': None}. (2) format_inbox over gather_all data whose notices carry two unseen notices renders a lane headed 'NOTICES FROM THE TESTER (2 unseen; <per_day>/day over <days> day(s), <total> total)' naming each id, its line and the first 8 lines of its diff with '(+N more diff line(s))' for the rest, and the line 'mark seen with: cairn operator notice-seen <id>', positioned after the QUESTIONS section and before DESIGN and the troubles lane; with zero unseen it renders one line 'NOTICES: 0 unseen (<total> total, <per_day>/day over <days> day(s))'. (3) when the ask raises, read_notices returns count None and an error naming the exception, and format_inbox renders '!! NOTICES: <that error>' and no 'NOTICES: 0 unseen'. (4) format_summary carries '<count> unseen notice(s) (<per_day>/day)', or 'notices: could not ask the tester' on an error. (5) main(['notice-seen', id]) asks request(to='tester', verb='notice-seen', body={'id': id}); it returns 0 printing 'seen <id>' on {'seen': id} and returns 1 printing the refusal on {'refused': ...}. (6) read_notices() against the live bus returns error None and a rate carrying total, first, days and per_day. WRONG INTENT if Akien is inundated (his words: \"if i get inundated, we'll change it\"). Horizon: this child PROVED.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the lane renders the rate, which is the standing measurement of whether Akien is inundated; it is reported to the foreground per ~/.cairn/foreground-decisions.md item 6, under parent CairnCommons/tickets/df05d93da4c0-an-unvouched-green-completes-and-notifies.json",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261004T183516-4348f49626a5.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261004T183454-2cf772c43bb2.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the reader, the render, the summary and the CLI word are one component's build and one proof",
+  "questions": [],
+  "parent": "df05d93da4c0",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-04",
+      "text": "D1: SETTLED: in cairn/tools/operator_inbox/inbox.py, beside read_email, add read_notices(*, ask=None) -> dict. Body: try: if ask is None: from cairn.tools.bus_client import reach (imported inside the function, as read_email does); reply = reach('tester').request(sender='operator_inbox', to='tester', verb='notices', why=\"operator inbox: the tester's notices lane\"); else: reply = ask(). body = reply['body']; unseen = list(body['unseen']); return {'unseen': unseen, 'count': len(unseen), 'rate': body['rate'], 'error': None}. except Exception as exc: return {'unseen': [], 'count': None, 'rate': None, 'error': f\"could not ask the tester's notices verb — {type(exc).__name__}: {exc}\"}. Docstring: the tester owns its notices (Law 6) and the inbox asks its verb, never the store (RULE 1); a failed ask is count None and an error, never a zero (Law 7); cites ticket 81c41e528d6f and Akien's answer to open-ed0a56ce6357."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-04",
+      "text": "D2: SETTLED: SECTION_ORDER becomes ['email', 'adjudications', 'lap', 'questions', 'notices', 'design', 'troubles', 'tickets', 'intentions', 'ideas'] (a comment: notices are his attention, so they sit among his sections, above the CC-owned troubles; ticket 81c41e528d6f). gather_all's returned dict gains 'notices': read_notices(ask=kw.get('notices_ask')), placed after 'questions'."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-04",
+      "text": "D3: SETTLED: module constant NOTICE_DIFF_HEAD = 8. In format_inbox, immediately after the QUESTIONS block and before the '# DESIGN' block: notices = data.get('notices') or {'unseen': [], 'count': None, 'rate': None, 'error': 'the notices lane was not read'}. If notices['error']: lines.append(f\"  !! NOTICES: {notices['error']}\"). Elif notices['count'] == 0: r = notices['rate']; lines.append(f\"  NOTICES: 0 unseen ({r['total']} total, {r['per_day']}/day over {r['days']} day(s))\"). Else: r = notices['rate']; lines.append(''); lines.append(_section_line(f\"NOTICES FROM THE TESTER ({notices['count']} unseen; {r['per_day']}/day over {r['days']} day(s), {r['total']} total)\")); lines.append(''); for n in notices['unseen']: lines.append(f\"    {n.get('id', '?')}  [{n.get('ticket') or '-'}]\"); lines.append(f\"      {n.get('line', '')}\"); diff = (n.get('diff') or '').splitlines(); for d in diff[:NOTICE_DIFF_HEAD]: lines.append(f'        {d[:100]}'); if len(diff) > NOTICE_DIFF_HEAD: lines.append(f'        (+{len(diff) - NOTICE_DIFF_HEAD} more diff line(s))'). After the loop: lines.append(''); lines.append('  mark seen with: cairn operator notice-seen <id>'); lines.append('')."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-04",
+      "text": "D4: SETTLED: in format_summary, right after parts.append(f\"{questions['count']} open question(s)\"): notices = data.get('notices'); if not notices or notices.get('error'): parts.append('notices: could not ask the tester'); else: parts.append(f\"{notices['count']} unseen notice(s) ({notices['rate']['per_day']}/day)\")."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-04",
+      "text": "D5: SETTLED: add mark_notice_seen(nid: str, *, ask=None) -> int beside read_notices. body = {'id': nid}. try: if ask is None: from cairn.tools.bus_client import reach; reply = reach('tester').request(sender='operator_inbox', to='tester', verb='notice-seen', why=f'operator marked notice {nid} seen', body=body); else: reply = ask(body). answer = reply['body']. except Exception as exc: print(f\"could not ask the tester's notice-seen verb — {type(exc).__name__}: {exc}\", file=sys.stderr); return 1. If answer.get('seen'): print(f\"seen {answer['seen']}\"); return 0. Else: print(answer.get('refused') or f'the tester answered {answer!r}', file=sys.stderr); return 1. In main, after the `show` block and before the '# Bare invocation' block: if is_word(args[0], 'notice-seen'): if len(args) < 2: print('usage: cairn operator notice-seen <notice id>', file=sys.stderr); return 2; return mark_notice_seen(args[1]). USAGE (the module's usage string) gains a line naming `notice-seen <id>`."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-04",
+      "text": "D6: SETTLED: cairn/tools/operator_inbox/proofs/test_operator_inbox.py test_section_order_is_ruled: the asserted list gains 'notices' between 'questions' and 'design', and its docstring gains one sentence: notices joined his sections 2026-10-04 (ticket 81c41e528d6f, Akien's answer to open-ed0a56ce6357: notify me), above the CC-owned troubles. The charter cairn/tools/operator_inbox/intention+why.json is rewritten through the artifact door (cairn artifact write <path> --verb cast --why ... --from <file>): in `what`, 'questions, design' becomes 'questions, notices (the tester's unseen notices with the per-day rate, asked through its `notices` verb — ticket 81c41e528d6f), design'; `invoke` gains the sentence '`cairn operator notice-seen <id>` marks a tester notice seen by asking the tester's `notice-seen` verb.'; then recompile_gate.sh is poked."
+    },
+    {
+      "n": 7,
+      "by": "cc",
+      "step": "D7",
+      "date": "2026-10-04",
+      "text": "D7: SETTLED: the proof is cairn/tools/operator_inbox/proofs/test_the_inbox_shows_the_tester_notices.py, written FIRST and run red. _REPO_ROOT = Path(__file__).resolve().parents[4] inserted on sys.path. PROVES = {'81c41e528d6f': {'1': 'test_the_reader_asks_the_tester_notices_verb', '2': 'test_the_lane_shows_each_notice_and_the_rate_among_his_sections', '3': 'test_a_tester_that_cannot_be_asked_is_loud', '4': 'test_the_summary_carries_the_count_and_the_rate', '5': 'test_notice_seen_asks_the_tester_verb', '6': 'test_the_live_tester_answers_the_lane'}}. Every tooth imports cairn.tools.operator_inbox.inbox INSIDE its body (so a reverted inbox reds a tooth instead of breaking the import). Teeth 1 and 5 replace cairn.tools.bus_client.reach (the package attribute) with a recorder whose request(**kw) records kw and returns a canned reply envelope {'body': ...}, restoring it in finally; tooth 1 asserts the recorder saw reach('tester') and request kw sender='operator_inbox', to='tester', verb='notices'; tooth 5 runs inbox.main(['notice-seen', 'n-aaaaaaaaaaaa']) under contextlib.redirect_stdout/redirect_stderr, asserting verb='notice-seen', body={'id': 'n-aaaaaaaaaaaa'}, return 0 and 'seen n-aaaaaaaaaaaa' on stdout for {'seen': ...}, then return 1 and the refusal text on stderr for {'refused': \"no notice 'n-aaaaaaaaaaaa' — nothing was marked\"}. Tooth 2 builds data = inbox.gather_all(notices_ask=<fake returning a reply with two notices, one with a 20-line diff, and rate {'total': 3, 'first': '2026-10-04T00:00:00+00:00', 'days': 2, 'per_day': 1.5}>) and asserts the header text, both ids and lines, the first diff line, '(+12 more diff line(s))', the mark-seen line, and out.find('QUESTIONS') < out.find('NOTICES FROM THE TESTER') < out.find('DESIGN'), and that the lane sits before whichever of '  TROUBLES:' / 'LIVE TROUBLES (' is present; then with an empty unseen it asserts 'NOTICES: 0 unseen (3 total, 1.5/day over 2 day(s))'. Tooth 3 uses an ask that raises ConnectionError('bus down') and asserts count None, 'ConnectionError' in the error, '!! NOTICES:' in format_inbox output and 'NOTICES: 0 unseen' absent. Tooth 4 asserts format_summary carries '2 unseen notice(s) (1.5/day)' for the fake and 'notices: could not ask the tester' for the raising ask. Tooth 6 calls inbox.read_notices() against the live bus and asserts error is None and set(rate) >= {'total', 'first', 'days', 'per_day'}. main() runs each PROVES tooth, prints '  ok   <name>' or '  FAIL <name>: <exc>', then GREEN or RED, exit 1 on any fail. After the build run it and test_operator_inbox.py green, then seal the operator_inbox proofs."
+    }
+  ],
+  "cast": "2026-10-04"
+}
