@@ -10,7 +10,7 @@
   "how": "In cairn/machines/build_inspector/inspector.py: factor _forwarding_map's entry filter into _valid_orders(order); add _hand_order_index() (every filed ticket's valid entries, {from: to}, a from two tickets forward differently left out), _deleting_ticket(path, repo_root) (the 12-hex id the deleting commit's subject opens with, via `git log --diff-filter=D -1 --format=%s -- path`), and continued_successor(address, repo_root, exists) (only for an address with a rename record whose chain final is gone: the deleting ticket's order for the final, else the consensus index); _resolves_to returns derived_successor(...) or continued_successor(...); forwarding_residue labels a crossed answer 'dissolution' instead of 'git'. Add the forwarding entry cairn/devices/cairn/machines/ground_loop/validations/test_stale_restart.json -> cairn/devices/cairn/machines/ground_loop/validations/test_heartbeat.json on bae622881f03. Proof: cairn/machines/build_inspector/proofs/test_a_rename_chain_crosses_a_dissolution.py, seven teeth. Decision lines carry the code verbatim.",
   "falsifier": "GREEN when, in a synthetic repo where a.py is renamed to b.py and b.py later deleted by a commit whose subject opens with the deleting ticket's id: (1) the deleting ticket's order b.py -> c.py makes a.py resolve to c.py under a charting ticket with no order; (2) with no order naming b.py, a.py resolves to None; (3) the charting ticket's own order for a.py wins; (4) z.py, deleted without a rename, does not resolve through the deleting ticket's order for z.py; (5) the deleting ticket's order wins over a disagreeing order on another ticket; (6) with a deleting commit that names no ticket, two disagreeing orders answer None and two agreeing ones answer their target; (7) the live inspect(component='ground_loop') carries no survey_holdings_resolve or charted_refs_resolve finding. RED if any fails. WRONG INTENT if an order answers for an address its own rename chain never reached, or a copy outranks the deleter. Horizon: PROVED, then the next absorb-then-cleanup needs one order on the cleaning ticket, not one per charting ticket.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [FIXME:waiting] -> BUILDME -> PROVEME -> PROVED",
   "watchme": "none, because the address sieves run inside build_inspector at every PROVEME of every component, and their findings ARE the report; forwarding_residue (cairn/machines/build_inspector/inspector.py) already measures what a hand still owes",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T023238-5ded5ba6e684.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T022736-f239acc11397.json",
@@ -58,7 +58,39 @@
       "step": "D5",
       "source": "rehearsal",
       "at": "2026-10-05T08:36:00+00:00"
+    },
+    {
+      "n": 6,
+      "text": "SETTLED: In cairn/machines/build_inspector/proofs/test_a_rename_chain_crosses_a_dissolution.py, tooth 7 (test_the_live_ground_loop_addresses_resolve) reads the live records where the commons actually is. Add a helper _live_tickets_root() returning str(_REPO_ROOT) when _REPO_ROOT.parent/CairnCommons/tickets is a directory, else str(Path.home()/'dev'/'src'/'cairn') (hollow.py resolves the commons the same way). Inside tooth 7, around insp.inspect(component='ground_loop'), save insp._TICKETS_ROOT and insp.ref_exists, set insp._TICKETS_ROOT = live and insp.ref_exists = lambda r: saved_exists(r) or grammar.ref_exists(r, live) (grammar is cairn.tools.chain.grammar), and restore both in finally. The assertion is unchanged. Measured in a git worktree with no commons beside it: GREEN 7/7 at HEAD, 7 FAIL with inspector.py at dae2ff17; GREEN in the home tree. Only the proof changes (a proofs-only repair; 479f75cc0917 keeps the hollow anchored at the build 955bff86). Order: cross BUILDME, write the proof, run it, seal with 'bin/cairn test --seal --timeout 900 <proof>', commit, cross PROVEME, run 'bin/cairn test --hollow 96541ff420bc --seal --timeout 900'.",
+      "by": "cc",
+      "step": "FIXME 1",
+      "source": "rehearsal",
+      "at": "2026-10-05T09:29:53+00:00"
+    },
+    {
+      "n": 7,
+      "text": "SETTLED: D6 is a repair after D1-D5 are already done and committed (the build 955bff86 stands; the proof from D1 is committed at 9849cb9b). It is not part of the D4 sequence and not a second proof: it edits the one committed proof file in place, replacing only tooth 7's body and adding _live_tickets_root, then runs D6's own order (cross BUILDME from FIXME, edit, run, seal, commit, cross PROVEME, hollow). D4's steps are not repeated.",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-05T09:36:56+00:00"
+    },
+    {
+      "n": 8,
+      "text": "SETTLED: D6's code, verbatim. D1-D5 are executed and committed (build 955bff86, proof 9849cb9b); the ticket stands at FIXME. In the committed cairn/machines/build_inspector/proofs/test_a_rename_chain_crosses_a_dissolution.py, replace the whole function test_the_live_ground_loop_addresses_resolve with the block below (the helper _live_tickets_root, then the new tooth 7), so the file's text from 'def _live_tickets_root' up to 'def main()' is exactly this; nothing else in the file changes:\ndef _live_tickets_root() -> str:\n    \"\"\"A cairn checkout whose sibling holds the live commons: this repo when CairnCommons sits beside\n    it, else the home checkout — hollow's worktree under /tmp has no commons beside it, and\n    the forwarding orders this tooth reads live only there (hollow.py resolves it the same way).\"\"\"\n    if (_REPO_ROOT.parent / \"CairnCommons\" / \"tickets\").is_dir():\n        return str(_REPO_ROOT)\n    return str(Path.home() / \"dev\" / \"src\" / \"cairn\")\n\n\ndef test_the_live_ground_loop_addresses_resolve():\n    from cairn.machines.build_inspector import inspector as insp\n    assert callable(insp.continued_successor), \"no continued_successor in inspector\"\n    from cairn.tools.chain import grammar\n    live = _live_tickets_root()\n    saved_root, saved_exists = insp._TICKETS_ROOT, insp.ref_exists\n    try:\n        # the code under test, over the live repo's records: forwarding orders and\n        # commons-relative refs (tickets/...) are read where the commons actually is\n        insp._TICKETS_ROOT = live\n        insp.ref_exists = lambda r: saved_exists(r) or grammar.ref_exists(r, live)\n        report = insp.inspect(component=\"ground_loop\")\n    finally:\n        insp._TICKETS_ROOT, insp.ref_exists = saved_root, saved_exists\n    mine = [f for f in report[\"findings\"]\n            if f.get(\"method\") in (\"survey_holdings_resolve\", \"charted_refs_resolve\")]\n    assert mine == [], [(f.get(\"method\"), (f.get(\"values\") or {}).get(\"address\") or f.get(\"about\"))\n                        for f in mine]",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-05T09:43:22+00:00"
+    },
+    {
+      "n": 9,
+      "text": "SETTLED: the crossings. Each one is this script saved as <scratchpad>/cross.py and run from the cairn repo root as 'PYTHONPATH=. python3 <scratchpad>/cross.py 96541ff420bc <TARGET> cairn/machines/build_inspector \"<why>\" [proof ...]'. FIXME -> BUILDME: TARGET BUILDME with no proof (the FIXME gate passes because FIXME 1 is answered as D6). BUILDME -> PROVEME: TARGET PROVEME naming cairn/machines/build_inspector/proofs/test_a_rename_chain_crosses_a_dissolution.py. It calls transitions.emit and writes the cursor back through the artifact door:\n\"\"\"Forward crossing TID -> TARGET at DEV's address; cursor written back through the artifact door.\nusage: cross.py TID TARGET DEV WHY [proven_by...]\"\"\"\nimport json\nimport sys\nfrom pathlib import Path\n\nfrom cairn.tools.base.transitions import emit\nfrom cairn.tools.artifact.artifact import write\n\nTID, target, dev, why = sys.argv[1:5]\nproven = sys.argv[5:]\ntp = next(Path(\"/home/akien/dev/src/CairnCommons/tickets\").glob(f\"{TID}-*.json\"))\nt = json.loads(tp.read_text())\ndev = Path(dev)\nif not (dev / \"intention+why.json\").is_file():\n    sys.exit(f\"refused: {dev} carries no charter — give the component's repo path, e.g. cairn/devices/tester\")\nkw = {\"proven_by\": proven} if proven else {}\nnew = emit(t[\"workflow_and_state\"], target, history_path=str(dev / \"history.json\"),\n           state_path=str(dev / \"state.json\"), ticket=TID, actor=\"cc\", why=why, **kw)\nprint(new)\nif new != t[\"workflow_and_state\"]:\n    t[\"workflow_and_state\"] = new\n    write(str(tp), json.dumps(t, indent=2, ensure_ascii=False) + \"\\n\", verb=\"cast\", why=why)",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-05T09:50:06+00:00"
     }
   ],
-  "rehearsal": "rehearsals/96541ff420bc-20261005T084036.json"
+  "rehearsal": "rehearsals/96541ff420bc-20261005T095625.json"
 }
