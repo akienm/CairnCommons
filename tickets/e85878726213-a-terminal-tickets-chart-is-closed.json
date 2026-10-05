@@ -1,0 +1,65 @@
+{
+  "id": "e85878726213",
+  "title": "a-terminal-tickets-chart-is-closed",
+  "date": "2026-10-05",
+  "owner": "CC",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "The build inspector judges the chart packets only of a component's tickets that are still in work: a ticket at any terminal state (cairn.tools.base.transitions.TERMINAL_STATES — PROVED, SUPERSEDED, RETIRED, DROPPED, KILLED, ABSORBED) has its chart closed, not only one at PROVED.",
+  "why": "164da559823d's PROVED crossing was refused on ground_loop (2026-10-05) by two decompose_composes_holdings findings from b5b5e0483af1's 2026-08-17 decompose berth — a ticket SUPERSEDED on 2026-10-01. _component_tickets counts every non-[PROVED] ticket as active, so 19 terminal-not-PROVED ticket rows across 12 components are re-judged for work nobody is doing.",
+  "traces_to": "Law 9 (a red measures distance from the spec now; a superseded chart is not the spec now — its successor is judged under its own id); Law 1 (re-judging settled records); Law 5 (the working surface carries what is under way)",
+  "how": "In cairn/machines/build_inspector/inspector.py, _component_tickets reads the cursor through transitions.parse_workflow and keeps a ticket active unless transitions.is_terminal(cursor state); an unparseable workflow string falls back to today's substring test. One new proof in build_inspector/proofs/.",
+  "falsifier": "GREEN when (1) _component_tickets over a scratch history naming a [SUPERSEDED] ticket and a [BUILDME] ticket returns the BUILDME ticket's spellings and none of the SUPERSEDED one's; (2) a ticket whose workflow_and_state does not parse (and carries no [PROVED]) is still returned; (3) inspect(component='ground_loop') carries no finding whose ticket is b5b5e0483af1 / staleness-is-about-this-process-not-about-disk. RED if any fails, or if any existing build_inspector proof goes red. WRONG INTENT if a terminal-not-PROVED ticket among the 19 measured rows carries a chart a live successor depends on. Horizon: 164da559823d's PROVED crossing passes the build gate on ground_loop the same session.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "watchme": "none, because every component crossing runs build_inspector over its own tickets (transitions.emit's BUILD_GATE, cairn/tools/base/transitions.py), so a terminal ticket's chart reappearing as a finding refuses the next crossing loudly",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T073909-1bcb53672da3.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T073821-5816dc05c47a.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one predicate in cairn/machines/build_inspector/inspector.py plus one new proof",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-05",
+      "text": "D1: SETTLED: in cairn/machines/build_inspector/inspector.py add, directly after the line `from cairn.tools.base import address, address_rule  # noqa: E402`, the line `from cairn.tools.base.transitions import MalformedWorkflow, is_terminal, parse_workflow  # noqa: E402  (ticket e85878726213: terminal is the system's word, not the inspector's)`. transitions imports build_inspector only lazily inside functions, so there is no import cycle."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-05",
+      "text": "D2: SETTLED: in _component_tickets (inspector.py, the loop over raw), replace the two lines `state = tdata.get(\"workflow_and_state\", \"\")` / `if not (isinstance(state, str) and \"[PROVED]\" in state):` with: `state = tdata.get(\"workflow_and_state\", \"\")` then `if not _closed(state):`, keeping the existing comment and `active |= ticket_spellings(tid, root=_TICKETS_ROOT)` body unchanged. Add above _component_tickets a module-level function: `def _closed(state) -> bool:` with docstring 'A ticket at any terminal state (transitions.TERMINAL_STATES) has its chart closed; an unparseable workflow keeps the old substring test, so an unreadable cursor still reds (ticket e85878726213).' and body: `if not isinstance(state, str):` `return False`; `try:` `wf = parse_workflow(state)` `except MalformedWorkflow:` `return \"[PROVED]\" in state`; `return is_terminal(wf.path[wf.cursor])`. Measured 2026-10-05 over every ticket in CairnCommons/tickets: the parsed cursor equals PROVED exactly where the substring test fires (0 disagreements), so the only behaviour change is the non-PROVED terminal states."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-05",
+      "text": "D3: SETTLED: new proof cairn/machines/build_inspector/proofs/test_a_terminal_tickets_chart_is_closed.py, shaped like cairn/machines/build_inspector/proofs/test_the_inspector_admits_the_bus_client.py (prints '  ok   <tooth>' / '  FAIL <tooth>: ...' then GREEN/RED, exit 0/1, imports inside tooth bodies), with PROVES = {\"e85878726213\": {\"1\": \"test_a_superseded_ticket_is_closed_and_a_buildme_one_is_kept\", \"2\": \"test_an_unparseable_ticket_is_kept\", \"3\": \"test_ground_loop_carries_no_superseded_chart\"}}. Teeth 1 and 2 share a fixture: with cairn.tools.scratch.scratch.scratch_dir as td, make td/cairn/comp and td/CairnCommons/tickets; write three tickets there as JSON: aaaaaaaaaa01-scratch-superseded.json (id aaaaaaaaaa01, workflow_and_state 'code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [SUPERSEDED]'), aaaaaaaaaa02-scratch-buildme.json (id aaaaaaaaaa02, 'code-seam@v2: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> PROVED'), aaaaaaaaaa03-scratch-unparseable.json (id aaaaaaaaaa03, 'not a workflow at all'); write td/cairn/comp/history.json as a list of three dicts {\"ticket\": id}. Swap inspector._TICKETS_ROOT to td/'cairn' inside try/finally restoring it. Tooth 1 asserts 'aaaaaaaaaa02' in the result and 'aaaaaaaaaa01' not in it and no element of the result starts with 'aaaaaaaaaa01' or contains 'scratch-superseded'. Tooth 2 asserts 'aaaaaaaaaa03' in the result. Measured 2026-10-05: grammar.ticket_path(id, root=td/'cairn') resolves a scratch ticket at td/CairnCommons/tickets/<id>-*.json, and parse_workflow reads the two fixture strings' cursors as SUPERSEDED and BUILDME. Tooth 3 calls inspector.inspect(component='ground_loop') and asserts no finding (dict) has a value containing 'b5b5e0483af1' or 'staleness-is-about-this-process-not-about-disk' in str(finding)."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-05",
+      "text": "D4: SETTLED: after the build, run every proof in cairn/machines/build_inspector/proofs/ (python3 <file> each) and require each to exit as it did before the build; then commit the inspector change and the proof together naming e85878726213, letting the pre-commit reseal door reseal."
+    },
+    {
+      "n": 5,
+      "text": "D4 amended: the new proof test_a_terminal_tickets_chart_is_closed.py must exit 0 (GREEN, all three teeth ok) after D1-D2; every other proof in cairn/machines/build_inspector/proofs/ must exit with the same code it exited with against HEAD's inspector.py (compared file by file), so no proof regresses.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-05T13:49:25+00:00"
+    }
+  ],
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T074249-63aebc03e7c7.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient f862a31ddda2 .. validate 63aebc03e7c7, each learned)"
+  },
+  "cast": "2026-10-05",
+  "rehearsal": "rehearsals/e85878726213-20261005T140136.json"
+}
