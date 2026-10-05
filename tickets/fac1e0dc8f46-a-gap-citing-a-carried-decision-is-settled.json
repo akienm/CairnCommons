@@ -1,0 +1,73 @@
+{
+  "id": "fac1e0dc8f46",
+  "title": "a-gap-citing-a-carried-decision-is-settled",
+  "date": "2026-10-05",
+  "owner": "CC",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "The rehearsal's gap diff counts a reader's assumption as settled when it names another decision id the same ticket carries: a builds_under_assumption node whose assumption cites D<m> (m not its own step's number, m among the ticket's decision ids) raises no assumes gap and joins no assumption_differs comparison; an id the ticket does not carry stays a gap.",
+  "why": "Readers answer a step by citing the decision that settles it ('as specified in D7', 'D12 provides the code') and the diff flags each citation as an assumption: 8383a32d20c5 ran five unclean passes, f5a344e6c629 four, and every added decision adds another cross-reference to flag. Akien, open-ba8f0eaca8cd (2026-10-05): 'yes on ba8f0eaca8cd, with that condition' — the id must resolve to a decision in the same ticket.",
+  "traces_to": "Law 1 (re-flagging an answer the ticket already gives by id re-derives the settled); Law 9 (his answer outranks cf80bdb57205's D6 as the newer translation of the spec)",
+  "how": "rehearsal.py gains cites_a_decision(step, assumption, decision_ids); gaps() takes decision_ids and skips settled builds_under_assumption nodes in the assumes and assumption_differs branches; rehearse() passes the ids it already computes. One new proof.",
+  "falsifier": "GREEN when (1) three reads whose D2 node builds under assumptions citing D1 in different words, with decision_ids {1, 2}, give gaps() == []; (2) the same reads citing D9 give an assumes gap on D2; (3) an assumption naming only D2 on step D2 stays an assumes gap; (4) a cannot_proceed node citing D1 stays a cannot_proceed gap; (5) gaps(reads) with no ids still returns the assumes and assumption_differs gaps; (6) rehearse() over a fixture ticket whose readers cite D1 on D2 writes a clean record. RED if any fails or any sibling rehearsal proof goes red. WRONG INTENT if three reads cite the same carried id on one step yet build observably different things. Horizon: 8383a32d20c5's next rehearsal carries no gap whose every assumption cites another carried id.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "watchme": "none, because every rehearsal record already stores reads and gaps under CairnCommons/rehearsals/ (written by cairn/machines/rehearsal/rehearsal.py rehearse()), so a settled citation that hid a real divergence is readable in the next record of the ticket that carries it",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T095709-f177a1e4d9c2.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T095640-135a76a6dd4b.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one helper and one parameter in cairn/machines/rehearsal/rehearsal.py plus one new proof",
+  "questions": [],
+  "answered_by": "/home/akien/dev/src/CairnCommons/questions/open-ba8f0eaca8cd.json",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-05",
+      "text": "D1: SETTLED: in cairn/machines/rehearsal/rehearsal.py, directly above `def gaps(`, add the module constant `_DECISION_ID = re.compile(r\"\\bD(\\d+)\\b\")` and the function `def cites_a_decision(step: str, assumption: str, decision_ids) -> bool:` with docstring 'A reader\\'s assumption is settled when it names ANOTHER decision the ticket carries (Akien, open-ba8f0eaca8cd: \"yes ... with that condition\" — the id must resolve in the same ticket). The step\\'s own number never counts; an id the ticket does not carry never counts.' and body: `if not decision_ids or not assumption:` `return False`; `own = re.fullmatch(r\"D(\\d+)\", (step or \"\").strip())`; `own_n = int(own.group(1)) if own else None`; `return any(int(m) in decision_ids and int(m) != own_n for m in _DECISION_ID.findall(assumption))`. `re` is already imported in cairn/machines/rehearsal/rehearsal.py."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-05",
+      "text": "D2: SETTLED: in cairn/machines/rehearsal/rehearsal.py, change `def gaps(reads: list[dict]) -> list[dict]:` to `def gaps(reads: list[dict], decision_ids: set[int] | None = None) -> list[dict]:` and append to its docstring the sentence: 'Amended (open-ba8f0eaca8cd): with ``decision_ids`` a builds_under_assumption node whose assumption names another carried decision id (cites_a_decision) is settled — it raises no ``assumes`` gap and its text joins no ``assumption_differs`` comparison; without ids nothing settles.' Inside gaps, add a local `def settled(node) -> bool:` returning `node[\"state\"] == \"builds_under_assumption\" and cites_a_decision(node[\"step\"], node.get(\"assumption\", \"\").strip(), decision_ids)`. In the per-node loop, change `if node[\"state\"] == \"builds_under_assumption\":` to `if node[\"state\"] == \"builds_under_assumption\" and not settled(node):` and leave the `elif node[\"state\"] == \"cannot_proceed\":` branch as it is (a cannot_proceed node never settles). In the step loop, compute `live = [i for i in present if not settled(steps_by_read[i][folded])]`, build `texts` from `live` instead of `present`, and emit the assumption_differs gaps `for i in live` instead of `for i in present`. The unlisted and step_absent branches are unchanged."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-05",
+      "text": "D3: SETTLED: in cairn/machines/rehearsal/rehearsal.py rehearse(), change `found = gaps(reads)` to `found = gaps(reads, ids)` (ids is the `decision_ids_of(...)` set rehearse already computes two lines above the read loop)."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-05",
+      "text": "D4: SETTLED: new proof cairn/machines/rehearsal/proofs/test_a_gap_citing_a_carried_decision_is_settled.py, shaped like cairn/machines/rehearsal/proofs/test_design_sha.py (module docstring naming ticket fac1e0dc8f46; sys.path insert of parents[4]; machine resolved at call time through `importlib.import_module(\"cairn.machines.rehearsal.rehearsal\")`; main() prints '  PASS  <tooth>' / '  FAIL  <tooth>: ...' then 'green — ...' or 'red — ...', exit 0/1). Import `World, Stub, TID, _kw, _node` from cairn.machines.rehearsal.proofs.test_rehearsal (the fixture ticket carries decisions 1 and 2). PROVES = {\"fac1e0dc8f46\": {\"1\": \"test_a_citation_of_a_carried_decision_settles_the_step\", \"2\": \"test_a_citation_of_an_uncarried_id_stays_a_gap\", \"3\": \"test_a_citation_of_the_steps_own_id_stays_a_gap\", \"4\": \"test_a_cannot_proceed_node_never_settles\", \"5\": \"test_without_ids_nothing_settles\", \"6\": \"test_a_rehearsal_whose_readers_cite_d1_is_clean\"}}. A helper `_reads(texts, state=\"builds_under_assumption\", step=\"D2\")` returns three reads `{\"read\": i+1, \"nodes\": [_node(\"D1\"), _node(step, state, texts[i], \"\")]}`. CITE = [\"as specified in D1\", \"D1 gives the widget, so D2 proves it\", \"follows D1's text\"]. Tooth 1: `gaps(_reads(CITE), {1, 2}) == []`. Tooth 2: with each text's 'D1' replaced by 'D9', `gaps(..., {1, 2})` contains a gap with kind 'assumes' and step 'D2'. Tooth 3: texts [\"D2 says prove it\", \"per D2\", \"D2 as written\"] give an 'assumes' gap on 'D2' with ids {1, 2}. Tooth 4: `_reads(CITE, state=\"cannot_proceed\")` with ids {1, 2} gives a 'cannot_proceed' gap on 'D2'. Tooth 5: `gaps(_reads(CITE))` (no ids) contains both an 'assumes' and an 'assumption_differs' gap on 'D2'. Tooth 6: w = World(); `rec = R.rehearse(TID, reader=Stub([{\"nodes\": [_node(\"D1\"), _node(\"D2\", \"builds_under_assumption\", c)]} for c in CITE]), **_kw(w))`; assert rec[\"clean\"] and rec[\"gaps\"] == []; w.close() in finally."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-05",
+      "text": "D5: SETTLED: before the build run every proof in cairn/machines/rehearsal/proofs/ (python3 <file> each) and record its exit; after the build each must exit as before and the new proof must exit 0. Against HEAD's rehearsal.py the new proof is red on teeth 1-4 and 6 (1-4 by TypeError: gaps() takes no decision_ids; 6 by the assumes and assumption_differs gaps the citations still raise) and green on tooth 5. Commit cairn/machines/rehearsal/rehearsal.py and cairn/machines/rehearsal/proofs/test_a_gap_citing_a_carried_decision_is_settled.py together naming fac1e0dc8f46, letting the pre-commit reseal door reseal."
+    },
+    {
+      "n": 6,
+      "text": "Work order: write the D4 proof first and run it against HEAD's rehearsal.py (teeth 1-4 and 6 red, tooth 5 green); then apply D1-D3 and run it again (all six green), then the sibling proofs.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-05T16:08:08+00:00"
+    }
+  ],
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T100000-963b01cf6b1e.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient d86bc6867c3c .. hypothesize 5844d09b9fd5, validate 963b01cf6b1e, each learned; re-charted after D5 mis-predicted HEAD's red teeth)"
+  },
+  "cast": "2026-10-05",
+  "rehearsal": "rehearsals/fac1e0dc8f46-20261005T161507.json"
+}
