@@ -17,5 +17,44 @@
   "task_or_ticket": "ticket",
   "children": "none, because the change is one import line and one proof",
   "questions": [],
-  "cast": "2026-10-05"
+  "cast": "2026-10-05",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T043156-57a9bf45c96e.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 266e2ed8818c .. validate 57a9bf45c96e, each learned)"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: SETTLED: Create cairn/devices/codemother/proofs/test_codemother_reaches_system_word_through_its_package.py with exactly this content. Its PROVES maps falsifier clause 1 to tooth nothing_in_codemother_reaches_system_word_undeclared. Measured at HEAD before the edit: RED, naming ('cairn/devices/codemother/shim.py', 326, 'cairn.tools.system_word.system_word', 'undeclared'):\n\"\"\"Proof for ticket 0527c3962d86 — codemother reaches system_word through its package.\n\nRULE 1 (Akien, 2026-10-01): a component is reached only through its DECLARED public interface.\nsystem_word declares cairn.tools.system_word (its __init__ re-exports is_word); b984567d8c05 added a\nfunction-local import in codemother's _handle_sealed naming the inner module\ncairn.tools.system_word.system_word. Measured before this ticket: 1 encapsulation_breaches row\n'undeclared' on cairn/tools/system_word, from cairn/devices/codemother/shim.py:326.\n\nOne tooth, over the LIVE repo (an invariant, never a snapshot):\n\n  1. NOTHING IN CODEMOTHER REACHES SYSTEM_WORD UNDECLARED. No encapsulation_breaches row has a\n     file under cairn/devices/codemother/ and target cairn/tools/system_word.\n\n    python3 cairn/devices/codemother/proofs/test_codemother_reaches_system_word_through_its_package.py   # exit 0 = green\n\"\"\"\nimport sys\nfrom pathlib import Path\n\n_REPO_ROOT = Path(__file__).resolve().parents[4]\nif str(_REPO_ROOT) not in sys.path:\n    sys.path.insert(0, str(_REPO_ROOT))\n\n\nclass _Late:\n    \"\"\"The inspector resolves AT CALL TIME, so `cairn test --hollow` reads as red teeth\n    rather than an import that never ran.\"\"\"\n\n    def __init__(self, module):\n        self._module = module\n\n    def __getattr__(self, name):\n        import importlib\n        return getattr(importlib.import_module(self._module), name)\n\n\n_inspector = _Late(\"cairn.machines.build_inspector.inspector\")\n\nPROVES = {\"0527c3962d86\": {\"1\": \"nothing_in_codemother_reaches_system_word_undeclared\"}}\n\nSOURCE = \"cairn/devices/codemother/\"\nTARGET = \"cairn/tools/system_word\"\n\nPASS = 0\nFAIL = 0\n\n\ndef _tooth(name, fn):\n    global PASS, FAIL\n    try:\n        fn()\n    except Exception as exc:  # noqa: BLE001 — a proof reports, never hides\n        FAIL += 1\n        print(f\"  RED   {name}: {type(exc).__name__}: {exc}\")\n    else:\n        PASS += 1\n        print(f\"  ok    {name}\")\n\n\ndef nothing_in_codemother_reaches_system_word_undeclared():\n    rows = [r for r in _inspector.encapsulation_breaches(str(_REPO_ROOT))\n            if r[\"file\"].startswith(SOURCE) and r[\"target\"] == TARGET]\n    assert not rows, f\"{len(rows)} reach(es) from codemother into system_word off its interface: \" \\\n        f\"{[(r['file'], r['line'], r['module'], r['reason']) for r in rows]}\"\n\n\nTEETH = [nothing_in_codemother_reaches_system_word_undeclared]\n\nif __name__ == \"__main__\":\n    for fn in TEETH:\n        _tooth(fn.__name__, fn)\n    print(f\"{PASS} passed, {FAIL} failed out of {PASS + FAIL}\")\n    sys.exit(1 if FAIL else 0)",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:32:22+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: SETTLED: The whole code change is one line of cairn/devices/codemother/shim.py, line 326 inside _handle_sealed: '        from cairn.tools.system_word.system_word import is_word' becomes '        from cairn.tools.system_word import is_word' (eight spaces of indentation kept). Mechanics: sed -i '326s/from cairn.tools.system_word.system_word import is_word/from cairn.tools.system_word import is_word/' cairn/devices/codemother/shim.py from the cairn root, then 'git diff --stat' shows 1 insertion, 1 deletion in that one file. shim.py is code, not a record, so no artifact door is involved. cairn.tools.system_word's __init__ re-exports the same is_word object.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:32:22+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: SETTLED: Order and mechanics. (1) Write the proof (D1) and seal it red: 'bin/cairn test --seal --timeout 900 cairn/devices/codemother/proofs/test_codemother_reaches_system_word_through_its_package.py'; commit the proof and its validation in cairn. (2) Apply D2 and run 'python3 cairn/devices/codemother/proofs/test_codemother_reaches_system_word_through_its_package.py': expect '1 passed, 0 failed out of 1'; 'python3 -c \"from cairn.machines.build_inspector.inspector import encapsulation_breaches as e; print(len(e(\\\".\\\")))\"' from the cairn root prints 90 (91 before); and 'python3 cairn/devices/codemother/proofs/test_codemother.py' ends 'Results: 33 passed, 0 failed, 33 total'. All three measured in a detached worktree of HEAD with D2 applied on 2026-10-05. (3) Seal the proof green with the same 'bin/cairn test --seal' command and commit shim.py and the validation in cairn. Run each cairn commit in the background and never wrap it in timeout: the pre-commit reseal door reseals codemother's proofs whose closure includes shim.py. Any proof the door times out is resealed by hand with 'bin/cairn test --seal --timeout 2400 <proof>' and committed.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:32:22+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: SETTLED: Nothing else changes. system_word's charter and code, build_inspector's encapsulation_breaches, and every other line of shim.py stay as they are. codemother's other encapsulation rows (its proofs importing the bus device's BusDevice/BusShim, and test_a_client_reaches_and_never_beats' reaches) and the librarian row (cairn/devices/librarian/tools/trees/proofs/test_trees_is_a_published_tool.py:131) stay red and are out of this ticket.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-05T10:32:22+00:00"
+    }
+  ]
 }
