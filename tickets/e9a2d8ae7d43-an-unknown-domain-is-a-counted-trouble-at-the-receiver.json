@@ -1,0 +1,51 @@
+{
+  "id": "e9a2d8ae7d43",
+  "title": "an-unknown-domain-is-a-counted-trouble-at-the-receiver",
+  "date": "2026-10-06",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "inference_domain raises one counted trouble at its own address for every ask naming a domain row that does not exist, naming the caller, while the caller still gets the same RouteRefused with no host call.",
+  "why": "Ruling 8h, 2026-10-05: any component that gets a request it can't fill raises a trouble at its own address, counted on every repeat, \"because we need to stop people throwing things at them that they can't do.\" The first case Akien named is this one: codemother asked inference_domain for a 'codemother' domain row that does not exist about 1,000 times a day. _domain_dressed raises RouteRefused before any call, and that pre-call lane raised nothing (ea4a6151300f gave only the host-refusal lane a trouble), so the broken caller stayed invisible. The lived symptom: a component spends its day refusing a caller nobody can see. Parent: a75ec82aa1f2.",
+  "traces_to": "Law 7 (a refusal at the receiver is silent today, and the trouble store is the record of truth); ruling 8h, first case named: codemother asked for a 'codemother' domain row about 1,000 times a day, refused in silence. Parent a75ec82aa1f2.",
+  "how": "In cairn/devices/inference_domain/domain.py resolve(), wrap the _domain_dressed call: on its refusal, raise_trouble through the receiver's own sink (or the module trail) with identity inference-unfilled-domain-<slug of the asked name>, a why carrying the refusal, and a detail naming the domain and the caller (caller_identity's {identity, how}); a raiser that fails prints to stderr; then re-raise the original refusal. Proof cairn/devices/inference_domain/proofs/test_an_unknown_domain_is_a_counted_trouble_at_the_receiver.py, red at f45bbf67 (teeth 1-2 red, 3-4 guards green).",
+  "falsifier": "GREEN when the four teeth pass bare and under the seal and the hollow reverting domain.py reds teeth 1 and 2; test_inference_domain.py, test_task_ticket.py and test_an_inference_call_logs_that_it_started.py stay green. RED if the refusal changes, a host call happens, a fillable ask raises, or the trouble lacks the caller. WRONG INTENT if Akien answers open-b9037ca75019 with (c), the sender only.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (cairn/devices/inference_domain/proofs/test_an_unknown_domain_is_a_counted_trouble_at_the_receiver.py) the behavior is a disposition inside resolve() whose seal component_color reds on drift, and the live counter is the trouble device's own fold of inference-unfilled-domain-<name>, shown in the operator's trouble lane",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261006T030354-6e930e054689.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261006T030330-c19be8839821.json",
+  "task_or_ticket": "ticket",
+  "parent": "a75ec82aa1f2",
+  "children": "none, because the change is one guarded call in one function of one file, with one proof on disk (cairn/devices/inference_domain/proofs/test_an_unknown_domain_is_a_counted_trouble_at_the_receiver.py)",
+  "questions": [],
+  "build_patch": "diff --git a/cairn/devices/inference_domain/domain.py b/cairn/devices/inference_domain/domain.py\nindex 49f87fad..67f290fd 100644\n--- a/cairn/devices/inference_domain/domain.py\n+++ b/cairn/devices/inference_domain/domain.py\n@@ -80,6 +80,7 @@ import hashlib\n import inspect\n import json\n import os\n+import re\n from contextlib import contextmanager\n import sys\n import time\n@@ -483,7 +484,29 @@ def resolve(request: dict, *, resolver, now: datetime | None = None, table: str\n     started = datetime.now(timezone.utc)\n     tick = time.perf_counter()\n     who = caller_identity(caller, frames=inspect.stack()[1:])\n-    request, domain_name = _domain_dressed(request, stacks=stacks)\n+    try:\n+        request, domain_name = _domain_dressed(request, stacks=stacks)\n+    except Exception as refusal:\n+        # AN ASK THIS RECEIVER CANNOT FILL IS A TROUBLE AT ITS OWN ADDRESS (ticket\n+        # e9a2d8ae7d43, decision 8h, Akien 2026-10-05: \"every requester that gets something\n+        # they can't do should throw a ticket\"). The first case was codemother asking for a\n+        # 'codemother' row ~1,000 times a day, refused here in silence. The identity names\n+        # the domain asked for, so the drain's fold on identity is the counter; still no host\n+        # call and no row. A raise that fails never replaces the caller's refusal (Law 7).\n+        asked = str(request.get(\"domain\") or \"\")\n+        try:\n+            raiser = sink if hasattr(sink, \"raise_trouble\") else _trail\n+            raiser.raise_trouble(\n+                \"inference-unfilled-domain-\" + (re.sub(r\"[^a-z0-9-]+\", \"-\", asked.lower())\n+                                                .strip(\"-\") or \"default\"),\n+                why=f\"inference_domain cannot fill an ask for domain {asked!r}: \"\n+                    f\"{type(refusal).__name__}: {str(refusal)[:200]}\",\n+                detail={\"refused\": type(refusal).__name__, \"detail\": str(refusal)[:2000],\n+                        \"domain\": asked, \"caller\": who})\n+        except Exception as unraised:  # noqa: BLE001 — the refusal is the caller's answer\n+            print(f\"inference_domain: an unfillable ask raised no trouble ({unraised!r}); \"\n+                  f\"the refusal itself follows\", file=sys.stderr)\n+        raise\n     canonical = canonicalize(request)\n     ticket = {\n         \"caller\": who,\n",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-06",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only cairn/devices/inference_domain/domain.py. It adds `import re` after `import os`, and in resolve() wraps `request, domain_name = _domain_dressed(request, stacks=stacks)` in try/except. On a refusal it raises a trouble through `sink` if it has raise_trouble, else the module `_trail`. The identity is 'inference-unfilled-domain-' + the asked name lowercased, with runs of non [a-z0-9-] replaced by '-' and stripped ('default' if empty). The why carries the refusal type and text. The detail carries refused, detail, domain and caller (`who`). A raiser that fails prints one line to stderr. Then the original refusal is re-raised unchanged. No other code changes."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-06",
+      "text": "D2: SETTLED: the proof cairn/devices/inference_domain/proofs/test_an_unknown_domain_is_a_counted_trouble_at_the_receiver.py is already on disk, committed red at 3ce8ee71 (teeth 1-2 red, 3-4 guards green). After the patch, `python3 cairn/devices/inference_domain/proofs/test_an_unknown_domain_is_a_counted_trouble_at_the_receiver.py` prints four PASS lines and exits 0. Run it with python3, not pytest: its _main moves domain's diagnostic roots into a scratch world so no fixture ticket or trouble lands in the live tree. Regressions, each with python3 and each exiting 0: cairn/devices/inference_domain/proofs/test_inference_domain.py, test_task_ticket.py, test_an_inference_call_logs_that_it_started.py."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-06",
+      "text": "D3: SETTLED: after the proof and regressions pass, commit with explicit paths: `git add cairn/devices/inference_domain/domain.py` plus whatever history/state/journal files the BUILDME crossing wrote (as `git status --short` lists them under cairn/devices/inference_domain and .artifact-journal.jsonl). Then `git commit -m 'e9a2d8ae7d43: BUILDME — an unknown domain is a counted trouble at the receiver'`, with the regression result as one line in the body. BaseShim (cairn/tools/base/shim.py) and handle_bounce are not touched."
+    }
+  ],
+  "cast": "2026-10-06",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261006T030500-8991e7ba97ef.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 216e8549e981 .. validate 8991e7ba97ef, each learned)"
+  }
+}
