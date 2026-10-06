@@ -20,7 +20,88 @@
   "questions": [
     "open-3906b6e09246"
   ],
-  "decisions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "In cairn/tools/artifact/artifact.py write() only: after hit = locate(p) and only when the path is journaled (hit is not None) and its suffix is .json, before the unchanged/no-op check, parse the body with json.loads. The accepted set is exactly four bodies, the same set transitions._ticket_shape accepts: json.dumps(doc, indent=2, ensure_ascii=ea) + ('\\\\n' if nl else '') for ea in (False, True) and nl in (False, True). A body that does not parse, or parses but is not byte-equal to one of the four, raises Refused naming the path and what was found (unparseable: the json error; otherwise: not the canonical indent=2 form). Nothing is written and nothing is journaled on a refusal. Non-.json paths and paths outside the jurisdiction are untouched. The comment cites f9ba6c89844d. write_json already emits indent=2 and needs no change.",
+      "by": "cc",
+      "step": "implement artifact.py write() check to refuse non-canonical JSON for journaled .json paths",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:40+00:00"
+    },
+    {
+      "n": 2,
+      "text": "In cairn/tools/artifact/artifact.py write() only: after hit = locate(p) and only when the path is journaled (hit is not None) and its suffix is .json, before the unchanged/no-op check, parse the body with json.loads. The accepted set is exactly four bodies, the same set transitions._ticket_shape accepts: json.dumps(doc, indent=2, ensure_ascii=ea) + ('\\\\n' if nl else '') for ea in (False, True) and nl in (False, True). A body that does not parse, or parses but is not byte-equal to one of the four, raises Refused naming the path and what was found (unparseable: the json error; otherwise: not the canonical indent=2 form). Nothing is written and nothing is journaled on a refusal. Non-.json paths and paths outside the jurisdiction are untouched. The comment cites f9ba6c89844d. write_json already emits indent=2 and needs no change.",
+      "by": "cc",
+      "step": "add canonical-form check to artifact.py write()",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:40+00:00"
+    },
+    {
+      "n": 3,
+      "text": "In cairn/tools/artifact/artifact.py write() only: after hit = locate(p) and only when the path is journaled (hit is not None) and its suffix is .json, before the unchanged/no-op check, parse the body with json.loads. The accepted set is exactly four bodies, the same set transitions._ticket_shape accepts: json.dumps(doc, indent=2, ensure_ascii=ea) + ('\\\\n' if nl else '') for ea in (False, True) and nl in (False, True). A body that does not parse, or parses but is not byte-equal to one of the four, raises Refused naming the path and what was found (unparseable: the json error; otherwise: not the canonical indent=2 form). Nothing is written and nothing is journaled on a refusal. Non-.json paths and paths outside the jurisdiction are untouched. The comment cites f9ba6c89844d. write_json already emits indent=2 and needs no change.",
+      "by": "cc",
+      "step": "write the artifact.py canonical-form check",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:40+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Same build, run once after the check lands, through the door: for every (name, root) in A.roots() and every (rel, p) in A.iter_records(name, root) with suffix .json whose bytes are not one of the four canonical bodies, re-serialise with json.dumps(doc, indent=2, ensure_ascii=ea) + newline-if-it-had-one, where ea = the text is pure ASCII and contains a \\\\u escape, and write it with A.write(p, body, verb='bulk', why='f9ba6c89844d: reshape to the canonical indent=2 form; content unchanged'). Assert json.loads(body) == the doc before writing and json.loads(p.read_bytes()) == the doc after. The one unparseable record, CairnCommons/decisions/2026-08-11-a-sieve-is-one-true-false-rule.json, has a trailing comma (line 26) removed by re.sub(r',(\\\\s*[}\\\\]])', r'\\\\1', text) and only that; its why says so. A dry run measured 93 records (89 hand-formatted, 3 indent=1, 1 unparseable; 0 ascii-escaped). The script is a one-shot in the builder's scratchpad, not committed: the journal entries (verb bulk) are its record. The reshaped records commit in their own repos with the build.",
+      "by": "cc",
+      "step": "reshape the 93 non-canonical journaled .json records",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:40+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The proof is already written and committed red (cairn/tools/artifact/proofs/test_a_json_record_lands_in_one_canonical_form.py): PROVES key f9ba6c89844d maps clauses 1-4 and census to five named teeth, modelled on the sibling test_artifact_door.py (set_diagnostic_roots over a scratch world, A bound at call time). Tooth 3 already covers all four (ensure_ascii, newline) shapes; teeth 1-2 expect A.Refused naming the path with file and journal byte-unchanged. Measured at HEAD under bin/cairn test: teeth 1, 2 and census red (93 of 2644), teeth 3 and 4 green as guards. The builder does not create or edit it.",
+      "by": "cc",
+      "step": "write proof with five teeth (one per falsifier clause)",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:40+00:00"
+    },
+    {
+      "n": 6,
+      "text": "The proof is already written and committed red (cairn/tools/artifact/proofs/test_a_json_record_lands_in_one_canonical_form.py): PROVES key f9ba6c89844d maps clauses 1-4 and census to five named teeth, modelled on the sibling test_artifact_door.py (set_diagnostic_roots over a scratch world, A bound at call time). Tooth 3 already covers all four (ensure_ascii, newline) shapes; teeth 1-2 expect A.Refused naming the path with file and journal byte-unchanged. Measured at HEAD under bin/cairn test: teeth 1, 2 and census red (93 of 2644), teeth 3 and 4 green as guards. The builder does not create or edit it.",
+      "by": "cc",
+      "step": "write the proof red with 5 teeth testing JSON canonicalization",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:40+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The proof is already written and committed red (cairn/tools/artifact/proofs/test_a_json_record_lands_in_one_canonical_form.py): PROVES key f9ba6c89844d maps clauses 1-4 and census to five named teeth, modelled on the sibling test_artifact_door.py (set_diagnostic_roots over a scratch world, A bound at call time). Tooth 3 already covers all four (ensure_ascii, newline) shapes; teeth 1-2 expect A.Refused naming the path with file and journal byte-unchanged. Measured at HEAD under bin/cairn test: teeth 1, 2 and census red (93 of 2644), teeth 3 and 4 green as guards. The builder does not create or edit it.",
+      "by": "cc",
+      "step": "write the proof with five teeth",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:41+00:00"
+    },
+    {
+      "n": 8,
+      "text": "Only if open-3906b6e09246 is answered yes (BUILDME is held until it is answered): in test_artifact_door.py rewrite only the body strings at lines 169 and 177 ('{\"id\": \"abc123def456\"}\\\\n') and 179 and 228 ('{\"id\": \"abc123def456\", \"x\": 1}\\\\n') to json.dumps(<the same dict>, indent=2) + '\\\\n', and line 233 ('{\"a\":1}') to json.dumps({'a': 1}, indent=2). The '{}' bodies at 183/186/189/194/232 are already canonical and stay. No assertion, name or check changes. If the answer is no, the ticket goes back for a re-cast, not around the gate.",
+      "by": "cc",
+      "step": "reshape fixture JSON in cairn/tools/artifact/proofs/test_artifact_door.py lines 169, 177, 179, 228, 233 to canonical indent=2 form",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:41+00:00"
+    },
+    {
+      "n": 9,
+      "text": "Only if open-3906b6e09246 is answered yes: in test_cast_ticket.py line 196 rewrite only '{\"id\": \"beside000001\"}\\\\n' to json.dumps({'id': 'beside000001'}, indent=2) + '\\\\n'. Nothing else in that file changes.",
+      "by": "cc",
+      "step": "reshape fixture JSON in cairn/tools/base/proofs/test_cast_ticket.py line 196 to canonical indent=2 form",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:41+00:00"
+    },
+    {
+      "n": 10,
+      "text": "Correction to D4, D1-D3, D8, D9: every doubled backslash in those lines is a shell-quoting artifact and reads single: the newline is \"\\n\", the regex is re.sub(r\",(\\s*[}\\]])\", r\"\\1\", text), and the escape test is the substring backslash-u.",
+      "by": "cc",
+      "step": "reshape the 93 non-canonical journaled .json records",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:02:47+00:00"
+    }
+  ],
   "build_patch": null,
   "cast": "2026-10-05",
   "chart_claim": {
