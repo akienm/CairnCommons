@@ -1,0 +1,44 @@
+{
+  "id": "f04d5ef26a48",
+  "title": "a-unit-a-test-run-starts-is-the-runs",
+  "date": "2026-10-05",
+  "owner": "CC",
+  "owning_intention": "launchers/intention+why.json",
+  "intention": "A systemd unit the launcher starts inside a test run carries the run's test id and collects itself if it fails, so the tester's kill reaches it and a killed run leaves no unit in the live user manager.",
+  "why": "Akien 2026-10-05 (/home/akien/.cairn/foreground-decisions.md 8g): the web server unit leak — 'i don't care which way we deal with it. as long as it gets fixed'. The lived symptom: proof runs leave cairn-proof-loop units running and cairn-proof-web units failed in the live user manager (measured 2026-10-06 01:35Z: cairn-proof-loop-1637418-2 running, cairn-proof-web-1637418-{1,2,3} failed), because systemd-run hands a unit the manager's environment and bf3c16162827's kill cannot find what carries no test id.",
+  "traces_to": "Test against live, marked as testing (ruled 2026-09-28, 2026-10-04: every test output carries a testing mark so it can be thrown away); bf3c16162827 (a tester run owns what it started); Law 7 (outside a run a failed live unit keeps its failed state where a human looks); RULE 1 (the change lives in launchers, the component that spawns the units)",
+  "how": "launchers/superclaude builds one array _sc_test_mark before its loop block: empty outside a run; when CAIRN_TESTER_TEST_ID is set it holds --setenv=CAIRN_TESTER_TEST_ID=<id> and -p CollectMode=inactive-or-failed. Both _sc_loop_start and _sc_web_start splice it after --unit. bf3c16162827's kill_what_it_started (a /proc environ scan) then reaches the unit's process, and a unit that failed (no process left) is garbage-collected by the manager. Proof launchers/proofs/test_a_unit_a_test_run_starts_is_the_runs.py, written red 1/4 at d2771437.",
+  "falsifier": "GREEN when launchers/proofs/test_a_unit_a_test_run_starts_is_the_runs.py prints four ok lines and exits 0: (1) the ground-loop unit superclaude starts with CAIRN_TESTER_TEST_ID set carries that id in its main process environment; (2) that unit killed with SIGKILL, and the web unit whose listener fails to bind, are both gone from the user manager afterwards; (3) `cairn test --timeout 25` over launchers/proofs/test_ground_loop_survives_its_caller.py leaves no cairn-proof-* unit it created; (4) with no test id the ground-loop unit carries none and keeps CollectMode 'inactive'; and launchers/proofs/test_bootstrap.py, launchers/proofs/test_ground_loop_survives_its_caller.py, launchers/proofs/test_superclaude_wire.py, launchers/proofs/test_superclaude_memory_scope.py, launchers/proofs/test_launchers_reach_into_no_device.py, launchers/proofs/test_launchers_probes_report_to_the_watch.py stay green. RED if any fails. Wrong intent if a unit started inside a test run must outlive the run (then the mark becomes a declared keep-list).",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (cairn/devices/tester/device.py run_proof) every tester run's validation record already names what its kill reached in evidence killed, so a unit the mark lets the kill reach is counted on every seal with no probe",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261005T213939-be3ec2f92d1b.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261005T213919-ff86b390b6f3.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one file (launchers/superclaude) in one component with one proof on disk; ensure_ground_loop is the sibling 2120e74dcf44 at cairn/tools/base",
+  "parent": "71d1bbfa98b0",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-05",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only launchers/superclaude: before the systemd-run blocks it builds an array _sc_test_mark, empty unless CAIRN_TESTER_TEST_ID is set, in which case it holds --setenv=CAIRN_TESTER_TEST_ID=<id> and -p CollectMode=inactive-or-failed; the array is expanded into both the ground-loop unit's and the web unit's systemd-run argv. No other code changes."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-05",
+      "text": "D2: SETTLED: the proof launchers/proofs/test_a_unit_a_test_run_starts_is_the_runs.py is already on disk, committed red at d2771437 (1 of 4 at HEAD: tooth 4 green, 1-3 red). After the build it prints four ok lines and exits 0; the regression proofs launchers/proofs/test_bootstrap.py, launchers/proofs/test_ground_loop_survives_its_caller.py, launchers/proofs/test_superclaude_wire.py, launchers/proofs/test_superclaude_memory_scope.py, launchers/proofs/test_launchers_reach_into_no_device.py, launchers/proofs/test_launchers_probes_report_to_the_watch.py each exit 0."
+    }
+  ],
+  "build_patch": "diff --git a/launchers/superclaude b/launchers/superclaude\nindex 6672c377..5eaf1ea3 100755\n--- a/launchers/superclaude\n+++ b/launchers/superclaude\n@@ -415,6 +415,18 @@ fi\n # (two loops held the address for 80 minutes on 2026-08-18 and nothing was loud about it). Any\n # OTHER failure — no bus, no manager, denied — is systemd being unreachable, and there the\n # setsid fall-through is right, because there is no first claimant to race.\n+# A UNIT STARTED INSIDE A TEST RUN IS THE RUN'S (ticket bf3c16162827: a run owns what it\n+# started). systemd-run hands a unit the MANAGER's environment, never ours, so without this the\n+# run's test id stops at this shell and the tester's kill cannot find the loop or the web\n+# server it caused — measured: a run killed by its timeout left its loop unit running. The id\n+# rides the unit so the kill reaches it, and CollectMode lets a test unit that FAILED (no\n+# process left to kill) collect itself instead of lingering as a corpse. Outside a test run\n+# this array is empty and the live units are byte-for-byte unchanged — their failed state stays\n+# where a human looks.\n+_sc_test_mark=()\n+if [[ -n \"${CAIRN_TESTER_TEST_ID:-}\" ]]; then\n+  _sc_test_mark=(--setenv=CAIRN_TESTER_TEST_ID=\"$CAIRN_TESTER_TEST_ID\" -p CollectMode=inactive-or-failed)\n+fi\n _sc_loop_unit=\"${SUPERCLAUDE_GROUND_LOOP_UNIT:-cairn-ground-loop}\"\n _sc_loop_log=\"${HOME}/.cairn/logs/ground_loop_nohup.log\"\n _sc_loop_root=\"$(cd \"$(dirname \"$(readlink -f \"${BASH_SOURCE[0]}\")\")/..\" 2>/dev/null && pwd)\"\n@@ -427,6 +439,7 @@ _sc_loop_root=\"$(cd \"$(dirname \"$(readlink -f \"${BASH_SOURCE[0]}\")\")/..\" 2>/dev/\n _sc_loop_start() {\n   systemd-run --user --quiet \\\n     --unit \"$_sc_loop_unit\" \\\n+    \"${_sc_test_mark[@]}\" \\\n     --working-directory \"${_sc_loop_root:-$PWD}\" \\\n     --setenv=HOME=\"$HOME\" \\\n     --setenv=PATH=\"$PATH\" \\\n@@ -503,6 +516,7 @@ _sc_web_root=\"$(cd \"$(dirname \"$(readlink -f \"${BASH_SOURCE[0]}\")\")/..\" 2>/dev/n\n _sc_web_start() {\n   systemd-run --user --quiet \\\n     --unit \"$_sc_web_unit\" \\\n+    \"${_sc_test_mark[@]}\" \\\n     --working-directory \"${_sc_web_root:-$PWD}\" \\\n     --setenv=HOME=\"$HOME\" \\\n     --setenv=PATH=\"$PATH\" \\\n",
+  "cast": "2026-10-05",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T214212-196d3f73acee.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 6c951759bdb9 .. validate 196d3f73acee, each learned)"
+  }
+}
