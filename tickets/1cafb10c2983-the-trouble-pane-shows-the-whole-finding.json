@@ -1,0 +1,46 @@
+{
+  "id": "1cafb10c2983",
+  "title": "the-trouble-pane-shows-the-whole-finding",
+  "date": "2026-10-06",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/web_server/intention+why.json",
+  "intention": "The trouble pane's detail side shows a selected trouble's whole finding, and the panel says it is read-only.",
+  "why": "Child of 7a1265439f54 for its falsifier clauses (4) and (5), measured red in the world on 2026-10-06 when the clause-coverage gate ran over the parent's re-entry: cairn/devices/web_server/render.py:271 rendered the detail side as a static 'Select a trouble from the list.' that nothing fills (the page carries no script), :417 clipped the only copy of the why with an ellipsis, and no text said the panel is read-only. The lived symptom: an operator meeting a live trouble on the panel cannot read its finding there, and the parent's 2026-09-04 PROVED said they could.",
+  "traces_to": "Law 7 (a diagnostic surface may collapse an error into a shape, but the detail view is the record, not a collapse); Law 9 (7a1265439f54's 2026-09-04 PROVED stood over clauses (4)/(5) that were never true — red is the default, green is earned); RULE 1 (the render kind is the web_server's, so the change lives there)",
+  "how": "In cairn/devices/web_server/render.py _render_trouble: each list row's id becomes an anchor to #trouble-<id>; the detail side carries one <section id=trouble-<id> class=trouble-full> per trouble holding standing, count, first/last seen and the whole why in a pre-wrap <pre>; _STYLE hides .trouble-full and shows .trouble-full:target, so selecting is a plain anchor and the page stays script-free; the header carries a visible 'read-only — troubles are raised and cleared by the system, never from this page'. Proof cairn/devices/web_server/proofs/test_the_trouble_pane_shows_the_whole_finding.py, written red 0/3.",
+  "falsifier": "Done when the proof's three teeth pass: (1) a 3,000-char why appears whole, escaped, in a detail section the list row links to; (2) detail sections are hidden until selected and shown by :target, one per trouble; (3) the panel says read-only in visible text. And test_web_server_views.py and test_web_server.py stay green. Wrong intent if the page needs a script to select, or if the detail side duplicates state the web server holds (it must stay pulled-live).",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py) the parent 7a1265439f54's probe already watches the running route to this pane, and the render is a pure function of its input that cannot drift between beats without a code change, which component_color reds against this proof's seal",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261006T012739-e0c7e5ab74cb.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261006T012724-cc4adf541014.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one render function and its CSS in one file of one component, with one proof on disk",
+  "parent": "7a1265439f54",
+  "questions": [],
+  "build_patch": "diff --git a/cairn/devices/web_server/render.py b/cairn/devices/web_server/render.py\nindex cbf8bb47..8d36ab76 100644\n--- a/cairn/devices/web_server/render.py\n+++ b/cairn/devices/web_server/render.py\n@@ -248,8 +248,11 @@ def _render_trouble(data) -> str:\n     light = (f'<span class=\"red-light\" style=\"display:inline-block;width:.8rem;height:.8rem;'\n              f'border-radius:50%;background:{light_color};vertical-align:middle;margin-right:.4rem;\">'\n              f'</span>')\n-    header = f'{light}<strong>{_esc(len(live))}</strong> live trouble{\"\" if len(live) == 1 else \"s\"}'\n+    header = (f'{light}<strong>{_esc(len(live))}</strong> live trouble{\"\" if len(live) == 1 else \"s\"}'\n+              f' <span class=\"trouble-readonly\">read-only — troubles are raised and cleared by '\n+              f'the system, never from this page</span>')\n     rows = \"\"\n+    sections = \"\"\n     for t in data:\n         if not isinstance(t, dict):\n             continue\n@@ -260,15 +263,23 @@ def _render_trouble(data) -> str:\n         first = _esc(t.get(\"first_seen\", \"\"))\n         last = _esc(t.get(\"last_seen\", \"\"))\n         rows += (f'<tr data-id=\"{tid}\">'\n-                 f'<td>{tid}</td><td>{standing}</td><td>{count}</td>'\n+                 f'<td><a href=\"#trouble-{tid}\">{tid}</a></td><td>{standing}</td><td>{count}</td>'\n                  f'<td class=\"trouble-why\">{why}</td>'\n                  f'<td>{first}</td><td>{last}</td></tr>')\n+        # THE DETAIL IS THE RECORD, NOT A SUMMARY (7a1265439f54 clause (4), ticket\n+        # 1cafb10c2983): the list may clip the why to a line, so the whole finding lives\n+        # here, one section per trouble, shown by :target when its id is selected — a\n+        # plain anchor, so the page stays script-free.\n+        sections += (f'<section id=\"trouble-{tid}\" class=\"trouble-full\">'\n+                     f'<h3>{tid}</h3><p>{standing} · count {count} · first seen {first} · '\n+                     f'last seen {last}</p><pre class=\"trouble-finding\">{why}</pre></section>')\n     table_html = (\n         '<table class=\"trouble-list\"><thead><tr>'\n         '<th>id</th><th>standing</th><th>count</th><th>why</th>'\n         '<th>first seen</th><th>last seen</th>'\n         '</tr></thead><tbody>' + rows + '</tbody></table>')\n-    detail_html = '<div class=\"trouble-detail\"><p class=\"trouble-detail-hint\">Select a trouble from the list.</p></div>'\n+    detail_html = ('<div class=\"trouble-detail\"><p class=\"trouble-detail-hint\">Select a trouble '\n+                   'from the list.</p>' + sections + '</div>')\n     return (f'<div class=\"trouble-panel\"><p class=\"trouble-header\">{header}</p>'\n             f'<div class=\"trouble-split\">{table_html}{detail_html}</div></div>')\n \n@@ -417,6 +428,10 @@ nav a.dev.harbor { border-color: #a86; }\n .trouble-list .trouble-why { max-width: 20rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n .trouble-detail { border: 1px solid #8884; border-radius: .5rem; padding: .6rem .9rem; min-height: 8rem; }\n .trouble-detail-hint { opacity: .6; font-style: italic; }\n+.trouble-readonly { opacity: .6; font-size: .85rem; margin-left: .6rem; }\n+.trouble-full { display: none; }\n+.trouble-full:target { display: block; }\n+.trouble-full .trouble-finding { white-space: pre-wrap; word-break: break-word; margin: .3rem 0; }\n .pane dl.record { margin: .3rem 0; display: grid; grid-template-columns: auto 1fr; gap: .1rem .8rem; }\n .pane dl.record dt { font-weight: 600; opacity: .8; }\n .pane dl.record dd { margin: 0; }\n",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-06",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only cairn/devices/web_server/render.py: in _render_trouble the header gains a visible 'read-only — troubles are raised and cleared by the system, never from this page' span; each list row's id becomes <a href=\"#trouble-<id>\">; one <section id=\"trouble-<id>\" class=\"trouble-full\"> per trouble (heading, standing, count, first and last seen, and the whole why in <pre class=\"trouble-finding\">) is appended inside the trouble-detail div after the hint; _STYLE gains .trouble-readonly, .trouble-full {display: none}, .trouble-full:target {display: block}, and pre-wrap for .trouble-finding. Every value still passes _esc. No other code changes."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-06",
+      "text": "D2: SETTLED: the proof cairn/devices/web_server/proofs/test_the_trouble_pane_shows_the_whole_finding.py is already on disk, committed red 0/3 at 3c3ff2f0. After the patch `python3 cairn/devices/web_server/proofs/test_the_trouble_pane_shows_the_whole_finding.py` shows 3 passed and exits 0. Regressions: `python3 cairn/devices/web_server/proofs/test_web_server_views.py` and `python3 cairn/devices/web_server/proofs/test_web_server.py` exit 0."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-06",
+      "text": "D3: SETTLED: after the proof and regressions pass, commit the patched render.py with the history, state and journal the BUILDME crossing wrote, in one cairn commit naming 1cafb10c2983. The parent 7a1265439f54 then names this proof's teeth for its clauses (4) and (5); that edit is the parent's, not this build's."
+    }
+  ],
+  "cast": "2026-10-06"
+}
