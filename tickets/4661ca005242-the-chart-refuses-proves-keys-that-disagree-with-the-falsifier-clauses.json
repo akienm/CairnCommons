@@ -8,7 +8,7 @@
   "why": "Law 4: a rule held as memory failed three times (50ad391f4e95, 693e9f45e6f2, 5f217a2d4bd6) — each time a proof's PROVES keys disagreed with the falsifier's clause markers and the disagreement surfaced only at hollow or clearance, where it costs a refusal, a FIXME bounce or a falsifier rewrite at PROVEME. The lived symptom is a builder who did the work and is stopped at the last gate by a key mismatch the chart could have named.",
   "traces_to": "Law 4 (a rule that matters is enforced by physics, not policy: the memory rule failed n=3); Law 8 (a proof whose declared teeth do not map to the falsifier's clauses lets hollow read a build as measured when no declared tooth covers a clause); Law 1 (each slip re-derived the same fix at PROVEME)",
   "how": "In cairn/devices/codemother/machines/validate/validate.py inspect_validate(): add one inspected entry, 'proves_keys_match_the_falsifier_clauses', recorded only when the packet claims a ticket (an unclaimed chart has no falsifier to check against). The rule mirrors clearance's (proof_coverage.lacks, the union over named proofs, extra keys allowed), as Akien agreed in open-514724f8ec30 (recommendation a): take every distinct proof path named in the packet's criteria instruments (regex [\\w./-]*/proofs/[\\w./-]+\\.py, resolved against root); want = proof_coverage.clauses(ticket_doc) with the ticket read through grammar.ticket_path; have = the union of proof_coverage.declared(proof).get(ticket, {}) keys over those proofs. The entry passes when want is a subset of have; it closes the gate when have is empty (no proof the chart runs declares the ticket) or some clause is missing, naming each proof with its declared keys, the clause keys, the missing clauses, and the one-line fix (key PROVES to the clauses, or have a criterion run the proof that does). proof_coverage is imported at call time through its public package interface (cairn.tools.proof_coverage). The check lives in inspect_validate only, never in the build inspector's judge_validate, so it fires at the write of a new validate berth and no standing berth is re-judged: the three standing PROVED charts it would refuse (7a1265439f54, a1a2156a2a17, a808e21d646f, census 2026-10-06) predate the rule and are not reopened. Proof under cairn/devices/codemother/machines/validate/proofs/, written red.",
-  "falsifier": "Done when (1) a validate packet claiming a ticket whose falsifier has no (N) markers, with a criterion running a proof that declares PROVES {tid: {'1':..,'2':..}}, is refused naming proves_keys_match_the_falsifier_clauses, the declared keys ['1','2'] and the clauses ['all']; (2) a claimed packet whose proofs declare keys equal to the clauses passes that entry; (3) a claimed packet none of whose proofs declares anything for the ticket is refused; (4) a claimed packet whose clauses are covered only by the union of two proofs (clause 1 in one, clause 2 in the other) passes that entry. Wrong intent if the gate re-judges a standing validate berth: the census of 2026-10-06 measured 3 standing PROVED charts it would refuse, and Akien answered (open-514724f8ec30) that they predate the rule.",
+  "falsifier": "Done when (1) a validate packet claiming a ticket whose falsifier has no (N) markers, with a criterion running a proof that declares PROVES {tid: {'1':..,'2':..}}, is refused naming proves_keys_match_the_falsifier_clauses, the declared keys ['1','2'] and the clauses ['all']; (2) a claimed packet whose proofs declare keys equal to the clauses passes that entry; (3) a claimed packet none of whose proofs declares anything for the ticket is refused; (4) a claimed packet whose clauses are covered only by the union of two proofs (clause 1 in one, clause 2 in the other) passes that entry. Wrong intent if the gate re-judges a standing validate berth: the census of 2026-10-06 measured 3 standing PROVED charts it would refuse, and not reopening them because they predate the rule is CC's call, confirmed by Akien 2026-10-06.",
   "node_class": "code-seam",
   "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
   "watchme": "none, because the consumer is the next chart run: its validate berth under /home/akien/.cairn/devices/chart/0/packets/ carries the proves_keys_match_the_falsifier_clauses entry, pass or fail, which is the measurement this ticket produces",
@@ -21,7 +21,72 @@
     "open-514724f8ec30",
     "open-3f6ba5f047ed"
   ],
-  "decisions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "No separate examination step: the proof's fixtures are read only for the names given in the proof decision; the census over standing berths is already done (2026-10-06, open-514724f8ec30) and is not repeated.",
+      "by": "cc",
+      "step": "examine and understand the proof fixtures for clauses vs. proves-key disagreement",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:18:53+00:00"
+    },
+    {
+      "n": 2,
+      "text": "In cairn/devices/codemother/machines/validate/validate.py only. At module top add nothing; inside inspect_validate, after record += common_shape_record(...) and before the composed judges, when isinstance(packet.get('ticket'), str) and packet['ticket']: tp = ticket_path(packet['ticket'], root) (import ticket_path from cairn.tools.chain.grammar, already an allowed module); if tp is None skip the entry (the shape record already reds an unfiled claim). Import at call time: from cairn.tools.proof_coverage import clauses, declared. want = clauses(json.load(open(tp))); proofs = sorted set of every match of re.compile(r'[\\w./-]*/proofs/[\\w./-]+\\.py') over str(c.get('instrument','')) for c in packet.get('criteria') or [] (dicts only), each resolved as os.path.join(root, p) unless absolute; per proof dec = sorted(declared(path).get(packet['ticket'], {})) (a missing file declares nothing). have = union of all dec; missing = [c for c in want if c not in have]. Append inspected('proves_keys_match_the_falsifier_clauses', stage='validate', expected='every clause declared', actual='every clause declared' if want and not missing else 'clause undeclared', lack=...) where lack reads: 'proves_keys_match_the_falsifier_clauses: proofs %s declare %s for %s; the falsifier clauses are %s; undeclared %s — key PROVES to the clauses, or have a criterion run the proof that declares them' with each proof's path and its dec list, the union sorted list, want sorted list, missing. Add 'import re' at module top beside json/os. Do NOT touch judge_validate or the build inspector. Then add exactly 'cairn.tools.proof_coverage' (and 're' if import_map counts stdlib, it does: add 're') to the allow tuple in cairn/devices/codemother/machines/validate/proofs/test_chart_validate.py test_import_allowlist with a one-line comment citing 4661ca005242 — only once open-3f6ba5f047ed is answered yes; BUILDME is held until it is. Run bin/cairn test on cairn/devices/codemother/machines/validate/proofs/test_the_chart_refuses_a_clause_no_proof_it_runs_declares.py (green 4/4) and on test_chart_validate.py (green); both only through bin/cairn test.",
+      "by": "cc",
+      "step": "implement proves_keys_match_the_falsifier_clauses check in validate.py inspect_validate",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:18:53+00:00"
+    },
+    {
+      "n": 3,
+      "text": "In cairn/devices/codemother/machines/validate/validate.py only. At module top add nothing; inside inspect_validate, after record += common_shape_record(...) and before the composed judges, when isinstance(packet.get('ticket'), str) and packet['ticket']: tp = ticket_path(packet['ticket'], root) (import ticket_path from cairn.tools.chain.grammar, already an allowed module); if tp is None skip the entry (the shape record already reds an unfiled claim). Import at call time: from cairn.tools.proof_coverage import clauses, declared. want = clauses(json.load(open(tp))); proofs = sorted set of every match of re.compile(r'[\\w./-]*/proofs/[\\w./-]+\\.py') over str(c.get('instrument','')) for c in packet.get('criteria') or [] (dicts only), each resolved as os.path.join(root, p) unless absolute; per proof dec = sorted(declared(path).get(packet['ticket'], {})) (a missing file declares nothing). have = union of all dec; missing = [c for c in want if c not in have]. Append inspected('proves_keys_match_the_falsifier_clauses', stage='validate', expected='every clause declared', actual='every clause declared' if want and not missing else 'clause undeclared', lack=...) where lack reads: 'proves_keys_match_the_falsifier_clauses: proofs %s declare %s for %s; the falsifier clauses are %s; undeclared %s — key PROVES to the clauses, or have a criterion run the proof that declares them' with each proof's path and its dec list, the union sorted list, want sorted list, missing. Add 'import re' at module top beside json/os. Do NOT touch judge_validate or the build inspector. Then add exactly 'cairn.tools.proof_coverage' (and 're' if import_map counts stdlib, it does: add 're') to the allow tuple in cairn/devices/codemother/machines/validate/proofs/test_chart_validate.py test_import_allowlist with a one-line comment citing 4661ca005242 — only once open-3f6ba5f047ed is answered yes; BUILDME is held until it is. Run bin/cairn test on cairn/devices/codemother/machines/validate/proofs/test_the_chart_refuses_a_clause_no_proof_it_runs_declares.py (green 4/4) and on test_chart_validate.py (green); both only through bin/cairn test.",
+      "by": "cc",
+      "step": "modify validate.py to add proves_keys_match_the_falsifier_clauses entry to inspect_validate()",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:18:53+00:00"
+    },
+    {
+      "n": 4,
+      "text": "In cairn/devices/codemother/machines/validate/validate.py only. At module top add nothing; inside inspect_validate, after record += common_shape_record(...) and before the composed judges, when isinstance(packet.get('ticket'), str) and packet['ticket']: tp = ticket_path(packet['ticket'], root) (import ticket_path from cairn.tools.chain.grammar, already an allowed module); if tp is None skip the entry (the shape record already reds an unfiled claim). Import at call time: from cairn.tools.proof_coverage import clauses, declared. want = clauses(json.load(open(tp))); proofs = sorted set of every match of re.compile(r'[\\w./-]*/proofs/[\\w./-]+\\.py') over str(c.get('instrument','')) for c in packet.get('criteria') or [] (dicts only), each resolved as os.path.join(root, p) unless absolute; per proof dec = sorted(declared(path).get(packet['ticket'], {})) (a missing file declares nothing). have = union of all dec; missing = [c for c in want if c not in have]. Append inspected('proves_keys_match_the_falsifier_clauses', stage='validate', expected='every clause declared', actual='every clause declared' if want and not missing else 'clause undeclared', lack=...) where lack reads: 'proves_keys_match_the_falsifier_clauses: proofs %s declare %s for %s; the falsifier clauses are %s; undeclared %s — key PROVES to the clauses, or have a criterion run the proof that declares them' with each proof's path and its dec list, the union sorted list, want sorted list, missing. Add 'import re' at module top beside json/os. Do NOT touch judge_validate or the build inspector. Then add exactly 'cairn.tools.proof_coverage' (and 're' if import_map counts stdlib, it does: add 're') to the allow tuple in cairn/devices/codemother/machines/validate/proofs/test_chart_validate.py test_import_allowlist with a one-line comment citing 4661ca005242 — only once open-3f6ba5f047ed is answered yes; BUILDME is held until it is. Run bin/cairn test on cairn/devices/codemother/machines/validate/proofs/test_the_chart_refuses_a_clause_no_proof_it_runs_declares.py (green 4/4) and on test_chart_validate.py (green); both only through bin/cairn test.",
+      "by": "cc",
+      "step": "write proves_keys_match_the_falsifier_clauses entry in inspect_validate",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:18:53+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The proof is already written and committed red at 77e7432e (cairn/devices/codemother/machines/validate/proofs/test_the_chart_refuses_a_clause_no_proof_it_runs_declares.py): PROVES key 4661ca005242 maps clauses 1-4 to four named teeth, each building a scratch world (tmp/repo beside tmp/CairnCommons/tickets holding a fixture ticket abcdef012345) and calling inspect_validate(packet, root=...) and validate_validate. Measured at HEAD under bin/cairn test: 4 of 4 red, the entry absent. The builder does not create or edit it, and reads it only to learn the names: the entry identity is exactly proves_keys_match_the_falsifier_clauses, and the refusal text must contain that identity, the declared keys as a sorted Python list repr (e.g. ['1', '2']) and the clauses likewise (e.g. ['all']).",
+      "by": "cc",
+      "step": "write proof file test_the_chart_refuses_a_clause_no_proof_it_runs_declares.py with 4 test teeth",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:18:53+00:00"
+    },
+    {
+      "n": 6,
+      "text": "The proof is already written and committed red at 77e7432e (cairn/devices/codemother/machines/validate/proofs/test_the_chart_refuses_a_clause_no_proof_it_runs_declares.py): PROVES key 4661ca005242 maps clauses 1-4 to four named teeth, each building a scratch world (tmp/repo beside tmp/CairnCommons/tickets holding a fixture ticket abcdef012345) and calling inspect_validate(packet, root=...) and validate_validate. Measured at HEAD under bin/cairn test: 4 of 4 red, the entry absent. The builder does not create or edit it, and reads it only to learn the names: the entry identity is exactly proves_keys_match_the_falsifier_clauses, and the refusal text must contain that identity, the declared keys as a sorted Python list repr (e.g. ['1', '2']) and the clauses likewise (e.g. ['all']).",
+      "by": "cc",
+      "step": "write proof file with four test cases demonstrating the gate behavior",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:18:54+00:00"
+    },
+    {
+      "n": 7,
+      "text": "open-3f6ba5f047ed is ANSWERED yes (Akien 2026-10-06, recorded on the question): adding cairn.tools.proof_coverage and re to the allow tuple in test_chart_validate.py test_import_allowlist, with a one-line comment citing 4661ca005242, is allowed and is part of this build; nothing else in that proof changes.",
+      "by": "cc",
+      "step": "implement proves_keys_match_the_falsifier_clauses check in validate.py inspect_validate",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:19:18+00:00"
+    },
+    {
+      "n": 8,
+      "text": "Correction to D2-D4 and D7, binding: validate.py imports NO new module except cairn.tools.proof_coverage at call time — do not add \"import re\" and do not add \"re\" to the allowlist, because open-3f6ba5f047ed allows exactly one addition (cairn.tools.proof_coverage) and nothing else. Find proof paths without regex: for each word of str(c.get(\"instrument\", \"\")).split(), strip the characters \",;:()[]\\x27\\\"`\" from both ends, and keep it when \"/proofs/\" is in it and it ends with \".py\". Everything else in the gate decision stands.",
+      "by": "cc",
+      "step": "implement proves_keys_match_the_falsifier_clauses check in validate.py inspect_validate",
+      "source": "rehearsal",
+      "at": "2026-10-06T17:19:29+00:00"
+    }
+  ],
   "build_patch": null,
   "cast": "2026-10-05",
   "chart_claim": {
