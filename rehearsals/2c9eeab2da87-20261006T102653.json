@@ -1,0 +1,460 @@
+{
+  "ticket": "2c9eeab2da87",
+  "record": "rehearsals/2c9eeab2da87-20261006T102653.json",
+  "at": "2026-10-06T10:26:53+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "a409bd55feed7af72dc4ab91ce12c892fa61c06f9f9e6018cb0fd1e5d20c0e08",
+  "ticket_sha256_at_read": "a409bd55feed7af72dc4ab91ce12c892fa61c06f9f9e6018cb0fd1e5d20c0e08",
+  "design_sha256": "d231d0e0809cfa8ddda689f284477a4a0d8acc539f29066ddbe07a3ba6e77cfb",
+  "reads": [
+    {
+      "ticket": "2c9eeab2da87",
+      "ticket_sha256": "a409bd55feed7af72dc4ab91ce12c892fa61c06f9f9e6018cb0fd1e5d20c0e08",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: write the proof red with 5 teeth per falsifier clauses (1)-(5)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) composing seal primitives from isolation.py",
+          "state": "builds_under_assumption",
+          "assumption": "run_exec replicates the seal composition used in run_proof (snapshot_instance_space + check_instance_seal + NoIsolation.wrap with instance_swap), extractable from device.py:run_proof's existing code",
+          "would_settle": "Clarify the exact seal assembly: should run_exec directly compose snapshot+check+wrap, or wrap an internal call to run_proof with a different subject?",
+          "confidence": 0.72
+        },
+        {
+          "step": "unlisted: add --exec flag to cli.py with command argument and optional --timeout",
+          "state": "builds_under_assumption",
+          "assumption": "--exec takes a required command string, --timeout is optional, and the CLI integration follows the existing pattern used for other TesterDevice methods",
+          "would_settle": "Specify parameter names, defaults, and how --timeout's value is passed to run_exec (exact units, bounds, handling of unspecified case)",
+          "confidence": 0.68
+        },
+        {
+          "step": "unlisted: declare run_exec entry in tester charter's public_interface",
+          "state": "builds_under_assumption",
+          "assumption": "public_interface should list the method as importable (e.g., 'cairn.devices.tester.device.TesterDevice.run_exec') and/or the CLI verb 'cairn test --exec'; format follows existing public_interface entries in other components",
+          "would_settle": "State exactly what appears in public_interface: the importable path, the CLI verb name, or both?",
+          "confidence": 0.62
+        },
+        {
+          "step": "unlisted: handle bwrap unavailable case - refuse with exit 2 naming the seal",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.88
+        },
+        {
+          "step": "unlisted: resolve WRONG INTENT precondition - confirm run_proof can run arbitrary commands without duplicating seal logic",
+          "state": "builds_under_assumption",
+          "assumption": "The WRONG INTENT caveat ('if run_proof's existing seal path cannot run a non-proof command without duplicating it, wrap run_proof instead') means the builder should inspect run_proof's signature/constraints first; if the caveat applies, the design wraps run_proof; if not, the design replicates its pattern",
+          "would_settle": "State: does run_proof's seal assembly accept any bash command, or only proof-like subjects? If arbitrary commands are disallowed, should run_exec wrap it?",
+          "confidence": 0.55
+        }
+      ]
+    },
+    {
+      "ticket": "2c9eeab2da87",
+      "ticket_sha256": "a409bd55feed7af72dc4ab91ce12c892fa61c06f9f9e6018cb0fd1e5d20c0e08",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: write the proof red: teeth 1-5",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can reference the sibling proof test_instance_seal.py and use it as a template to understand Cairn proof structure, and can infer test implementations from the falsifier clauses and tooth names listed in the validate section.",
+          "would_settle": "Provide explicit examples or a proof template showing how to structure teeth, invoke isolation primitives, and assert falsifier conditions.",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: implement TesterDevice.run_exec, --exec CLI flag, and public_interface declaration",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can examine existing run_proof code to infer the TesterDevice method structure and isolation primitive usage, and can pattern-match the CLI handler from existing code; CAIRN_TESTER_TEST_ID marking scheme is derivable from run_proof's implementation.",
+          "would_settle": "Specify the function signature for run_exec(command, *, timeout), clarify the CAIRN_TESTER_TEST_ID marking mechanism, and show an example public_interface declaration.",
+          "confidence": 0.7
+        }
+      ]
+    },
+    {
+      "ticket": "2c9eeab2da87",
+      "ticket_sha256": "a409bd55feed7af72dc4ab91ce12c892fa61c06f9f9e6018cb0fd1e5d20c0e08",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: write (or verify) the proof red: cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py with 5 teeth per the falsifier clauses",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) in device.py, add cairn test --exec flag to cli.py, and declare both in tester charter's public_interface",
+          "state": "builds_under_assumption",
+          "assumption": "instance_bind_flags is available in cairn/devices/tester/isolation.py and is the correct mechanism for isolation setup; the method to generate or format CAIRN_TESTER_TEST_ID is a known pattern (uuid, timestamp, etc.)",
+          "would_settle": "Specify how instance_bind_flags composes into the seal setup; clarify whether CAIRN_TESTER_TEST_ID should be a UUID, timestamp, or sequence number, and whether it rides in environment or elsewhere",
+          "confidence": 0.68
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: add --exec flag to cli.py with command argument and optional --timeout",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "--exec takes a required command string, --timeout is optional, and the CLI integration follows the existing pattern used for other TesterDevice methods"
+      ],
+      "would_settle": [
+        "Specify parameter names, defaults, and how --timeout's value is passed to run_exec (exact units, bounds, handling of unspecified case)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: declare run_exec entry in tester charter's public_interface",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "public_interface should list the method as importable (e.g., 'cairn.devices.tester.device.TesterDevice.run_exec') and/or the CLI verb 'cairn test --exec'; format follows existing public_interface entries in other components"
+      ],
+      "would_settle": [
+        "State exactly what appears in public_interface: the importable path, the CLI verb name, or both?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) composing seal primitives from isolation.py",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "run_exec replicates the seal composition used in run_proof (snapshot_instance_space + check_instance_seal + NoIsolation.wrap with instance_swap), extractable from device.py:run_proof's existing code"
+      ],
+      "would_settle": [
+        "Clarify the exact seal assembly: should run_exec directly compose snapshot+check+wrap, or wrap an internal call to run_proof with a different subject?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) in device.py, add cairn test --exec flag to cli.py, and declare both in tester charter's public_interface",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "instance_bind_flags is available in cairn/devices/tester/isolation.py and is the correct mechanism for isolation setup; the method to generate or format CAIRN_TESTER_TEST_ID is a known pattern (uuid, timestamp, etc.)"
+      ],
+      "would_settle": [
+        "Specify how instance_bind_flags composes into the seal setup; clarify whether CAIRN_TESTER_TEST_ID should be a UUID, timestamp, or sequence number, and whether it rides in environment or elsewhere"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement TesterDevice.run_exec, --exec CLI flag, and public_interface declaration",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder can examine existing run_proof code to infer the TesterDevice method structure and isolation primitive usage, and can pattern-match the CLI handler from existing code; CAIRN_TESTER_TEST_ID marking scheme is derivable from run_proof's implementation."
+      ],
+      "would_settle": [
+        "Specify the function signature for run_exec(command, *, timeout), clarify the CAIRN_TESTER_TEST_ID marking mechanism, and show an example public_interface declaration."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: resolve WRONG INTENT precondition - confirm run_proof can run arbitrary commands without duplicating seal logic",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The WRONG INTENT caveat ('if run_proof's existing seal path cannot run a non-proof command without duplicating it, wrap run_proof instead') means the builder should inspect run_proof's signature/constraints first; if the caveat applies, the design wraps run_proof; if not, the design replicates its pattern"
+      ],
+      "would_settle": [
+        "State: does run_proof's seal assembly accept any bash command, or only proof-like subjects? If arbitrary commands are disallowed, should run_exec wrap it?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write the proof red: teeth 1-5",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The builder can reference the sibling proof test_instance_seal.py and use it as a template to understand Cairn proof structure, and can infer test implementations from the falsifier clauses and tooth names listed in the validate section."
+      ],
+      "would_settle": [
+        "Provide explicit examples or a proof template showing how to structure teeth, invoke isolation primitives, and assert falsifier conditions."
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: add --exec flag to cli.py with command argument and optional --timeout",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: declare run_exec entry in tester charter's public_interface",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: handle bwrap unavailable case - refuse with exit 2 naming the seal",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) composing seal primitives from isolation.py",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) in device.py, add cairn test --exec flag to cli.py, and declare both in tester charter's public_interface",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement TesterDevice.run_exec, --exec CLI flag, and public_interface declaration",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: resolve WRONG INTENT precondition - confirm run_proof can run arbitrary commands without duplicating seal logic",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write (or verify) the proof red: cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py with 5 teeth per the falsifier clauses",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the proof red with 5 teeth per falsifier clauses (1)-(5)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the proof red: teeth 1-5",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: add --exec flag to cli.py with command argument and optional --timeout",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify parameter names, defaults, and how --timeout's value is passed to run_exec (exact units, bounds, handling of unspecified case)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: declare run_exec entry in tester charter's public_interface",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "State exactly what appears in public_interface: the importable path, the CLI verb name, or both?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: handle bwrap unavailable case - refuse with exit 2 naming the seal",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) composing seal primitives from isolation.py",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Clarify the exact seal assembly: should run_exec directly compose snapshot+check+wrap, or wrap an internal call to run_proof with a different subject?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) in device.py, add cairn test --exec flag to cli.py, and declare both in tester charter's public_interface",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Specify how instance_bind_flags composes into the seal setup; clarify whether CAIRN_TESTER_TEST_ID should be a UUID, timestamp, or sequence number, and whether it rides in environment or elsewhere"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement TesterDevice.run_exec, --exec CLI flag, and public_interface declaration",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the function signature for run_exec(command, *, timeout), clarify the CAIRN_TESTER_TEST_ID marking mechanism, and show an example public_interface declaration."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: resolve WRONG INTENT precondition - confirm run_proof can run arbitrary commands without duplicating seal logic",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "State: does run_proof's seal assembly accept any bash command, or only proof-like subjects? If arbitrary commands are disallowed, should run_exec wrap it?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write (or verify) the proof red: cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py with 5 teeth per the falsifier clauses",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the proof red with 5 teeth per falsifier clauses (1)-(5)",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the proof red: teeth 1-5",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Provide explicit examples or a proof template showing how to structure teeth, invoke isolation primitives, and assert falsifier conditions."
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.116977,
+        "duration_ms": 79219,
+        "is_error": false,
+        "session_id": "807c5bcd-571e-4f58-98f1-3373b74cf9ab"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1438446,
+        "duration_ms": 157808,
+        "is_error": false,
+        "session_id": "aa8f65da-f776-4414-8743-16c83997858b"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1204826,
+        "duration_ms": 137779,
+        "is_error": false,
+        "session_id": "e59e32a3-4066-4cee-a0f0-91154d104d8e"
+      }
+    ],
+    "cost_usd": 0.381304,
+    "duration_ms": 374806,
+    "rendered_chars": 50929,
+    "by": null
+  },
+  "divergence": null
+}

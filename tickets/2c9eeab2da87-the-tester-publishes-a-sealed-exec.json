@@ -23,5 +23,88 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261006T042017-f3e7590c018c.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 0f8398ee8eb3 .. validate f3e7590c018c, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The proof is already written and red: cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py, PROVES keys 1-5 plus the composite test_the_whole_falsifier_holds_end_to_end, red 6 of 6 under the seal at 3c73e2ea. Do not edit it; build against it.",
+      "by": "cc",
+      "step": "unlisted: write the proof red: teeth 1-5",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:25+00:00"
+    },
+    {
+      "n": 2,
+      "text": "Add to TesterDevice in cairn/devices/tester/device.py: def run_exec(self, command: str, *, timeout: int = 3600, cwd: str | None = None) -> int. cwd defaults to os.getcwd(); iso = get_isolation('none'). If inside_an_instance_seal(): seal = check_instance_seal(iso, _INSTANCE_ROOT, cwd), swap = _INSTANCE_ROOT if seal.sealed. Else if bwrap_available() is false: no swap. Else made = snapshot_instance_space(); seal = check_instance_seal(iso, made, cwd); swap = made if seal.sealed. Then argv = iso.wrap(['bash','-c',command], cwd=cwd, instance_swap=swap) (that is where instance_bind_flags and CAIRN_TESTER_INSTANCE_SEALED=1 come from). env = os.environ minus TEST_ID_ENV, plus TEST_ID_ENV=mint_test_id() (runs.py; env var CAIRN_TESTER_TEST_ID). subprocess.run(argv, env=env, cwd=cwd, timeout=timeout) with NO capture so stdin/stdout/stderr are the caller's; return its returncode; TimeoutExpired prints 'timed out after Ns' to stderr and returns 124. After the run, kill_what_it_started(test). finally: shutil.rmtree(Path(made).parent) when made. It mints no record and no validation.",
+      "by": "cc",
+      "step": "unlisted: implement TesterDevice.run_exec(command, *, timeout) composing seal primitives from isolation.py",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:25+00:00"
+    },
+    {
+      "n": 3,
+      "text": "When no swap was confirmed (no bwrap and no inherited seal, or check_instance_seal not SEALED), run_exec prints to stderr 'cairn test --exec: refused — the instance seal is not confirmed (<verdict>: <detail>); the command was not run' and returns 2 BEFORE anything runs. Never a bare fallback.",
+      "by": "cc",
+      "step": "unlisted: handle bwrap unavailable case - refuse with exit 2 naming the seal",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:25+00:00"
+    },
+    {
+      "n": 4,
+      "text": "In cairn/devices/tester/cli.py main(): ap.add_argument('--exec', metavar='COMMAND', dest='exec_command'). Change --timeout to default=None and after parsing set it to 3600 for --exec and 120 otherwise (the existing per-proof default, unchanged in meaning). Dispatch first, before reseal/hollow/discover: if args.exec_command is not None: return TesterDevice().run_exec(args.exec_command, timeout=args.timeout). fold_flags must not fold the command: after folding, put the raw token back at the index after '--exec'. Add the usage line  to the module docstring.",
+      "by": "cc",
+      "step": "unlisted: add --exec flag to cli.py with command argument and optional --timeout",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:25+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Through the artifact door (cairn artifact write <charter> --verb cast --why ... --from <file>), set public_interface in cairn/devices/tester/intention+why.json from [] to [\"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c under the instance seal; exit passes through, 2 when no seal)\"]. A list of str, so the encapsulation sieve's missing_field check still holds; callers reach it by subprocess, never import.",
+      "by": "cc",
+      "step": "unlisted: declare run_exec entry in tester charter's public_interface",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:26+00:00"
+    },
+    {
+      "n": 6,
+      "text": "Settled, not wrong intent: run_proof takes a proof PATH and mints a record, so it cannot run a pipeline. run_exec composes the same isolation.py primitives run_proof calls (bwrap_available, inside_an_instance_seal, snapshot_instance_space, check_instance_seal, NoIsolation.wrap) and duplicates no seal logic; run_proof is not edited.",
+      "by": "cc",
+      "step": "unlisted: resolve WRONG INTENT precondition - confirm run_proof can run arbitrary commands without duplicating seal logic",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:26+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D4 lost its usage line to shell quoting; the line to add under the existing usage block in cli.py is:    cairn test --exec \"<command>\"              run any command under the instance seal (exit passes through; 2 when no seal)",
+      "by": "cc",
+      "step": "unlisted: add the --exec usage line to cli.py's module docstring",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:27:32+00:00"
+    },
+    {
+      "n": 8,
+      "text": "Every name D2 uses is already imported at the top of cairn/devices/tester/device.py, so add no import: from cairn.devices.tester.isolation import _INSTANCE_ROOT (the live ~/.cairn path), INDETERMINATE, Seal, bwrap_available, check_instance_seal, get_isolation, inside_an_instance_seal, snapshot_instance_space; from cairn.devices.tester.runs import ENV as TEST_ID_ENV, kill_what_it_started, mint_test_id. check_instance_seal(iso, swap_root, cwd) returns a Seal dataclass with .verdict, .detail and the .sealed property. snapshot_instance_space() returns the swap root path (str), and the caller removes its parent directory. iso.wrap(argv, cwd, *, instance_swap=) returns the argv list. test = mint_test_id() is a str, and that same value goes to kill_what_it_started(test).",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:33:33+00:00"
+    },
+    {
+      "n": 9,
+      "text": "fold_flags is cairn.tools.system_word.fold_flags, already imported in cli.py and called once at 'args = ap.parse_args(fold_flags(sys.argv[1:] if argv is None else argv))'. It lowercases every token that starts with '-'. Replace that line with: raw = list(sys.argv[1:] if argv is None else argv); folded = fold_flags(raw); then for i, tok in enumerate(folded): if tok == '--exec' and i + 1 < len(raw): folded[i + 1] = raw[i + 1]. Then args = ap.parse_args(folded). fold_flags itself is not edited.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:33:33+00:00"
+    },
+    {
+      "n": 10,
+      "text": "Exact charter write: write the full new charter JSON (json.dumps(doc, indent=2, ensure_ascii=False) + newline) to a scratchpad file, then run: bin/cairn artifact write cairn/devices/tester/intention+why.json --verb cast --why '2c9eeab2da87: publish cairn test --exec in public_interface' --from <that file>.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-06T10:33:33+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/2c9eeab2da87-20261006T104613.json"
 }
