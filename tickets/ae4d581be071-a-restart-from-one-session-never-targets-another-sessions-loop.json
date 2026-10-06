@@ -1,0 +1,23 @@
+{
+  "id": "ae4d581be071",
+  "title": "a-restart-from-one-session-never-targets-another-sessions-loop",
+  "date": "2026-10-06",
+  "owner": "CC",
+  "owning_intention": "launchers/intention+why.json",
+  "intention": "A restart asked from one superclaude session never targets another session's loop, even when two sessions were launched at the same instance address.",
+  "why": "Two CC sessions launched at the default instance 0 share one loop.pid and one restart-flag set (measured 2026-10-06 by the peer akiendelllinux_cc_0: loops 441666 and 512525, both --name akiendelllinux_cc_0). loop.pid holds whichever launched last, so `cairn cc restart now` from the other session would kill the wrong session's CC and leave it with no relaunch -- the hang-up the loop_pid guard exists to prevent. The lived symptom: an operator restarting one session ends a different one.",
+  "traces_to": "Law 6 (everything has exactly one owner, and the owner alone gates writes): two loops share one loop.pid and one flag set, so neither owns its own restart gate; the lived symptom is `cairn cc restart now` from the peer's session hanging up this session's loop.",
+  "how": "launchers/superclaude defaults --instance to 0 (line 225) and derives one flags home per instance (line 299); its inner loop writes its own pid to <home>/loop.pid (line 91), and cairn/devices/cc/0/bin/restart _loop_pid (lines 73-81) reads that file to find the loop to kill, while the restart flags (COMMAND_RESTART*.flag) are consumed by whichever loop exits first. So a second launch at an occupied instance overwrites the first's pid and shares its flags. Fix at launchers per Akien's answer: either a launch refuses (or moves to the next free instance) when the instance's loop.pid names a live loop, or loop.pid and the flags become per-session inside the instance. Proof under launchers/proofs/, written red: two inner loops launched at one instance with a stub CLAUDE_BIN; restart's target from session X is X's loop, never Y's.",
+  "falsifier": "GREEN when a proof launching two inner loops at one instance address shows restart run from session X resolves X's loop pid and never session Y's, and a restart flag written by X is consumed only by X's loop; RED at HEAD, where the second launch overwrites loop.pid. WRONG INTENT if Akien answers that two sessions at one instance address is itself forbidden and the launcher should simply refuse the second launch, in which case the proof's teeth become: the second launch at an occupied instance exits non-zero naming the live loop.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (launchers/superclaude) occupancy is decided at launch, a disposition sealed by the launchers proof whose seal component_color reds on drift; a live second launch at a held instance is visible in ps and in the instance's loop.pid",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261006T040207-0518e0dc1175.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261006T040136-3ca19f185549.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is the launch-time instance check in one file (launchers/superclaude) plus, under answer (c), the loop.pid path restart reads at cairn/devices/cc/0/bin/restart",
+  "questions": [
+    "open-62a7f29771e6"
+  ],
+  "cast": "2026-10-06"
+}
