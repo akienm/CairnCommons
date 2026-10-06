@@ -28,233 +28,52 @@
       "n": 1,
       "text": "The proof already exists, committed red 5 of 5 at 34a8b36e: cairn/devices/tester/proofs/test_an_unbuildable_network_seal_refuses_the_run.py, teeth named in its PROVES for this ticket (1 test_run_proof_refuses_before_the_subject_runs, 2 test_cairn_test_seal_refuses_and_persists_nothing, 3 test_the_hollow_exits_2_instead_of_measuring, 4 test_the_charter_says_exec_leaves_the_network_open) plus a composite. Do not rewrite it; build until it prints green 5 of 5 under bin/cairn test.",
       "by": "cc",
-      "step": "unlisted: write test proof with four test teeth",
+      "step": "consolidated from D1",
       "source": "rehearsal",
       "at": "2026-10-06T14:17:35+00:00"
     },
     {
       "n": 2,
-      "text": "The proof already exists, committed red 5 of 5 at 34a8b36e: cairn/devices/tester/proofs/test_an_unbuildable_network_seal_refuses_the_run.py, teeth named in its PROVES for this ticket (1 test_run_proof_refuses_before_the_subject_runs, 2 test_cairn_test_seal_refuses_and_persists_nothing, 3 test_the_hollow_exits_2_instead_of_measuring, 4 test_the_charter_says_exec_leaves_the_network_open) plus a composite. Do not rewrite it; build until it prints green 5 of 5 under bin/cairn test.",
+      "text": "In cairn/devices/tester/device.py, module level: class SealUnavailable(ValueError), and a function refuse_unbuildable(iso) whose body is: available, why = iso.available(); if iso.seals_network and not available: raise SealUnavailable(f\"cairn test: refused — the {iso.name} seal this proof asks for cannot be built here ({why}); the proof was not run\"). The {why} in that f-string is the second value iso.available() returns (the reason string isolation.py already writes). The words 'cannot be built' and 'not run' are what tooth 1 reads.",
       "by": "cc",
-      "step": "unlisted: Write test_an_unbuildable_network_seal_refuses_the_run.py with teeth 1-4",
+      "step": "consolidated from D19",
       "source": "rehearsal",
-      "at": "2026-10-06T14:17:35+00:00"
+      "at": "2026-10-06T14:25:01+00:00"
     },
     {
       "n": 3,
-      "text": "The proof already exists, committed red 5 of 5 at 34a8b36e: cairn/devices/tester/proofs/test_an_unbuildable_network_seal_refuses_the_run.py, teeth named in its PROVES for this ticket (1 test_run_proof_refuses_before_the_subject_runs, 2 test_cairn_test_seal_refuses_and_persists_nothing, 3 test_the_hollow_exits_2_instead_of_measuring, 4 test_the_charter_says_exec_leaves_the_network_open) plus a composite. Do not rewrite it; build until it prints green 5 of 5 under bin/cairn test.",
+      "text": "In TesterDevice.run_proof, replace the branch 'if iso.seals_network and not available: seal = Seal(\"indeterminate\", ...)' with a call to refuse_unbuildable(iso) placed right after iso = get_isolation(isolation), before any seal check, snapshot, run or persist; the else arm (seal = iso.check_seal(...)) becomes unconditional, and the now-unused 'available, why = iso.available()' line in run_proof goes. refuse_unbuildable is the module-level function of D2, defined in the same file (cairn/devices/tester/device.py) above class TesterDevice, so it is in scope when run_proof calls it.",
       "by": "cc",
-      "step": "unlisted: write the proof test_an_unbuildable_network_seal_refuses_the_run.py with four teeth",
+      "step": "consolidated from D7",
       "source": "rehearsal",
-      "at": "2026-10-06T14:17:35+00:00"
+      "at": "2026-10-06T14:17:36+00:00"
     },
     {
       "n": 4,
-      "text": "In cairn/devices/tester/device.py, module level: class SealUnavailable(ValueError), and a function refuse_unbuildable(iso) that calls iso.available() and, when iso.seals_network and not available, raises SealUnavailable(f\"cairn test: refused — the {iso.name} seal this proof asks for cannot be built here ({why}); the proof was not run\"). The words 'cannot be built' and 'not run' are what tooth 1 reads. In TesterDevice.run_proof, replace the branch 'if iso.seals_network and not available: seal = Seal(\"indeterminate\", ...)' with a call to refuse_unbuildable(iso) placed right after iso = get_isolation(isolation), before any seal check, snapshot, run or persist; the else arm (seal = iso.check_seal(...)) becomes unconditional.",
+      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. {rel} is the existing local rel = _rel(proof), assigned at the top of the same for-proof loop and already used by the neighbouring REFUSED print; it stays rel, not refusal. The existing exit 1 if (reds or refused) gives the nonzero exit.",
       "by": "cc",
-      "step": "unlisted: define SealUnavailable as a ValueError and raise it in run_proof when iso.seals_network and not iso.available()",
+      "step": "consolidated from D22",
       "source": "rehearsal",
-      "at": "2026-10-06T14:17:35+00:00"
+      "at": "2026-10-06T14:25:01+00:00"
     },
     {
       "n": 5,
-      "text": "In cairn/devices/tester/device.py, module level: class SealUnavailable(ValueError), and a function refuse_unbuildable(iso) that calls iso.available() and, when iso.seals_network and not available, raises SealUnavailable(f\"cairn test: refused — the {iso.name} seal this proof asks for cannot be built here ({why}); the proof was not run\"). The words 'cannot be built' and 'not run' are what tooth 1 reads.",
+      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {rel: seal_isolation(repo_root / rel) for rel in proofs} (line 807; seal_isolation returns an isolation NAME string such as 'netns' or 'none', so depth.values() are strings) and before run_all() runs any proof: for name in sorted(set(depth.values())): try: refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation(name) is cairn.devices.tester.isolation.get_isolation and turns the name into the isolation instance refuse_unbuildable takes; import refuse_unbuildable and SealUnavailable from cairn.devices.tester.device inside measure(), beside its existing TesterDevice import.",
       "by": "cc",
-      "step": "unlisted: define SealUnavailable exception",
+      "step": "consolidated from D25",
       "source": "rehearsal",
-      "at": "2026-10-06T14:17:35+00:00"
+      "at": "2026-10-06T14:33:32+00:00"
     },
     {
       "n": 6,
-      "text": "In TesterDevice.run_proof, replace the branch 'if iso.seals_network and not available: seal = Seal(\"indeterminate\", ...)' with a call to refuse_unbuildable(iso) placed right after iso = get_isolation(isolation), before any seal check, snapshot, run or persist; the else arm (seal = iso.check_seal(...)) becomes unconditional.",
-      "by": "cc",
-      "step": "unlisted: Edit device.py to raise SealUnavailable in run_proof",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 7,
-      "text": "In TesterDevice.run_proof, replace the branch 'if iso.seals_network and not available: seal = Seal(\"indeterminate\", ...)' with a call to refuse_unbuildable(iso) placed right after iso = get_isolation(isolation), before any seal check, snapshot, run or persist; the else arm (seal = iso.check_seal(...)) becomes unconditional.",
-      "by": "cc",
-      "step": "unlisted: raise SealUnavailable in TesterDevice.run_proof",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 8,
-      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. The existing exit 1 if (reds or refused) gives the nonzero exit.",
-      "by": "cc",
-      "step": "unlisted: catch SealUnavailable in cairn/devices/tester/cli.py and route it to the REFUSED lane",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 9,
-      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. The existing exit 1 if (reds or refused) gives the nonzero exit.",
-      "by": "cc",
-      "step": "unlisted: Edit cli.py to catch SealUnavailable and report REFUSED exit path",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 10,
-      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. The existing exit 1 if (reds or refused) gives the nonzero exit.",
-      "by": "cc",
-      "step": "unlisted: handle SealUnavailable in cairn/devices/tester/cli.py",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 11,
-      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {...} (line 807) and before run_all() runs any proof, for each distinct isolation name in depth.values(): try refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation comes from cairn.devices.tester.isolation.",
-      "by": "cc",
-      "step": "unlisted: Edit hollow.py to catch SealUnavailable and exit 2",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 12,
-      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {...} (line 807) and before run_all() runs any proof, for each distinct isolation name in depth.values(): try refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation comes from cairn.devices.tester.isolation.",
-      "by": "cc",
-      "step": "unlisted: handle SealUnavailable in cairn/devices/tester/hollow.py",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 13,
-      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {...} (line 807) and before run_all() runs any proof, for each distinct isolation name in depth.values(): try refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation comes from cairn.devices.tester.isolation.",
-      "by": "cc",
-      "step": "unlisted: handle SealUnavailable in cairn/devices/tester/hollow.py to produce exit 2 as HollowUnmeasurable",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 14,
-      "text": "Replace the --exec entry in cairn/devices/tester/intention+why.json public_interface with exactly: \"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c instance-sealed, network open — the instance seal only, no network seal; exit passes through, 2 when no seal)\". Write it through bin/cairn artifact write <absolute path> --verb cast --why '67af8b743a63 clause 4' --from <file>, then run cairn/tools/intentions_model_compiler/recompile_gate.sh.",
-      "by": "cc",
-      "step": "unlisted: Edit intention+why.json public_interface --exec entry to say network open",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:36+00:00"
-    },
-    {
-      "n": 15,
-      "text": "Replace the --exec entry in cairn/devices/tester/intention+why.json public_interface with exactly: \"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c instance-sealed, network open — the instance seal only, no network seal; exit passes through, 2 when no seal)\". Write it through bin/cairn artifact write <absolute path> --verb cast --why '67af8b743a63 clause 4' --from <file>, then run cairn/tools/intentions_model_compiler/recompile_gate.sh.",
-      "by": "cc",
-      "step": "unlisted: update tester charter --exec entry",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:37+00:00"
-    },
-    {
-      "n": 16,
-      "text": "Replace the --exec entry in cairn/devices/tester/intention+why.json public_interface with exactly: \"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c instance-sealed, network open — the instance seal only, no network seal; exit passes through, 2 when no seal)\". Write it through bin/cairn artifact write <absolute path> --verb cast --why '67af8b743a63 clause 4' --from <file>, then run cairn/tools/intentions_model_compiler/recompile_gate.sh.",
-      "by": "cc",
-      "step": "unlisted: update the public_interface entry for cairn test --exec in intention+why.json to say instance-sealed with network open",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:37+00:00"
-    },
-    {
-      "n": 17,
-      "text": "The ticket's decisions are the lines disposed here, each recorded by this rehearsal's --decide: D1 define SealUnavailable+refuse_unbuildable in device.py; D2 raise it in run_proof; D3 cli REFUSED arm; D4 hollow converts to HollowUnmeasurable up front; D5 charter --exec wording; D6 the proof stands as committed.",
-      "by": "cc",
-      "step": "unlisted: the ticket carries no explicit decisions field",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:17:37+00:00"
-    },
-    {
-      "n": 18,
-      "text": "In cairn/devices/tester/device.py, module level: class SealUnavailable(ValueError), and a function refuse_unbuildable(iso) whose body is: available, why = iso.available(); if iso.seals_network and not available: raise SealUnavailable(f\"cairn test: refused — the {iso.name} seal this proof asks for cannot be built here ({why}); the proof was not run\"). The {why} in that f-string is the second value iso.available() returns (the reason string isolation.py already writes). The words 'cannot be built' and 'not run' are what tooth 1 reads.",
-      "by": "cc",
-      "step": "D4",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:25:00+00:00"
-    },
-    {
-      "n": 19,
-      "text": "In cairn/devices/tester/device.py, module level: class SealUnavailable(ValueError), and a function refuse_unbuildable(iso) whose body is: available, why = iso.available(); if iso.seals_network and not available: raise SealUnavailable(f\"cairn test: refused — the {iso.name} seal this proof asks for cannot be built here ({why}); the proof was not run\"). The {why} in that f-string is the second value iso.available() returns (the reason string isolation.py already writes). The words 'cannot be built' and 'not run' are what tooth 1 reads.",
-      "by": "cc",
-      "step": "D5",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:25:01+00:00"
-    },
-    {
-      "n": 20,
-      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. {rel} is the existing local rel = _rel(proof), assigned at the top of the same for-proof loop and already used by the neighbouring REFUSED print; it stays rel, not refusal. The existing exit 1 if (reds or refused) gives the nonzero exit.",
-      "by": "cc",
-      "step": "D8",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:25:01+00:00"
-    },
-    {
-      "n": 21,
-      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. {rel} is the existing local rel = _rel(proof), assigned at the top of the same for-proof loop and already used by the neighbouring REFUSED print; it stays rel, not refusal. The existing exit 1 if (reds or refused) gives the nonzero exit.",
-      "by": "cc",
-      "step": "D9",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:25:01+00:00"
-    },
-    {
-      "n": 22,
-      "text": "In cairn/devices/tester/cli.py, import SealUnavailable from cairn.devices.tester.device and add a separate 'except SealUnavailable as refusal:' arm beside the existing (SealDowngradeRefused, SealConversionRefused) arm around tester.run_proof: print(f\"  REFUSED {rel}  (not run: the seal it asks for cannot be built here)\"), refused.append((proof, str(refusal))), continue. {rel} is the existing local rel = _rel(proof), assigned at the top of the same for-proof loop and already used by the neighbouring REFUSED print; it stays rel, not refusal. The existing exit 1 if (reds or refused) gives the nonzero exit.",
-      "by": "cc",
-      "step": "D10",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:25:01+00:00"
-    },
-    {
-      "n": 23,
-      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {rel: seal_isolation(repo_root / rel) for rel in proofs} (line 807; seal_isolation returns an isolation NAME string such as 'netns' or 'none', so depth.values() are strings) and before run_all() runs any proof: for name in sorted(set(depth.values())): try: refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation(name) is cairn.devices.tester.isolation.get_isolation and turns the name into the isolation instance refuse_unbuildable takes; import refuse_unbuildable and SealUnavailable from cairn.devices.tester.device inside measure(), beside its existing TesterDevice import.",
-      "by": "cc",
-      "step": "D11",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:33:31+00:00"
-    },
-    {
-      "n": 24,
-      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {rel: seal_isolation(repo_root / rel) for rel in proofs} (line 807; seal_isolation returns an isolation NAME string such as 'netns' or 'none', so depth.values() are strings) and before run_all() runs any proof: for name in sorted(set(depth.values())): try: refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation(name) is cairn.devices.tester.isolation.get_isolation and turns the name into the isolation instance refuse_unbuildable takes; import refuse_unbuildable and SealUnavailable from cairn.devices.tester.device inside measure(), beside its existing TesterDevice import.",
-      "by": "cc",
-      "step": "D12",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:33:31+00:00"
-    },
-    {
-      "n": 25,
-      "text": "HollowUnmeasurable is the existing RuntimeError class at cairn/devices/tester/hollow.py:132; cli.py's --hollow handler already prints it to stderr and returns 2. In measure(), right after depth = {rel: seal_isolation(repo_root / rel) for rel in proofs} (line 807; seal_isolation returns an isolation NAME string such as 'netns' or 'none', so depth.values() are strings) and before run_all() runs any proof: for name in sorted(set(depth.values())): try: refuse_unbuildable(get_isolation(name)) except SealUnavailable as e: raise HollowUnmeasurable(f\"hollow: {e}\") from e. get_isolation(name) is cairn.devices.tester.isolation.get_isolation and turns the name into the isolation instance refuse_unbuildable takes; import refuse_unbuildable and SealUnavailable from cairn.devices.tester.device inside measure(), beside its existing TesterDevice import.",
-      "by": "cc",
-      "step": "D13",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:33:32+00:00"
-    },
-    {
-      "n": 26,
       "text": "Write the new tester charter via the artifact door, never by editing the file directly: (a) python3 reads cairn/devices/tester/intention+why.json, replaces the one public_interface string containing '--exec' with exactly \"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c instance-sealed, network open — the instance seal only, no network seal; exit passes through, 2 when no seal)\", and writes the whole JSON (indent=2, ensure_ascii=False, trailing newline) to a scratch file; (b) bin/cairn artifact write /home/akien/dev/src/cairn/cairn/devices/tester/intention+why.json --verb cast --why '67af8b743a63 clause 4' --from <that scratch file> — the first path is the record being replaced, --from is the new bytes; (c) run cairn/tools/intentions_model_compiler/recompile_gate.sh.",
       "by": "cc",
-      "step": "D14",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:33:32+00:00"
-    },
-    {
-      "n": 27,
-      "text": "Write the new tester charter via the artifact door, never by editing the file directly: (a) python3 reads cairn/devices/tester/intention+why.json, replaces the one public_interface string containing '--exec' with exactly \"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c instance-sealed, network open — the instance seal only, no network seal; exit passes through, 2 when no seal)\", and writes the whole JSON (indent=2, ensure_ascii=False, trailing newline) to a scratch file; (b) bin/cairn artifact write /home/akien/dev/src/cairn/cairn/devices/tester/intention+why.json --verb cast --why '67af8b743a63 clause 4' --from <that scratch file> — the first path is the record being replaced, --from is the new bytes; (c) run cairn/tools/intentions_model_compiler/recompile_gate.sh.",
-      "by": "cc",
-      "step": "D15",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:33:32+00:00"
-    },
-    {
-      "n": 28,
-      "text": "Write the new tester charter via the artifact door, never by editing the file directly: (a) python3 reads cairn/devices/tester/intention+why.json, replaces the one public_interface string containing '--exec' with exactly \"cairn test --exec '<command>' [--timeout N]  (TesterDevice.run_exec: bash -c instance-sealed, network open — the instance seal only, no network seal; exit passes through, 2 when no seal)\", and writes the whole JSON (indent=2, ensure_ascii=False, trailing newline) to a scratch file; (b) bin/cairn artifact write /home/akien/dev/src/cairn/cairn/devices/tester/intention+why.json --verb cast --why '67af8b743a63 clause 4' --from <that scratch file> — the first path is the record being replaced, --from is the new bytes; (c) run cairn/tools/intentions_model_compiler/recompile_gate.sh.",
-      "by": "cc",
-      "step": "D16",
-      "source": "rehearsal",
-      "at": "2026-10-06T14:33:32+00:00"
-    },
-    {
-      "n": 29,
-      "text": "Index of this ticket's decisions, kept current: D1-D3 the proof stands as committed at 34a8b36e; D4-D5 SealUnavailable + refuse_unbuildable in device.py; D6-D7 run_proof calls refuse_unbuildable; D8-D10 cli.py REFUSED arm; D11-D13 hollow converts to HollowUnmeasurable before any proof runs; D14-D16 charter --exec wording through the artifact door. Any later D<n> amends the decision with the same subject; where two say the same, the higher number stands.",
-      "by": "cc",
-      "step": "D17",
+      "step": "consolidated from D28",
       "source": "rehearsal",
       "at": "2026-10-06T14:33:32+00:00"
     }
+  ],
+  "notes": [
+    "2026-10-06: 29 rehearsal decisions (three passes, each --decide appending) folded to one per subject, the newest text kept verbatim; a cold read was flagging superseded D4-D16 asking for what D18-D29 already said."
   ]
 }
