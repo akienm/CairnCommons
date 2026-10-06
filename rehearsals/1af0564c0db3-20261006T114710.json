@@ -1,0 +1,317 @@
+{
+  "ticket": "1af0564c0db3",
+  "record": "rehearsals/1af0564c0db3-20261006T114710.json",
+  "at": "2026-10-06T11:47:10+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "8fa6cafb39a1fded46f5254533296f57e9344a19e334fa453a3cf34b3724090a",
+  "ticket_sha256_at_read": "8fa6cafb39a1fded46f5254533296f57e9344a19e334fa453a3cf34b3724090a",
+  "design_sha256": "94a3d57506653c29ffb4c7ce13ad3ebf65ec520d8d8f65534110bd85eaa20de5",
+  "reads": [
+    {
+      "ticket": "1af0564c0db3",
+      "ticket_sha256": "8fa6cafb39a1fded46f5254533296f57e9344a19e334fa453a3cf34b3724090a",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: write bin/proofs/test_proof_gate.py with test teeth implementing the 7 falsifier clauses",
+          "state": "builds_under_assumption",
+          "assumption": "The proof structure follows Cairn's convention where each falsifier clause maps to a test tooth, with the teeth initially all red before the gate exists",
+          "would_settle": "Describe the structure of a Cairn proof file and how falsifier clauses become test teeth; or reference test_delete_gate.py as the template to follow",
+          "confidence": 0.4
+        },
+        {
+          "step": "unlisted: write bin/cmd/proofgate and register in .claude/settings.json",
+          "state": "builds_under_assumption",
+          "assumption": "The pseudocode in the 'how' section describing hookSpecificOutput {hookEventName: PreToolUse, permissionDecision: allow, permissionDecisionReason, additionalContext, updatedInput: {command}} is sufficient to infer the exact JSON structure expected by Claude Code's hook API",
+          "would_settle": "Provide the exact hookSpecificOutput JSON structure as a concrete example, or confirm the Claude Code hooks documentation referenced (code.claude.com/docs/en/hooks) fully specifies the format",
+          "confidence": 0.65
+        }
+      ]
+    },
+    {
+      "ticket": "1af0564c0db3",
+      "ticket_sha256": "8fa6cafb39a1fded46f5254533296f57e9344a19e334fa453a3cf34b3724090a",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: write bin/proofs/test_proof_gate.py with 7 test functions corresponding to the 7 falsifier clauses",
+          "state": "builds_under_assumption",
+          "assumption": "test_delete_gate.py (sibling proof in bin/proofs/) demonstrates a readable pattern for proof structure; proof_coverage.teeth_printed() is available and works as described in the validate chart; the test can verify gate behavior by checking file existence (bin/cmd/proofgate) and attempting to invoke it",
+          "would_settle": "The proof file must have 7 test functions with names matching the validate chart (test_python3_by_path_is_rewritten_under_the_seal, test_pytest_in_any_spelling_is_refused_with_the_way_through, test_cairn_test_reads_and_other_python_pass_untouched, test_settings_register_the_gate_under_pretooluse_bash, test_every_census_command_is_refused_or_rewritten_never_bare, test_a_rewritten_proof_runs_under_the_instance_seal, test_quotes_and_pipes_survive_the_rewrite), each implementing one of the 7 falsifier clauses; when run before the gate exists, all 7 teeth fail red",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: write bin/cmd/proofgate and register in .claude/settings.json",
+          "state": "builds_under_assumption",
+          "assumption": "bin/cmd/deletegate exists on disk and is readable (shows gate pattern: reads stdin JSON {tool_name, tool_input.command}, exits 0 or 2, returns appropriate output); .claude/settings.json exists and has a PreToolUse Bash section with deletegate already registered; Claude Code's hookSpecificOutput format is as documented in the ticket reference to code.claude.com/docs/en/hooks (though that external source is not provided here)",
+          "would_settle": "bin/cmd/proofgate must read stdin JSON and: (a) exit 2 with stderr naming 'bin/cairn test' if command runs pytest/py.test/python -m pytest; (b) exit 0 with hookSpecificOutput {hookEventName: PreToolUse, permissionDecision: allow, updatedInput: {command: '<repo>/bin/cairn test --exec ' + shlex.quote(original)}} if command runs a file under proofs/ directory by python (including env/timeout/strace prefixes, cd+relative, module form, loop over glob); (c) exit 0 silent for cairn test, reads, and other python. Register the gate in .claude/settings.json under PreToolUse matcher Bash using the same structure as deletegate",
+          "confidence": 0.6
+        }
+      ]
+    },
+    {
+      "ticket": "1af0564c0db3",
+      "ticket_sha256": "8fa6cafb39a1fded46f5254533296f57e9344a19e334fa453a3cf34b3724090a",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: Write the proof red (bin/proofs/test_proof_gate.py) with 8 teeth matching falsifier criteria",
+          "state": "builds_under_assumption",
+          "assumption": "Test framework structure and output format can be inferred from the sibling proof test_delete_gate.py located in the same directory",
+          "would_settle": "State the test file format, naming convention for teeth, and expected output structure that the proof harness reads",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: Write bin/cmd/proofgate handling pytest/python-path/other cases; register in .claude/settings.json PreToolUse Bash matcher",
+          "state": "builds_under_assumption",
+          "assumption": "Claude Code's PreToolUse hook provides stdin JSON as {tool_name, tool_input.command} and accepts hookSpecificOutput with the exact JSON structure specified in the ticket",
+          "would_settle": "Provide bin/cmd/deletegate implementation as reference; confirm the exact stdin JSON format and hookSpecificOutput structure that Claude Code expects; clarify how <repo> is computed",
+          "confidence": 0.57
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: write bin/cmd/proofgate and register in .claude/settings.json",
+      "reads": [
+        1,
+        2
+      ],
+      "assumption": [
+        "The pseudocode in the 'how' section describing hookSpecificOutput {hookEventName: PreToolUse, permissionDecision: allow, permissionDecisionReason, additionalContext, updatedInput: {command}} is sufficient to infer the exact JSON structure expected by Claude Code's hook API",
+        "bin/cmd/deletegate exists on disk and is readable (shows gate pattern: reads stdin JSON {tool_name, tool_input.command}, exits 0 or 2, returns appropriate output); .claude/settings.json exists and has a PreToolUse Bash section with deletegate already registered; Claude Code's hookSpecificOutput format is as documented in the ticket reference to code.claude.com/docs/en/hooks (though that external source is not provided here)"
+      ],
+      "would_settle": [
+        "Provide the exact hookSpecificOutput JSON structure as a concrete example, or confirm the Claude Code hooks documentation referenced (code.claude.com/docs/en/hooks) fully specifies the format",
+        "bin/cmd/proofgate must read stdin JSON and: (a) exit 2 with stderr naming 'bin/cairn test' if command runs pytest/py.test/python -m pytest; (b) exit 0 with hookSpecificOutput {hookEventName: PreToolUse, permissionDecision: allow, updatedInput: {command: '<repo>/bin/cairn test --exec ' + shlex.quote(original)}} if command runs a file under proofs/ directory by python (including env/timeout/strace prefixes, cd+relative, module form, loop over glob); (c) exit 0 silent for cairn test, reads, and other python. Register the gate in .claude/settings.json under PreToolUse matcher Bash using the same structure as deletegate"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Write bin/cmd/proofgate handling pytest/python-path/other cases; register in .claude/settings.json PreToolUse Bash matcher",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "Claude Code's PreToolUse hook provides stdin JSON as {tool_name, tool_input.command} and accepts hookSpecificOutput with the exact JSON structure specified in the ticket"
+      ],
+      "would_settle": [
+        "Provide bin/cmd/deletegate implementation as reference; confirm the exact stdin JSON format and hookSpecificOutput structure that Claude Code expects; clarify how <repo> is computed"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write bin/proofs/test_proof_gate.py with 7 test functions corresponding to the 7 falsifier clauses",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "test_delete_gate.py (sibling proof in bin/proofs/) demonstrates a readable pattern for proof structure; proof_coverage.teeth_printed() is available and works as described in the validate chart; the test can verify gate behavior by checking file existence (bin/cmd/proofgate) and attempting to invoke it"
+      ],
+      "would_settle": [
+        "The proof file must have 7 test functions with names matching the validate chart (test_python3_by_path_is_rewritten_under_the_seal, test_pytest_in_any_spelling_is_refused_with_the_way_through, test_cairn_test_reads_and_other_python_pass_untouched, test_settings_register_the_gate_under_pretooluse_bash, test_every_census_command_is_refused_or_rewritten_never_bare, test_a_rewritten_proof_runs_under_the_instance_seal, test_quotes_and_pipes_survive_the_rewrite), each implementing one of the 7 falsifier clauses; when run before the gate exists, all 7 teeth fail red"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write bin/proofs/test_proof_gate.py with test teeth implementing the 7 falsifier clauses",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The proof structure follows Cairn's convention where each falsifier clause maps to a test tooth, with the teeth initially all red before the gate exists"
+      ],
+      "would_settle": [
+        "Describe the structure of a Cairn proof file and how falsifier clauses become test teeth; or reference test_delete_gate.py as the template to follow"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Write the proof red (bin/proofs/test_proof_gate.py) with 8 teeth matching falsifier criteria",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "Test framework structure and output format can be inferred from the sibling proof test_delete_gate.py located in the same directory"
+      ],
+      "would_settle": [
+        "State the test file format, naming convention for teeth, and expected output structure that the proof harness reads"
+      ]
+    },
+    {
+      "kind": "assumption_differs",
+      "step": "unlisted: write bin/cmd/proofgate and register in .claude/settings.json",
+      "reads": [
+        1,
+        2
+      ],
+      "assumption": [
+        "The pseudocode in the 'how' section describing hookSpecificOutput {hookEventName: PreToolUse, permissionDecision: allow, permissionDecisionReason, additionalContext, updatedInput: {command}} is sufficient to infer the exact JSON structure expected by Claude Code's hook API",
+        "bin/cmd/deletegate exists on disk and is readable (shows gate pattern: reads stdin JSON {tool_name, tool_input.command}, exits 0 or 2, returns appropriate output); .claude/settings.json exists and has a PreToolUse Bash section with deletegate already registered; Claude Code's hookSpecificOutput format is as documented in the ticket reference to code.claude.com/docs/en/hooks (though that external source is not provided here)"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write bin/cmd/proofgate and register in .claude/settings.json",
+      "reads": [
+        3
+      ],
+      "present_in": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write bin/cmd/proofgate handling pytest/python-path/other cases; register in .claude/settings.json PreToolUse Bash matcher",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write bin/proofs/test_proof_gate.py with 7 test functions corresponding to the 7 falsifier clauses",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write bin/proofs/test_proof_gate.py with test teeth implementing the 7 falsifier clauses",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write the proof red (bin/proofs/test_proof_gate.py) with 8 teeth matching falsifier criteria",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write bin/cmd/proofgate and register in .claude/settings.json",
+      "reads": [
+        1,
+        2
+      ],
+      "would_settle": [
+        "Provide the exact hookSpecificOutput JSON structure as a concrete example, or confirm the Claude Code hooks documentation referenced (code.claude.com/docs/en/hooks) fully specifies the format",
+        "bin/cmd/proofgate must read stdin JSON and: (a) exit 2 with stderr naming 'bin/cairn test' if command runs pytest/py.test/python -m pytest; (b) exit 0 with hookSpecificOutput {hookEventName: PreToolUse, permissionDecision: allow, updatedInput: {command: '<repo>/bin/cairn test --exec ' + shlex.quote(original)}} if command runs a file under proofs/ directory by python (including env/timeout/strace prefixes, cd+relative, module form, loop over glob); (c) exit 0 silent for cairn test, reads, and other python. Register the gate in .claude/settings.json under PreToolUse matcher Bash using the same structure as deletegate"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write bin/cmd/proofgate handling pytest/python-path/other cases; register in .claude/settings.json PreToolUse Bash matcher",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Provide bin/cmd/deletegate implementation as reference; confirm the exact stdin JSON format and hookSpecificOutput structure that Claude Code expects; clarify how <repo> is computed"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write bin/proofs/test_proof_gate.py with 7 test functions corresponding to the 7 falsifier clauses",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The proof file must have 7 test functions with names matching the validate chart (test_python3_by_path_is_rewritten_under_the_seal, test_pytest_in_any_spelling_is_refused_with_the_way_through, test_cairn_test_reads_and_other_python_pass_untouched, test_settings_register_the_gate_under_pretooluse_bash, test_every_census_command_is_refused_or_rewritten_never_bare, test_a_rewritten_proof_runs_under_the_instance_seal, test_quotes_and_pipes_survive_the_rewrite), each implementing one of the 7 falsifier clauses; when run before the gate exists, all 7 teeth fail red"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write bin/proofs/test_proof_gate.py with test teeth implementing the 7 falsifier clauses",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Describe the structure of a Cairn proof file and how falsifier clauses become test teeth; or reference test_delete_gate.py as the template to follow"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write the proof red (bin/proofs/test_proof_gate.py) with 8 teeth matching falsifier criteria",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "State the test file format, naming convention for teeth, and expected output structure that the proof harness reads"
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1246326,
+        "duration_ms": 171561,
+        "is_error": false,
+        "session_id": "82a4c5fe-56f3-43de-815a-64d64a7184f2"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1062766,
+        "duration_ms": 132358,
+        "is_error": false,
+        "session_id": "9c6d60f1-2c75-4817-9643-c54e7e754802"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1074316,
+        "duration_ms": 115350,
+        "is_error": false,
+        "session_id": "5cc0aeaf-d3a7-45cd-a5fa-9139d43c3cb9"
+      }
+    ],
+    "cost_usd": 0.338341,
+    "duration_ms": 419269,
+    "rendered_chars": 26642,
+    "by": null
+  },
+  "divergence": null
+}
