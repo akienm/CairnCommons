@@ -1,0 +1,50 @@
+{
+  "id": "8e37bf2be2dc",
+  "title": "a-watch-stands-while-its-probe-is-installed",
+  "date": "2026-10-06",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A ticket's watch stands while its probe is installed — at FIXME or PROVEME with an armed probe, as well as at PROVED or WATCHME — and watchme_spec answers that question for every reader.",
+  "why": "Measured 2026-10-06: 7a1265439f54's WATCHME crossing refused with [component_color] proof test_cairn_probes_report_to_the_watch.py sealed green (actual: red). That proof (f1da5944464e) means 'every standing cairn probe reports to harbor_master's watch verb', and decided 'standing' by hand as PROVED/WATCHME only. 7a12, the only ticket naming a probe under cairn/devices/cairn/probes/, was sent to FIXME BY ITS OWN WATCH and fixed forward to PROVEME with the probe installed and firing, so the population read empty: a deadlock, and a population bug — a probe whose ticket is at FIXME is still installed and still firing, and got there through the watch, so counting only resting tickets drops the very probes most likely to be red. The widening can only ADD members, never remove one; the 'population vanished' tooth stays exactly as strict. Refused alternatives: the gate special-casing one proof for one crossing (a skip rule), and widening inside the proof (the hollow refuses a build that lives only in a proof file). What a WATCHME spec means is watchme_spec's question and armed_error already measures 'installed', so the reader lives there (agreed with the peer akiendelllinux_cc_0, option (i)). harbor_master's rest check is left alone: if it should adopt stands_watch that is its own ticket, cast only if a measurement shows the two disagree in a way that matters. The lived symptom: a probe that caught a red vanishes from the count of probes reporting, and the ticket it caught cannot finish its repair.",
+  "traces_to": "Law 1 (what a WATCHME spec means is answered once, at watchme_spec, not re-decided in each proof); Law 9 (the probes most likely red are the ones off rest; dropping them reads a vanished population as green-or-deadlock); RULE 1 (the reader is tools/base's public interface, consumed by the cairn device's proof)",
+  "how": "Add stands_watch(ticket, spec, *, root) to cairn/tools/base/watchme_spec.py: True when the ticket's cursor is PROVED or WATCHME (unconditionally, as the hand rule counted), or FIXME/PROVEME with armed_error(spec, root=root) is None; False otherwise. Proof cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py, written red 0/4. Afterwards, as its own reseal, the cairn device's proof consumes stands_watch through the public interface.",
+  "falsifier": "Done when the proof's four teeth pass: (1) FIXME and PROVEME tickets with an armed probe stand; (2) PROVED and WATCHME stand unconditionally, armed or not; (3) FIXME/PROVEME with an unarmed or absent probe do not, nor TICKETME/BUILDME with an armed one; (4) over the real corpus every (ticket, spec) the PROVED/WATCHME rule counted still stands. And test_watchme_spec.py stays green. Wrong intent if a reader other than the population proof needs a different meaning of 'stands', or if harbor_master's rest check has to change for this to hold.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (cairn/devices/cairn/proofs/test_cairn_probes_report_to_the_watch.py) the reader's one consumer is the cairn device's population proof, whose seal component_color reds on any drift; the reader is a pure function of the ticket and the berth on disk",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261006T022459-ff95f14681a1.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261006T022441-ace1c05d9b54.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one function in one file of one component, with one proof on disk",
+  "questions": [],
+  "build_patch": "diff --git a/cairn/tools/base/watchme_spec.py b/cairn/tools/base/watchme_spec.py\nindex 105989e7..3491cfb5 100644\n--- a/cairn/tools/base/watchme_spec.py\n+++ b/cairn/tools/base/watchme_spec.py\n@@ -314,6 +314,33 @@ def absent_probes(ticket: dict, *, root: Path | str = _REPO_ROOT) -> list[str]:\n     return out\n \n \n+def stands_watch(ticket: dict, spec: dict, *, root: Path | str = _REPO_ROOT) -> bool:\n+    \"\"\"DOES THIS SPEC'S WATCH STAND — is its probe in the population that reports to the watch?\n+\n+    Ticket 8e37bf2be2dc, 2026-10-06. A ticket at PROVED or WATCHME stands unconditionally, as\n+    the hand rule counted it. A ticket at FIXME or PROVEME stands when ``armed_error`` finds its\n+    probe installed: it got off rest THROUGH the watch, the probe is still firing, and dropping\n+    it drops exactly the probes most likely to be red. Measured: the cairn device's population\n+    proof counted only resting tickets, so 7a1265439f54 — sent to FIXME by its own watch —\n+    emptied the population and could not cross into the WATCHME that would refill it. Anywhere\n+    else (before the build has crossed BUILDME) the watch does not stand yet.\n+\n+    What a WATCHME spec means is this module's question, so readers ask here rather than\n+    re-deciding it (Law 1). harbor_master's rest check is a different question — which ticket\n+    a finding may move — and does not read this.\"\"\"\n+    from cairn.tools.base.transitions import parse_workflow\n+\n+    try:\n+        here = parse_workflow(ticket[\"workflow_and_state\"]).here\n+    except Exception:  # noqa: BLE001 — a ticket with no parseable cursor stands nowhere\n+        return False\n+    if here in (\"PROVED\", \"WATCHME\"):\n+        return True\n+    if here in (\"FIXME\", \"PROVEME\"):\n+        return armed_error(spec, root=root) is None\n+    return False\n+\n+\n def require_watchme_spec(ticket: dict) -> None:\n     \"\"\"The refusing face, for a caller that wants the raise rather than the text.\"\"\"\n     err = watchme_spec_error(ticket)\n",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-06",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only cairn/tools/base/watchme_spec.py: it adds stands_watch(ticket, spec, *, root=_REPO_ROOT) -> bool just before require_watchme_spec. The function parses the cursor with transitions.parse_workflow(ticket['workflow_and_state']).here (False if that raises); returns True at PROVED or WATCHME; at FIXME or PROVEME returns armed_error(spec, root=root) is None; False anywhere else. No other code changes; harbor_master is not touched."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-06",
+      "text": "D2: SETTLED: the proof cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py is already on disk, committed red 0/4 at 91460ab1. After the patch `python3 cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py` shows 4 passed and exits 0. Regression: `python3 cairn/tools/base/proofs/test_watchme_spec.py` exits 0 (18/18 green)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-06",
+      "text": "D3: SETTLED: after the proof and regression pass, commit with explicit paths: `git add cairn/tools/base/watchme_spec.py` plus whatever history/state/journal files the BUILDME crossing wrote under cairn/tools/base (as `git status --short cairn/tools/base` lists them), then `git commit -m '8e37bf2be2dc: BUILDME — stands_watch reads an installed probe off rest as standing'` with the regression result (`test_watchme_spec.py 18/18 green`) as one line in the message body. The cairn device's proof switching to stands_watch is a later reseal, not this build."
+    }
+  ],
+  "cast": "2026-10-06",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261006T022602-e40b24be43da.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 54988e8e37f0 .. validate e40b24be43da, each learned)"
+  }
+}
