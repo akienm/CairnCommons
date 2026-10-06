@@ -80,8 +80,24 @@
       "step": "D4",
       "source": "rehearsal",
       "at": "2026-10-06T12:04:48+00:00"
+    },
+    {
+      "n": 8,
+      "text": "Segmenting is deliberately NOT quote-aware (a hook stays short of a shell parser, as bin/cmd/deletegate explains): the raw text is split by the regex '&&|\\|\\||[;|\\n]|\\bdo\\b|\\bthen\\b', quotes and escapes included; each segment is then tokenized with shlex.split(segment, comments=False), falling back to segment.split() on a ValueError (an unbalanced quote left by the cut). $var and $(...) are never expanded — a token starting with $ counts only by the glob rule in D7. A quote containing ; can only ADD a rewrite (the rewritten command still runs whole under the seal), never remove one, because the rewrite carries the original whole text.",
+      "by": "cc",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-06T12:22:52+00:00"
+    },
+    {
+      "n": 9,
+      "text": "CORRECTION to D8, measured 2026-10-06: a quoted ; or | CAN remove a rewrite. X=\"a;b\" python3 cairn/x/proofs/test_y.py passes bare (exit 0, no output), because the cut lands inside the quotes and neither segment's command word is python. The built gate keeps the D8 segmenting as is; this miss is recorded, not handled. It sits outside the falsifier's named spellings, and all 364 x 4 census spellings rewrite or refuse.",
+      "by": "cc",
+      "step": "D8",
+      "source": "rehearsal",
+      "at": "2026-10-06T12:23:21+00:00"
     }
   ],
-  "rehearsal": "rehearsals/1af0564c0db3-20261006T121300.json",
+  "rehearsal": "rehearsals/1af0564c0db3-20261006T124216.json",
   "measured_at_build": "2026-10-06. (1) Census that bore the ticket (parent dda0e72b9c67): every proof run under raw pytest with strace -f, 88 of 290 wrote into live ~/.cairn, 2705 paths. (2) proofgate judge() dry-run over every proof in the repo (364 files under proofs/): 'python3 <proof>' rewritten 364/364, 'pytest <proof>' refused 364/364, 'cat|sed|grep <proof>' untouched 364/364, 0 bare. (3) bin/cairn test bin/proofs/test_proof_gate.py test_delete_gate.py test_artifact_gate.py: 3 green, 0 red (diagnostic). (4) Live hook, n=1: after adding the PreToolUse entry to .claude/settings.json mid-session, a Bash call whose text the gate rewrites when fed directly ran BARE in the same session (CAIRN_TESTER_INSTANCE_SEALED unset) — Claude Code does not reload hooks from settings.json mid-session; the registration takes effect at the next session start, where the first rewritten call is the behavioural witness. (5) Side finding: the segment tokenizer counts a proof path inside a trailing '# comment' as an arg, so such a command is rewritten — harmless (it still runs, sealed), recorded not fixed."
 }
