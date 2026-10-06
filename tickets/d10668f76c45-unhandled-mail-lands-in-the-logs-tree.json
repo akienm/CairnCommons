@@ -1,0 +1,50 @@
+{
+  "id": "d10668f76c45",
+  "title": "unhandled-mail-lands-in-the-logs-tree",
+  "date": "2026-10-06",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "Mail codemother cannot dispatch lands in the logs tree, where it ages out, instead of piling up in her instance space and riding into every tester seal.",
+  "why": "Gap C of the 2026-10-05 re-plan relayed by akiendelllinux_cc_0 (/home/akien/.cairn/foreground-decisions.md). The lived symptom: the bare cairn/devices/tester/proofs/test_isolation.py run at HEAD on 2026-10-06 measured 'scratch: 203.7MB disk, 11980 entries' against its 150MB bound, so every tester seal copies a sandbox a third over budget. 79MB of that is ~/.cairn/devices/codemother/0/mail (3,682 files), replies to her own requests that nothing reads or forgets.",
+  "traces_to": "Law 5 and Law 6's berth rule (cairn/tools/base/address.py log_path: the logs tree holds what HAPPENED to a thing, forgotten past 30 days; instance space holds its life); the tester's seal bound (ticket 1c4ae8f053fe: a per-proof sandbox under 150MB, enforced by cairn/devices/tester/proofs/test_isolation.py); RULE 1 (the change lives in codemother, which owns where her mail lands)",
+  "how": "In cairn/devices/codemother/shim.py set _MAIL_DIR = log_path('codemother', 0) / 'mail' instead of instance_path('codemother', 0) / 'mail', dropping the unused instance_path import and _INSTANCE_ROOT. Then move (mv, never a delete) the standing files from ~/.cairn/devices/codemother/0/mail into ~/.cairn/logs/codemother/0/mail. Proof cairn/devices/codemother/proofs/test_unhandled_mail_lands_in_the_logs_tree.py, written red 0/4.",
+  "falsifier": "GREEN when cairn/devices/codemother/proofs/test_unhandled_mail_lands_in_the_logs_tree.py prints four ok lines and exits 0: (1) _persist writes under log_path('codemother',0)/mail; (2) nothing lands under devices/codemother/0/mail; (3) CodeMotherDevice.state()['mail_dir'] names the logs address; (4) the live ~/.cairn/devices/codemother/0/mail holds no files; and `python3 cairn/devices/codemother/proofs/test_codemother.py` exits 0, and the bare `python3 cairn/devices/tester/proofs/test_isolation.py` passes with its 150MB bound unchanged. RED if any fails. Wrong intent if anything reads codemother's unhandled mail back as state she needs.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (cairn/devices/tester/proofs/test_isolation.py test_the_seal_evidence_carries_what_it_cost) every bare tester run already records the sandbox's disk_bytes against the 150MB bound, so regrowth of instance space reds an existing proof with no probe",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261006T001415-412089d7d314.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261006T001410-03364683ec9c.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one constant in one file of one component, plus a one-shot move, with one proof on disk",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-06",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only cairn/devices/codemother/shim.py: the address import becomes `from cairn.tools.base.address import log_path, tool_path`, the _INSTANCE_ROOT line goes, and _MAIL_DIR = log_path('codemother', 0) / 'mail'. No other code changes."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-06",
+      "text": "D2: SETTLED: the proof cairn/devices/codemother/proofs/test_unhandled_mail_lands_in_the_logs_tree.py is already on disk, committed red (0 of 4 at HEAD). After the build and the move (D3) it prints four ok lines and exits 0. Regressions: `python3 cairn/devices/codemother/proofs/test_codemother.py` exits 0, and the bare `python3 cairn/devices/tester/proofs/test_isolation.py` passes with its 150MB bound unchanged (the bound is the tester's falsifier and is never edited by this ticket)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-06",
+      "text": "D3: SETTLED: after the patch, move the standing mail once, with mv and never a delete: `mkdir -p ~/.cairn/logs/codemother/0/mail && find ~/.cairn/devices/codemother/0/mail -maxdepth 1 -type f -exec mv -t ~/.cairn/logs/codemother/0/mail/ {} +` (find, because 3,682 files overflow a shell glob). The emptied directory may stay; tooth 4 counts files only. If the bare test_isolation still reads over 150MB after the move, report the measured size and stop: the remaining overage is other devices' growth and is its own ticket."
+    }
+  ],
+  "build_patch": "diff --git a/cairn/devices/codemother/shim.py b/cairn/devices/codemother/shim.py\nindex 4b4cdc32..67cab9dc 100644\n--- a/cairn/devices/codemother/shim.py\n+++ b/cairn/devices/codemother/shim.py\n@@ -42,10 +42,12 @@ from pathlib import Path\n \n from cairn.tools.base.device import BaseDevice\n from cairn.tools.base.shim import BaseShim\n-from cairn.tools.base.address import instance_path, tool_path\n+from cairn.tools.base.address import log_path, tool_path\n \n-_INSTANCE_ROOT = instance_path(\"codemother\", 0)\n-_MAIL_DIR = _INSTANCE_ROOT / \"mail\"\n+# MAIL SHE CANNOT DISPATCH IS EXHAUST (ticket d10668f76c45): the replies to her own requests, which\n+# nothing reads, are what HAPPENED to her, so they berth in the logs tree and age out with it.\n+# Kept in instance space they grew to 3,666 files / 79MB and rode into every tester seal.\n+_MAIL_DIR = log_path(\"codemother\", 0) / \"mail\"\n \n # THE CHARTER TOOL'S HELD INSTANCE (ticket 65b34c57ab71) — the first code ownership transfer\n # from CC to another device. Charter is a tool and a tool has users, not an owner (Law 6),\n",
+  "cast": "2026-10-06",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261006T001807-cf10e26f329c.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 77ab6c1aabf5 .. validate cf10e26f329c, each learned)"
+  }
+}
