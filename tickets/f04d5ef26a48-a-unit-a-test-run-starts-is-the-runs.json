@@ -32,6 +32,14 @@
       "step": "D2",
       "date": "2026-10-05",
       "text": "D2: SETTLED: the proof launchers/proofs/test_a_unit_a_test_run_starts_is_the_runs.py is already on disk, committed red at d2771437 (1 of 4 at HEAD: tooth 4 green, 1-3 red). After the build it prints four ok lines and exits 0; the regression proofs launchers/proofs/test_bootstrap.py, launchers/proofs/test_ground_loop_survives_its_caller.py, launchers/proofs/test_superclaude_wire.py, launchers/proofs/test_superclaude_memory_scope.py, launchers/proofs/test_launchers_reach_into_no_device.py, launchers/proofs/test_launchers_probes_report_to_the_watch.py each exit 0."
+    },
+    {
+      "n": 3,
+      "text": "D2b: SETTLED: run each proof as `python3 <path>` from the cairn repo root (each is a plain script with a __main__ block; none needs pytest), or through `bin/cairn test <path>`; each must exit 0.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-06T03:46:44+00:00"
     }
   ],
   "build_patch": "diff --git a/launchers/superclaude b/launchers/superclaude\nindex 6672c377..5eaf1ea3 100755\n--- a/launchers/superclaude\n+++ b/launchers/superclaude\n@@ -415,6 +415,18 @@ fi\n # (two loops held the address for 80 minutes on 2026-08-18 and nothing was loud about it). Any\n # OTHER failure — no bus, no manager, denied — is systemd being unreachable, and there the\n # setsid fall-through is right, because there is no first claimant to race.\n+# A UNIT STARTED INSIDE A TEST RUN IS THE RUN'S (ticket bf3c16162827: a run owns what it\n+# started). systemd-run hands a unit the MANAGER's environment, never ours, so without this the\n+# run's test id stops at this shell and the tester's kill cannot find the loop or the web\n+# server it caused — measured: a run killed by its timeout left its loop unit running. The id\n+# rides the unit so the kill reaches it, and CollectMode lets a test unit that FAILED (no\n+# process left to kill) collect itself instead of lingering as a corpse. Outside a test run\n+# this array is empty and the live units are byte-for-byte unchanged — their failed state stays\n+# where a human looks.\n+_sc_test_mark=()\n+if [[ -n \"${CAIRN_TESTER_TEST_ID:-}\" ]]; then\n+  _sc_test_mark=(--setenv=CAIRN_TESTER_TEST_ID=\"$CAIRN_TESTER_TEST_ID\" -p CollectMode=inactive-or-failed)\n+fi\n _sc_loop_unit=\"${SUPERCLAUDE_GROUND_LOOP_UNIT:-cairn-ground-loop}\"\n _sc_loop_log=\"${HOME}/.cairn/logs/ground_loop_nohup.log\"\n _sc_loop_root=\"$(cd \"$(dirname \"$(readlink -f \"${BASH_SOURCE[0]}\")\")/..\" 2>/dev/null && pwd)\"\n@@ -427,6 +439,7 @@ _sc_loop_root=\"$(cd \"$(dirname \"$(readlink -f \"${BASH_SOURCE[0]}\")\")/..\" 2>/dev/\n _sc_loop_start() {\n   systemd-run --user --quiet \\\n     --unit \"$_sc_loop_unit\" \\\n+    \"${_sc_test_mark[@]}\" \\\n     --working-directory \"${_sc_loop_root:-$PWD}\" \\\n     --setenv=HOME=\"$HOME\" \\\n     --setenv=PATH=\"$PATH\" \\\n@@ -503,6 +516,7 @@ _sc_web_root=\"$(cd \"$(dirname \"$(readlink -f \"${BASH_SOURCE[0]}\")\")/..\" 2>/dev/n\n _sc_web_start() {\n   systemd-run --user --quiet \\\n     --unit \"$_sc_web_unit\" \\\n+    \"${_sc_test_mark[@]}\" \\\n     --working-directory \"${_sc_web_root:-$PWD}\" \\\n     --setenv=HOME=\"$HOME\" \\\n     --setenv=PATH=\"$PATH\" \\\n",
@@ -40,5 +48,6 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T214212-196d3f73acee.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 6c951759bdb9 .. validate 196d3f73acee, each learned)"
-  }
+  },
+  "rehearsal": "rehearsals/f04d5ef26a48-20261006T035207.json"
 }
