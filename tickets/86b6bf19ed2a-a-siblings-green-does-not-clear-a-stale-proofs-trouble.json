@@ -1,0 +1,50 @@
+{
+  "id": "86b6bf19ed2a",
+  "title": "a-siblings-green-does-not-clear-a-stale-proofs-trouble",
+  "date": "2026-10-06",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A component's seal-red trouble stays raised while any sealed proof in that component does not reproduce, so a proof that outran the reseal budget is reported on a record of truth instead of silently left stale.",
+  "why": "Measured 2026-10-06: cairn/tools/base/proofs/test_transitions.py runs ~182s and declares no PROOF_TIMEOUT_S, so the commit-time reseal (budget 120s) timed it out on two commits that touched its closure. The door raised seal-red-cairn-tools-base with the timeout why (~/.cairn/logs/tester/0/20261006.083253.205466.tester.raise_trouble.json), and 1.8s later a sibling's green (test_watchme_spec.py) cleared the same identity (20261006.083254.995762.tester.clear_trouble.json). The trouble store then read CLEARED while the stale seal stood, and 8e37bf2be2dc's PROVED was refused by component_color with nothing on any record saying why. The commit's stdout did print TIMEOUT, but that is a diagnostic surface that scrolls away; the record of truth (Law 7) was the one erased. The identity is one per component on purpose, so the wrong act is the clear: one proof's green says nothing about another proof in the component. The peer akiendelllinux_cc_0's falsifier: a proof whose runtime exceeds the budget is either resealed or reported loudly at commit, never silently left stale. Raising the budget is refused as the fix until what the budget protects (commit latency) is measured. The lived symptom: a PROVED is refused for a stale seal, and the trouble lane that should name it is empty.",
+  "traces_to": "Law 7 (errors are permanent in records of truth: the trouble store is one, and a sibling's green erased a standing fault from it); Law 9 (a stale seal must read red until reproven, and its trouble is how it reads red to anyone not running component_color); the peer's falsifier: a proof whose runtime exceeds the budget is either resealed or reported loudly at commit, never silently left stale",
+  "how": "In cairn/devices/tester/reseal.py, add unreproduced_siblings(proof): the other proofs in the component that carry a validations file which standing() no longer reads proven. On a green reseal, send the clear only when that list is empty, and return it as still_unreproduced (named in the why). Never-sealed siblings do not count. Proof cairn/devices/tester/proofs/test_a_siblings_green_does_not_clear_a_stale_proofs_trouble.py, red 0/3 at 93daf52c.",
+  "falsifier": "Done when the three teeth pass: (1) proof A times out, sibling B reseals green: no clear, and B's result names A as still_unreproduced; (2) A then reseals green: exactly one clear; (3) a rung-3 red sibling holds the clear the same way, and a never-sealed sibling does not. And test_reseal_door.py stays 9/9. Wrong intent if the measured silence came from elsewhere (the trouble drain dropping raises), or if holding the clear makes troubles stand for proofs that are in fact reproducing.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because (cairn/devices/tester/proofs/test_a_siblings_green_does_not_clear_a_stale_proofs_trouble.py) the behavior is a pure disposition inside the reseal door whose proof seal component_color reds on any drift, and the live trouble store (cairn trouble live) shows the standing trouble directly",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261006T024946-f6e28e7f6e20.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261006T024928-0bb97cf41d01.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because the change is one function and one guarded call in one file of one component, with one proof on disk",
+  "questions": [],
+  "build_patch": "diff --git a/cairn/devices/tester/reseal.py b/cairn/devices/tester/reseal.py\nindex 4e810159..0d60cfb1 100644\n--- a/cairn/devices/tester/reseal.py\n+++ b/cairn/devices/tester/reseal.py\n@@ -163,6 +163,20 @@ def trouble_identity(proof_path) -> str:\n     return _SLUG.sub(\"-\", f\"seal-red-{comp}\".lower()).strip(\"-\")\n \n \n+def unreproduced_siblings(proof_path) -> list[str]:\n+    \"\"\"The OTHER proofs in this proof's component that carry a seal ``standing()`` no longer\n+    reads proven — what still holds the component's one trouble open (ticket 86b6bf19ed2a).\n+    A proof with no validations file was never sealed, so it is not counted.\"\"\"\n+    proof = Path(proof_path).resolve()\n+    out = []\n+    for sib in sorted((Path(component_root_for(str(proof))) / \"proofs\").glob(\"*.py\")):\n+        if sib.resolve() == proof or not Path(validations_path_for(str(sib))).is_file():\n+            continue\n+        if not standing(str(sib))[\"proven\"]:\n+            out.append(_rel(sib))\n+    return out\n+\n+\n def read_ladder(proof_path) -> dict | None:\n     \"\"\"The OPEN ladder on this proof's standing seal, or ``None``.\n \n@@ -465,16 +479,27 @@ def reseal(proof_path, *, ruling_id: str | None = None, tester=None, raiser=None\n         sealed = {**record, \"evidence\": evidence}\n         compare(sealed, proof)\n         persist_validation(sealed, proof_path=str(proof))\n-        try:\n-            raiser.clear_trouble(identity, by=CLEARS_FOR, what_changed=(\n-                f\"{CALLER}: {rel} ran green and its seal was landed through the store's \"\n-                f\"door — the fingerprint reproduces again\"))\n-        except Exception:  # noqa: BLE001 — a lane we cannot reach leaves the trouble standing\n-            pass           #   (loud and wrong beats quiet and wrong; Law 7)\n+        # THE TROUBLE IS THE COMPONENT'S, SO ONE PROOF'S GREEN IS NOT ITS CLEAR (ticket\n+        # 86b6bf19ed2a). Measured 2026-10-06: test_transitions.py timed out at commit, the\n+        # door raised seal-red-cairn-tools-base, and test_watchme_spec.py's green cleared it\n+        # 1.8s later — the stale seal stood with nothing on any record saying so. The clear\n+        # waits for the green that leaves no SEALED sibling unreproduced; a never-sealed\n+        # sibling is not a seal that stopped reproducing, so it does not hold the clear.\n+        still = unreproduced_siblings(proof)\n+        if not still:\n+            try:\n+                raiser.clear_trouble(identity, by=CLEARS_FOR, what_changed=(\n+                    f\"{CALLER}: {rel} ran green and its seal was landed through the store's \"\n+                    f\"door — no sealed proof in the component is left unreproduced\"))\n+            except Exception:  # noqa: BLE001 — a lane we cannot reach leaves the trouble standing\n+                pass           #   (loud and wrong beats quiet and wrong; Law 7)\n         return {\"proof\": rel, \"outcome\": \"resealed\" if ladder or before[\"seal\"] else \"sealed\",\n                 \"rung\": 4 if ruling_id else (2 if ladder else 1), \"ran\": True,\n                 \"ruling\": ruling_id, \"ladder_closed\": bool(ladder),\n-                \"why\": f\"ran green under isolation {iso!r}; the seal was replaced\"}\n+                \"still_unreproduced\": still,\n+                \"why\": f\"ran green under isolation {iso!r}; the seal was replaced\"\n+                       + (f\" — the component's trouble stands for {', '.join(still)}\"\n+                          if still else \"\")}\n \n     # ── RUNG 3: the red stands, and it becomes attention ──────────────────────────────\n     # THE BOUND IS TODAY'S HASH, AND THE CARRY-FORWARD IT REPLACED WAS DEAD CODE — told\n",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-06",
+      "text": "D1: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only cairn/devices/tester/reseal.py: it adds unreproduced_siblings(proof_path) -> list[str] just above read_ladder (the other proofs under the same component's proofs/ that have a validations file and whose standing()['proven'] is False, as repo-relative paths; a proof with no validations file is skipped), and in reseal()'s green branch sends raiser.clear_trouble only when that list is empty, adding 'still_unreproduced' to the returned dict and naming the list in its why. No other code changes; trouble_identity stays one per component."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-06",
+      "text": "D2: SETTLED: the proof cairn/devices/tester/proofs/test_a_siblings_green_does_not_clear_a_stale_proofs_trouble.py is already on disk, committed red 0/3 at 93daf52c. After the patch `python3 cairn/devices/tester/proofs/test_a_siblings_green_does_not_clear_a_stale_proofs_trouble.py` shows 3 passed and exits 0. Regression: `python3 -m pytest -q cairn/devices/tester/proofs/test_reseal_door.py` exits 0 (9 passed)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-06",
+      "text": "D3: SETTLED: after the proof and regression pass, commit with explicit paths: `git add cairn/devices/tester/reseal.py` plus whatever history/state/journal files the BUILDME crossing wrote under cairn/devices/tester (as `git status --short cairn/devices/tester` lists them), then `git commit -m '86b6bf19ed2a: BUILDME — a sibling green does not clear a stale proof trouble'` with the regression result (`test_reseal_door.py 9/9 green`) as one line in the message body. Declaring PROOF_TIMEOUT_S in test_transitions.py is not part of this build."
+    }
+  ],
+  "cast": "2026-10-06",
+  "chart_claim": {
+    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261006T025034-c0d406e78945.json",
+    "chain_complete": true,
+    "filled_by": "CC chart chain (orient 933ab9a09af0 .. validate c0d406e78945, each learned)"
+  }
+}
