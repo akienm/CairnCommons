@@ -93,5 +93,36 @@
       "kind": "watchme",
       "missing": "the probe reads its ticket's falsifier as failing and its carry names no finding"
     }
+  ],
+  "build_patch": "diff --git a/cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py b/cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py\nindex a0f62c9d..7413107b 100644\n--- a/cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py\n+++ b/cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py\n@@ -81,7 +81,19 @@ def _check(context: dict) -> dict:\n \n \n def _carry(context: dict) -> dict:\n-    return _check(context)\n+    \"\"\"The measurement, plus — when it is unhealthy — WHY, as the finding. ``watch_carry``\n+    reads ``finding`` and nothing else; a reason left under ``error`` reaches the ticket as\n+    the generic no-finding, which is how 7a1265439f54 landed at FIXME on 2026-10-05 saying\n+    only that its probe had nothing to say (Law 7).\"\"\"\n+    out = dict(_check(context))\n+    if not out[\"healthy\"]:\n+        if out.get(\"error\"):\n+            out[\"finding\"] = f\"the trouble panel's route failed: {out['error']}\"\n+        elif not out[\"pane_declared\"]:\n+            out[\"finding\"] = \"the cairn device declares no trouble pane\"\n+        else:\n+            out[\"finding\"] = \"the trouble pane's handler did not come back with a list\"\n+    return out\n \n \n def _enough(context: dict) -> bool:\n",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-06",
+      "text": "D1: SETTLED: this is a FIXME repair of a ticket whose panel was built and PROVED on 2026-09-04. The pane declaration, the handler, the render kind, the red light, the /ws/troubles route and the probe module ALREADY EXIST and are not rebuilt. The repair is only the probe's carry (D2) and the proof teeth already committed (D3)."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-06",
+      "text": "D2: SETTLED: apply exactly the unified diff carried in this ticket's build_patch field (`git apply` from a file holding that text, run in the cairn repo root). It edits only cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py: _carry returns a copy of _check's result and, when healthy is False, adds a 'finding' string — 'the trouble panel's route failed: <error>' when _check recorded an error, else 'the cairn device declares no trouble pane' when no pane is declared, else 'the trouble pane's handler did not come back with a list'. A healthy carry has no 'finding' key. _check is unchanged. No other code changes."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-06",
+      "text": "D3: SETTLED: the proof cairn/devices/cairn/proofs/test_trouble_panel.py is already on disk and committed (6b4b2dbc, f43d20a0) with PROVES for this ticket: clause 1 test_websocket_route_exists, clause 2 test_an_UNHEALTHY_probe_NAMES_ITS_FINDING (red before the patch, green after), clause 3 test_the_panel_is_the_CAIRN_devices_not_the_hosts. After the patch `python3 -m pytest cairn/devices/cairn/proofs/test_trouble_panel.py` shows 16 passed. Regression: `python3 cairn/devices/cairn/proofs/test_cairn_probes_report_to_the_watch.py` is run and its result recorded, whatever it is (it reds while this ticket stands at FIXME; that red is not this build's to change)."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-06",
+      "text": "D4: SETTLED: clauses 4 (detail not truncated) and 5 (the panel says it is read-only) are measured RED in the world (cairn/devices/web_server/render.py:271 static detail hint, :417 ellipsis, no read-only text) and their code is the web_server device's, so under RULE 1 they are built by a child code-seam on cairn/devices/web_server, not in this build. This ticket crosses BUILDME and PROVEME, then waits for that child to be PROVED before its own PROVED."
+    }
   ]
 }
