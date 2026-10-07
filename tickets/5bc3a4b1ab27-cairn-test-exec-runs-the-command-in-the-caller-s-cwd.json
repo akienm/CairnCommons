@@ -24,5 +24,39 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261007T131246-568af321d248.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 34699bd309b4 .. validate 568af321d248, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The proof already exists, committed red at 01d39b57: cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py, PROVES key 5bc3a4b1ab27 with 1 test_exec_from_another_dir_runs_there (red at HEAD), 2 test_an_explicit_cwd_still_wins and 3 test_a_proof_path_run_still_resolves_from_the_repo (green as guards). Do not rewrite or edit it. If it is absent from disk, STOP and kick the ticket back to TICKETME.",
+      "by": "cc",
+      "step": "unlisted: write the proof with three teeth",
+      "source": "rehearsal",
+      "at": "2026-10-07T19:20:04+00:00"
+    },
+    {
+      "n": 2,
+      "text": "In bin/cmd/test, insert two lines immediately before line 25 (cd \"$REPO\"): a comment '# --exec runs where the caller stood (ticket 5bc3a4b1ab27): carry $PWD across the cd below.' and then 'export CAIRN_TESTER_CALLER_CWD=\"$PWD\"'. Nothing else in bin/cmd/test changes; the cd and the exec on line 26 stay.",
+      "by": "cc",
+      "step": "unlisted: export CAIRN_TESTER_CALLER_CWD in bin/cmd/test",
+      "source": "rehearsal",
+      "at": "2026-10-07T19:20:04+00:00"
+    },
+    {
+      "n": 3,
+      "text": "In cairn/devices/tester/cli.py: add 'import os' on its own line after 'import argparse' (line 54; os is not imported today). At lines 453-454 the call becomes TesterDevice().run_exec(args.exec_command, timeout=3600 if args.timeout is None else args.timeout, cwd=os.environ.get(\"CAIRN_TESTER_CALLER_CWD\") or None). device.py is NOT edited: run_exec at device.py:802 already takes keyword cwd: str | None = None and does cwd = cwd or os.getcwd(), so an explicit cwd still wins and an unset variable falls back as today.",
+      "by": "cc",
+      "step": "unlisted: modify cli.py --exec dispatch to pass cwd to run_exec",
+      "source": "rehearsal",
+      "at": "2026-10-07T19:20:04+00:00"
+    },
+    {
+      "n": 4,
+      "text": "After the edit run, each as its own command, only through bin/cairn test --netns: the proof above (expect 3 of 3 green), cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py (expect green, unchanged), and cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py (68cef2ddd8ef's sibling; expect green with that ticket's applied build in the working tree). pytest is refused.",
+      "by": "cc",
+      "step": "unlisted: run the proofs after the edit",
+      "source": "rehearsal",
+      "at": "2026-10-07T19:20:04+00:00"
+    }
+  ]
 }
