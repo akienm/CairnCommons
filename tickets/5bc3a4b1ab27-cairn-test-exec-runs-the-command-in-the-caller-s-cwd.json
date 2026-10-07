@@ -1,0 +1,23 @@
+{
+  "id": "5bc3a4b1ab27",
+  "title": "cairn test --exec runs the command in the caller's cwd",
+  "date": "2026-10-07",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "`cairn test --exec` runs its command in the directory the caller stood in: bin/cmd/test carries $PWD across its `cd \"$REPO\"` as CAIRN_TESTER_CALLER_CWD, and the --exec dispatch hands it to run_exec as the default cwd (an explicit cwd= still wins). Proof-path runs keep their repo-relative resolution.",
+  "why": "The sealed exec (2c9eeab2da87) is the one door the verdict (68cef2ddd8ef) and CC's tool calls are rewritten onto, as a drop-in for bare `bash -c`. It silently ran every command at the repo root, so 68cef2ddd8ef's sibling proof test_the_instrument_is_run.py reds 127 ('bash: proofs/exits.sh: No such file or directory') with a correct verdict build: an instrument written relative to where it is run cannot be trusted through the door.",
+  "traces_to": "Law 8 and the isolation family under dda0e72b9c67 (the door must be a faithful drop-in, or the instruments rewritten onto it measure the wrong tree); RULE 1 (the fix lands at the tester's own address, not inside the verdict).",
+  "how": "bin/cmd/test: `export CAIRN_TESTER_CALLER_CWD=\"$PWD\"` immediately before `cd \"$REPO\"`. cairn/devices/tester/cli.py --exec dispatch: run_exec(..., cwd=os.environ.get(\"CAIRN_TESTER_CALLER_CWD\") or None). device.py unchanged. Red-first proof cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py, teeth: test_exec_from_another_dir_runs_there (1), test_an_explicit_cwd_still_wins (2), test_a_proof_path_run_still_resolves_from_the_repo (3).",
+  "falsifier": "Done when cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py is green under bin/cairn test: (1) `bin/cairn test --exec pwd` run with cwd=<a mktemp dir> prints that dir (red at HEAD b887549e: prints the repo root); (2) TesterDevice().run_exec('pwd', cwd=<dir B>) driven in a child interpreter with CAIRN_TESTER_CALLER_CWD=<dir A> prints dir B, so an explicit cwd still wins; (3) `bin/cairn test cairn/devices/tester/proofs/fixtures/green_proof.py` run with cwd=<a mktemp dir> still finds and runs that proof (repo-relative proof-path resolution untouched). And 68cef2ddd8ef's test_the_instrument_is_run.py goes green with its applied build unchanged. Horizon: this voyage. Wrong intent if a measured --exec caller relies on running at the repo root from elsewhere.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the first live use is ticket 68cef2ddd8ef's sibling proof cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py, which runs instruments with cwd=<tempdir> through --exec and reds 127 if the cwd is lost",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261007T130904-f87196012591.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261007T130759-9ec5d98ea9f1.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because one export line in bin/cmd/test, one keyword at one call in cairn/devices/tester/cli.py, and one proof in cairn/devices/tester/proofs",
+  "questions": "none, because peer akiendelllinux_cc_0 called the design (F10, recorded in /home/akien/.cairn/foreground-decisions.md, Akien's to overturn) and the proof is new and cleared at this cast; the parent need is ticket 68cef2ddd8ef",
+  "gates_bound": "Proved: cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py green and sealed under bin/cairn test with its three teeth declared under PROVES for this ticket; a hollow reading that reverts bin/cmd/test and cli.py and watches tooth 1 red; feeds back to origin on failure (a red returns the boat to FIXME).",
+  "parent": "68cef2ddd8ef",
+  "cast": "2026-10-07"
+}
