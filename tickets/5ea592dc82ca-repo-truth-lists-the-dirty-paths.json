@@ -24,5 +24,24 @@
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261007T143319-80bcdeb0a861.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 5ca128bbd57c .. validate 80bcdeb0a861, each learned)"
-  }
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The proof is ALREADY WRITTEN and committed red at 19a3cc77: cairn/tools/orient/proofs/test_repo_truth_lists_dirty_paths.py, PROVES {'5ea592dc82ca': {'1','2','3'}} mapped to test_dirty_lists_modified_untracked_and_rename_destination, test_dirty_paths_still_counts_porcelain_lines and test_a_clean_repo_lists_nothing; 3 failed at HEAD under bin/cairn test --netns (no 'dirty' key). The build does not touch the proof.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-07T20:43:22+00:00"
+    },
+    {
+      "n": 2,
+      "text": "The build is ONE edit to cairn/tools/orient/orient.py, inside repo_truth's per-repo loop (def repo_truth(*, repos=None), which defines a local _git(*args) that returns (rc, stdout.strip(), stderr.strip()) and already does '_, porcelain, _ = _git(\"status\", \"--porcelain\")'). Right after that line add: 'z = subprocess.run([\"git\", \"-C\", str(r), \"status\", \"--porcelain\", \"-z\", \"--untracked-files=all\"], capture_output=True, text=True).stdout' (unstripped, so the first entry keeps its XY), then 'fields = z.split(\"\\0\"); dirty = []; i = 0', then 'while i < len(fields): e = fields[i]; i += 1; if not e: continue; dirty.append(e[3:]); if e[0] in \"RC\": i += 1' (a rename/copy's NEXT field is its source, skipped). Add '\"dirty\": dirty,' to the row dict after '\"dirty_paths\": ...'. dirty_paths is unchanged. subprocess is already imported in orient.py. Nothing else changes.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-07T20:43:22+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/5ea592dc82ca-20261007T204758.json"
 }
