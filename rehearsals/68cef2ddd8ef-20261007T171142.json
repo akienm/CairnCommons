@@ -1,0 +1,333 @@
+{
+  "ticket": "68cef2ddd8ef",
+  "record": "rehearsals/68cef2ddd8ef-20261007T171142.json",
+  "at": "2026-10-07T17:11:42+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "d84702783d335ea21de89b59cc37da42b945b2559219af1b0ca16cc63ff17f08",
+  "ticket_sha256_at_read": "d84702783d335ea21de89b59cc37da42b945b2559219af1b0ca16cc63ff17f08",
+  "design_sha256": "68cdc929ed49ab24a9bb9c39c724b4d2b2e6d14f82166a2a91b7917b35fc9dd9",
+  "reads": [
+    {
+      "ticket": "68cef2ddd8ef",
+      "ticket_sha256": "d84702783d335ea21de89b59cc37da42b945b2559219af1b0ca16cc63ff17f08",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: ensure test_an_instrument_runs_under_the_seal.py has the four specified teeth, red at HEAD",
+          "state": "builds_under_assumption",
+          "assumption": "The builder understands the proof_coverage tooth-naming system well enough to write or verify the four teeth; the proof file's structure is inferred from examining other proofs in the codebase (not provided in this text).",
+          "would_settle": "The proof file must exist with exactly these four teeth: test_an_instrument_runs_inside_a_sealed_exec, test_an_instrument_goes_to_the_sealed_exec_and_nowhere_else, test_the_record_keeps_its_keys_and_its_exit, test_a_refused_seal_is_recorded_and_nothing_runs_bare; they fail (red) with current run_instrument.",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: edit verdict.py run_instrument to invoke bin/cairn test --exec instead of subprocess.run bash -c",
+          "state": "builds_under_assumption",
+          "assumption": "The builder can determine the timeout value N by either finding a configured default, reading test_the_instrument_is_run.py's timeout expectation, or inferring from context; the builder can parse the --exec response (exit code, stdout tail, duration) into the record shape (command, exit, timed_out, seconds, tail) — the exact response format is not detailed here, only that it must preserve exit codes and record a seal refusal (exit 2) without falling back.",
+          "would_settle": "Specify the timeout value in seconds (or confirm it defaults); describe the --exec response format and how to extract each field of the record shape; confirm that exit 2 is recorded as-is without triggering a fallback to bare bash -c.",
+          "confidence": 0.65
+        }
+      ]
+    },
+    {
+      "ticket": "68cef2ddd8ef",
+      "ticket_sha256": "d84702783d335ea21de89b59cc37da42b945b2559219af1b0ca16cc63ff17f08",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: write the proof file test_an_instrument_runs_under_the_seal.py with four teeth asserting the falsifier conditions",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "Provide the proof framework structure (how teeth are named and written as assertions) and either an example proof from the verdict component or a link to the proof documentation",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: modify verdict.py run_instrument to invoke cairn test --exec and parse the result into the record fields",
+          "state": "builds_under_assumption",
+          "assumption": "The sealed exec (bin/cairn test --exec) outputs data structured such that timed_out, seconds, and tail can be extracted; a reasonable timeout value can be chosen; the command can be passed as a single string or appropriately quoted argument",
+          "would_settle": "Specify the exact timeout value to use, the complete output format of cairn test --exec, and clarify how to parse timed_out (boolean), seconds (float?), and tail (last N lines of output?) from that output",
+          "confidence": 0.68
+        }
+      ]
+    },
+    {
+      "ticket": "68cef2ddd8ef",
+      "ticket_sha256": "d84702783d335ea21de89b59cc37da42b945b2559219af1b0ca16cc63ff17f08",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: write proof red with four teeth checking the four falsifier clauses",
+          "state": "builds_under_assumption",
+          "assumption": "The tooth names (from the validate criteria: test_an_instrument_runs_inside_a_sealed_exec, test_an_instrument_goes_to_the_sealed_exec_and_nowhere_else, test_the_record_keeps_its_keys_and_its_exit, test_a_refused_seal_is_recorded_and_nothing_runs_bare) are the intended names; the testing methodology for each falsifier clause is derivable from the falsifier statement itself plus the hypothesize expectations and the sibling proof test_the_instrument_is_run.py",
+          "would_settle": "Add a decisions field (D1–D4) listing the four proof teeth and their individual falsifier responsibility, or replace 'write the proof red: teeth 1-4' in the how clause with the four tooth names and how each tests its clause",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: modify run_instrument in cairn/devices/codemother/machines/verdict/verdict.py to call bin/cairn test --exec instead of bare bash -c",
+          "state": "builds_under_assumption",
+          "assumption": "bin/cairn test --exec <command> --timeout N returns output (or a callable response) parseable into the existing record fields (command, exit, timed_out, seconds, tail); exit code 2 signals seal refusal and 124 signals timeout; the builder can extract these from the tester device's response without additional interpretation beyond what the tester charter's public_interface states",
+          "would_settle": "Quote or inline the output format and response shape of bin/cairn test --exec (JSON, dict, or text structure), showing how timed_out and timeout duration are extracted from its output",
+          "confidence": 0.72
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: edit verdict.py run_instrument to invoke bin/cairn test --exec instead of subprocess.run bash -c",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder can determine the timeout value N by either finding a configured default, reading test_the_instrument_is_run.py's timeout expectation, or inferring from context; the builder can parse the --exec response (exit code, stdout tail, duration) into the record shape (command, exit, timed_out, seconds, tail) — the exact response format is not detailed here, only that it must preserve exit codes and record a seal refusal (exit 2) without falling back."
+      ],
+      "would_settle": [
+        "Specify the timeout value in seconds (or confirm it defaults); describe the --exec response format and how to extract each field of the record shape; confirm that exit 2 is recorded as-is without triggering a fallback to bare bash -c."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: ensure test_an_instrument_runs_under_the_seal.py has the four specified teeth, red at HEAD",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder understands the proof_coverage tooth-naming system well enough to write or verify the four teeth; the proof file's structure is inferred from examining other proofs in the codebase (not provided in this text)."
+      ],
+      "would_settle": [
+        "The proof file must exist with exactly these four teeth: test_an_instrument_runs_inside_a_sealed_exec, test_an_instrument_goes_to_the_sealed_exec_and_nowhere_else, test_the_record_keeps_its_keys_and_its_exit, test_a_refused_seal_is_recorded_and_nothing_runs_bare; they fail (red) with current run_instrument."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: modify run_instrument in cairn/devices/codemother/machines/verdict/verdict.py to call bin/cairn test --exec instead of bare bash -c",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "bin/cairn test --exec <command> --timeout N returns output (or a callable response) parseable into the existing record fields (command, exit, timed_out, seconds, tail); exit code 2 signals seal refusal and 124 signals timeout; the builder can extract these from the tester device's response without additional interpretation beyond what the tester charter's public_interface states"
+      ],
+      "would_settle": [
+        "Quote or inline the output format and response shape of bin/cairn test --exec (JSON, dict, or text structure), showing how timed_out and timeout duration are extracted from its output"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: modify verdict.py run_instrument to invoke cairn test --exec and parse the result into the record fields",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The sealed exec (bin/cairn test --exec) outputs data structured such that timed_out, seconds, and tail can be extracted; a reasonable timeout value can be chosen; the command can be passed as a single string or appropriately quoted argument"
+      ],
+      "would_settle": [
+        "Specify the exact timeout value to use, the complete output format of cairn test --exec, and clarify how to parse timed_out (boolean), seconds (float?), and tail (last N lines of output?) from that output"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write proof red with four teeth checking the four falsifier clauses",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The tooth names (from the validate criteria: test_an_instrument_runs_inside_a_sealed_exec, test_an_instrument_goes_to_the_sealed_exec_and_nowhere_else, test_the_record_keeps_its_keys_and_its_exit, test_a_refused_seal_is_recorded_and_nothing_runs_bare) are the intended names; the testing methodology for each falsifier clause is derivable from the falsifier statement itself plus the hypothesize expectations and the sibling proof test_the_instrument_is_run.py"
+      ],
+      "would_settle": [
+        "Add a decisions field (D1–D4) listing the four proof teeth and their individual falsifier responsibility, or replace 'write the proof red: teeth 1-4' in the how clause with the four tooth names and how each tests its clause"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: write the proof file test_an_instrument_runs_under_the_seal.py with four teeth asserting the falsifier conditions",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Provide the proof framework structure (how teeth are named and written as assertions) and either an example proof from the verdict component or a link to the proof documentation"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: edit verdict.py run_instrument to invoke bin/cairn test --exec instead of subprocess.run bash -c",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: ensure test_an_instrument_runs_under_the_seal.py has the four specified teeth, red at HEAD",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify run_instrument in cairn/devices/codemother/machines/verdict/verdict.py to call bin/cairn test --exec instead of bare bash -c",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify verdict.py run_instrument to invoke cairn test --exec and parse the result into the record fields",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write proof red with four teeth checking the four falsifier clauses",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the proof file test_an_instrument_runs_under_the_seal.py with four teeth asserting the falsifier conditions",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: edit verdict.py run_instrument to invoke bin/cairn test --exec instead of subprocess.run bash -c",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify the timeout value in seconds (or confirm it defaults); describe the --exec response format and how to extract each field of the record shape; confirm that exit 2 is recorded as-is without triggering a fallback to bare bash -c."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: ensure test_an_instrument_runs_under_the_seal.py has the four specified teeth, red at HEAD",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "The proof file must exist with exactly these four teeth: test_an_instrument_runs_inside_a_sealed_exec, test_an_instrument_goes_to_the_sealed_exec_and_nowhere_else, test_the_record_keeps_its_keys_and_its_exit, test_a_refused_seal_is_recorded_and_nothing_runs_bare; they fail (red) with current run_instrument."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify run_instrument in cairn/devices/codemother/machines/verdict/verdict.py to call bin/cairn test --exec instead of bare bash -c",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Quote or inline the output format and response shape of bin/cairn test --exec (JSON, dict, or text structure), showing how timed_out and timeout duration are extracted from its output"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify verdict.py run_instrument to invoke cairn test --exec and parse the result into the record fields",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the exact timeout value to use, the complete output format of cairn test --exec, and clarify how to parse timed_out (boolean), seconds (float?), and tail (last N lines of output?) from that output"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write proof red with four teeth checking the four falsifier clauses",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add a decisions field (D1–D4) listing the four proof teeth and their individual falsifier responsibility, or replace 'write the proof red: teeth 1-4' in the how clause with the four tooth names and how each tests its clause"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the proof file test_an_instrument_runs_under_the_seal.py with four teeth asserting the falsifier conditions",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Provide the proof framework structure (how teeth are named and written as assertions) and either an example proof from the verdict component or a link to the proof documentation"
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.11586360000000001,
+        "duration_ms": 118769,
+        "is_error": false,
+        "session_id": "5134e914-1301-4230-8cbb-8317cb33af9e"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1122786,
+        "duration_ms": 107631,
+        "is_error": false,
+        "session_id": "758b4291-44f2-4412-bcf3-4ae6a6e656ae"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1023006,
+        "duration_ms": 83383,
+        "is_error": false,
+        "session_id": "90726883-69e5-4abc-8eb6-121ba0f0b21e"
+      }
+    ],
+    "cost_usd": 0.330443,
+    "duration_ms": 309783,
+    "rendered_chars": 62069,
+    "by": null
+  },
+  "divergence": null
+}
