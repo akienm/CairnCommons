@@ -1,0 +1,23 @@
+{
+  "id": "f43b5705ea03",
+  "title": "validation_store digests a component's current seals",
+  "date": "2026-10-07",
+  "owner": "CC",
+  "intention": "validation_store answers, in one string, the current seal state of a whole component, so a dependent can record it and later tell whether it moved.",
+  "traces_to": "Law 9 via 1b6516f92db3 and parent 50e0581737e8 (yellow on a dependency's move needs a comparable token for 'the dependency's seals'). RULE 1: the store owns seals, so the digest is the store's.",
+  "how": "(a) def seal_digest(component_dir: str) -> str in validation_store.py. (b) Iterate sorted(glob(<dir>/validations/*.json)). For each, records = read_validations(path=f), skip it when records is empty, and take cur = records[-1] if it is a list, else records. If cur is not a dict, raise ValueError(f). (c) Add the row [Path(f).stem, cur.get('verdict'), (cur.get('evidence') or {}).get('source_fingerprint')]. (d) Return hashlib.sha256(json.dumps(rows, sort_keys=True, separators=(',',':')).encode()).hexdigest(). (e) Proof: cairn/tools/validation_store/proofs/test_seal_digest.py, fixture validations files in a tempdir, PROVES keyed on this ticket, clauses 1-5, one tooth each.",
+  "falsifier": "Done when cairn/tools/validation_store/proofs/test_seal_digest.py is green under bin/cairn test --netns. (1) Two calls over an unchanged fixture component return the same 64-hex string. (2) Changing a current record's evidence.source_fingerprint changes the digest. (3) Changing its verdict changes the digest. (4) Appending an older entry before the last, or changing only a timestamp field, leaves the digest unchanged. (5) A component with no validations dir returns the sha256 of the canonical empty list. Red at HEAD 4b3ac7f5: no seal_digest.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because its consumer is ticket 50e0581737e8 (the yellow sieve), whose proof exercises it",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261007T143000-7371e756a15c.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261007T143000-2dbb26ffe7fd.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because one function in /home/akien/dev/src/cairn/cairn/tools/validation_store/validation_store.py plus one proof",
+  "questions": "none, because the shape is fixed by parent ticket 50e0581737e8 and the proof is new and cleared at this cast",
+  "gates_bound": "Proved: cairn/tools/validation_store/proofs/test_seal_digest.py green and sealed under bin/cairn test --netns, five teeth under PROVES for this ticket. A hollow reverting validation_store.py reds every tooth. Feeds back to origin on failure.",
+  "owning_intention": "cairn/tools/validation_store/intention+why.json",
+  "parent": "50e0581737e8",
+  "why": "Parent 50e0581737e8 marks a dependent yellow when a reached component's seals move. That needs one comparable token for a component's seal state, recorded at seal time and recomputed by the inspector, and the store that owns seals is where it belongs (RULE 1).",
+  "cast": "2026-10-07"
+}

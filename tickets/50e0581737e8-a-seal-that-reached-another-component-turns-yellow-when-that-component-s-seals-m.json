@@ -1,0 +1,26 @@
+{
+  "id": "50e0581737e8",
+  "title": "A seal that reached another component turns yellow when that component's seals move",
+  "date": "2026-10-07",
+  "owner": "CC",
+  "intention": "A sealed proof whose run reached another component turns YELLOW when that component's seals move, so a repair or regression there is visible to its dependents.",
+  "traces_to": "Law 9 via 1b6516f92db3 (green is earned; yellow is a dependency-change-only state the CLAUDE.md residue names as not yet derived) and Law 8 (a peer leaning on a proof must see when what that proof leaned on moved). RULE 1 and 184d211153ff: the closure stops at the component, so reach is recorded as COMPONENTS, never by widening the fingerprint.",
+  "how": "(a) a new function `a_reached_component_moved(row, comp_dir) -> list[dict]` in inspector.py, beside component_color, registered in the same sieve table (inspector.py ~3759). (b) Per proofs/test_*.py, read its seal the way component_color does. Skip it unless the verdict is green AND the own fingerprint matches (reuse _sealed_fingerprint_now). (c) For each (dir, digest) in evidence.get('reached') or {}, compute validation_store.seal_digest(<repo>/<dir>) (child ticket). On difference, emit _finding('a_reached_component_moved', row['component'], f'{dir} has not moved since {proof} was sealed', expected=digest, actual=now, proof=proof.name, reached=dir, color='yellow'). (d) No gate composes it. (e) The proof builds fixture components in a tempdir and calls the sieve directly. PROVES keyed on this ticket, clauses 1-4. This parent proves AFTER both children.",
+  "falsifier": "Done when cairn/machines/build_inspector/proofs/test_a_reached_component_moved.py is green under bin/cairn test --netns. (1) A fixture component A, whose green seal records evidence.reached={B_dir: seal_digest(B_dir)}, reads ZERO a_reached_component_moved findings while B's validations are unchanged. (2) After B's validations/<stem>.json current record changes (a new source_fingerprint), A reads exactly one finding naming B with values.color == 'yellow'. (3) component_color over A still reads no finding in case (2), so yellow is not red. (4) A seal without `reached` reads no finding. Red at HEAD 4b3ac7f5: no such sieve. Horizon: this voyage plus the first live yellow on a re-sealed tester.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the first live yellow is the verdict siblings (cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py) on the next tester re-seal, read by bin/cmd/inspect; a probe has no consumer until a reader acts on yellow",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261007T142816-4ebf1f6a6f6e.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261007T142809-098f1963b2f8.json",
+  "task_or_ticket": "ticket",
+  "children": [
+    "f43b5705ea03",
+    "734b22d09f2e"
+  ],
+  "questions": "none, because peer akiendelllinux_cc_0 called the shape and parent ticket 1b6516f92db3's falsifier fixes the meaning (yellow, not red); the mechanism is settled by measurement (a sitecustomize prepended on PYTHONPATH fired through bin/cmd/test --exec, n=1)",
+  "gates_bound": "Proved: cairn/machines/build_inspector/proofs/test_a_reached_component_moved.py green and sealed under bin/cairn test --netns, four teeth under PROVES for this ticket, after both children are PROVED. A hollow reverting inspector.py reds teeth 2 and 4. Feeds back to origin on failure.",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "parent": "1b6516f92db3",
+  "why": "Gap 1, measured 2026-10-07: a repair to the tester (5bc3a4b1ab27) was invisible to the verdict proofs that reach it by subprocess, because their seals' closure stops at their own component (184d211153ff, RULE 1). A dependent cannot tell that what it leaned on moved, so a peer leans on a stale green (Law 8). 1b6516f92db3 asks for yellow (not red) on a dependency change.",
+  "cast": "2026-10-07"
+}
