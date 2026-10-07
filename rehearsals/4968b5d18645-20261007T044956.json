@@ -1,0 +1,514 @@
+{
+  "ticket": "4968b5d18645",
+  "record": "rehearsals/4968b5d18645-20261007T044956.json",
+  "at": "2026-10-07T04:49:56+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "a071bf4c841afe92721165b033ef0b01cd8df8f6af63de7f7bcb434bdccb681a",
+  "ticket_sha256_at_read": "a071bf4c841afe92721165b033ef0b01cd8df8f6af63de7f7bcb434bdccb681a",
+  "design_sha256": "15f9862d46d76d09b334b4440c34e6385ac62fffcb83654144d951dd2280fe89",
+  "reads": [
+    {
+      "ticket": "4968b5d18645",
+      "ticket_sha256": "a071bf4c841afe92721165b033ef0b01cd8df8f6af63de7f7bcb434bdccb681a",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: implement retire() function in rehearsal.py",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.88
+        },
+        {
+          "step": "unlisted: filter reader_view and decision_ids_of to exclude retired entries",
+          "state": "builds_under_assumption",
+          "assumption": "builder has access to and is familiar with the existing reader_view and decision_ids_of implementations to know how to apply the filter",
+          "would_settle": "provide context snippets showing the current structure of reader_view and decision_ids_of to clarify where/how to apply the filter",
+          "confidence": 0.82
+        },
+        {
+          "step": "unlisted: add --retire, --because, --into flags to CLI in __main__.py",
+          "state": "builds_under_assumption",
+          "assumption": "--retire takes a list of decision ids, --because takes a required string, --into takes an optional single decision id; mutual exclusivity follows the pattern of existing --decide/--proved/--standing groups in this codebase",
+          "would_settle": "specify exact argparse configuration (nargs, type, required) for each new flag and show how mutual exclusivity is declared",
+          "confidence": 0.79
+        },
+        {
+          "step": "unlisted: wire CLI flags to call retire() with correct exit codes",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: create test_a_superseded_decision_is_retired.py proof with four test teeth",
+          "state": "builds_under_assumption",
+          "assumption": "the four PROVES teeth (1, 2, 3, 4) map to the four falsifier conditions (1)-(4): condition 1 tests reader_view/decision_ids_of filtering, condition 2 tests ownership refusal, condition 3 tests live-cite refusal, condition 4 tests bad --into refusal",
+          "would_settle": "explicitly list what each of the four proof teeth should assert",
+          "confidence": 0.84
+        }
+      ]
+    },
+    {
+      "ticket": "4968b5d18645",
+      "ticket_sha256": "a071bf4c841afe92721165b033ef0b01cd8df8f6af63de7f7bcb434bdccb681a",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: implement retire(ticket, ns, *, by, because, into=None, root=None) with refusal logic for all five conditions",
+          "state": "builds_under_assumption",
+          "assumption": "Refused is an exception class already used by decide(); 'absent' means decision ID not in ticket's decisions list; error messages should name each lack per the five refusal conditions listed",
+          "would_settle": "retire() implementation covering: n in ns absent/already-retired refusal, by-mismatch refusal (fold case via system_word), live-line-citing-retired refusal with pattern match, into-validation refusal, empty-because refusal",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: implement retire() write logic—stamp retired entries with {by, at (UTC iso seconds), because, into} and call _write_ticket through artifact door",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.93
+        },
+        {
+          "step": "unlisted: modify reader_view to drop retired entries from pasted copy and skip [settled by] annotations if settler or target is retired",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.91
+        },
+        {
+          "step": "unlisted: modify decision_ids_of to exclude entries carrying 'retired' field",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.96
+        },
+        {
+          "step": "unlisted: add CLI flags --retire D<n> [D<n> ...] with --because WHY and optional --into D<m>; mutual exclusivity with --decide/--proved/--standing; exits 0 on write, 2 on Refused",
+          "state": "builds_under_assumption",
+          "assumption": "--into is optional at the CLI and function level; the verb is invoked as `cairn rehearse <ticket> --retire D<n> ... --because <text> --by <who> [--into D<m>]`",
+          "would_settle": "CLI argument parsing structure and mutual exclusivity group setup in __main__.py; clarification of whether --into is required or optional",
+          "confidence": 0.81
+        },
+        {
+          "step": "unlisted: create test_a_superseded_decision_is_retired.py with fixture tickets in tmp commons (root=), direct function calls (no reader stub), PROVES 4 teeth matching the four falsifier conditions",
+          "state": "builds_under_assumption",
+          "assumption": "Test fixture structure follows the pattern of the sibling test test_decide_lands_in_its_line.py; the builder will examine that proof for World and tooth structure",
+          "would_settle": "Explicit template or reference to sibling test, or detailed format for fixture ticket construction and tooth assertion structure",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "ticket": "4968b5d18645",
+      "ticket_sha256": "a071bf4c841afe92721165b033ef0b01cd8df8f6af63de7f7bcb434bdccb681a",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: ticket provides no explicit decisions list (D1-DN) required by rehearsal schema; the entire feature described in the 'how' section is one implicit decision",
+          "state": "cannot_proceed",
+          "assumption": "decisions field is required by the rehearsal system to produce a one-node-per-decision build tree; without it, I cannot map the work to the expected structure",
+          "would_settle": "add explicit decisions list to the ticket JSON: at least one D<n> entry per logical step (retire() function, reader_view filter, decision_ids_of filter, CLI flags, test proof), or confirm this ticket format omits decisions by design",
+          "confidence": 0.95
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: add --retire, --because, --into flags to CLI in __main__.py",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "--retire takes a list of decision ids, --because takes a required string, --into takes an optional single decision id; mutual exclusivity follows the pattern of existing --decide/--proved/--standing groups in this codebase"
+      ],
+      "would_settle": [
+        "specify exact argparse configuration (nargs, type, required) for each new flag and show how mutual exclusivity is declared"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: add CLI flags --retire D<n> [D<n> ...] with --because WHY and optional --into D<m>; mutual exclusivity with --decide/--proved/--standing; exits 0 on write, 2 on Refused",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "--into is optional at the CLI and function level; the verb is invoked as `cairn rehearse <ticket> --retire D<n> ... --because <text> --by <who> [--into D<m>]`"
+      ],
+      "would_settle": [
+        "CLI argument parsing structure and mutual exclusivity group setup in __main__.py; clarification of whether --into is required or optional"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create test_a_superseded_decision_is_retired.py proof with four test teeth",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the four PROVES teeth (1, 2, 3, 4) map to the four falsifier conditions (1)-(4): condition 1 tests reader_view/decision_ids_of filtering, condition 2 tests ownership refusal, condition 3 tests live-cite refusal, condition 4 tests bad --into refusal"
+      ],
+      "would_settle": [
+        "explicitly list what each of the four proof teeth should assert"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create test_a_superseded_decision_is_retired.py with fixture tickets in tmp commons (root=), direct function calls (no reader stub), PROVES 4 teeth matching the four falsifier conditions",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Test fixture structure follows the pattern of the sibling test test_decide_lands_in_its_line.py; the builder will examine that proof for World and tooth structure"
+      ],
+      "would_settle": [
+        "Explicit template or reference to sibling test, or detailed format for fixture ticket construction and tooth assertion structure"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: filter reader_view and decision_ids_of to exclude retired entries",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "builder has access to and is familiar with the existing reader_view and decision_ids_of implementations to know how to apply the filter"
+      ],
+      "would_settle": [
+        "provide context snippets showing the current structure of reader_view and decision_ids_of to clarify where/how to apply the filter"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement retire(ticket, ns, *, by, because, into=None, root=None) with refusal logic for all five conditions",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Refused is an exception class already used by decide(); 'absent' means decision ID not in ticket's decisions list; error messages should name each lack per the five refusal conditions listed"
+      ],
+      "would_settle": [
+        "retire() implementation covering: n in ns absent/already-retired refusal, by-mismatch refusal (fold case via system_word), live-line-citing-retired refusal with pattern match, into-validation refusal, empty-because refusal"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: ticket provides no explicit decisions list (D1-DN) required by rehearsal schema; the entire feature described in the 'how' section is one implicit decision",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "decisions field is required by the rehearsal system to produce a one-node-per-decision build tree; without it, I cannot map the work to the expected structure"
+      ],
+      "would_settle": [
+        "add explicit decisions list to the ticket JSON: at least one D<n> entry per logical step (retire() function, reader_view filter, decision_ids_of filter, CLI flags, test proof), or confirm this ticket format omits decisions by design"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: add --retire, --because, --into flags to CLI in __main__.py",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: add CLI flags --retire D<n> [D<n> ...] with --because WHY and optional --into D<m>; mutual exclusivity with --decide/--proved/--standing; exits 0 on write, 2 on Refused",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create test_a_superseded_decision_is_retired.py proof with four test teeth",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create test_a_superseded_decision_is_retired.py with fixture tickets in tmp commons (root=), direct function calls (no reader stub), PROVES 4 teeth matching the four falsifier conditions",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: filter reader_view and decision_ids_of to exclude retired entries",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement retire() function in rehearsal.py",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement retire() write logic—stamp retired entries with {by, at (UTC iso seconds), because, into} and call _write_ticket through artifact door",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement retire(ticket, ns, *, by, because, into=None, root=None) with refusal logic for all five conditions",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify decision_ids_of to exclude entries carrying 'retired' field",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify reader_view to drop retired entries from pasted copy and skip [settled by] annotations if settler or target is retired",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: ticket provides no explicit decisions list (D1-DN) required by rehearsal schema; the entire feature described in the 'how' section is one implicit decision",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: wire CLI flags to call retire() with correct exit codes",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: add --retire, --because, --into flags to CLI in __main__.py",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "specify exact argparse configuration (nargs, type, required) for each new flag and show how mutual exclusivity is declared"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: add CLI flags --retire D<n> [D<n> ...] with --because WHY and optional --into D<m>; mutual exclusivity with --decide/--proved/--standing; exits 0 on write, 2 on Refused",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "CLI argument parsing structure and mutual exclusivity group setup in __main__.py; clarification of whether --into is required or optional"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create test_a_superseded_decision_is_retired.py proof with four test teeth",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "explicitly list what each of the four proof teeth should assert"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create test_a_superseded_decision_is_retired.py with fixture tickets in tmp commons (root=), direct function calls (no reader stub), PROVES 4 teeth matching the four falsifier conditions",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Explicit template or reference to sibling test, or detailed format for fixture ticket construction and tooth assertion structure"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: filter reader_view and decision_ids_of to exclude retired entries",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "provide context snippets showing the current structure of reader_view and decision_ids_of to clarify where/how to apply the filter"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement retire() function in rehearsal.py",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement retire() write logic—stamp retired entries with {by, at (UTC iso seconds), because, into} and call _write_ticket through artifact door",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement retire(ticket, ns, *, by, because, into=None, root=None) with refusal logic for all five conditions",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "retire() implementation covering: n in ns absent/already-retired refusal, by-mismatch refusal (fold case via system_word), live-line-citing-retired refusal with pattern match, into-validation refusal, empty-because refusal"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify decision_ids_of to exclude entries carrying 'retired' field",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify reader_view to drop retired entries from pasted copy and skip [settled by] annotations if settler or target is retired",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: ticket provides no explicit decisions list (D1-DN) required by rehearsal schema; the entire feature described in the 'how' section is one implicit decision",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "add explicit decisions list to the ticket JSON: at least one D<n> entry per logical step (retire() function, reader_view filter, decision_ids_of filter, CLI flags, test proof), or confirm this ticket format omits decisions by design"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: wire CLI flags to call retire() with correct exit codes",
+      "reads": [
+        1
+      ]
+    }
+  ],
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.0814296,
+        "duration_ms": 72009,
+        "is_error": false,
+        "session_id": "19cfdfe8-5b2d-45a3-b777-711c306cf258"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.09815360000000001,
+        "duration_ms": 102390,
+        "is_error": false,
+        "session_id": "a247913d-1fad-433e-8794-61be57d27c37"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.08370060000000001,
+        "duration_ms": 85412,
+        "is_error": false,
+        "session_id": "316a2378-ebee-4045-a4e6-95fd57377e00"
+      }
+    ],
+    "cost_usd": 0.263284,
+    "duration_ms": 259811,
+    "rendered_chars": 28265,
+    "by": null
+  },
+  "divergence": null
+}
