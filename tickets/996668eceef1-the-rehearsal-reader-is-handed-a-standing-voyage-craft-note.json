@@ -18,5 +18,95 @@
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T164155-c4d13ee90ca0.json",
   "task_or_ticket": "ticket",
   "builder_notes": "WHERE: cairn/machines/rehearsal/. Add VOYAGE_CRAFT_PATH = HERE / 'voyage_craft.md' beside PROMPT_PATH (rehearsal.py:47), and def voyage_craft() beside prompt() (:92). It reads the file and raises Refused(f'no voyage-craft note at {VOYAGE_CRAFT_PATH}') when the file is absent. In render() (:333), parts becomes [prompt(), '\\n\\n# VOYAGE CRAFT\\n\\n' + voyage_craft(), '\\n\\n# THE TICKET...']. The proof stubs a missing note by monkeypatching R.VOYAGE_CRAFT_PATH, so voyage_craft() must read the module global at call time. prompt.md gains one rule: the VOYAGE CRAFT section is standing for every ticket, and a step it answers is settled, not a gap. The fixtures follow test_decide_lands_in_its_line.py:84 (render with root=commons, berths_root=no-berths, repo). The note's text is in the ticket's how. Existing proofs: test_decide_lands_in_its_line.py:92 finds '# THE TICKET' by search, so inserting a section before it keeps that proof green. Every rehearsal proof is resealed after the build.",
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: DONE. The proof cairn/machines/rehearsal/proofs/test_the_reader_is_handed_the_voyage_craft.py is complete on disk and was committed in two proof commits: 7ffa8a2f (teeth 1-3) and 9edee02e (tooth 4, message '996668eceef1: proof — tooth 4, the prompt and the charter say so'). At 9edee02e all four teeth FAIL. Nothing in the proof is edited at any later step. The predict's A (the proof commit) is 9edee02e.",
+      "by": "cc",
+      "step": "the proof commits",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: create cairn/machines/rehearsal/voyage_craft.md. Its bytes are exactly the ticket how's VOYAGE_CRAFT_TEXT: everything after the line 'VOYAGE_CRAFT_TEXT:' and its blank line, from 'This section is standing.' to the end of the how, ending in one newline. Write it with the Write tool; it is not a record, so no door is involved.",
+      "by": "cc",
+      "step": "voyage_craft.md",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: in cairn/machines/rehearsal/rehearsal.py: (a) directly under the line 'PROMPT_PATH = HERE / \"prompt.md\"' add 'VOYAGE_CRAFT_PATH = HERE / \"voyage_craft.md\"'. (b) Directly after def prompt() add def voyage_craft() -> str, whose docstring says: the standing voyage-craft note (ticket 996668eceef1), the steps every code-seam voyage takes the same way, handed to the reader on every render so they are settled once; read at call time from VOYAGE_CRAFT_PATH, and absent, the render refuses rather than hand a reader less. Its body: 'if not VOYAGE_CRAFT_PATH.is_file(): raise Refused(f\"no voyage-craft note at {VOYAGE_CRAFT_PATH}\")', then 'return VOYAGE_CRAFT_PATH.read_text(encoding=\"utf-8\")'. (c) In render(), the line 'parts = [prompt(), \"\\n\\n# THE TICKET\\n\\n```json\\n\" + reader_view(blob) + \"\\n```\\n\"]' becomes 'parts = [prompt(), \"\\n\\n# VOYAGE CRAFT\\n\\n\" + voyage_craft(), \"\\n\\n# THE TICKET\\n\\n```json\\n\" + reader_view(blob) + \"\\n```\\n\"]'. render()'s docstring gains, after 'the ticket as reader_view shows it', the words 'after the standing voyage-craft note'. Nothing else in the file changes.",
+      "by": "cc",
+      "step": "rehearsal.py",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: in cairn/machines/rehearsal/prompt.md, under '## Rules', insert a new bullet directly after the bullet that begins '- **Work that has ALREADY LANDED' and before '- Stay inside the text.'. The bullet is exactly: '- **The VOYAGE CRAFT section is standing.** It holds for every ticket. A step it answers (the commits and their messages, committing records between doors, running and sealing proofs, the predict, PROVEME, the hollow, PROVED) is settled: a decision that names such a step builds as written for the part the section answers, and a step the section answers that no decision names is not `unlisted`, so emit no node for it. Where a ticket\\'s own decision says something different, the decision governs.'",
+      "by": "cc",
+      "step": "prompt.md",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: append one sentence to the end of the 'what' string in cairn/machines/rehearsal/intention+why.json: ' Before the ticket, the reader is handed the standing voyage-craft note voyage_craft.md (ticket 996668eceef1), the steps every code-seam voyage takes the same way, and prompt.md tells it a step that note answers is settled; a missing note refuses the render.' No other field changes. Write it through the artifact door, never by hand: load the JSON, change 'what', dump it with json.dumps(doc, indent=2, ensure_ascii=False) plus a trailing newline to a scratch file F, then run 'bin/cairn artifact write cairn/machines/rehearsal/intention+why.json --verb cast --why \"996668eceef1: the charter names the voyage-craft note among the reader inputs\" --from F'. That write appends to cairn's .artifact-journal.jsonl.",
+      "by": "cc",
+      "step": "the charter",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6: after D2-D5, run 'bin/cairn test --exec \"~/.cairn/venv/bin/python3 cairn/machines/rehearsal/proofs/test_the_reader_is_handed_the_voyage_craft.py\"'. All four teeth PASS; if any FAILs, fix the build, never the proof. Then the build commit stages exactly cairn/machines/rehearsal/voyage_craft.md, cairn/machines/rehearsal/rehearsal.py, cairn/machines/rehearsal/prompt.md, cairn/machines/rehearsal/intention+why.json and cairn's .artifact-journal.jsonl (D5's journal line), with the message '996668eceef1: build — the rehearsal reader is handed a standing voyage-craft note'. Its hash is the predict's B.",
+      "by": "cc",
+      "step": "run and the build commit",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 7,
+      "text": "D7: after the build commit, seal each proof in its own command, in this order: 'bin/cairn test --seal cairn/machines/rehearsal/proofs/test_the_reader_is_handed_the_voyage_craft.py', then 'bin/cairn test --seal cairn/machines/rehearsal/proofs/<name>' for each of test_a_gap_citing_a_carried_decision_is_settled.py, test_a_scoped_decision_is_handed_as_context_not_a_step.py, test_a_superseded_decision_is_retired.py, test_decide_lands_in_its_line.py, test_design_sha.py, test_rehearsal.py, test_rehearsal_probes_report_to_the_watch.py. All eight land green. Then the seal commit stages cairn/machines/rehearsal/validations/ (the new record and the seven resealed), cairn/machines/rehearsal/history.json, cairn/machines/rehearsal/state.json and cairn's .artifact-journal.jsonl, with the message '996668eceef1: seal — the rehearsal reader is handed a standing voyage-craft note'.",
+      "by": "cc",
+      "step": "the seals",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:04+00:00"
+    },
+    {
+      "n": 8,
+      "text": "D8: the predict runs exactly as the VOYAGE CRAFT text's clause 4 types it, with A = 9edee02e and B = the build commit. Its writes_to files are cairn/machines/rehearsal/rehearsal.py, cairn/machines/rehearsal/prompt.md and cairn/machines/rehearsal/intention+why.json (each overwritten with git show 9edee02e:<path>) and cairn/machines/rehearsal/voyage_craft.md, which is new in the build and so is removed. As built, the proof exits 0 with all four teeth PASS. Reverted, it exits 1 with all four teeth FAIL.",
+      "by": "cc",
+      "step": "the predict",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:05+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D9: the PROVEME --why is exactly: 'built and sealed: all four teeth green on the build commit; bare predict (siblings 0) reds all four with the build reverted to 9edee02e; all eight rehearsal proofs sealed green'. --proven-by is cairn/machines/rehearsal/proofs/test_the_reader_is_handed_the_voyage_craft.py. If any measured result differs from that sentence, the builder does not cross and reports the actual result to the peer.",
+      "by": "cc",
+      "step": "the PROVEME why",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:05+00:00"
+    },
+    {
+      "n": 10,
+      "text": "D10: after PROVEME, 'bin/cairn test --hollow 996668eceef1 --seal'. The expected reading for each file the hollow measures: rehearsal.py reverted reds teeth 1 and 2; prompt.md reverted reds tooth 4; intention+why.json reverted reds tooth 4; voyage_craft.md, if measured, reds teeth 1 and 3. If any file reads hollow, or the hollow opens an approval question, the builder stops and reports the reading and the question id to the peer. If the reading is as expected, commit its records.",
+      "by": "cc",
+      "step": "the hollow",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:05+00:00"
+    },
+    {
+      "n": 11,
+      "text": "D11: the PROVED arguments. validate_ref = /home/akien/.cairn/devices/chart/0/packets/validate-20261008T165723-c920f22cae20.json, the claiming validate berth. verdicts = three entries, one per criterion of that berth in its order: 'the voyage-craft proof seals green with all four teeth'; 'the sealed hollow reverting rehearsal.py reds teeth 1 and 2'; 'every other rehearsal proof stays sealed green'. Each copies the criterion's claim, instrument, expect_exit and timeout_s verbatim and adds outcome 'pass', discriminating_observation (the predict's four reds at 9edee02e against four greens at the build commit) and evidence (build commit, seal commit, the hollow reading). dispositions = five entries, one per hypothesis piece, named verbatim: 'write the four-tooth voyage-craft proof'; 'write voyage_craft.md with the ticket's text'; 'hand the note to the reader in render() and refuse when it is missing'; 'add the standing-section rule to prompt.md and the input to the charter'; 'seal the new proof and reseal every rehearsal proof green'. Each has disposition 'confirmed' and by 'cc'. Then clear and write back as the VOYAGE CRAFT text's clause 7 says.",
+      "by": "cc",
+      "step": "the PROVED arguments",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:58:05+00:00"
+    }
+  ]
 }
