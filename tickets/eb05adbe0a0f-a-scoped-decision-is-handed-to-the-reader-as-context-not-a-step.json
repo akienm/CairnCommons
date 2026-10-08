@@ -20,5 +20,47 @@
     "open-277b8ed6e899"
   ],
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/machines/rehearsal/rehearsal.py — scope() directly after retire() (:695-753); reader_view (:222-272), the line after the retired filter at :249; decision_ids_of (:140-146); cairn/machines/rehearsal/__main__.py — --scope beside --retire (:55-70), copying its argument handling and _decision_id parsing; cairn/machines/rehearsal/prompt.md — after the step rules (:19-26). FIXTURE? copy cairn/machines/rehearsal/proofs/test_a_superseded_decision_is_retired.py's world (its fixture commons root passed as root=, scratch_dir from cairn.tools.scratch.scratch, never tempfile); tooth 3 runs __main__ as a subprocess with that root the way the retire proof does, or calls its main() if that proof does — copy whichever it uses. RUNNER? end with print_teeth_main as its neighbours do. SEAL? bin/cairn test --netns --seal on the new file. CLEARANCE: open-277b8ed6e899; BUILDME waits on it. 41202d4c8d3b is queued after this ticket.",
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "cairn/machines/rehearsal/rehearsal.py gains scope(ticket, ns, *, by, because, root=None) directly after retire(), mirroring it: it collects every lack and raises Refused(\"scope refused over {ticket} — N lack(s): ...\") naming all of them, writing nothing — lacks are a missing --by, an empty because, no ids, an id the ticket does not carry, an id already scoped (has context), an id already retired, and a line whose by differs from the caller (fold(d.get('by')) != fold(by)). It has no citation check: a scoped line stays visible to the reader. On pass it sets d['context'] = {'by': by, 'at': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'because': because} on each named decision, keeps its text unchanged, writes through _write_ticket(tk, doc, why=...) (door verb cast), and returns the list of scoped decision dicts.",
+      "by": "cc",
+      "step": "unlisted: scope() function to stamp context={by, at, because} on named live decisions through door verb cast",
+      "source": "rehearsal",
+      "at": "2026-10-08T19:17:50+00:00"
+    },
+    {
+      "n": 2,
+      "text": "reader_view in rehearsal.py keeps its current work (drop retired, label each text D<n>, add the [settled by D<n>] annotations) over the live decisions, then splits them: every decision carrying a 'context' field moves out of doc['decisions'] into doc['context'], in the same order, its text still labeled D<n>; doc['context'] is set only when that list is non-empty, so a ticket with nothing scoped reads byte-identical to today.",
+      "by": "cc",
+      "step": "unlisted: reader_view moves scoped decisions into a top-level 'context' list",
+      "source": "rehearsal",
+      "at": "2026-10-08T19:17:50+00:00"
+    },
+    {
+      "n": 3,
+      "text": "decision_ids_of in rehearsal.py omits every decision carrying a 'context' field, exactly as it already omits 'retired' ones; validate() is unchanged, since it already refuses a step naming an id outside decision_ids and requires every carried id once.",
+      "by": "cc",
+      "step": "unlisted: decision_ids_of omits scoped decision ids",
+      "source": "rehearsal",
+      "at": "2026-10-08T19:17:50+00:00"
+    },
+    {
+      "n": 4,
+      "text": "cairn/machines/rehearsal/__main__.py adds --scope (nargs='+', metavar 'D<n>') beside --retire, reusing the existing --because and --by flags. A --scope branch mirrors the --retire branch: p.error (exit 2) if combined with --decide, --proved, --standing or --retire, or if --by or --because is missing — so nothing is written; each id parses through _decision_id; it calls R.scope(args.ticket, ns, by=args.by, because=args.because), prints 'scoped D{n} on {ticket} by {by}: {text}' per returned decision and then 'the ticket's bytes changed — rehearse again before BUILDME', and returns 0; a Refused prints its message and returns 2. The usage epilog gains the line: cairn rehearse <ticket> --scope D<n> [D<n> ...] --because \"<why>\" --by <who>.",
+      "by": "cc",
+      "step": "unlisted: CLI gains --scope D<n> [...] --because <why> --by <who>, standing alone like --retire",
+      "source": "rehearsal",
+      "at": "2026-10-08T19:17:51+00:00"
+    },
+    {
+      "n": 5,
+      "text": "cairn/machines/rehearsal/prompt.md gains one bullet in its Rules section, directly after the 'Name steps by decision id' bullet, verbatim: '- **The `context` list is never a step.** A decision there was scoped by its author: it describes the voyage or the session, not the build. Read it for what it says, and never emit a node for it — its id is not in the vocabulary, and a reading that names it is handed back.'",
+      "by": "cc",
+      "step": "unlisted: prompt.md gains one line: the 'context' list is read for what it says and is never a step",
+      "source": "rehearsal",
+      "at": "2026-10-08T19:17:51+00:00"
+    }
+  ]
 }
