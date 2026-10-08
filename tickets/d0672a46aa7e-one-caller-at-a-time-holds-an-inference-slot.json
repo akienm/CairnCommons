@@ -21,5 +21,169 @@
   "parent": "d80360545e91",
   "builder_notes": "WHERE: cairn/devices/inference_domain/host.py _urllib_transport :136-147; SlotHeld beside HostUnreachable (a subclass, so every caller that already handles an unreachable host handles it). LOCK IDIOM: the house flock — cairn/devices/bus/server.py:359, ground_loop guard.py:67, cairn/tools/artifact/artifact.py:294 — copy the open/flock/close shape, poll LOCK_NB with a short sleep until the deadline. ENDPOINT KEY: scheme://host:port from urllib.parse of the url, so two paths on one host share a slot. FIXTURE: two subprocesses (multiprocessing or subprocess.run of python -c) each monkeypatch urllib.request.urlopen to a stand-in that writes enter/exit timestamps to a scratch file and sleeps ~1s; point XDG_RUNTIME_DIR at a scratch_dir for the proof so the live lock dir is untouched. No real host, no network.",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T140400-39ab10d57801.json",
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the build's FIRST commit adds only cairn/devices/inference_domain/proofs/test_one_caller_at_a_time_holds_an_inference_slot.py. Its PROVES is {'d0672a46aa7e': {'1': 'test_one_endpoint_never_holds_two_callers', '2': 'test_a_held_slot_refuses_by_name_and_never_dials', '3': 'test_two_endpoints_do_overlap'}}. Each tooth spawns real child interpreters with XDG_RUNTIME_DIR set to its own scratch_dir, and the endpoints are fixture names under .invalid. Each child replaces urllib.request.urlopen with a stand-in that stamps enter and exit around a sleep, then calls host._urllib_transport(url + '/api/chat', b'{}', timeout) once. Tooth 2 reads SlotHeld's endpoint and lock_path attributes and its message, and requires the lock path to lie under the scratch runtime dir and end in .lock. Measured at this commit through bin/cairn test --exec: teeth 1 and 2 red ('two callers were inside one endpoint at once'; 'host publishes no SlotHeld'), tooth 3 PASS.",
+      "by": "cc",
+      "step": "the proof commit",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:55:31+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/inference_domain/host.py adds 'import fcntl', 'import hashlib', 'import os', 'import time' and 'import urllib.parse' beside its imports, and 'from pathlib import Path'. Directly after class HostUnreachable it defines class SlotHeld(HostUnreachable). Its docstring: the slot's owner admits one caller per endpoint, and a caller that waits its whole timeout is refused by name. Being a HostUnreachable, the failover walk treats a held slot as an unreachable host, which is the behaviour d0672a46aa7e wants and needs no change there. __init__(self, endpoint: str, lock_path, waited: float) sets self.endpoint, self.lock_path = str(lock_path) and self.waited, and calls super().__init__ with the message f'inference slot at {endpoint} is held by another caller: waited {waited:.2f}s for {lock_path}'. Two module functions follow. _endpoint_of(url): s = urllib.parse.urlsplit(url); returns f'{s.scheme}://{s.hostname}:{s.port or (443 if s.scheme == \"https\" else 80)}'. _slot_lock_path(endpoint): base = os.environ.get('XDG_RUNTIME_DIR') or f'/run/user/{os.getuid()}'; returns Path(base) / 'cairn' / 'inference_domain' / 'slots' / (hashlib.sha256(endpoint.encode()).hexdigest()[:12] + '.lock'). A comment says why the lock is not under ~/.cairn: the tester's instance seal swaps it.",
+      "by": "cc",
+      "step": "SlotHeld and the lock path",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:55:31+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: _urllib_transport keeps its signature and its request build. Before urlopen it computes endpoint = _endpoint_of(url) and path = _slot_lock_path(endpoint), runs path.parent.mkdir(parents=True, exist_ok=True), opens fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600) and records started = time.monotonic(). If timeout is None it calls fcntl.flock(fd, fcntl.LOCK_EX), which blocks. Otherwise it loops on fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB): on BlockingIOError, if time.monotonic() - started >= timeout it closes fd and raises SlotHeld(endpoint, path, time.monotonic() - started); else it sleeps 0.05. Once the lock is held, the existing try/with-urlopen/except block runs unchanged inside an outer try whose finally does os.close(fd), which releases the lock. The docstring gains one paragraph naming d0672a46aa7e and the 2026-07-13 saturation. _urllib_get is not touched.",
+      "by": "cc",
+      "step": "the lock",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:55:31+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: run the new proof through bin/cairn test --exec: all three teeth PASS. Seal it with plain bin/cairn test --seal <proof>, and test_host.py the same way, each in its own command; both must land green. proven_by = cairn/devices/inference_domain/proofs/test_one_caller_at_a_time_holds_an_inference_slot.py, carried on the PROVEME crossing as --proven-by. A bare worktree predict at the build commit, with the sibling CairnCommons count reading 0, runs the proof as built (green) and with host.py reverted to the proof commit (teeth 1 and 2 red). Then bin/cairn test --hollow d0672a46aa7e --seal: host.py reverted reds teeth 1 and 2; the proof is skipped as the instrument. Then PROVED through proved_gen once both repos are pushed.",
+      "by": "cc",
+      "step": "verification",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:55:31+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5 (settles D1's gap): the proof is not to be written by the builder. It already stands on disk, complete, at cairn/devices/inference_domain/proofs/test_one_caller_at_a_time_holds_an_inference_slot.py (191 lines, three teeth plus _main). D1's commit stages that exact file, unchanged, with git add of that one path. Nothing in it is edited at any later step.",
+      "by": "cc",
+      "step": "the proof file is already written",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:01:16+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D5b (settles D4's gaps), all from ~/dev/src/cairn with P = the proof path. Seal: 'bin/cairn test --seal P', then separately 'bin/cairn test --seal cairn/devices/inference_domain/proofs/test_host.py'. Predict: '/tmp/claude-1000/-home-akien-dev-src-cairn/462a6e82-2573-46ef-8f40-d13459d02813/scratchpad/d067_predict.sh <proof commit> <build commit>', a script already written in the builder's scratchpad; it makes a detached worktree under /tmp/claude-1000/bare.XXXX, prints 'siblings: N' (N counts a CairnCommons directory beside the worktree; it must print 0, else the predict does not count), runs P as built (rc=0), overwrites host.py from the proof commit, runs P again (teeth 1 and 2 FAIL, rc=1), then removes the worktree and prunes. PROVEME: 'PYTHONPATH=. ~/.cairn/venv/bin/python3 -m cairn.tools.base.cross d0672a46aa7e PROVEME --actor cc --why \"...\" --proven-by P'. Hollow: 'bin/cairn test --hollow d0672a46aa7e --seal'. PROVED: push both repos, then 'PYTHONPATH=. python3 /tmp/claude-1000/-home-akien-dev-src-cairn/462a6e82-2573-46ef-8f40-d13459d02813/scratchpad/proved_gen.py /tmp/claude-1000/-home-akien-dev-src-cairn/462a6e82-2573-46ef-8f40-d13459d02813/scratchpad/pv_d067.json', the builder's established PROVED script, which berths the verdict and calls clearance.clear.",
+      "by": "cc",
+      "step": "exact commands for D4",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:01:16+00:00",
+      "context": {
+        "by": "cc",
+        "at": "2026-10-08T22:06:01+00:00",
+        "because": "superseded by D14 and D15, which carry the same steps typed in full with no session-scratchpad script; kept as context only"
+      }
+    },
+    {
+      "n": 7,
+      "text": "D7 (settles D6's gap): both scripts D6 names were measured present on 2026-10-08 before this line was written. d067_predict.sh is 790 bytes, mode -rwxrwxr-x, sha256 prefix 772761676de1. proved_gen.py is 1585 bytes, sha256 prefix 34c0c3617f4c, and is run by an explicit python3, so it needs no execute bit. They are the builder's own tools in its session scratchpad, not part of the system. If either is missing when its step comes, the builder stops and reports it; it does not reconstruct the script from memory.",
+      "by": "cc",
+      "step": "the scratchpad scripts exist",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:06:51+00:00",
+      "context": {
+        "by": "cc",
+        "at": "2026-10-08T22:06:01+00:00",
+        "because": "superseded by D14 and D15, which carry the same steps typed in full with no session-scratchpad script; kept as context only"
+      }
+    },
+    {
+      "n": 8,
+      "text": "D8: after D2 and D3, run the new proof through bin/cairn test --exec and get all three teeth to PASS. Then make the build commit, separate from D1's proof commit: git add cairn/devices/inference_domain/host.py only, message 'd0672a46aa7e: build — one caller at a time holds an inference slot, per endpoint'. That commit's hash is the <build commit> D6 hands to d067_predict.sh, and D1's hash is the <proof commit>. The seals in D6 come after the build commit, and their validation records go in a third commit.",
+      "by": "cc",
+      "step": "the build commit",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:16:00+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D9 (settles D6's session-path gap): this ticket is built by the session that folded D5-D8, session 462a6e82-2573-46ef-8f40-d13459d02813, whose scratchpad holds both scripts (measured in D7). No other session builds it. If the voyage passes to another session, that session stops at D6 and asks for the scripts; it does not substitute paths.",
+      "by": "cc",
+      "step": "whose scratchpad",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:16:00+00:00",
+      "context": {
+        "by": "cc",
+        "at": "2026-10-08T22:06:01+00:00",
+        "because": "superseded by D14 and D15, which carry the same steps typed in full with no session-scratchpad script; kept as context only"
+      }
+    },
+    {
+      "n": 10,
+      "text": "D10 (settles D1's message gap): D1's commit message is exactly 'd0672a46aa7e: proof — one caller at a time holds an inference slot, per endpoint', followed by a blank line and the session's two trailer lines.",
+      "by": "cc",
+      "step": "the proof commit message",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:23:42+00:00"
+    },
+    {
+      "n": 11,
+      "text": "D11 (settles D6's confirm gap): as the first act of D6, the builder runs 'ls -l' on both script paths. It proceeds only if both list with the sizes D7 recorded (790 and 1585 bytes). Any other result stops D6 and is reported to the peer. Running in this session is what D9 already requires, so there is no session ID to check: a different session would not have this ticket's voyage in hand.",
+      "by": "cc",
+      "step": "the runtime check of the scripts",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:31:56+00:00",
+      "context": {
+        "by": "cc",
+        "at": "2026-10-08T22:06:01+00:00",
+        "because": "superseded by D14 and D15, which carry the same steps typed in full with no session-scratchpad script; kept as context only"
+      }
+    },
+    {
+      "n": 12,
+      "text": "D12 (settles D10's trailer gap): the two trailer lines are exactly 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>' and 'Claude-Session: https://claude.ai/code/session_01JrhBQALF5qFBEVqQJUsXUu'. They end every commit message on this voyage (D1, D8 and the seal commit), after one blank line.",
+      "by": "cc",
+      "step": "the trailer lines",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:38:18+00:00"
+    },
+    {
+      "n": 13,
+      "text": "D13, an index with no new choices; read each step through the lines named here. D1 (the proof commit): the file is already written (D5), its message is fixed (D10), and its trailers are fixed (D12). D2 and D3 (host.py): built as written, then committed by D8. D4 (verification): executed with D6's commands, in D8's order, after D11's script check. D6's scripts: present and measured (D7), and checked again at runtime (D11). If either script is absent, the builder stops and reports to the peer. It does NOT write a replacement from D6's description, because a re-derived predict is not the measured one. No step is missing between D1 and PROVED: D1 proof commit, D2+D3 build, D8 run and build commit, D6 seals and seal commit, D11 check, D6 predict, D6 PROVEME, D6 hollow, D6 PROVED.",
+      "by": "cc",
+      "step": "which line settles which step",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:46:46+00:00",
+      "context": {
+        "by": "cc",
+        "at": "2026-10-08T22:06:01+00:00",
+        "because": "superseded by D14 and D15, which carry the same steps typed in full with no session-scratchpad script; kept as context only"
+      }
+    },
+    {
+      "n": 14,
+      "text": "D14 (supersedes D6's two script references and D7/D11's checks of them; the rest of D6 stands). D1 is DONE: the proof was committed as 5a3dc72a, the proof commit, with D10's message; 'git show 5a3dc72a --stat' lists that one file. PREDICT, typed in full rather than run from a script, from ~/dev/src/cairn with B = the build commit: W=$(mktemp -d /tmp/claude-1000/bare.XXXX); git worktree add -q --detach $W B; ls $(dirname $W) | grep -c '^CairnCommons$' must print 0; cd $W; PYTHONPATH=. ~/.cairn/venv/bin/python3 P exits 0; git show 5a3dc72a:cairn/devices/inference_domain/host.py > cairn/devices/inference_domain/host.py; the same run exits 1 with teeth 1 and 2 FAIL and tooth 3 PASS; cd back; git worktree remove --force $W; git worktree prune. PROVED, through system code only: cairn.devices.codemother.machines.verdict.verdict.write_verdict({ticket, validate_ref: the claiming validate berth, verdicts: one pass per criterion, dispositions: one per hypothesis}); then cairn.devices.cairn.machines.harbor_master.clearance.clear(<the ticket's workflow_and_state>, 'PROVED', actor='CC', boat_id='d0672a46aa7e', proven_by=[P], ticket='d0672a46aa7e', history_path=cairn/devices/inference_domain/history.json, state_path=.../state.json); then write the returned workflow back through cairn.tools.artifact.artifact.write(<ticket path>, ..., verb='cast'). The builder may wrap those three calls in a helper; the calls are the step.",
+      "by": "cc",
+      "step": "no step rests on a scratchpad file",
+      "source": "rehearsal",
+      "at": "2026-10-08T21:56:20+00:00"
+    },
+    {
+      "n": 15,
+      "text": "D15 (D6's commands with the scratchpad references removed; predict and PROVED are D14's), all from ~/dev/src/cairn, P = cairn/devices/inference_domain/proofs/test_one_caller_at_a_time_holds_an_inference_slot.py. (1) After the D8 build commit, seal each proof in its own command: 'bin/cairn test --seal P', then 'bin/cairn test --seal cairn/devices/inference_domain/proofs/test_host.py'; both land green; commit the validation records as the third commit, with D12's trailers. (2) Run the predict exactly as D14 types it. (3) PROVEME: 'PYTHONPATH=. ~/.cairn/venv/bin/python3 -m cairn.tools.base.cross d0672a46aa7e PROVEME --actor cc --why \"<what was measured>\" --proven-by P'. (4) Hollow: 'bin/cairn test --hollow d0672a46aa7e --seal'; host.py reverted reds teeth 1 and 2. (5) Push both repos, then PROVED through D14's three calls. Nothing in this voyage runs a file from a session scratchpad.",
+      "by": "cc",
+      "step": "D6 restated without scripts",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:06:01+00:00"
+    },
+    {
+      "n": 16,
+      "text": "D16 (settles D15's --why gap): the PROVEME --why is exactly 'built and sealed: all three teeth green on the build commit; bare predict (siblings 0) reds teeth 1 and 2 with host.py reverted to 5a3dc72a, tooth 3 green either way; test_host.py sealed green'. If any measured result differs from that sentence, the builder does not cross. It reports the actual result to the peer instead. The hollow runs after PROVEME, so its result is not in this why.",
+      "by": "cc",
+      "step": "the PROVEME why",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:15:03+00:00"
+    },
+    {
+      "n": 17,
+      "text": "D17 (settles D14's argument gap and D15's message gap). SEAL COMMIT: the message is exactly 'd0672a46aa7e: seal — one caller at a time holds an inference slot, per endpoint', with D12's trailers. PROVED ARGUMENTS: validate_ref = /home/akien/.cairn/devices/chart/0/packets/validate-20261008T145504-1aa629b99387.json, the claiming validate berth. verdicts = three entries, one per criterion of that berth, in its order. Each copies the criterion's claim, instrument, expect_exit and timeout_s verbatim, and adds outcome 'pass', discriminating_observation (the measured red-before and green-after, with commit hashes) and evidence (build commit, seal state). dispositions = four entries, one per hypothesis piece of the berth's hypothesize_ref, named verbatim: 'write the three-tooth slot proof'; 'add SlotHeld and the per-endpoint lock path to host.py'; 'wrap _urllib_transport's urlopen in the per-endpoint flock bounded by the call's timeout'; 'seal the new proof and confirm every inference_domain proof stays green'. Each carries piece, expect (copied from the hypothesis), disposition 'confirmed' and by 'cc'. clear(): history_path = /home/akien/dev/src/cairn/cairn/devices/inference_domain/history.json and state_path = /home/akien/dev/src/cairn/cairn/devices/inference_domain/state.json, both existing files. artifact.write: path = /home/akien/dev/src/CairnCommons/tickets/d0672a46aa7e-one-caller-at-a-time-holds-an-inference-slot.json; content = the ticket JSON with workflow_and_state set to clear()'s return, json.dumps(indent=2, ensure_ascii=False) plus a newline; verb='cast'; why='d0672a46aa7e: PROVED — one caller at a time holds an inference slot, per endpoint'. Any refusal from these calls stops the voyage and is reported verbatim.",
+      "by": "cc",
+      "step": "the PROVED arguments and the seal commit message",
+      "source": "rehearsal",
+      "at": "2026-10-08T22:24:22+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/d0672a46aa7e-20261008T223344.json"
 }
