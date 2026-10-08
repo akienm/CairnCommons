@@ -28,5 +28,23 @@
     "open-4b3d45d375ca"
   ],
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/proof_coverage/proof_coverage.py (one regex near _CLAUSE_MARK at line 96, and the tail of clauses() at :151-182, which today returns from three places — restructure so each return path goes through one helper that appends the decision keys) and one new proof cairn/tools/proof_coverage/proofs/test_a_clause_a_decide_line_adds_is_covered.py. HOW DOES lacks() GET THE FIXTURE PROOF? read test_proof_coverage.py's existing lacks() teeth and copy their fixture shape (a scratch repo_root holding the proof file with a PROVES dict); use cairn.tools.scratch.scratch.scratch_dir, never tempfile. RUNNER? the file ends with the same __main__ runner its neighbours use. SEAL? bin/cairn test --seal on the new file. CLEARANCE: question open-4b3d45d375ca; BUILDME waits on it.",
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE PROOF IS ALREADY WRITTEN, AND IS NOT EDITED: cairn/tools/proof_coverage/proofs/test_a_clause_a_decide_line_adds_is_covered.py landed at cairn e350537c with PROVES {'46ece5fd9f69': {'1','2','3'}}; against d90f5b26 teeth 1-2 FAIL and tooth 3 is ok. The build writes nothing under proofs/ — after the build, run it with bin/cairn test --exec \"~/.cairn/venv/bin/python3 <that path>\" and expect 3/3 green; the only file the build changes is cairn/tools/proof_coverage/proof_coverage.py.",
+      "by": "cc",
+      "step": "unlisted: write test_a_clause_a_decide_line_adds_is_covered.py with three teeth",
+      "source": "rehearsal",
+      "at": "2026-10-08T18:34:15+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2 THE BUILD, IN cairn/tools/proof_coverage/proof_coverage.py ONLY. (a) Add a module regex beside _CLAUSE_MARK: _ADDED_CLAUSE = re.compile(r\"falsifier clause \\((\\d{1,2})\\) is added by this line\", re.I) — case-INSENSITIVE, because the one corpus line (11cd253f10bc D6) opens the sentence with a capital 'A falsifier clause'. (b) The decision shape is measured on 11cd253f10bc: ticket['decisions'] is a list of dicts with keys n, text, by, step, source, at; read str text only; skip a decision that is not a dict or whose text is not a str (never raise). (c) Restructure clauses(ticket): compute the falsifier's base list EXACTLY as today (nested proves_red keys / _CLAUSE_MARK before _WRONG_INTENT / lettered run / [WHOLE] / [] for empty text), then append, in decision order, every key _ADDED_CLAUSE finds in any decision's text that is not already in the list, and return that. Every existing return path goes through the append. (d) A decision that only cites a numbered marker in prose matches nothing and adds nothing. (e) Nothing else changes: lacks(), declared(), teeth_printed() and every caller stay as they are — lacks() already reads want = clauses(ticket).",
+      "by": "cc",
+      "step": "unlisted: modify clauses() to append decide-line clause keys from ticket['decisions']",
+      "source": "rehearsal",
+      "at": "2026-10-08T18:34:16+00:00"
+    }
+  ]
 }
