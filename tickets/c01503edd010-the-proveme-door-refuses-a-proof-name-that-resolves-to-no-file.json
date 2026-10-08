@@ -19,5 +19,47 @@
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/base/transitions.py only, plus the new proof. (A) New helper _dead_names(ticket: str, named: list[str], since: list[str]) -> list[dict] directly above inspect_proof_named: for each name in named then since (deduped, first origin wins: named -> 'this crossing', since -> 'since BUILDME'), p = Path(name) if Path(name).is_absolute() else _REPO_ROOT / name; if not p.is_file(): append {'name': name, 'from': origin}. (B) In inspect_proof_named, after union: dead = _dead_names(ticket, named, list(since)); actual = shown if union and not dead; if not union: the existing no-proof text; if dead: f\"the PROVEME crossing of ticket {ticket!r} names {len(dead)} proof(s) that resolve to no file: \" + '; '.join(f\"{d['name']!r} ({d['from']})\" for d in dead) + \" — a name is read repo-relative under the cairn root or absolute, as proof_coverage reads it at PROVED, which would refuse it as [proof_on_disk]\"; pass dead=dead into _lane values beside named and since_buildme. The lane identity the_proveme_crossing_names_its_proof, expected, and code string stay; still ONE lane. (C) _proof_named_gate: when the mismatch is a dead name (record[0]['values']['dead'] non-empty) raise ProofNamedRed with message f\"PROVEME crossing refused for ticket {ticket!r}: proven_by names a proof that resolves to no file — {listing}. Name the proof by its repo-relative path (e.g. skills/sail/proofs/<file>.py); a name since the latest forward BUILDME stays in the union PROVED reads until a forward BUILDME cuts it.\" — keep the existing message for the empty union; the message must contain 'proven_by' and the ticket id in both. (D) Docstring of inspect_proof_named cites this ticket. PROOF: model on test_proveme_names_its_proof.py — the _PretendCharted context manager (replace transitions._entry_gate and _stamp_sail), _AT_BUILDME = 'bug@v1: THINKME -> TICKETME -> [BUILDME] -> PROVEME -> PROVED', a fixture ticket id no journal carries (assert crossings.proven_by_since_buildme(id) == [] first), tempfile dirs outside any repo (the clean-tree seat records no lane there). Tooth 3: save crossings.ROOTS, set crossings.ROOTS = {'repo': <tmp>/repo, 'commons': <tmp>/commons} (both dirs created), write <tmp>/repo/fx/history.json as {'entries': [{'from': 'TICKETME', 'to': 'BUILDME', 'direction': 'forward', 'ticket': <id>, 'proven_by': 'p/gone.py', 'at': '2026-01-01T10:00:00', 'seq': 1}]}, call crossings._CACHE.clear(), emit; restore ROOTS and clear _CACHE in finally. Main via the same if __name__ == '__main__' runner the sibling uses.",
   "queued_after": "3d31d968a1a0 (peer F19: 'Queue it after the hollow ticket'; the hollow ticket is PROVED, so it follows the queue as it stands)",
   "depends_on": [],
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the proof ALREADY LANDED in cairn commit fd95c7fb (red proof): cairn/tools/base/proofs/test_a_dead_proof_name_is_refused_at_proveme.py carries PROVES['c01503edd010'] with keys '1'-'3' naming the three teeth of the falsifier, all three measured red against today's code (tooth 1: the bare name crossed ungated; tooth 2: values.dead absent; tooth 3: the since-BUILDME dead name crossed). It builds as written — the build edits NO proof file, only cairn/tools/base/transitions.py (D2-D5).",
+      "by": "cc",
+      "step": "the proof file",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:29:46+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: transitions.py gains def _dead_names(named: list[str], since: list[str]) -> list[dict], placed directly above def inspect_proof_named: walk named (origin 'this crossing') then since (origin 'since BUILDME'), skipping a name already seen so a name on both reads 'this crossing'; for each, p = Path(name) if Path(name).is_absolute() else _REPO_ROOT / name; if not p.is_file(), append {'name': name, 'from': origin}; return the list in that order. _REPO_ROOT is the module's existing constant (transitions.py:131); Path is already imported. This is the resolution proof_coverage.lacks makes at PROVED (cairn/tools/proof_coverage/proof_coverage.py:350), copied, not imported (RULE 1).",
+      "by": "cc",
+      "step": "the resolution helper",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:29:46+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: in inspect_proof_named, after union is built: dead = _dead_names(named, list(since)). actual = shown when union and not dead; the EXISTING no-proof text when not union (unchanged); when dead: f\"the PROVEME crossing of ticket {ticket!r} names {len(dead)} proof(s) that resolve to no file: \" + '; '.join(f\"{d['name']!r} ({d['from']})\" for d in dead) + \" — a name is read repo-relative under the cairn root, or absolute, as proof_coverage reads it at PROVED, which would refuse it as [proof_on_disk]\". The _lane call gains dead=dead beside named= and since_buildme=, so values carries 'dead' (an empty list when clean). Identity the_proveme_crossing_names_its_proof, expected (shown), and code string stay; the seat still returns exactly ONE lane (test_proveme_names_its_proof.py:120 asserts it). The docstring gains one paragraph citing c01503edd010: the names must also resolve to files, read the way PROVED reads them.",
+      "by": "cc",
+      "step": "the lane",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:29:46+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: _proof_named_gate keeps its existing raise for the empty union, and gains a branch BEFORE it: dead = record[0]['values'].get('dead') or []; if bad and dead: raise ProofNamedRed(f\"PROVEME crossing refused for ticket {ticket!r}: proven_by names a proof that resolves to no file — \" + '; '.join(f\"{d['name']!r} ({d['from']})\" for d in dead) + \". Name the proof by its repo-relative path (e.g. skills/sail/proofs/<file>.py) or its absolute path; a name on a crossing since the latest forward BUILDME stays in the union PROVED reads until a forward BUILDME cuts it.\", findings=_findings_of(record)). Both messages contain 'proven_by' and the ticket id. The clean return ('clean — proof named: ...') is unchanged.",
+      "by": "cc",
+      "step": "the refusal",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:29:46+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: after the build, run through bin/cairn test --exec (pytest is refused): the new proof (3/3 green), then the neighbours unchanged and green — cairn/tools/base/proofs/test_proveme_names_its_proof.py, cairn/tools/base/proofs/test_proveme_entry_needs_a_clean_tree.py, cairn/tools/base/proofs/test_transitions.py, cairn/devices/cairn/machines/harbor_master/proofs/test_clearance.py. Seal the new proof with bin/cairn test --netns --seal. The hollow reverts cairn/tools/base/transitions.py to the pre-build commit; all three teeth red there (measured at fd95c7fb).",
+      "by": "cc",
+      "step": "verification",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:29:46+00:00"
+    }
+  ]
 }
