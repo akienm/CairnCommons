@@ -10,7 +10,7 @@
   "how": "In cairn/machines/rehearsal: render() appends a '# ALREADY LANDED' section carrying the ticket's workflow_and_state cursor and every commit in the repo whose message names the ticket id, one '<short hash> <subject>' line each, oldest first, or '(nothing landed for this ticket)'; prompt.md drops the false framing 'You are rehearsing a ticket BEFORE anyone builds it' and gains one rule: a step whose work a landed commit already did is builds_as_written, and no unlisted step is emitted for work a landed commit did. Two teeth in cairn/machines/rehearsal/proofs/test_rehearsal.py. Questions a Haiku-level builder would need, answered here: Where? cairn/machines/rehearsal/rehearsal.py, new module-level function landed(ticket: str, cursor: str, repo: Path) -> str, placed directly above render(). How? subprocess.run(['git', '-C', str(repo), 'log', '--reverse', '--format=%h %s', f'--grep={ticket}'], capture_output=True, text=True, check=True); lines = the stdout's non-empty lines. Returns '\\n# ALREADY LANDED\\n\\ncursor: ' + cursor + '\\n\\n' + ('\\n'.join(lines) if lines else '(nothing landed for this ticket)') + '\\n'. On subprocess.CalledProcessError or OSError returns '\\n# ALREADY LANDED\\n\\n(landed commits could not be read: ' + str(exc) + ')\\n'. render(): after parts = [prompt(), ...ticket view...], parse the blob for workflow_and_state (json.loads; on failure or absence the cursor is '(no cursor)') and parts.append(landed(ticket, cursor, repo)); nothing else in render changes. prompt.md: replace the sentence 'You are rehearsing a ticket BEFORE anyone builds it, so that' with 'You are rehearsing a ticket so that' (the rest of that sentence unchanged), and add under ## Rules, directly after the whole-list rule: '- **Work that has ALREADY LANDED builds as written.** The ALREADY LANDED section lists the commits that name this ticket. A step whose work one of those commits already did is `builds_as_written` — there is nothing left to build — and you never emit an `unlisted:` step for work a landed commit did.' Proof: add T1 and T2 (names above) to proofs/test_rehearsal.py, under a PROVES entry for this ticket mapping '1' to T1 and '2' to T2; T1 builds its fixture repo with git init plus git -c user.email=t@t -c user.name=t commit --allow-empty -m '<msg>' three times. The existing prompt tooth test_the_prompt_says_the_job_is_the_tree_and_cannot_proceed_is_legal_and_the_schema_mirrors_validate is left as is.",
   "falsifier": "Falsifier: cairn/machines/rehearsal/proofs/test_rehearsal.py green and sealed under bin/cairn test --netns with its existing teeth and two new ones: (1) test_render_lists_the_tickets_landed_commits_oldest_first_and_says_when_none — a fixture git repo with three commits: 'aaaaaaaaaaaa: first', 'unrelated: other', 'aaaaaaaaaaaa: second' and a fixture commons ticket aaaaaaaaaaaa whose workflow_and_state is 'code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED'; render('aaaaaaaaaaaa', root=<fixture commons>, repo=<fixture repo>) text contains '# ALREADY LANDED', the cursor string, and the lines '<hash> aaaaaaaaaaaa: first' then '<hash> aaaaaaaaaaaa: second' in that order, and not 'unrelated: other'; a second ticket bbbbbbbbbbbb with no commit renders '(nothing landed for this ticket)'; (2) test_the_prompt_says_landed_work_builds_as_written — prompt.md contains 'ALREADY LANDED' and 'builds_as_written' in the landed-work rule and does not contain 'BEFORE anyone builds it'. Both red with rehearsal.py and prompt.md reverted to the pre-build commit (the hollow). Then measured, not sealed (F22): (a) 41202d4c8d3b's next rehearsal reaches CLEAN without raising landed work (the helper, the two tests, committing the build); pass count and gaps recorded on this ticket; a re-raise sends this ticket back to FIXME; (b) one control read at PROVEME: 41202d4c8d3b's view with D14 removed still flags the crossing-command gap on D12; recorded on this ticket. Horizon: this voyage plus 8y's next rehearsal.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [FIXME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the live reading is 41202d4c8d3b's next rehearsal, which is the next step of that voyage (ticket CairnCommons/tickets/41202d4c8d3b-*.json, cursor TICKETME) and is recorded on this ticket per F22 (a) at /home/akien/.cairn/foreground-decisions.md line 483",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261007T234122-570ad3a608a0.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261007T234047-d9c3d0c3dbcd.json",
@@ -119,9 +119,41 @@
       "step": "FIXME 2",
       "source": "rehearsal",
       "at": "2026-10-08T07:03:38+00:00"
+    },
+    {
+      "n": 13,
+      "text": "D13: answered by D14 (prompt.md's landed-work rule narrowed to what a listed commit's change performs) and D15 (the ALREADY LANDED header says the voyage is NOT complete), pinned by T4 test_landed_work_is_only_what_a_listed_commit_performs_and_the_voyage_is_not_done, ALREADY LANDED red in cairn commit 79967a1a under PROVES['80518446bfc8']['4']. The live measure is the corrected control (41202d4c8d3b minus D14 and D16, ticket_sha256 09a15081...) through the fixed reader, 3 reads, bar >=1 of 3 raising the crossing-command gap; 0 of 3 stops and reports. Honesty note: the kick-back rests on OLD 1/3 vs NEW 0/3 at n=3, weak evidence of a mask; the pre-set table (F25) sent it to FIXME and that stands.",
+      "by": "cc",
+      "step": "FIXME 1",
+      "source": "rehearsal",
+      "at": "2026-10-08T07:58:41+00:00"
+    },
+    {
+      "n": 14,
+      "text": "D14: in cairn/machines/rehearsal/prompt.md, the bullet under ## Rules that begins '- **Work that has ALREADY LANDED builds as written.**' is replaced whole by this one line: '- **Work that has ALREADY LANDED builds as written — and only that work.** The ALREADY LANDED section lists the commits that name this ticket. A decision counts as built only where a listed commit's change performs it: that step is `builds_as_written`, and you never emit an `unlisted:` step for work a listed commit performed. Anything no listed commit performs, including crossings, proofs and the commands that move the cursor, is judged exactly as if this section were absent.' No other prompt line changes.",
+      "by": "cc",
+      "step": "the prompt rule",
+      "source": "rehearsal",
+      "at": "2026-10-08T07:58:42+00:00"
+    },
+    {
+      "n": 15,
+      "text": "D15: cairn/machines/rehearsal/rehearsal.py gains, directly above def landed(), the module constant NOT_DONE = 'This voyage is NOT complete: its remaining steps are still to be built.' and every string landed() returns (the two failure returns and the normal one) begins '\\n# ALREADY LANDED\\n\\n' + NOT_DONE + '\\n\\n' in place of '\\n# ALREADY LANDED\\n\\n'; what follows is unchanged (the failure text, or 'cursor: ' and the list). Nothing else in rehearsal.py changes.",
+      "by": "cc",
+      "step": "the header line",
+      "source": "rehearsal",
+      "at": "2026-10-08T07:58:42+00:00"
+    },
+    {
+      "n": 16,
+      "text": "D16: this voyage's decision list is D1-D4 and D8-D9 (ALREADY LANDED in cairn d5dda558 and b462b2ce, build as written) plus D14-D15, which are this voyage's whole build; D16 supersedes D10's 'this voyage's build is D9 alone'. T1-T3 stand green; T4 (cairn 79967a1a) is red until D14 and D15 land and must then be green with all 16 teeth.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-08T07:58:42+00:00"
     }
   ],
-  "rehearsal": "rehearsals/80518446bfc8-20261008T071818.json",
+  "rehearsal": "rehearsals/80518446bfc8-20261008T080329.json",
   "fixme": [
     {
       "n": 1,
