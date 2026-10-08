@@ -1,0 +1,25 @@
+{
+  "id": "d0672a46aa7e",
+  "date": "2026-10-08",
+  "owner": "CC",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T135505-3d4b3757882b.json",
+  "task_or_ticket": "ticket",
+  "title": "One caller at a time holds an inference slot",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "inference_domain, as the owner of the inference slot, lets one caller at a time into each endpoint: the one function that opens the slot takes an exclusive per-endpoint lock bounded by the call's timeout and raises a named SlotHeld when the slot stays held.",
+  "why": "Akien via peer akiendelllinux_cc_0 as F39, 2026-10-08, verbatim: \"it sounds to me like we don't need it at all... this is deeper than i designed. what i said was everything needed to be able to be worked on live. self testing, self checking... as long as things are working, we don't need to retest 400 proofs for something i never thought we needed.\" The ruling retires the tester's network namespace (d80360545e91), whose only recorded why was the 2026-07-13 incident: nine test runs saturating the single inference slot (cairn/devices/tester/isolation.py:15-20). Census 2026-10-08: inference_domain has no flock, semaphore or queue; host._urllib_transport (host.py:136-147) is a bare urlopen. So the protection moves to the slot's owner before the namespace goes.",
+  "traces_to": "Law 4 (one consumer per slot becomes physics at the one function every caller passes, instead of a namespace that bound proofs only); Law 6 (the slot is inference_domain's to gate); RULE 1 (the rule lives inside the component that owns the resource).",
+  "how": "cairn/devices/inference_domain/host.py: _urllib_transport takes fcntl.flock(LOCK_EX|LOCK_NB) on $XDG_RUNTIME_DIR/cairn/inference_domain/slots/<sha256(scheme://host:port)[:12]>.lock (falling back to /run/user/<uid> when the variable is unset), retrying until the call's own timeout, then raising SlotHeld(HostUnreachable) naming the endpoint, the lock path and the wait. The lock wraps only the urlopen; installed_models' GET of /api/tags does not take it. The lock is not under ~/.cairn because the tester's instance seal swaps ~/.cairn per run, so a lock there would never be shared with a live caller. Proof change is question open-c64930dd5ef8.",
+  "falsifier": "Falsifier: cairn/devices/inference_domain/proofs/test_one_caller_at_a_time_holds_an_inference_slot.py under PROVES {'d0672a46aa7e': {'1','2','3'}}: (1) two processes calling host._urllib_transport against one endpoint, with urllib.request.urlopen replaced in each by a stand-in that sleeps and stamps enter/exit times, never overlap inside it; (2) a caller finding the slot held past its own timeout raises SlotHeld carrying the endpoint and the lock path and never calls urlopen; (3) two different endpoints do overlap. Hollow: reverting host.py reds teeth 1 and 2. Every inference_domain proof stays green. Horizon: the tester's retirement (d80360545e91) lands with no saturation trouble from a concurrent proof run. Wrong intent if a second dialer of the slot is found outside host.py (the sole_path sieve says none).",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because a held slot raises SlotHeld loudly at its caller, and every inference call already logs its start through /home/akien/dev/src/cairn/cairn/devices/inference_domain/probes/an_inference_call_logs_that_it_started.py — an overlap would read as two starts on one endpoint with no SlotHeld between them",
+  "children": "none, because one function in /home/akien/dev/src/cairn/cairn/devices/inference_domain/host.py and one new proof",
+  "questions": [
+    "open-c64930dd5ef8"
+  ],
+  "parent": "d80360545e91",
+  "builder_notes": "WHERE: cairn/devices/inference_domain/host.py _urllib_transport :136-147; SlotHeld beside HostUnreachable (a subclass, so every caller that already handles an unreachable host handles it). LOCK IDIOM: the house flock — cairn/devices/bus/server.py:359, ground_loop guard.py:67, cairn/tools/artifact/artifact.py:294 — copy the open/flock/close shape, poll LOCK_NB with a short sleep until the deadline. ENDPOINT KEY: scheme://host:port from urllib.parse of the url, so two paths on one host share a slot. FIXTURE: two subprocesses (multiprocessing or subprocess.run of python -c) each monkeypatch urllib.request.urlopen to a stand-in that writes enter/exit timestamps to a scratch file and sleeps ~1s; point XDG_RUNTIME_DIR at a scratch_dir for the proof so the live lock dir is untouched. No real host, no network.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T140400-39ab10d57801.json",
+  "cast": "2026-10-08"
+}
