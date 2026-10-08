@@ -19,5 +19,56 @@
   ],
   "gates_bound": "Proved: skills/sail/proofs/test_sail_sweeps_the_tree_first.py green and sealed under bin/cairn test --netns, the new tooth under PROVES for this ticket; the tooth's in-proof mutations (sweep line deleted, sweep line after /chart) each red the predicate; the hollow reading is Akien's approval of the proofs-only build per ruling 8p (hollow.py:1100). Feeds back to origin on failure (a red returns the boat to FIXME).",
   "questions": [],
-  "cast": "2026-10-07"
+  "cast": "2026-10-07",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the proof carries TWO teeth keyed to the falsifier's clauses (proof_coverage.clauses returns ['1','2']): PROVES['41202d4c8d3b'] = {'1': 'test_skill_md_calls_the_sweep', '2': 'test_skill_md_sweeps_before_it_charts'}, committed red in 9154af40 (validate refuses an undeclared clause). Tooth 1 asserts _sweep_order_problem(live SKILL.md) is None and returns 'absent' with every line containing 'python3 -m skills.sail.sweep' removed; tooth 2 asserts the same None and returns 'after /chart' with that line moved directly below the '## 0. Chart it' heading, and 'no /chart heading' with that heading removed. The build is ONLY the helper _sweep_order_problem(text) -> str|None added to the same proof file: None when the first sweep-call line's index precedes the first line starting '## 0. Chart it'; 'absent' when no line contains the sweep call; 'no /chart heading' when the sweep line exists but no heading does; 'after /chart' otherwise. No assertion in either tooth changes in the build. The builder_check's single key 'test_skill_md_sweeps_before_it_charts' is superseded by this line.",
+      "by": "cc",
+      "step": "unlisted: one PROVES key vs two falsifier clauses",
+      "source": "rehearsal",
+      "at": "2026-10-08T01:17:27+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof is plain pytest functions with bare assert statements, run by the file's existing runner (if __name__ == '__main__': raise SystemExit(print_teeth_main(__file__)), already at the end of the file) — follow the five 92e0d158b1bc teeth in the same file. _sweep_order_problem is a module-level function placed after the _SKILL_MD/_SWEEP_CALL/_CHART_HEADING constants (lines 39-41 in 9154af40), uses those constants, imports nothing new; it iterates text.splitlines() with enumerate, takes the index of the first line containing _SWEEP_CALL and of the first line that startswith _CHART_HEADING, and returns 'absent' / 'no /chart heading' / 'after /chart' / None in that order of checks.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-08T01:26:55+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: after the build is committed, the proof is green under bin/cairn test --netns, and the ticket has crossed PROVEME, take the hollow reading: bin/cairn test --netns --seal --hollow 41202d4c8d3b skills/sail/proofs/test_sail_sweeps_the_tree_first.py. Because the build touched only the proof, the hollow skips it as the instrument and, per ruling 8p (cairn/devices/tester/hollow.py:1100-1110), prints 'ASKED Akien -> open-<id>'; once Akien answers approving, re-run the same command, which prints 'APPROVED ... -> open-<id>' and lands evidence.hollow['41202d4c8d3b'] on the seal. PROVED crosses only after that.",
+      "by": "cc",
+      "step": "unlisted: take the hollow reading for operator approval",
+      "source": "rehearsal",
+      "at": "2026-10-08T01:26:55+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: the three constants ALREADY STAND in the proof file, committed by the red proof 9154af40 — _SKILL_MD = Path(__file__).resolve().parent.parent / 'SKILL.md', _SWEEP_CALL = 'python3 -m skills.sail.sweep', _CHART_HEADING = '## 0. Chart it' — directly after the PROVES block. The build does not add, rename or change them; it only adds _sweep_order_problem, which reads them.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-08T01:36:39+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: if Akien's answer to the 8p question declines the proofs-only build, the hollow stays red and the ticket does not cross PROVED: it retreats PROVEME->BUILDME, and the decline is folded onto the ticket as a decision line before anything is rebuilt. If he approves, re-run the D3 command and PROVED crosses on its evidence.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-08T01:36:39+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6: the D3 wait is not polled and not guessed. The first --seal run prints one line 'ASKED Akien -> open-<12hex> (cairn question list): once answered, re-run --seal' — copy that id, send it to the peer akiendelllinux_cc_0, and end the turn (no waiter, no loop). Akien's answer is detected by running cairn question show open-<12hex>: it prints the question's JSON, and it is answered exactly when that JSON carries \"resolved\": true and a non-empty \"answer\" (his verbatim words) with \"answered_by\" naming him. An approving answer → re-run the D3 command; the hollow itself re-reads the question (hollow.approval, hollow.py:731) and prints 'APPROVED skills/sail/proofs/test_sail_sweeps_the_tree_first.py -> open-<12hex>' — that printed line, not the builder's reading of his words, is what lands the evidence. If the re-run prints ASKED again (the hollow did not accept the answer as approval), treat it as a decline under D5.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-08T01:45:28+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/41202d4c8d3b-20261008T015323.json"
 }
