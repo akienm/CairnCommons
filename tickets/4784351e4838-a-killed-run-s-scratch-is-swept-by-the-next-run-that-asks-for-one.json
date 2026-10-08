@@ -1,0 +1,72 @@
+{
+  "id": "4784351e4838",
+  "title": "A killed run's scratch is swept by the next run that asks for one",
+  "date": "2026-10-08",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "A scratch directory or worktree left behind by a run that was killed before its atexit sweep could fire is removed by the next process that asks the scratch tool for one, so a killed run leaks only until the next proof starts instead of forever.",
+  "why": "Measured 2026-10-08: /tmp held 1068 entries (1.7G on tmpfs). A clean bin/cairn test --exec of test_watch_receives_a_finding.py left its prefix at 254 before and 254 after, so the atexit door holds for runs that exit; the tester kills a timed-out proof (bf3c16162827) and a SIGKILL fires no atexit, so a killed run's scratch_dir and scratch_worktree leak forever. scratch.py's own docstring named the tail ('A run killed with SIGKILL fires no atexit hook and leaks'). CORRECTION measured after /sorted fired: not every leftover is a kill — exec_cwd_proof_fixture_* (55) and three other prefixes come from four proofs that call tempfile.mkdtemp bare, which test_scratch.py's corpus tooth caught red at this ticket's red-proof commit aaea6c36 (seal-red-cairn-tools-scratch); that is a separate defect in other components, not this door's.",
+  "traces_to": "Law 4 (cleanup enforced by physics: the atexit door binds only runs that exit; a kill is the case it never reached) and the scratch charter's own falsifier 'if a scratch directory outlives its run' — measured red on the host today.",
+  "how": "cairn/tools/scratch/scratch.py: scratch_dir and scratch_worktree put their owner's pid in the name behind a fixed marker (<prefix>scratch.<pid>-<mkdtemp suffix>); the first call in each process sweeps the temp root for marked entries whose pid is dead — rmtree, and for a worktree parent, prune the registration its worktree's .git file names. A live owner's entry is never touched; an unmarked entry is never touched. Mirrors the pid-in-the-name sweep of 201a37bf1613 (scratch tables) and isolation._sweep_orphaned_snapshots. New proof in cairn/tools/scratch/proofs.",
+  "falsifier": "Falsifier: cairn/tools/scratch/proofs/test_a_killed_runs_scratch_is_swept_by_the_next.py (landed red), green and sealed under bin/cairn test --netns, teeth under PROVES for this ticket: (1) a SIGKILLed child's scratch_dir under a fixture TMPDIR is gone after the next process under that TMPDIR calls scratch_dir; (2) a SIGKILLed child's scratch_worktree is gone and the fixture repo's git worktree list no longer names it; (3) a live child's scratch_dir and an unmarked directory beside it survive that call. test_scratch.py, test_scratch_is_a_tool.py and tester's test_hollow.py stay green unchanged. Hollow: scratch.py reverted to the pre-build commit reds teeth 1 and 2 (measured). Horizon: the temp root's marked entries with dead pids fall to zero after any proof run; the next host census of /tmp reads it.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the live reading is the host temp root itself: /tmp entries matching scratch\\.(\\d+)-[a-z0-9_]{8}$ whose pid is dead, counted by the same regex in /home/akien/dev/src/cairn/cairn/tools/scratch/scratch.py, and every proof run's first scratch call sweeps them",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T033401-414a8b3813ff.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T033226-2b90775ce846.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because one sweep function, one name change in two doors, and one docstring paragraph in /home/akien/dev/src/cairn/cairn/tools/scratch/scratch.py, with its proof already landed",
+  "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/scratch/scratch.py only. (A) A module constant _MARK = 'scratch.' and a regex _OWNED = re.compile(r'scratch\\.(\\d+)-[a-z0-9_]{8}$'). (B) def _owner_alive(pid) as isolation._pid_alive (os.kill(pid, 0): ProcessLookupError -> False, PermissionError -> True) — copied, not imported (RULE 1). (C) def _sweep_dead_owners(tmp: str | None = None) -> list[str]: root = Path(tmp or tempfile.gettempdir()); for each entry in root.iterdir() (OSError -> return []), m = _OWNED.search(entry.name); skip unless m and entry.is_dir(); pid = int(m.group(1)); skip if pid == os.getpid() or _owner_alive(pid); if (entry / 'worktree' / '.git').is_file(): read its 'gitdir: X' line, rmtree entry, then git --git-dir <Path(X).parents[1]> worktree prune (env=git_env(), capture_output); else rmtree entry; append str(entry); any OSError prints 'scratch: could not sweep <entry>: ...' to stderr and continues. (D) A module flag _swept = False and def _sweep_once(): if not _swept: set it, call _sweep_dead_owners(). (E) scratch_dir: call _sweep_once() first, then mkdtemp(prefix=f'{prefix}{_MARK}{os.getpid()}-'). scratch_worktree: same, for the parent mkdtemp. (F) The module docstring's 'WHAT THIS DOES NOT CLAIM' paragraph is replaced by one citing 4784351e4838: a killed run leaks until the next process asks for a scratch, and the legacy unmarked entries are not this door's to judge. PROOF: already landed; it builds as written.",
+  "queued_after": "c01503edd010",
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the proof ALREADY LANDED in cairn commit aaea6c36 (red proof): cairn/tools/scratch/proofs/test_a_killed_runs_scratch_is_swept_by_the_next.py carries PROVES['4784351e4838'] keys '1'-'3'; teeth 1-2 measured red against today's scratch.py (a SIGKILLed child's scratch_dir and scratch_worktree outlive the next process's scratch_dir call), tooth 3 green as the guard. It builds as written — the build edits NO proof file, only cairn/tools/scratch/scratch.py (D2-D5).",
+      "by": "cc",
+      "step": "the proof file",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:34:52+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: scratch.py gains module constants _MARK = 'scratch.' and _OWNED = re.compile(r'scratch\\.(\\d+)-[a-z0-9_]{8}$') (import re). scratch_dir makes its directory with tempfile.mkdtemp(prefix=f'{prefix}{_MARK}{os.getpid()}-'); scratch_worktree makes its parent the same way. Nothing else about either door changes: the atexit registration, ScratchPath, WorktreeUnavailable and the worktree path parent/'worktree' stay as they are.",
+      "by": "cc",
+      "step": "the name",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:34:52+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: scratch.py gains def _owner_alive(pid: int) -> bool (os.kill(pid, 0); ProcessLookupError -> False; PermissionError -> True; else True — copied from isolation._pid_alive, not imported, RULE 1) and def _sweep_dead_owners(tmp: str | None = None) -> list[str]: root = Path(tmp or tempfile.gettempdir()); entries = list(root.iterdir()) (OSError -> return []); for each entry: m = _OWNED.search(entry.name); skip unless m and entry.is_dir(); pid = int(m.group(1)); skip if pid == os.getpid() or _owner_alive(pid); gitfile = entry / 'worktree' / '.git'; if gitfile.is_file(): gitdir = the text after 'gitdir:' on its first line, stripped; shutil.rmtree(entry); subprocess.run(['git', '--git-dir', str(Path(gitdir).parents[1]), 'worktree', 'prune'], capture_output=True, text=True, env=git_env()); else shutil.rmtree(entry); append str(entry). Every OSError (and a gitfile that does not parse) prints 'scratch: could not sweep {entry}: {type(e).__name__}: {e}' to stderr and continues; nothing raises.",
+      "by": "cc",
+      "step": "the sweep",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:34:52+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: a module flag _swept = False and def _sweep_once() -> None: global _swept; if _swept: return; _swept = True; _sweep_dead_owners(). scratch_dir and scratch_worktree each call _sweep_once() as their FIRST statement, before mkdtemp. Once per process, at the first scratch call: no clock, no daemon. git_env is defined above scratch_worktree already; _sweep_dead_owners is placed after git_env so it can call it.",
+      "by": "cc",
+      "step": "when it fires",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:34:53+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: the module docstring's 'WHAT THIS DOES NOT CLAIM' paragraph is replaced by one citing 4784351e4838: a run killed with SIGKILL fires no atexit hook, so its scratch carries its owner's pid in the name and the next process to ask for a scratch removes it (a worktree is also deregistered); no supervisor watches a directory; entries made before the marker existed carry no pid and are not this door's to judge. Verify through bin/cairn test --exec (pytest is refused): the new proof 3/3 green, then cairn/tools/scratch/proofs/test_scratch.py, cairn/tools/scratch/proofs/test_scratch_is_a_tool.py and cairn/devices/tester/proofs/test_hollow.py — the last two may carry the standing bare-mkdtemp red (seal-red-cairn-tools-scratch, four proofs in other components) and are judged tooth by tooth: every tooth green before the build stays green. Seal the new proof with bin/cairn test --netns --seal. The hollow reverts scratch.py; teeth 1-2 red there.",
+      "by": "cc",
+      "step": "docstring and verification",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:34:53+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6 (folds D5): the neighbours that carry the standing bare-mkdtemp red are cairn/tools/scratch/proofs/test_scratch.py (its tooth test_no_proof_in_this_repo_calls_mkdtemp_bare, red over four proofs in cairn/devices/tester and cairn/tools/base) and cairn/tools/scratch/proofs/test_scratch_is_a_tool.py (its tooth the_tool_stands runs test_scratch.py) — NOT test_hollow.py, which must be wholly green. Every other tooth of those two is green before the build and stays green after it.",
+      "by": "cc",
+      "step": "docstring and verification",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:34:58+00:00"
+    }
+  ]
+}
