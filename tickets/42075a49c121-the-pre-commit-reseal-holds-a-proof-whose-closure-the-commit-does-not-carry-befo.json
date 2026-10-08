@@ -22,5 +22,55 @@
   ],
   "gates_bound": "Proved: cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py green and sealed under bin/cairn test --netns, teeth (1)-(4) under PROVES for this ticket; the hollow reverts cairn/devices/tester/reseal.py and cairn/devices/tester/cli.py and a declared tooth reds on each. Feeds back to origin on failure (a red returns the boat to FIXME).",
   "questions": [],
-  "cast": "2026-10-07"
+  "cast": "2026-10-07",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the proof ALREADY LANDED in cairn commit 51c1e053 (red proof): cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py carries PROVES['42075a49c121'] with keys '1'-'4' naming the four teeth of the falsifier and its fixtures (_dirty_repo, _FakeTester, _FakeRaiser), all four standing red against today's code; it builds as written — the build edits NO proof file, only cairn/devices/tester/reseal.py (D2-D4) and cairn/devices/tester/cli.py (D5).",
+      "by": "cc",
+      "step": "the proof file",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:55:41+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: reseal.py gains def dirty_against_index(proof_rel: str, closure: list[str] | None, base: Path) -> list[str], placed directly above def stage_clean_seals: files = list(closure) if closure is not None else [os.path.relpath(component_root_for(str(base / proof_rel)), base)]; files.append(proof_rel); dirty = subprocess.run(['git', '-C', str(base), 'diff', '--name-only', '--', *files], capture_output=True, text=True).stdout.split(); untracked = subprocess.run(['git', '-C', str(base), 'ls-files', '--others', '--exclude-standard', '--', *files], capture_output=True, text=True).stdout.split(); return sorted(dirty + untracked). stage_clean_seals replaces its own files/dirty/untracked lines with dirty = dirty_against_index(r['proof'], closure, base) and holds when dirty is non-empty; its behaviour is otherwise unchanged. os, subprocess, Path and component_root_for are already in scope in reseal.py.",
+      "by": "cc",
+      "step": "the shared dirty predicate",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:55:41+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: reseal() and reseal_all() each gain the keyword index_only: bool = False, and reseal_all passes index_only=index_only into each reseal() call. In reseal(), directly after the block 'if before[\"proven\"]: return {... \"unchanged\" ...}' and before the comment that begins 'RESOLVED ONCE, HERE' (so before the raiser is resolved and before any run): if index_only: top = subprocess.run(['git', '-C', str(proof.parent), 'rev-parse', '--show-toplevel'], capture_output=True, text=True); if top.returncode == 0: base = Path(top.stdout.strip()); trail = read_validations(str(proof)); closure = closure_of(trail[-1]) if trail else None; dirty = dirty_against_index(os.path.relpath(proof, base), closure, base); if dirty: return {'proof': rel, 'outcome': 'held', 'rung': 1, 'ran': False, 'because': dirty, 'why': 'the commit does not carry ' + ', '.join(dirty[:3]) + ' — this proof measures what is committed, so it waits for the commit that carries them'}. A proof outside any git repo (returncode != 0) runs as today.",
+      "by": "cc",
+      "step": "the hold before the run",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:55:41+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: in stage_clean_seals, the FIRST statement inside the for r in results loop is: if r.get('outcome') == 'held': held.append({'validation': os.path.relpath(validations_path_for(str(base / r['proof'])), base), 'because': r['because']}); continue — before the existing outcome filter, which is otherwise unchanged.",
+      "by": "cc",
+      "step": "the stage lists a held result",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:55:43+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: in cairn/devices/tester/cli.py _reseal_run, the call door.reseal_all(proofs, ruling_id=args.ruling, timeout=args.timeout, skip_settled=not args.targets) gains index_only=bool(args.stage); and in its results loop, a branch elif r['outcome'] == 'held': continue is added before the final else, because a held result is printed by the existing HELD line under if args.stage (the only path that produces one) and must not also print as RESEAL.",
+      "by": "cc",
+      "step": "the cli passes index_only and prints a hold once",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:55:43+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6: D1-D5 are this ticket's decision list, one per build step; the how field and the sorted berth's builder_check are their prose source, and where they differ the D line governs.",
+      "by": "cc",
+      "step": "the decisions list",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:55:43+00:00"
+    }
+  ]
 }
