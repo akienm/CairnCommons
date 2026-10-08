@@ -1,0 +1,25 @@
+{
+  "id": "af394c12b62a",
+  "title": "The hollow's 8p question opens when record skips stand beside the instrument",
+  "date": "2026-10-07",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The hollow's 8p approval branch opens Akien's question for a proofs-only build whose writes_to also lists its own records, so an honest writes_to no longer makes a proofs-only build unprovable.",
+  "why": "Measured on 8y (41202d4c8d3b): a proofs-only build whose writes_to honestly lists its own validation record is skipped SKIP_INSTRUMENT + SKIP_RECORD, and hollow.py:1106 requires every skip to be SKIP_INSTRUMENT, so 8p's question can never open and the hollow reds 'measured nothing' forever. F19 (/home/akien/.cairn/foreground-decisions.md line 466, the peer's call, Akien's to overturn): widen the branch, pin three edges.",
+  "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build couldn't pass) and Law 10 via ruling 8p (Akien's approval IS the measurement when nothing can be reverted): today an honest writes_to listing the build's own validation record blocks that measurement from ever being asked, which leaves 8y (41202d4c8d3b) and every proofs-only build like it unprovable.",
+  "how": "At cairn/devices/tester/hollow.py:1106 widen the condition from every skip being SKIP_INSTRUMENT to every skip being SKIP_INSTRUMENT or SKIP_RECORD with at least one SKIP_INSTRUMENT, nothing unchanged as before. A new proof in cairn/devices/tester/proofs/ pins three edges over the f5bba1daa72a fixtures: instrument+record skips ask; record skips alone stay red and ask nothing; any unchanged file or any other skip reason beside them stays red and asks nothing. Questions a Haiku-level builder would need, answered here: Which lines? hollow.py:1106 only, the `if only and not unchanged and all(s['why'] == SKIP_INSTRUMENT ...)` condition: becomes all(why in (SKIP_INSTRUMENT, SKIP_RECORD)) and any(why == SKIP_INSTRUMENT); update the comment above it to cite this ticket and F19. Where do fixtures come from? load test_the_tester_records_an_approved_proofs_only_build.py via importlib the way it loads test_the_hollow_skips_only_the_instrument.py, and reuse its _instrument_only(extra_writes), _question, _measure, _run_cli, _questions. Record path? 'validations/test_fixture.json' (needs not exist: _classify skips before the existence check). Unchanged file? SUBJECT ('other/proofs/test_other.py') which the build does not touch. Must anything else change? No: cli.py, approval(), ask_for_approval() stay as they are.",
+  "falsifier": "Falsifier: cairn/devices/tester/proofs/test_the_8p_question_opens_beside_records.py, green under bin/cairn test --netns at HEAD: (1) test_instrument_and_record_skips_open_the_8p_question — writes_to = instrument + its import + validations/test_fixture.json, no answer: --seal opens exactly one question raised_by tester naming the instrument, and with an Akien-answered question naming the instrument the run is green and approved covers every skipped file; (2) test_record_skips_alone_stay_red_and_ask_nothing — writes_to = validations/test_fixture.json only: verdict red 'measured nothing', approved and approval_wanted empty even with an Akien answer naming the record, and --seal opens no question; (3) test_an_unchanged_file_or_another_skip_beside_them_stays_red — instrument + record + an absent gone.py, and separately instrument + record + an unchanged writes_to file: each red, nothing approved, nothing asked, even with an Akien answer naming the instrument. The hollow over this ticket reverts hollow.py and tooth (1) reds. Horizon: this voyage.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the first live fire is ticket 41202d4c8d3b's own hollow (/home/akien/dev/src/CairnCommons/tickets/41202d4c8d3b-sail-s-skill-md-calls-the-sweep-before-chart-or-a-tooth-reds.json, next in the queue): it either prints ASKED and opens the 8p question or it does not, and that voyage carries the reading",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261007T200128-68b45fe846ae.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261007T200059-e8d2f3a558cc.json",
+  "writes_to": [
+    "cairn/devices/tester/hollow.py",
+    "cairn/devices/tester/proofs/test_the_8p_question_opens_beside_records.py",
+    "cairn/devices/tester/validations/test_the_8p_question_opens_beside_records.json"
+  ],
+  "gates_bound": "Proved: cairn/devices/tester/proofs/test_the_8p_question_opens_beside_records.py green and sealed under bin/cairn test --netns, three teeth under PROVES for this ticket; the hollow reverts cairn/devices/tester/hollow.py and tooth (1) reds. Feeds back to origin on failure (a red returns the boat to FIXME).",
+  "questions": [],
+  "cast": "2026-10-07"
+}
