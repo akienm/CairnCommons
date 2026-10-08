@@ -22,5 +22,47 @@
   ],
   "gates_bound": "Proved: cairn/machines/rehearsal/proofs/test_rehearsal.py green and sealed under bin/cairn test --netns, T1 and T2 under PROVES for this ticket; the hollow reverts cairn/machines/rehearsal/rehearsal.py and cairn/machines/rehearsal/prompt.md and T1 and T2 red. Feeds back to origin on failure (a red returns the boat to FIXME), including a re-raise of landed work in 41202d4c8d3b's next rehearsal (F22 (a)).",
   "questions": [],
-  "cast": "2026-10-07"
+  "cast": "2026-10-07",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the two teeth ALREADY LANDED in cairn commit c0409d9e (red proof): cairn/machines/rehearsal/proofs/test_rehearsal.py carries PROVES['80518446bfc8'] = {'1': 'test_render_lists_the_tickets_landed_commits_oldest_first_and_says_when_none', '2': 'test_the_prompt_says_landed_work_builds_as_written'} and both functions, standing red against today's rehearsal.py and prompt.md; they build as written — the build edits NO proof file, only cairn/machines/rehearsal/rehearsal.py (D2, D3) and cairn/machines/rehearsal/prompt.md (D4).",
+      "by": "cc",
+      "step": "unlisted: Write red tests T1 and T2 to proofs/test_rehearsal.py",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:54:24+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: rehearsal.py gains a module-level def landed(ticket: str, cursor: str, repo: Path) -> str placed directly above def render(): try: out = subprocess.run(['git', '-C', str(repo), 'log', '--reverse', '--format=%h %s', f'--grep={ticket}'], capture_output=True, text=True, check=True).stdout; except (subprocess.CalledProcessError, OSError) as exc: return '\\n# ALREADY LANDED\\n\\n(landed commits could not be read: ' + str(exc) + ')\\n'; lines = [l for l in out.splitlines() if l.strip()]; return '\\n# ALREADY LANDED\\n\\ncursor: ' + cursor + '\\n\\n' + ('\\n'.join(lines) if lines else '(nothing landed for this ticket)') + '\\n'. subprocess is imported at the top of rehearsal.py if it is not already.",
+      "by": "cc",
+      "step": "unlisted: Add landed(ticket: str, cursor: str, repo: Path) -> str function to rehearsal.py, placed directly above render()",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:54:24+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: in render(), directly after the line that assigns parts = [prompt(), '\\n\\n# THE TICKET\\n\\n```json\\n' + reader_view(blob) + '\\n```\\n'] and before the try: chain = chain_for_ticket(...) block, insert: try: cursor = json.loads(blob).get('workflow_and_state') or '(no cursor)' / except (json.JSONDecodeError, AttributeError): cursor = '(no cursor)' / parts.append(landed(ticket, str(cursor), repo)) — repo is the Path render() already resolved one line above; nothing else in render() changes.",
+      "by": "cc",
+      "step": "unlisted: Modify render() to parse workflow_and_state and append landed(ticket, cursor, repo) output",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:54:24+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: prompt.md line 3 'You are the cheapest reader. You are rehearsing a ticket BEFORE anyone builds it, so that' becomes 'You are the cheapest reader. You are rehearsing a ticket so that' (rest of the sentence unchanged); and under ## Rules, as the line directly after the whole-list rule, ONE line (tooth 2 reads a single line): '- **Work that has ALREADY LANDED builds as written.** The ALREADY LANDED section lists the commits that name this ticket. A step whose work one of those commits already did is `builds_as_written` — there is nothing left to build — and you never emit an `unlisted:` step for work a landed commit did.'",
+      "by": "cc",
+      "step": "unlisted: Modify prompt.md to remove 'BEFORE anyone builds it' framing and add the landed-work rule under ## Rules",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:54:25+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: D1-D4 are this ticket's decision list, one per build step; the how field is their prose source, and where the two differ the D line governs.",
+      "by": "cc",
+      "step": "cannot_proceed: The ticket lacks an explicit decisions list",
+      "source": "rehearsal",
+      "at": "2026-10-08T05:54:25+00:00"
+    }
+  ]
 }
