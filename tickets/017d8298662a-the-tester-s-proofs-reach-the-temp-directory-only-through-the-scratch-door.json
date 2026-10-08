@@ -21,5 +21,55 @@
   ],
   "queued_after": "b4d39f3610f3",
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py; cairn/devices/tester/proofs/test_an_unbuildable_network_seal_refuses_the_run.py; cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py and one new file cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py. WHAT EXACTLY? each line takes its directory from cairn.tools.scratch.scratch.scratch_dir(<the same prefix>) instead of tempfile.mkdtemp: :80 inside the child source becomes swap = str(Path(scratch_dir(\"exec_proof_fixture_swap_\")) / \"cairn\") with 'from cairn.tools.scratch.scratch import scratch_dir' added to that child source's imports (:76-79) and tempfile dropped from its import line if unused; :74 becomes self.root = Path(scratch_dir(\"unbuildable_seal_proof_fixture_\")) (its rmtree in tearDown at :87 stays); :44 becomes return os.path.realpath(scratch_dir(f\"exec_cwd_proof_fixture_{tag}_\")); the module-level import tempfile is removed where nothing else uses it, and from cairn.tools.scratch.scratch import scratch_dir added beside the other imports. THE NEW TOOTH: PROVES = {'017d8298662a': {'1': 'test_no_proof_in_the_tester_reaches_temp_bare'}}; the tooth imports bare_temp_reach at call time (so the hollow binds it then) and asserts bare_temp_reach(Path(__file__).resolve().parents[1]) == []. ORDER: commit the new tooth first and measure it red (it names the offender lines), then the proof edits, measured green. RUN: bin/cairn test --netns on each edited proof and the new tooth; seal with --seal. HOLLOW: bin/cairn test --hollow 017d8298662a --seal after PROVEME; it reverts the edited proof(s), not the tooth file. CLEARANCE: open-551895c1adad, answered. ORDER IN THE QUEUE: after b4d39f3610f3 PROVED.",
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the build's FIRST commit adds only cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py. PROVES = {'017d8298662a': {'all': 'test_the_testers_proofs_name_no_bare_temp_reach'}}. The key is 'all', not the '1' the falsifier text names, because the falsifier carries no numbered clause markers and proof_coverage.clauses reads ['all'] for it. The one tooth imports bare_temp_reach from cairn.tools.scratch.scratch at call time. It asserts that this proof file is in sorted(cairn/devices/tester rglob proofs/test_*.py), so the scan cannot pass over an empty population. It then asserts bare_temp_reach(cairn/devices/tester) == [], and the failure message lists the offenders. No line of the file outside a comment names the temp-directory calls. Measured at the commit through bin/cairn test --exec: red, naming exactly the three lines (exec proof :80, unbuildable-seal proof :74, exec-cwd proof :44).",
+      "by": "cc",
+      "step": "the proof commit",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:45:39+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: in cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py only the child source string changes. Its import line 'import json, subprocess, sys, tempfile' becomes 'import json, subprocess, sys', and a line 'from cairn.tools.scratch.scratch import scratch_dir' follows 'from pathlib import Path'. The swap line becomes swap = str(Path(scratch_dir(\"exec_proof_fixture_swap_\")) / \"cairn\"). The module-level imports are unchanged: there is no module-level tempfile. The child runs with PYTHONPATH set to the repo, so the import resolves. scratch_dir sweeps the directory when the child exits, and the parent compares only the swap string against the bwrap argv, so no tooth reads the directory after the child is gone.",
+      "by": "cc",
+      "step": "the exec proof",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:45:39+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: in cairn/devices/tester/proofs/test_an_unbuildable_network_seal_refuses_the_run.py, delete the module-level 'import tempfile' (its sole use is the fixture root). Add 'from cairn.tools.scratch.scratch import scratch_dir' on the line directly after sys.path.insert(0, str(_REPO_ROOT)). _Fixture.__enter__'s root becomes self.root = Path(scratch_dir(\"unbuildable_seal_proof_fixture_\")). __exit__'s shutil.rmtree(self.root, ignore_errors=True) stays as it is. If d80360545e91 retires this proof before the build, this decision lapses and the build edits two proofs.",
+      "by": "cc",
+      "step": "the unbuildable-seal proof",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:45:39+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: in cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py, delete the module-level 'import tempfile' (its sole use is _elsewhere). Add 'from cairn.tools.scratch.scratch import scratch_dir' on the line directly after sys.path.insert(0, str(_REPO_ROOT)). _elsewhere(tag) becomes return os.path.realpath(scratch_dir(f\"exec_cwd_proof_fixture_{tag}_\")). Each tooth compares realpaths it computed itself, so scratch_dir's longer directory name changes no assertion.",
+      "by": "cc",
+      "step": "the exec-cwd proof",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:45:39+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: seal each of the four tester proofs (the new tooth file and the three edited ones) with plain bin/cairn test --seal <proof>, each in its own command. This replaces the falsifier's 'under bin/cairn test --netns': peer F43 folded it, and d80360545e91 is retiring the network seal. Each must land green. git diff of the three edited proofs against the proof commit shows no assert line changed. proven_by = cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py, carried on the PROVEME crossing as --proven-by. Akien named the hollow on open-551895c1adad ('hollow = revert the edits'), and it is measured by a bare worktree predict. Before counting the predict, confirm the sibling CairnCommons count reads 0. Then run the tooth as built (PASS); then revert the three proofs to the proof commit (git show <proof commit>:<file> > <file>) and run it again: it must red, naming exactly the three lines. Record both in the chart. Then run bin/cairn test --hollow 017d8298662a --seal. Every build file is under proofs/, so it skips them all and opens its approval question to Akien. Word that question so his answer is one word: cite open-551895c1adad verbatim and the predict's result (reverted -> tooth red on three lines). PROVED waits for his answer.",
+      "by": "cc",
+      "step": "verification",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:45:39+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6: settles D5's two assumptions. (a) The predict is the script /tmp/claude-1000/-home-akien-dev-src-cairn/462a6e82-2573-46ef-8f40-d13459d02813/scratchpad/017d_predict.sh <proof commit> <build commit>. It makes a bare worktree with mktemp -d /tmp/claude-1000/bare.XXXX and git worktree add -q --detach at the build commit. Its first output line is 'siblings: N', where N = ls of the worktree's parent directory piped to grep -c '^CairnCommons$'; the predict counts only when N is 0. It runs the new tooth as built (expects rc=0, PASS). It then writes each of the three edited proofs back from the proof commit with git show (skipping a file absent there) and runs the tooth again (expects rc=1, FAIL naming exactly the three lines). Last it runs git worktree remove --force and prune. Both runs are recorded verbatim in the PROVED verdict's discriminating_observation (the pv json built for proved_gen), which is where this voyage's chart keeps its measurements. (b) The builder does not word the approval question: cairn/devices/tester/hollow.py ask_for_approval opens it, raised_by the tester, bound to 017d8298662a, with fixed text ('May 017d8298662a cross PROVED on your approval — its build wrote only its own proofs (<files>), so the hollow can revert nothing and measure nothing?'). It opens only when hollow.approval finds no answered question naming a full skipped path (trouble hollow-approval-cannot-read-a-bare-filename-answer). The builder reports that question's id to the peer, with open-551895c1adad's answer quoted and the predict result, so that context reaches Akien beside the question. A second --hollow --seal opens no second question.",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-08T20:52:11+00:00"
+    }
+  ]
 }
