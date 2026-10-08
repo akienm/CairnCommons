@@ -21,5 +21,48 @@
   ],
   "gates_bound": "Proved: cairn/devices/sudo_relay/proofs/test_sudo_relay.py green and sealed under bin/cairn test, the four new teeth under PROVES for this ticket; the hollow reverts cairn/devices/sudo_relay/relay.py and teeth (1)-(4) red. Feeds back to origin on failure (a red returns the boat to FIXME).",
   "questions": [],
-  "cast": "2026-10-07"
+  "cast": "2026-10-07",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The proof is ALREADY WRITTEN and committed red at cairn 262daa49: cairn/devices/sudo_relay/proofs/test_sudo_relay.py. PROVES['ae25d8fae5cb'] = {'1': 'test_a_leftover_result_is_never_returned', '2': 'test_an_unanswered_request_times_out_rather_than_taking_anothers', '3': 'test_the_daemon_runs_under_the_requests_timeout', '4': 'test_an_orphan_is_a_loud_finding'}; _main runs all 13 checks and prints PASS/FAILED per tooth; test_protocol_runs_the_command_and_returns_the_truth is already in the id form (rid = relay.submit(...); relay.await_result(rid, timeout=2.0)). Measured at 262daa49: 5 FAILED (test_protocol, teeth 1-4), 8 PASS. The build does not touch the proof.",
+      "by": "cc",
+      "step": "unlisted: the proof is already written and committed red",
+      "source": "rehearsal",
+      "at": "2026-10-08T03:43:06+00:00"
+    },
+    {
+      "n": 2,
+      "text": "relay.py only. Constants _PENDING='pending.json', _EXECUTING='executing.json', _RESULTS='results', _AWAITING='awaiting', _LEGACY_DONE='done', _AWAIT_GRACE_S=5.0. audit_record(..., rid=None) uses rid as the id when given. submit(command, *, timeout_s=120.0) -> str mints rid with _mint_id(datetime.now(timezone.utc)), touches awaiting/<rid>, writes pending.json {id, command, timeout_s} by temp file + os.replace, returns rid. process_pending os.replace's pending.json to executing.json, json.loads it, builds the record with audit_record(rid=req id), write_audit, writes results/<rid>.json by temp + replace, unlinks executing.json. await_result(rid, *, timeout, poll) polls ONLY results/<rid>.json; on a hit loads it, unlinks it and the awaiting marker, returns the record; at the deadline unlinks the marker and raises TimeoutError naming rid. request_root(command, *, timeout): rid = submit(command, timeout_s=timeout); return await_result(rid, timeout=timeout + _AWAIT_GRACE_S). daemon.py unchanged.",
+      "by": "cc",
+      "step": "unlisted: mint the request id in relay.py",
+      "source": "rehearsal",
+      "at": "2026-10-08T03:43:06+00:00"
+    },
+    {
+      "n": 3,
+      "text": "In process_pending the executor call becomes executor(command, timeout=timeout_s) with timeout_s read from the pending payload; local_executor/root_executor already take timeout= and _run already returns (None, out, err + '[sudo_relay] timed out after Ns') on expiry. No executor signature changes.",
+      "by": "cc",
+      "step": "unlisted: pass the request's timeout to the executor",
+      "source": "rehearsal",
+      "at": "2026-10-08T03:43:06+00:00"
+    },
+    {
+      "n": 4,
+      "text": "New module function orphaned_results() -> list[str]: the ids of results/*.json with no awaiting/<id> marker, plus the id inside a legacy relay/done when one exists; it never deletes. SudoRelayDevice.request_root, after its existing 'request_root' emit, emits 'orphaned_results' with pointer = the first id and values = {'orphans': ids} when the list is non-empty. state() gains the key 'orphaned_results'. The audit record's six fields are unchanged.",
+      "by": "cc",
+      "step": "unlisted: orphaned_results read loudly, nothing deleted",
+      "source": "rehearsal",
+      "at": "2026-10-08T03:43:06+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The legacy relay/done is a single FILE at <instance>/relay/done, written by today's process_pending as json.dumps(record) of the six-field audit record; its id is the record's 'id' key (the proof's _plant_leftovers writes exactly that). orphaned_results() reads it with json.loads(text)['id']; if the file cannot be parsed or has no 'id', the literal name 'done' is listed instead, so the leftover is still named. The file is never written, consumed or deleted by the new code.",
+      "by": "cc",
+      "step": "D4: the legacy relay/done format",
+      "source": "rehearsal",
+      "at": "2026-10-08T03:50:14+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/ae25d8fae5cb-20261008T035738.json"
 }
