@@ -1,0 +1,75 @@
+{
+  "id": "b4d39f3610f3",
+  "title": "The scratch tool publishes the scan that names a proof's bare reach into the temp directory",
+  "date": "2026-10-08",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "The scratch tool publishes, in its public interface, the scan that names every proof line reaching the system temp directory directly, so any component can hold its own proofs to the scratch door without the scratch tool knowing who calls.",
+  "why": "Peer F30 (2026-10-08): the proposed shared helper failed RULE 1 twice — teeth inside tools/scratch naming the tester's and tools/base's proofs make the provider know its consumers, and one component's build would ride another's ticket. The scan that enforces the scratch door (test_scratch.py:143, inline today, red on 4 bare mkdtemp sites: 3 in tester proofs, 1 in tools/base proofs; 64 exec_cwd_proof_fixture_* leaked in /tmp from them, measured 2026-10-08) is published instead, so each consumer proves its own proofs clean by calling it.",
+  "traces_to": "RULE 1 (encapsulation: a component reaches another only through its public interface, and a provider does not know its consumers — the tester and tools/base each prove their own proofs clean by calling this, never by a tooth inside scratch naming them) and Law 4 (the scratch door is physics only while the scan that enforces it is reachable by every component that must stay behind it).",
+  "how": "cairn/tools/scratch/scratch.py gains bare_temp_reach(root) -> list[str]: the exact scan test_scratch.py's corpus tooth runs inline today (root.rglob('proofs/test_*.py'), skip __pycache__, a non-comment line containing 'mkdtemp' or 'gettempdir' is named as '<path relative to root>:<line no>: <stripped line>'). The corpus tooth calls it over the repo and drops its own file (the self-exemption stays in the proof, not in the provider), keeping its assertion and message. A new tooth in test_scratch.py: a fixture root with one bare mkdtemp proof is named, and one routed through scratch_dir is not.",
+  "falsifier": "Falsifier: cairn/tools/scratch/proofs/test_scratch.py gains test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one, under PROVES for b4d39f3610f3 key '1': a scratch_dir fixture root holds proofs/test_bare.py (a bare tempfile.mkdtemp() line, a gettempdir line, a commented mkdtemp line) and proofs/test_routed.py (calls scratch_dir only), plus notproofs/test_bare.py with a bare mkdtemp line; bare_temp_reach(root) returns exactly the two live lines of proofs/test_bare.py in that format, nothing from test_routed.py, the comment, or notproofs/. The corpus tooth keeps its assertion and message and its offender list is unchanged. Hollow: scratch.py reverted to the pre-build commit has no bare_temp_reach, the tooth binds it at call time and reds. Horizon: 017d8298662a and b2abaa16e590 each prove their own proofs clean by calling it.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because its live reading is its consumers: 017d8298662a and b2abaa16e590 each call bare_temp_reach on their own proofs dir in a sealed tooth, and the corpus tooth in /home/akien/dev/src/cairn/cairn/tools/scratch/proofs/test_scratch.py reads the whole repo through it on every reseal",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T034743-96b434004571.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T034712-c16151a24874.json",
+  "task_or_ticket": "ticket",
+  "children": "none, because one function in /home/akien/dev/src/cairn/cairn/tools/scratch/scratch.py and two tooth edits in /home/akien/dev/src/cairn/cairn/tools/scratch/proofs/test_scratch.py; the consumers are separate tickets 017d8298662a and b2abaa16e590",
+  "questions": [
+    "open-637f083600aa"
+  ],
+  "queued_after": "4784351e4838",
+  "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/scratch/scratch.py (the function) and cairn/tools/scratch/proofs/test_scratch.py (the tooth move + the new tooth) — nothing else. WHAT EXACTLY? def bare_temp_reach(root: str | Path) -> list[str], placed after git_env: root = Path(root); out = []; for py in sorted(root.rglob('proofs/test_*.py')): skip if '__pycache__' in py.parts; for n, line in enumerate(py.read_text(errors='replace').splitlines(), 1): if not line.lstrip().startswith('#') and ('mkdtemp' in line or 'gettempdir' in line): out.append(f'{py.relative_to(root)}:{n}: {line.strip()}'); return out. Its docstring names the defect (3581 leaked entries, e038544a9b60) and says it names no caller. THE CORPUS TOOTH: me = str(Path(__file__).resolve().relative_to(REPO)); offenders = [o for o in bare_temp_reach(REPO) if not o.startswith(me + ':')]; the assert and message verbatim; import bare_temp_reach at call time inside the tooth so a reverted scratch.py reds teeth instead of breaking the runner. THE NEW TOOTH: as in falsifier_check, PROVES gains 'b4d39f3610f3': {'1': 'test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one'}. PROOF CLEARANCE: question open-637f083600aa; BUILDME waits on it.",
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the build's FIRST commit is the proof edit to cairn/tools/scratch/proofs/test_scratch.py, made only after question open-637f083600aa is answered yes: PROVES gains 'b4d39f3610f3': {'1': 'test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one'}; the new tooth (D3) is measured red against today's scratch.py (no bare_temp_reach — the tooth does 'from cairn.tools.scratch import scratch as _s; reach = getattr(_s, \"bare_temp_reach\", None); assert reach is not None, ...' at call time). The corpus tooth's rewrite (D4) lands in the same commit; since bare_temp_reach is absent until D2, the corpus tooth is red there for that reason as well as its standing four offenders — both are recorded in the commit message.",
+      "by": "cc",
+      "step": "the proof edit",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:48:12+00:00"
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/tools/scratch/scratch.py gains, directly after def git_env, def bare_temp_reach(root: str | Path) -> list[str]: root = Path(root); out = []; for py in sorted(root.rglob('proofs/test_*.py')): if '__pycache__' in py.parts: continue; for n, line in enumerate(py.read_text(errors='replace').splitlines(), 1): if not line.lstrip().startswith('#') and ('mkdtemp' in line or 'gettempdir' in line): out.append(f'{py.relative_to(root)}:{n}: {line.strip()}'); return out. Docstring: every line of a proof under root that reaches the system temp directory without the scratch door, in the corpus tooth's offender format; it names no caller and exempts nothing — a caller that must exempt itself (test_scratch.py's vacuity control) filters the result; cite e038544a9b60 (3581 leaked entries) and b4d39f3610f3. Path is already imported in scratch.py; if not, add it to the existing pathlib import.",
+      "by": "cc",
+      "step": "the function",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:48:13+00:00"
+    },
+    {
+      "n": 3,
+      "text": "D3: test_scratch.py gains def test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one(): root = scratch_dir('bare-temp-reach-fixture-'), imported from cairn.tools.scratch.scratch at call time; write root/'proofs'/'test_bare.py' with lines: 'import tempfile', 'd = tempfile.mkdtemp()', 'e = tempfile.gettempdir()', '# tempfile.mkdtemp() in a comment'; write root/'proofs'/'test_routed.py' with 'from cairn.tools.scratch.scratch import scratch_dir' and \"d = scratch_dir('x-')\"; write root/'notproofs'/'test_bare.py' with 'import tempfile; tempfile.mkdtemp()'. Assert reach(root) == ['proofs/test_bare.py:2: d = tempfile.mkdtemp()', 'proofs/test_bare.py:3: e = tempfile.gettempdir()'] exactly — the routed file, the comment and the non-proofs dir each absent, the gettempdir spelling present.",
+      "by": "cc",
+      "step": "the new tooth",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:48:13+00:00"
+    },
+    {
+      "n": 4,
+      "text": "D4: test_no_proof_in_this_repo_calls_mkdtemp_bare keeps its name, its leading comment about the self-exemption, its assert and its message verbatim; its body becomes: from cairn.tools.scratch.scratch import bare_temp_reach (call time); me = str(Path(__file__).resolve().relative_to(REPO)); offenders = [o for o in bare_temp_reach(REPO) if not o.startswith(me + ':')]. The inline loop and its gettempdir comment move to bare_temp_reach's docstring (D2). Verify before/after: the corpus tooth's printed offender list is the same four lines (3 tester, 1 tools/base) — it stays red; its green is recorded by whichever of 017d8298662a and b2abaa16e590 lands second.",
+      "by": "cc",
+      "step": "the corpus tooth",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:48:13+00:00"
+    },
+    {
+      "n": 5,
+      "text": "D5: run through bin/cairn test --exec (pytest is refused): test_scratch.py — the new tooth green, the corpus tooth red with exactly the four standing offenders and nothing else, every other tooth green; then the neighbours unchanged: cairn/tools/scratch/proofs/test_scratch_is_a_tool.py (red only through the corpus tooth, trouble seal-red-cairn-tools-scratch) and cairn/tools/scratch/proofs/test_a_killed_runs_scratch_is_swept_by_the_next.py. proven_by is cairn/tools/scratch/proofs/test_scratch.py; seal it with bin/cairn test --netns --seal. The hollow reverts cairn/tools/scratch/scratch.py to the pre-build commit and the new tooth reds; test_scratch.py is the instrument and is not reverted. Then cross PROVEME and PROVED through the same crossing door the voyage used for 42075a49c121, each in its own command.",
+      "by": "cc",
+      "step": "verification",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:48:13+00:00"
+    },
+    {
+      "n": 6,
+      "text": "D6 (folds D5's last sentence, which named a precedent instead of the steps): T = b4d39f3610f3, proven_by = cairn/tools/scratch/proofs/test_scratch.py; the crossings are each their own command, in this order, all at the component cairn/tools/scratch: BUILDME and PROVEME by cairn.tools.base.transitions.emit(<ticket workflow_and_state>, <target>, history_path='cairn/tools/scratch/history.json', state_path='cairn/tools/scratch/state.json', ticket=T, actor='cc', why=<one line>, proven_by=[<proven_by>] at PROVEME only), the returned cursor written onto the ticket through cairn.tools.artifact.artifact.write(<ticket path>, <json>, verb='cast', why=...); after PROVEME is committed, bin/cairn test --hollow T --seal and commit its record; push BOTH repos; PROVED by cairn.devices.cairn.machines.harbor_master.clearance.clear(<workflow_and_state>, 'PROVED', actor='CC', boat_id=T, proven_by=[<proven_by>], ticket=T, history_path=..., state_path=...), cursor written back the same way; commit and push both repos; then measured_at_build through the artifact door. There is no CLI crossing door — that gap is its own ticket in the cast queue (peer F21) and this ticket does not build it.",
+      "by": "cc",
+      "step": "the crossings",
+      "source": "rehearsal",
+      "at": "2026-10-08T09:48:53+00:00"
+    }
+  ]
+}
