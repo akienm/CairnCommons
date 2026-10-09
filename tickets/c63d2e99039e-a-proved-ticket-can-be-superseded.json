@@ -1,0 +1,59 @@
+{
+  "id": "c63d2e99039e",
+  "title": "A proved ticket can be superseded",
+  "date": "2026-10-08",
+  "owner": "CC",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T201346-f6050a82c506.json",
+  "task_or_ticket": "ticket",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A ticket standing at PROVED can cross to SUPERSEDED when a later proved ticket replaces it, while a disposition that is an alternative to completing (DROPPED) stays refused from PROVED.",
+  "why": "Measured 2026-10-08: `cross 481221f45884 SUPERSEDED` refused with \"refused: IllegalTransition: PROVED -> SUPERSEDED is illegal for code-seam@v2 (legal from here: ['BUILDME', 'PROVEME', 'THINKME', 'TICKETME', 'WATCHME']) — e.g. a forward skip past a gate summons is refused\", though Akien had answered \"both look good to me\" to exactly that crossing (open-0d44f8905e2e). Peer akiendelllinux_cc_0 as F47, 2026-10-08: \"(a) would move a crossing to fit a gate, which is exactly the plaster we don't do. And Akien's yes on open-0d44f8905e2e already settled the spec: a PROVED ticket can be superseded. The door just doesn't offer that crossing yet, so the gate is what's wrong.\" A proved ticket whose behaviour is retired must be able to say so, or every cursor reader keeps counting it as standing.",
+  "traces_to": "Law 9 (Akien's head outranks every artifact: his yes on open-0d44f8905e2e settled that a PROVED ticket may be superseded, and the gate is an older translation) and Law 5 (the corpus says what is going on now: a proved ticket whose behaviour was retired must be able to say so, or it reads as standing)",
+  "how": "In cairn/tools/base/transitions.py legal_targets, add SUPERSEDED (and RETIRED only if Akien picks that option) to the legal targets when the cursor stands at a rest state, beside the existing summons branch; rewrite the standing tooth test_disposition_refused_from_a_rest so PROVED -> DROPPED still refuses and PROVED -> SUPERSEDED lands; reword the tools/base charter line that says a disposition is reachable 'from any summons'. The proof's predict reproduces 481221f45884's exact refusal line on a fixture before the build.",
+  "falsifier": "Falsifier: cairn/tools/base/proofs/test_a_proved_ticket_can_be_superseded.py under PROVES {'c63d2e99039e': {'1','2'}}: (1) on a code-seam@v2 fixture standing at [PROVED], transitions.emit(..., 'SUPERSEDED', history_path, state_path) in a scratch_dir world lands: the returned string ends '-> PROVED -> [SUPERSEDED]', parse_workflow reads here == 'SUPERSEDED', and the journaled crossing reads from PROVED, to SUPERSEDED, direction 'disposition'; (2) on the same fixture emit(..., 'DROPPED') still raises IllegalTransition; RETIRED is not added (Akien chose option a at open-bb5a0ceb8991). Predict before the build: tooth 1 reds with the exact refusal measured on 481221f45884: \"PROVED -> SUPERSEDED is illegal for code-seam@v2 (legal from here: ['BUILDME', 'PROVEME', 'THINKME', 'TICKETME', 'WATCHME'])\". Hollow: reverting transitions.py reds tooth 1. Every other test_transitions.py tooth stays green, test_disposition_refused_from_a_rest included (it asserts PROVED -> DROPPED, which stays refused). Horizon: d80360545e91's eighth how step crosses 481221f45884 PROVED -> SUPERSEDED through the real door. Wrong intent if: Akien answers that a proved ticket is never dispositioned.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the first and only consumer measured is d80360545e91's how (8): its three PROVED -> SUPERSEDED crossings (481221f45884, 67af8b743a63, 054bcbe02f12) through the real door are the live reading, recorded in their history.json",
+  "children": [],
+  "builder_notes": "WHERE: cairn/tools/base/transitions.py legal_targets :748-780; add after the summons branch (:777-779): when wf.here is a rest state (not a summons and not a disposition), add the from-rest dispositions to targets. Spell it as a module constant naming which dispositions a rest may take, intersected with the class's declared dispositions, so a class that does not declare SUPERSEDED gains nothing. Contents of the constant: ('SUPERSEDED',) (Akien chose option a at open-bb5a0ceb8991). Update the comment at :777 to say both. PROOF: new file cairn/tools/base/proofs/test_a_proved_ticket_can_be_superseded.py with a PROVES dict at module level, the fixture string 'code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]', history/state paths under cairn.tools.scratch.scratch.scratch_dir(prefix), never tempfile; read the journal with cairn.tools.charter.projector.read_history as test_disposition_journals_with_direction_disposition does. STANDING TOOTH: in test_transitions.py only the docstring of test_disposition_refused_from_a_rest changes, to say a proved ticket may be superseded (replacement by a later proof) but not dropped (an alternative to completing); its assertion is unchanged. The section comment at :1644-1648 ('refusing disposition from a rest') gets the same wording. CHARTER: cairn/tools/base/intention+why.json, the phrase 'reachable from any summons' becomes 'reachable from any summons, and SUPERSEDED also from the rest PROVED', written through the artifact door. Build in the worktree on branch f47-dispositions-from-proved; no file under cairn/devices/tester may enter a commit.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T201451-9402129de339.json",
+  "cast": "2026-10-08",
+  "questions": [
+    "open-bb5a0ceb8991"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "In cairn/tools/base/transitions.py add a module constant _REST_DISPOSITIONS = ('SUPERSEDED',) beside legal_targets; in legal_targets, directly after the existing 'if is_summons(wf.here): targets.update(dispositions)' branch, add 'elif wf.here not in dispositions: targets.update(dispositions & set(_REST_DISPOSITIONS))' so a rest (a state not ending -ME, e.g. PROVED) gains SUPERSEDED only when the class declares it; change the comment above the summons branch to '# dispositions — reachable from any summons as terminal exits; SUPERSEDED also from a rest'. Nothing else in the file changes.",
+      "by": "cc (CC's call, per Akien 2026-10-09)",
+      "step": "unlisted: Modify cairn/tools/base/transitions.py legal_targets to add from-rest disposition branch",
+      "source": "rehearsal",
+      "at": "2026-10-09T14:32:25+00:00"
+    },
+    {
+      "n": 2,
+      "text": "The proof cairn/tools/base/proofs/test_a_proved_ticket_can_be_superseded.py already exists, committed at 97beab22 before the build; it uses 481221f45884's exact workflow string (with WATCHME(first_seal_isolation)) rather than the shorter fixture in builder_notes so its predict reproduces that refusal word for word. Do not edit it; the build only runs it.",
+      "by": "cc (CC's call, per Akien 2026-10-09)",
+      "step": "unlisted: Create new proof file test_a_proved_ticket_can_be_superseded.py with PROVES dict and predict",
+      "source": "rehearsal",
+      "at": "2026-10-09T14:32:25+00:00"
+    },
+    {
+      "n": 3,
+      "text": "In cairn/tools/base/proofs/test_transitions.py the docstring of test_disposition_refused_from_a_rest becomes exactly: 'A ticket at PROVED (a rest, not a summons) CANNOT be DROPPED — dropping is an alternative to completing the workflow, and a proved ticket has completed. SUPERSEDED is the one disposition a rest may take (a later proved ticket replaces it), proved in test_a_proved_ticket_can_be_superseded.py.' In the DISPOSITION TEETH section comment, the words 'and refusing disposition from a rest.' become 'and refusing DROPPED and RETIRED from a rest — only SUPERSEDED crosses from a rest (ticket c63d2e99039e).' The assertion and every other line stay unchanged.",
+      "by": "cc (CC's call, per Akien 2026-10-09)",
+      "step": "unlisted: Modify test_transitions.py docstring of test_disposition_refused_from_a_rest and section comment at lines 1644-1648",
+      "source": "rehearsal",
+      "at": "2026-10-09T14:32:26+00:00"
+    },
+    {
+      "n": 4,
+      "text": "The tools/base charter (cairn/tools/base, its intention-and-why JSON): copy it to the scratchpad, replace the single occurrence of 'reachable from any summons' with 'reachable from any summons, and SUPERSEDED also from the rest PROVED' using a Python script (json load, str.replace asserting count == 1, json dump with the file's existing indent), then write it back with: bin/cairn artifact write <the charter path> --verb cast --why 'c63d2e99039e: SUPERSEDED is legal from the rest PROVED' --from <the scratch copy>. Run that from ~/dev/src/cairn after the code commit is fast-forwarded into main, and commit the charter with the build.",
+      "by": "cc (CC's call, per Akien 2026-10-09)",
+      "step": "unlisted: update charter line 'reachable from any summons' via artifact door",
+      "source": "rehearsal",
+      "at": "2026-10-09T14:32:26+00:00"
+    }
+  ],
+  "rehearsal": "rehearsals/c63d2e99039e-20261009T143949.json"
+}
