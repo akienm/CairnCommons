@@ -10,7 +10,7 @@
   "how": "skills/chart/live.py only: _drain_before_serving prints entry['stderr'] when present (fallback: today's format, for a codemother that predates 637d206be821) and returns the drained list; add DRAIN_FAILED_EXIT = 3. _counsel and _learn: compute failed = any('failed' in e for e in drained); do everything they do today (serve, print JSON); then return DRAIN_FAILED_EXIT if failed else 0. A refused learn still returns 1 (its own failure outranks a drain failure). Module docstring names exit 3. Charter through the artifact door: public_interface names the exit codes 0/1/3.",
   "falsifier": "skills/chart/proofs/test_the_verbs_exit_nonzero_on_a_failed_drain.py under PROVES {'4818f7f37e1e': {'1','2','3'}}, monkeypatching live._ask_codemother (the one bus seam) and live.counsel/_embed/dial: (1) learn with a drain reply carrying one failed entry with stderr 'X' prints exactly 'X' on stderr, still prints its JSON on stdout, and returns 3; (2) counsel likewise returns 3 with its JSON served; (3) with no failed entry both return 0, and a refused deposit returns 1. Hollow: returning 0 unconditionally reds 1 and 2; re-rendering the line reds 1.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the exit code's consumers are the /chart and /sail skills' own runs (skills/chart/SKILL.md :167, skills/sail/SKILL.md :227), where a non-zero exit is read by CC on the spot",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261010T105010-f466448e7780.json",
   "task_or_ticket": "ticket",
@@ -23,10 +23,59 @@
     {
       "n": 2,
       "text": "Serve first, then exit non-zero: the drain's Law 7 story says the verb still serves. CC's call, per Akien 2026-10-09."
+    },
+    {
+      "n": 3,
+      "text": "Edit skills/chart/live.py: add DRAIN_FAILED_EXIT = 3 beside _SENDER; in _drain_before_serving print entry['stderr'] if the failed entry carries it, else today's 'DEPOSIT FAILED — %s STANDS PENDING on the ledger: %s' format; in _counsel and _learn compute failed = any('failed' in e for e in drained) after the drain, serve exactly as today, and return DRAIN_FAILED_EXIT if failed else 0 (the refused-deposit return 1 is untouched and comes first); the module docstring's exit line names 3. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "build step 1",
+      "source": "rehearsal",
+      "at": "2026-10-10T17:48:43+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Append to skills/chart/intention+why.json public_interface (a list of str; the RULE 1 sieve reads membership only, and the tester charter already carries a prose entry) the string: 'python3 -m skills.chart.live <verb> — exit 0 served; 1 usage or the verb's own refusal; 3 served, but an owed deposit failed in the drain (ticket 4818f7f37e1e)', through artifact.write verb charter, then run cairn/tools/intentions_model_compiler/recompile_gate.sh. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "build step 2",
+      "source": "rehearsal",
+      "at": "2026-10-10T17:48:43+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Write and seal skills/chart/proofs/test_the_verbs_exit_nonzero_on_a_failed_drain.py (written red-first before the validate berth): monkeypatch live._ask_codemother, live._embed, live.counsel and live.dial, capture stdout/stderr with contextlib.redirect_*, three teeth per the falsifier, tooth lines in the tester's '  green <name>' idiom; seal with bin/cairn test --seal; run the hollows by hand before PROVEME (return 0 unconditionally; re-render the line) and mechanically after via bin/cairn test --hollow 4818f7f37e1e --seal. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "build step 3",
+      "source": "rehearsal",
+      "at": "2026-10-10T17:48:44+00:00"
+    },
+    {
+      "n": 6,
+      "text": "Fallback substitutes (entry['berth'], entry['failed']) exactly as live.py does today. The charter write is: load the JSON, append the string to the public_interface list, then artifact.write(path, json.dumps(doc, indent=2, ensure_ascii=False)+'\\n', verb='charter', why='4818f7f37e1e: ...') from cairn.tools.artifact.artifact; there is no field-level verb. The proof follows the already-written file skills/chart/proofs/test_the_verbs_exit_nonzero_on_a_failed_drain.py (PROVES dict, one function per tooth, main() prints '  green <name>' / '  RED   <name> — ...' and 'N passed, M failed out of K'); it exists red-first at BUILDME. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "D3-D5 particulars",
+      "source": "rehearsal",
+      "at": "2026-10-10T17:55:13+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The proof monkeypatches exactly four names on skills.chart.live and restores them in main(): _ask_codemother (drain -> {'accepted': True, 'drained': <scenario list>}; deposit -> accepted True with learn/nexus, or accepted False for the refusal scenario), _embed (fixed vector), counsel (returns {'floor': 0.5, 'walk': []}), dial (returns {'nexi': {}}). Scenarios: one failed entry carrying stderr (teeth 1, 2); [] and one landed entry (tooth 3, exit 0); refused deposit with [] and with the failed entry (tooth 3, exit 1). CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "D5 mocking",
+      "source": "rehearsal",
+      "at": "2026-10-10T18:02:52+00:00"
+    },
+    {
+      "n": 8,
+      "text": "Measured 2026-10-10: _SENDER = \"chart\" is a module-level constant at skills/chart/live.py:31, between _BUS = None and EMBED_MODEL; DRAIN_FAILED_EXIT = 3 goes on the line after it. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "D3 anchor",
+      "source": "rehearsal",
+      "at": "2026-10-10T18:09:26+00:00"
     }
   ],
   "builder_notes": "WHERE: skills/chart/live.py _drain_before_serving :63-77, _counsel :80-97, _learn :100-121. Until the stuck verdict b577a9f486dd is repaired, every live learn will exit 3 — that is intended and loud.",
   "from_idea": "2026-10-10-so-you-re-running-builder-is-running",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T105145-ea22941f4a97.json",
-  "cast": "2026-10-10"
+  "cast": "2026-10-10",
+  "rehearsal": "rehearsals/4818f7f37e1e-20261010T181554.json"
 }
