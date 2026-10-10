@@ -1,0 +1,28 @@
+{
+  "id": "a43109013780",
+  "title": "The personal feed pane shows a bounded tail of the channel",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cairn/tools/base/shim.py _personal_feed_pane renders at most the newest FEED_PANE_LIMIT (200) messages of a device's personal channel, newest last, preceded by one line naming how many older messages exist and the command that reads them all; it never reads the whole channel to do so.",
+  "why": "Akien 2026-10-10: \"to the best of your ability, get it all closed\", pre-approved through PROVED. This ticket closes live trouble /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json, a measured fault that enters as a bug (skills/intent/SKILL.md: a bug enters as a ticket, not through /intent). Measured 2026-10-02: GET /device/cairn = 428,192,484 bytes, 434 MB under <h2>Chat. Re-measured 2026-10-10 by cc0: 1,448,295,623 bytes in 47.1s (curl to http://localhost/device/cairn), and the web server held 1.17 GB RSS afterwards; the builder's background rehearsal was killed for low memory the same hour.",
+  "traces_to": "Law 7 (a presentation surface may collapse into a coherent shape; an unbounded one is no surface at all); CP4 (the device page is for a reader, and nobody reads 1.4 GB).",
+  "how": "cairn/tools/base only. In shim.py _personal_feed_pane (~:578 region; find it by name): (1) module constant FEED_PANE_LIMIT = 200; (2) ask the bus/store for the newest N (if the read API has no limit argument, read through it but slice before rendering, and say so in a comment naming the debt); (3) render 'N older messages not shown — <cli command that lists the channel>' when older exist. No receipt filtering change. Keep the pane's existing HTML shape.",
+  "falsifier": "cairn/tools/base/proofs/test_the_feed_pane_is_bounded.py under PROVES {'a43109013780': {'1','2'}}, over a fixture shim with an injected channel of 1,000 messages: (1) the rendered pane carries exactly FEED_PANE_LIMIT message entries, the newest ones, newest last; (2) it carries the line naming 800 older messages; with 5 messages there is no such line and all 5 show. Hollow: removing the slice reds 1. Live check in the verdict: GET /device/cairn under 5 MB.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json and the trouble clears with a measured what_changed when this ticket is PROVED; a recurrence re-raises the same identity",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Limit 200, newest last, a count line for the rest: the smallest bound that keeps a working conversation visible. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/tools/base/shim.py def _personal_feed_pane. Do NOT GET /device/cairn on the live server before this lands: it is 1.4 GB. Restart the web server after (cairn restart path, not a hand kill).",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T171210-858ce706d284.json",
+  "cast": "2026-10-10"
+}

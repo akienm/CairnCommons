@@ -1,0 +1,32 @@
+{
+  "id": "3c62020b0d88",
+  "title": "The trouble store folds what is pending before it answers a read",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/trouble/intention+why.json",
+  "intention": "cairn/devices/trouble: every read of the held store (TroubleDevice.live, all, get/show and the shim's read verbs) first folds every pending emission, serialized by an exclusive flock on the watermark file so two readers never fold twice; and a raise emission whose detail is not a mapping folds as {'note': <the value>} instead of refusing, so a legacy emission cannot wedge its source's lane.",
+  "why": "Akien 2026-10-10: \"to the best of your ability, get it all closed\", pre-approved through PROVED. This ticket closes live trouble /home/akien/dev/src/CairnCommons/troubles/trouble-drain-has-no-host-the-beat-backstop-is-prose.json, a measured fault that enters as a bug (skills/intent/SKILL.md: a bug enters as a ticket, not through /intent). Re-measured 2026-10-10 by cc0: the ground loop pulses nothing by design (cairn/devices/cairn/machines/ground_loop/__main__.py: 'No bus, no probes, no shims ... no pulse calls', ticket bae622881f03), so TroubleShim.on_pulse never runs; systemctl --user lists cairn-bus, cairn-ground-loop, cairn-web-server and no trouble host. A hand TroubleShim().drain() folded 7 pending emissions and refused 1: harbor_master/0/20261009.000059.516741 (string detail), which per _fold's own docstring wedges that source's watermark.",
+  "traces_to": "Law 4 (the backstop is physics, not a docstring); Law 7 (a fault raised is a fault the reader sees); memory a-provider-doesnt-know-its-consumers (the consumer asks).",
+  "how": "cairn/devices/trouble only. (1) Move the drain body so the device can call it: a module-level fold_pending(root, roots) in the trouble package (shim.drain delegates to it), holding fcntl.flock(LOCK_EX) on the watermark file for the whole fold. (2) TroubleDevice.live(), all() and the get/show read path call fold_pending first; a fold that raises is caught, recorded on the returned value's side channel / stderr, and the read still answers (a read never fails because a fold did). (3) _fold for the raise gate: detail = values.get('detail'); if not a dict and not None -> {'note': detail}. (4) on_pulse and receive_raise stay. Docstrings that say 'the beat drains it' are corrected to 'the next read drains it'.",
+  "falsifier": "cairn/devices/trouble/proofs/test_a_read_folds_what_is_pending.py under PROVES {'3c62020b0d88': {'1','2','3'}} on a scratch roots tree: (1) an emission written to a fixture source's log dir is not in the store's file until TroubleDevice(...).live() is called, and is in live()'s answer; (2) a raise emission with a string detail folds as {'note': ...} and a later emission from the same source folds too (the lane is not wedged); (3) two processes calling live() at once over 20 pending emissions leave every count exactly 1. Hollow: removing the fold from live() reds 1. In the verdict, the live pending count after one `cairn trouble list` is 0.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/CairnCommons/troubles/trouble-drain-has-no-host-the-beat-backstop-is-prose.json and the trouble clears with a measured what_changed when this ticket is PROVED; a recurrence re-raises the same identity",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/CairnCommons/troubles/trouble-drain-has-no-host-the-beat-backstop-is-prose.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The read is the event that drains, not a daemon and not the beat: Akien ruled the ground loop is only a heartbeat (bae622881f03) and probes/mail fire on their events; a reader is the consumer asking. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "A legacy non-mapping detail folds as {'note': value}; the raise door refusing it going forward is ticket 906ceb765d0a. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/devices/trouble/shim.py drain :159, _fold :213, watermark :105-132; trouble.py live :315. operator_inbox reads TroubleDevice.live() directly (cairn/tools/operator_inbox/inbox.py read_troubles) — that is why the fold belongs in live(), so the banner drains without a second door.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T171210-7efa40e4ab8d.json",
+  "cast": "2026-10-10"
+}
