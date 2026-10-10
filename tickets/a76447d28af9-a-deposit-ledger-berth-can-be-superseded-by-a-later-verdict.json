@@ -10,7 +10,7 @@
   "how": "cairn/tools/chain/verdict_contract.py only: add public mark_superseded(berth, *, by, why, ledger_path=None) -> dict beside mark_failed, appending {'kind':'superseded','berth','by','ticket','why','at':_stamp()} through _append. Refuses with ValueError, appending nothing, when: why is empty; berth has no enqueued record; berth already has a deposited or superseded record; by == berth; by has no enqueued record on the ledger; by's enqueued ticket differs from berth's. pending(): landed = berths with kind in ('deposited','superseded'). Charter public_interface names mark_superseded through the artifact door. Depends on 2b34b52f80f3 (mark_failed beside it).",
   "falsifier": "cairn/tools/chain/proofs/test_a_berth_can_be_superseded.py under PROVES {'a76447d28af9': {'1','2','3'}}, on a tmp ledger: (1) enqueue old and new for ticket T, mark_superseded(old, by=new, why='w'): last record is kind 'superseded' with berth, by, ticket T, why 'w', at; pending() returns [new] only; (2) each refusal case (empty why; old not enqueued; old already deposited; old already superseded; by == old; by not enqueued; by enqueued for another ticket) raises ValueError and leaves the ledger byte-identical; (3) mark_failed records on old do not stop it being superseded, and pending() ignores failed records. Hollow: not adding 'superseded' to pending's landed set reds 1; dropping any guard reds its case in 2.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the first and only caller is task e70b9e117cf0's repair of the berth /home/akien/.cairn/devices/chart/0/packets/verdict-20260815T141125-dd35ea1c8f7b.json, and its result is read in the ledger /home/akien/.cairn/devices/chart/0/verdict-deposits.jsonl",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261010T105010-f466448e7780.json",
   "task_or_ticket": "ticket",
@@ -23,10 +23,51 @@
     {
       "n": 2,
       "text": "The replacing berth must already be enqueued for the same ticket, so the supersede can never retire an obligation without another one owed in its place. CC's call, per Akien 2026-10-09."
+    },
+    {
+      "n": 3,
+      "text": "Edit cairn/tools/chain/verdict_contract.py only: add public mark_superseded(berth, *, by, why, ledger_path=None) -> dict after mark_failed; resolve path as mark_failed does; read_ledger once; refuse with ValueError before any append when why is not a non-empty str, berth has no enqueued record, any deposited or superseded record names berth, by == berth, by has no enqueued record, or by's enqueued ticket differs from berth's; else _append({'kind':'superseded','berth','by','ticket':<berth's enqueued ticket>,'why','at':_stamp()}). pending(): landed = berths whose kind is in ('deposited','superseded'). The ledger header comment names the fourth kind citing this ticket. mark_deposited, mark_failed and enqueue_verdict are not edited. No charter write: the chain charter's public_interface lists the module cairn.tools.chain.verdict_contract, not names (as 2b34b52f80f3 measured for mark_failed). CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "Implement mark_superseded() and update pending() and ledger header in verdict_contract.py",
+      "source": "rehearsal",
+      "at": "2026-10-10T19:16:05+00:00"
+    },
+    {
+      "n": 4,
+      "text": "The proof is already written red-first at cairn/tools/chain/proofs/test_a_berth_can_be_superseded.py in the idiom of test_the_ledger_records_a_failed_deposit.py beside it (PROVES dict, _contract() binding at call time, scratch_dir tmp ledgers, main() prints '  green <name>' / '  RED   <name> — ...' and 'N passed, M failed out of K'; plain script, not pytest). Seal twice with bin/cairn test --seal <proof>; hand hollows before PROVEME (drop 'superseded' from pending's landed set; drop a guard), then bin/cairn test --hollow a76447d28af9 --seal after. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "Write the proof test_a_berth_can_be_superseded.py with three teeth and seal it",
+      "source": "rehearsal",
+      "at": "2026-10-10T19:16:06+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Measured 2026-10-10: the proof file exists on disk, written before the validate berth (the validate door needs the proof red-first); it reads 0 of 3 green before the build. The builder does not rewrite it; it is committed with the build. If it were missing, write it from the falsifier's three clauses in the idiom of test_the_ledger_records_a_failed_deposit.py. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "Write proof file test_a_berth_can_be_superseded.py",
+      "source": "rehearsal",
+      "at": "2026-10-10T19:22:08+00:00"
+    },
+    {
+      "n": 6,
+      "text": "Order: build verdict_contract.py; run bin/cairn test --seal <proof> twice in a row after the build (both must read 3 of 3 green); then two hand hollows, each separately and each restored from git before the next: (a) pending's landed set back to 'deposited' alone -> tooth 1 (and 3) red; (b) delete the 'by enqueued for another ticket' guard -> tooth 2 red; restore with git checkout of the file is NOT used (uncommitted build) — restore from a scratch copy taken before the mutation, then re-run the proof green. Then reflection, commit, PROVEME, bin/cairn test --hollow a76447d28af9 --seal. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "D4",
+      "source": "rehearsal",
+      "at": "2026-10-10T19:22:08+00:00"
+    },
+    {
+      "n": 7,
+      "text": "One scratch copy of the built verdict_contract.py is taken once, after the build and before the first hollow, and it restores the file after each of the two hollows. CC's call, per Akien 2026-10-09.",
+      "by": "CC",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-10T19:30:11+00:00"
     }
   ],
   "builder_notes": "WHERE: cairn/tools/chain/verdict_contract.py, beside mark_failed (added by 2b34b52f80f3) and mark_deposited; pending() at ~:252. Proof uses pytest tmp_path for the ledger. Do not touch codemother or skills/chart.",
   "from_idea": "2026-10-10-so-you-re-running-builder-is-running",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T130654-cbaeb3347cfb.json",
-  "cast": "2026-10-10"
+  "cast": "2026-10-10",
+  "rehearsal": "rehearsals/a76447d28af9-20261010T193603.json"
 }
