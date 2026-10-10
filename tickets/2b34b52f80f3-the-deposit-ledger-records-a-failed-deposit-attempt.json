@@ -1,0 +1,32 @@
+{
+  "id": "2b34b52f80f3",
+  "title": "The deposit ledger records a failed deposit attempt",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/chain/intention+why.json",
+  "intention": "cairn/tools/chain/verdict_contract.py's verdict-deposit ledger carries a third record kind, 'failed', appended once per failed deposit attempt and naming the berth, the ticket, the time, the stderr line the failure was reported with, and its result code; pending() is unchanged, so a failed berth stays owed.",
+  "why": "Akien 2026-10-10, verbatim (idea 2026-10-10-so-you-re-running-builder-is-running): \"we need to make the queue record stderr. and the result code for heavens sake. and we preapproved all these things thru PROVED\". Measured 2026-10-10: ~/.cairn/devices/chart/0/verdict-deposits.jsonl holds exactly one line for verdict-20260815T141125-dd35ea1c8f7b, {'kind': 'enqueued', 'at': '2026-09-18T12:56:35', 'ticket': 'b577a9f486dd'}, and nothing else, although every drain since has refused it (VerdictRefused: verdicts[0..2].discriminating_observation must be a non-empty string); the only trace is a stderr print in skills/chart/live.py _drain_before_serving, and the tester on 2026-10-08 could only bound the failure count, not measure it.",
+  "traces_to": "Law 7 (the deposit ledger is the record of truth for owed deposits and keeps no failure); Law 3 (the failure count is unmeasurable from the record today).",
+  "how": "cairn/tools/chain/verdict_contract.py only: add public mark_failed(berth, *, stderr, result_code, ticket=None, ledger_path=None) -> dict beside mark_deposited, appending {'kind':'failed','berth','ticket','at':_stamp(),'stderr','result_code'} through _append. stderr must be a non-empty str and result_code a non-empty str, else ValueError (an empty failure record is the silent lapse again). ticket defaults to the ticket on the berth's enqueued record when one is found by read_ledger. pending() and mark_deposited are not edited. Export mark_failed in the module's public surface wherever mark_deposited is listed (charter public_interface in cairn/tools/chain/intention+why.json, through the artifact door). Docstring of mark_deposited's 'whole story' line now true: cite this ticket.",
+  "falsifier": "cairn/tools/chain/proofs/test_the_ledger_records_a_failed_deposit.py under PROVES {'2b34b52f80f3': {'1','2','3'}}: (1) after enqueue + mark_failed on a tmp ledger, read_ledger's last record has kind 'failed' and carries berth, ticket (taken from the enqueued record), at, stderr and result_code byte-equal to what was passed; (2) pending() still returns that berth after any number of failed records, and stops returning it only after mark_deposited; (3) mark_failed with empty stderr or empty result_code raises ValueError and appends nothing (ledger byte-identical). Hollow: removing mark_failed's append reds 1; making 'failed' answer an enqueue in pending() reds 2; dropping the guard reds 3.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the failed records' only writer is the drain at /home/akien/dev/src/cairn/cairn/devices/codemother/deposit.py and the ledger /home/akien/.cairn/devices/chart/0/verdict-deposits.jsonl is read by the operator; the stuck berth verdict-20260815T141125-dd35ea1c8f7b exercises it live",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261010T105010-f466448e7780.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "result_code is a string, the failure's class name (e.g. 'VerdictRefused'), not a process exit integer: the drain runs inside a bus verb, where no process exits; the process exit code belongs to the CLI verbs (ticket 4818f7f37e1e). CC's call, per Akien 2026-10-09."
+    },
+    {
+      "n": 2,
+      "text": "One failed record per attempt, not de-duplicated: Akien asked for the record; growth is measured after it runs (intent falsifier's wrong-intent clause). CC's call, per Akien 2026-10-09."
+    }
+  ],
+  "builder_notes": "WHERE: cairn/tools/chain/verdict_contract.py — LEDGER_PATH :209, _stamp :212, _append :216, read_ledger, pending :252, enqueue_verdict :269, mark_deposited :289. Use tmp ledger_path in the proof (scratch door: cairn.devices.tester.scratch is NOT importable here under RULE 1 — use pytest tmp_path). Do not touch codemother or skills/chart.",
+  "from_idea": "2026-10-10-so-you-re-running-builder-is-running",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T105144-47a34a32e3f9.json",
+  "cast": "2026-10-10"
+}

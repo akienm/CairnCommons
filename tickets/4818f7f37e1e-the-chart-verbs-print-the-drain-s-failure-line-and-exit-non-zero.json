@@ -1,0 +1,32 @@
+{
+  "id": "4818f7f37e1e",
+  "title": "The chart verbs print the drain's failure line and exit non-zero",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "skills/chart/intention+why.json",
+  "intention": "skills/chart/live.py's learn and counsel print each failed drain entry's own stderr line (no second rendering) and, after still serving, exit with a non-zero result code when any pending verdict failed to deposit, so a caller sees the failure in the exit status as well as on stderr.",
+  "why": "Akien 2026-10-10, verbatim (idea 2026-10-10-so-you-re-running-builder-is-running): \"we need to make the queue record stderr. and the result code for heavens sake. and we preapproved all these things thru PROVED\". Measured 2026-10-10: ~/.cairn/devices/chart/0/verdict-deposits.jsonl holds exactly one line for verdict-20260815T141125-dd35ea1c8f7b, {'kind': 'enqueued', 'at': '2026-09-18T12:56:35', 'ticket': 'b577a9f486dd'}, and nothing else, although every drain since has refused it (VerdictRefused: verdicts[0..2].discriminating_observation must be a non-empty string); the only trace is a stderr print in skills/chart/live.py _drain_before_serving, and the tester on 2026-10-08 could only bound the failure count, not measure it.",
+  "traces_to": "Law 7 (the deposit ledger is the record of truth for owed deposits and keeps no failure); Law 3 (the failure count is unmeasurable from the record today).",
+  "how": "skills/chart/live.py only: _drain_before_serving prints entry['stderr'] when present (fallback: today's format, for a codemother that predates 637d206be821) and returns the drained list; add DRAIN_FAILED_EXIT = 3. _counsel and _learn: compute failed = any('failed' in e for e in drained); do everything they do today (serve, print JSON); then return DRAIN_FAILED_EXIT if failed else 0. A refused learn still returns 1 (its own failure outranks a drain failure). Module docstring names exit 3. Charter through the artifact door: public_interface names the exit codes 0/1/3.",
+  "falsifier": "skills/chart/proofs/test_the_verbs_exit_nonzero_on_a_failed_drain.py under PROVES {'4818f7f37e1e': {'1','2','3'}}, monkeypatching live._ask_codemother (the one bus seam) and live.counsel/_embed/dial: (1) learn with a drain reply carrying one failed entry with stderr 'X' prints exactly 'X' on stderr, still prints its JSON on stdout, and returns 3; (2) counsel likewise returns 3 with its JSON served; (3) with no failed entry both return 0, and a refused deposit returns 1. Hollow: returning 0 unconditionally reds 1 and 2; re-rendering the line reds 1.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the exit code's consumers are the /chart and /sail skills' own runs (skills/chart/SKILL.md :167, skills/sail/SKILL.md :227), where a non-zero exit is read by CC on the spot",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261010T105010-f466448e7780.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Exit 3, not 1: 1 already means usage or this verb's own refusal; 3 means 'served, but an owed deposit failed'. CC's call, per Akien 2026-10-09."
+    },
+    {
+      "n": 2,
+      "text": "Serve first, then exit non-zero: the drain's Law 7 story says the verb still serves. CC's call, per Akien 2026-10-09."
+    }
+  ],
+  "builder_notes": "WHERE: skills/chart/live.py _drain_before_serving :63-77, _counsel :80-97, _learn :100-121. Until the stuck verdict b577a9f486dd is repaired, every live learn will exit 3 — that is intended and loud.",
+  "from_idea": "2026-10-10-so-you-re-running-builder-is-running",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T105145-ea22941f4a97.json",
+  "cast": "2026-10-10"
+}

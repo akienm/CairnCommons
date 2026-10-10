@@ -1,0 +1,28 @@
+{
+  "id": "637d206be821",
+  "title": "Codemother's drain writes each failed deposit to the ledger",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "cairn/devices/codemother/deposit.py drain_pending appends a 'failed' ledger record for every berth it fails to deposit, carrying the same stderr line the chart verbs print and the failure's result code, and returns that line and code in the drained entry so the printer and the record share one rendering.",
+  "why": "Akien 2026-10-10, verbatim (idea 2026-10-10-so-you-re-running-builder-is-running): \"we need to make the queue record stderr. and the result code for heavens sake. and we preapproved all these things thru PROVED\". Measured 2026-10-10: ~/.cairn/devices/chart/0/verdict-deposits.jsonl holds exactly one line for verdict-20260815T141125-dd35ea1c8f7b, {'kind': 'enqueued', 'at': '2026-09-18T12:56:35', 'ticket': 'b577a9f486dd'}, and nothing else, although every drain since has refused it (VerdictRefused: verdicts[0..2].discriminating_observation must be a non-empty string); the only trace is a stderr print in skills/chart/live.py _drain_before_serving, and the tester on 2026-10-08 could only bound the failure count, not measure it.",
+  "traces_to": "Law 7 (the deposit ledger is the record of truth for owed deposits and keeps no failure); Law 3 (the failure count is unmeasurable from the record today).",
+  "how": "cairn/devices/codemother/deposit.py only: in drain_pending's except branch, build line = 'DEPOSIT FAILED — %s STANDS PENDING on the ledger: %s: %s' % (berth, type(e).__name__, e) (byte-identical to what skills/chart/live.py prints today), call verdict_contract.mark_failed(berth, stderr=line, result_code=type(e).__name__, ticket=entry.get('ticket'), ledger_path=ledger_path) through the public import already used for mark_deposited, and add 'stderr': line and 'result_code': type(e).__name__ to the drained entry beside the existing 'failed' and 'still_pending' keys. If mark_failed itself raises, the entry carries 'ledger_write_failed': '<Type>: <msg>' and the drain continues (the door must still serve). Charter's DEPOSIT FACE paragraph updated through the artifact door to say failures are recorded. Depends on 2b34b52f80f3 (mark_failed exists).",
+  "falsifier": "cairn/devices/codemother/proofs/test_a_failed_deposit_is_written_to_the_ledger.py under PROVES {'637d206be821': {'1','2','3'}}, using the fixtures of test_deposit.py's test_a_failed_deposit_stands_pending_and_is_named: (1) a drain over one enqueued berth whose deposit raises appends exactly one 'failed' record whose stderr starts 'DEPOSIT FAILED — <berth> STANDS PENDING on the ledger: ' and whose result_code is the raised class name; a second drain appends a second; (2) the drained entry carries stderr and result_code equal to the record's; (3) a successful drain appends no failed record. Hollow: removing the mark_failed call reds 1; dropping the entry keys reds 2. Existing test_deposit.py stays green.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the consumer of the written record is the operator reading the ledger and the chart verbs of ticket 4818f7f37e1e; the live stuck berth verdict-20260815T141125-dd35ea1c8f7b writes its first failed record on the next learn after this lands, which is the in-world check",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261010T105010-f466448e7780.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The line is rendered once, in the drain, and carried to the printer: two renderings drift. CC's call, per Akien 2026-10-09."
+    }
+  ],
+  "builder_notes": "WHERE: cairn/devices/codemother/deposit.py drain_pending :151-206, except branch :202-205. verdict_contract import at top of file (find 'mark_deposited'). Proof fixtures: cairn/devices/codemother/proofs/test_deposit.py :250 test_a_failed_deposit_stands_pending_and_is_named — copy its setup, do not import across files. Do not edit skills/chart.",
+  "from_idea": "2026-10-10-so-you-re-running-builder-is-running",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T105144-f3231317046b.json",
+  "cast": "2026-10-10"
+}
