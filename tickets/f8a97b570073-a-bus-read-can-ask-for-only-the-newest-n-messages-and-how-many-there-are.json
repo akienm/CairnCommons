@@ -1,0 +1,28 @@
+{
+  "id": "f8a97b570073",
+  "title": "A bus read can ask for only the newest N messages, and how many there are",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "cairn/devices/cairn/machines/bus BusDevice.read takes an optional limit=N and then returns only the newest N matching messages (DB rows and ring rows merged, newest last, same order as today); limit None keeps today's full read; and a new method count(to=, channel=, reply_to=) returns how many messages match, both reachable through the bus socket (server CALLABLE).",
+  "why": "Akien 2026-10-10: \"to the best of your ability, get it all closed\", pre-approved through PROVED. This ticket closes live trouble /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json, a measured fault that enters as a bug (skills/intent/SKILL.md: a bug enters as a ticket, not through /intent). Measured 2026-10-10 by the builder after a43109013780: GET /device/cairn is 99,981 bytes but takes ~25 s, because BusDevice.read (cairn/devices/cairn/machines/bus/bus.py:484) has no limit argument and the panes read every message on the channel (thousands of rows, ~1.5 GB) to show the newest 200.",
+  "traces_to": "CP4 (a page that is bounded but reads the whole channel still takes 25 s to load); Law 7 (read() stays the full truth by default; the bound is the caller's explicit ask).",
+  "how": "cairn/devices/cairn/machines/bus only. bus.py read(): add limit: int | None = None; when set, the DB query becomes the newest N by ctid (where + ' ORDER BY ctid DESC LIMIT %s', params + (limit,), then reverse the rows), merged with _ring_matches, then sliced to the last N. count(): SELECT count(*) via store.read with a where over the same clauses plus len(_ring_matches) for rows not yet flushed (the ring holds only unflushed rows; check that against _flush before relying on it). server.py: add 'count' to CALLABLE. RemoteBus forwards **kwargs already (cairn/tools/bus_client/remote.py:289); add a count method there only if _method needs it named (that is a second component: if so, say so in the build and keep it to one line).",
+  "falsifier": "cairn/devices/cairn/machines/bus/proofs/test_a_read_takes_the_newest_n.py under PROVES {'f8a97b570073': {'1','2','3'}} on a test-marked bus table: (1) after posting 300 messages to one addressee/channel (some flushed, some still in the ring), read(limit=50) returns exactly the newest 50, oldest-first, equal to read()[-50:]; (2) count() for that addressee/channel returns 300; (3) read() with no limit still returns all 300. Hollow: ignoring limit reds 1. Live check in the verdict: time of RemoteBus().read(to='cairn', channel='personal', limit=200) under 2 s.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault was measured by the builder at a43109013780's PROVED (its trouble /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json, now cleared) and this ticket's verdict re-measures the live page; a recurrence shows in that pane's own size and load time",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The bound is an argument the caller passes, never a default: read() without it stays the full truth (Law 7). CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: bus.py read :484, _ring_matches :470, ORDER BY ctid built at :501; server.py CALLABLE :49. Store reads are raw SQL where clauses (cairn/devices/db_domain/tools/client/store.py read :311); do not change store.py.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T175801-6dcaa53f42f3.json",
+  "cast": "2026-10-10"
+}

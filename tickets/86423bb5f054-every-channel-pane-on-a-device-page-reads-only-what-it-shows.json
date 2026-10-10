@@ -1,0 +1,30 @@
+{
+  "id": "86423bb5f054",
+  "title": "Every channel pane on a device page reads only what it shows",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cairn/tools/base/shim.py _personal_feed_pane, _info_pane and _debug_pane each read their channel with bus.read(..., limit=FEED_PANE_LIMIT), get the total from bus.count(...), and render the newest FEED_PANE_LIMIT entries plus the 'N older messages not shown' line when the total is larger; no pane reads a whole channel.",
+  "why": "Akien 2026-10-10: \"to the best of your ability, get it all closed\", pre-approved through PROVED. This ticket closes live trouble /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json, a measured fault that enters as a bug (skills/intent/SKILL.md: a bug enters as a ticket, not through /intent). Measured 2026-10-10 by the builder after a43109013780: _personal_feed_pane slices after an unbounded bus.read (its own comment names the debt), and _info_pane and _debug_pane (cairn/tools/base/shim.py, right after it) render every message on their channels with no bound at all; the page takes ~25 s.",
+  "traces_to": "CP4 (a device page loads in seconds); Law 7 (a presentation surface may collapse; the count line says what it collapsed).",
+  "how": "cairn/tools/base/shim.py only, after f8a97b570073 lands: in the three panes pass limit=FEED_PANE_LIMIT to self._bus.read and compute older = self._bus.count(to=..., channel=...) - len(messages); factor the shared older-line into one helper used by all three; info/debug bodies go through _bounded_body like the feed's. Remove the 'sliced after the read' debt comment. A bus without limit/count (an injected fake) raises TypeError: let the existing except render the pane absent with the reason.",
+  "falsifier": "cairn/tools/base/proofs/test_every_pane_reads_only_what_it_shows.py under PROVES {'86423bb5f054': {'1','2'}} with a fixture bus recording each read's kwargs over 1,000 messages per channel: (1) each of the three panes calls read with limit=FEED_PANE_LIMIT and renders exactly that many entries plus an older line naming 800; (2) no pane calls read without a limit. Hollow: removing limit from _info_pane reds 2. Existing test_the_feed_pane_is_bounded.py stays green. Live check in the verdict: GET /device/cairn under 3 s.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault was measured by the builder at a43109013780's PROVED (its trouble /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json, now cleared) and this ticket's verdict re-measures the live page; a recurrence shows in that pane's own size and load time",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/CairnCommons/troubles/chat-pane-is-unbounded.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [
+    "f8a97b570073"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "One bound (FEED_PANE_LIMIT) for all three panes: they are the same projection over different channels. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/tools/base/shim.py _personal_feed_pane :629, _info_pane :659, _debug_pane :678, FEED_PANE_LIMIT :66. Depends on f8a97b570073 (bus read limit + count).",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T175801-a77b7618ed3a.json",
+  "cast": "2026-10-10"
+}
