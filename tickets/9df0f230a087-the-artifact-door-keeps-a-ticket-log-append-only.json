@@ -1,0 +1,33 @@
+{
+  "id": "9df0f230a087",
+  "title": "The artifact door keeps a ticket log append-only",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "cairn/tools/artifact/jurisdiction.json names CairnCommons tickets/*.log.jsonl as a record set, and cairn/tools/artifact/artifact.py's write() refuses, writing nothing, any write to a *.jsonl record whose new bytes do not begin with the record's current bytes exactly, or whose added bytes are not whole lines each parsing as a JSON object.",
+  "why": "Akien 2026-10-09, verbatim: \"the plan is always the 'current what to do' all questions answered, all intentions clear. the questions and the answering of them is in the ticket log.\" 2026-10-10 he chose the layout \"Flat plan + .log.jsonl (Recommended)\": tickets/<id>-<slug>.json IS the plan, rewritten in place with no superseded lines, and tickets/<id>-<slug>.log.jsonl beside it is the append-only log, one JSON object per line. Then: \"to the best of your ability, get it all closed\", all pre-approved through PROVED. Intention: /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md. Measured 2026-10-10 (/home/akien/dev/src/CairnCommons/measurements/2026-10-10-ticket-field-readers.json): 244 top-level fields over 516 tickets, 166 of them read by no non-proof code, so the trail is mostly fields nobody but a reader-mind opens.",
+  "traces_to": "Law 7 (a ticket log is a record of truth, so it is append-only by physics); Law 4 (append-only enforced at the door, not promised in prose); Law 5 (the plan/log split, intention /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md).",
+  "how": "cairn/tools/artifact only. (1) jurisdiction.json: add {'under': 'tickets', 'name': '*.log.jsonl'} under roots.CairnCommons.records, through the door like any record. Confirm the existing tickets '*.json' pattern does not already match a .log.jsonl name (fnmatch '*.json' does not; measure it in the proof). (2) artifact.py write(), beside the `p.suffix == '.json'` canonical check (~:417): when p.suffix == '.jsonl' call a new _refuse_non_append(p, blob): old = p.read_bytes() if p.exists() else b''; refuse (Refused, naming the path and the first differing byte offset) unless blob.startswith(old); the tail blob[len(old):] must be empty or end with b'\\n', and every line of it must json.loads to a dict. The journal entry's verb stays whatever the caller passes ('append' expected). Charter public_interface notes the jsonl rule.",
+  "falsifier": "cairn/tools/artifact/proofs/test_a_ticket_log_is_append_only.py under PROVES {'9df0f230a087': {'1','2','3'}}, on a tmp commons root: (1) creating tickets/x-y.log.jsonl through write() with one object line lands and is journaled; a second write equal to old + one more object line lands; (2) each refusal — a write that changes or drops an earlier byte, a tail without trailing newline, a tail line that is not JSON, a tail line that is a JSON list — raises Refused and leaves the file byte-identical and the journal unchanged; (3) jurisdiction classifies tickets/x-y.log.jsonl as a record and tickets/x-y.json still as a record, and nothing else under tickets/ changes classification. Hollow: deleting the startswith check reds case 2's first refusal; deleting the jurisdiction line reds 3.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because its only first caller is ticket 76da3a283277 (the ticket log door in cairn/tools/base), whose own proofs write through this rule; a refusal there is loud at that door; the intention it serves is /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261009T134421-7d72ff02192c.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Append-only is judged by byte prefix (new starts with old), not by parsing and comparing objects: the cheapest rule that cannot be satisfied by a rewrite. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "The rule keys on the .jsonl suffix of any record, not on tickets/ alone, so any future append-only record set inherits it by naming itself .jsonl. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/tools/artifact/artifact.py write() ~:402-430 (the .json canonical check at :417, Refused class, _journal at ~:303); jurisdiction.json roots.CairnCommons.records. Build first of the six (9df0f230a087, 76da3a283277, fad76bb5d1f5, 29569fca68a3, 1fc53d5d96cc, then bf1cd5d79805). Do not touch tools/base.",
+  "from_idea": "2026-10-09-idea-intention-ticket-and-chart-are-planning",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T170022-9153228adc44.json",
+  "cast": "2026-10-10"
+}

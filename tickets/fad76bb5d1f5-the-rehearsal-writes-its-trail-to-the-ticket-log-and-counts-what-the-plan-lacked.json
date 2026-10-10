@@ -1,0 +1,36 @@
+{
+  "id": "fad76bb5d1f5",
+  "title": "The rehearsal writes its trail to the ticket log and counts what the plan lacked",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "cairn/machines/rehearsal records each rehearsal on the ticket's log (kind 'rehearsal') instead of overwriting the plan's rehearsal pointer, retires decisions by moving them whole to the log (kind 'decision_retired'), reads its standing from the log, and each rehearsal record carries log_reaches: the gaps whose text a log entry already answers, each naming that entry.",
+  "why": "Akien 2026-10-09, verbatim: \"the plan is always the 'current what to do' all questions answered, all intentions clear. the questions and the answering of them is in the ticket log.\" 2026-10-10 he chose the layout \"Flat plan + .log.jsonl (Recommended)\": tickets/<id>-<slug>.json IS the plan, rewritten in place with no superseded lines, and tickets/<id>-<slug>.log.jsonl beside it is the append-only log, one JSON object per line. Then: \"to the best of your ability, get it all closed\", all pre-approved through PROVED. Intention: /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md. Measured 2026-10-10 (/home/akien/dev/src/CairnCommons/measurements/2026-10-10-ticket-field-readers.json): 244 top-level fields over 516 tickets, 166 of them read by no non-proof code, so the trail is mostly fields nobody but a reader-mind opens.",
+  "traces_to": "Law 5 (the rehearsal reader is handed the plan, never the trail); Law 3 (a gap the log could have settled is counted, so 'the plan is enough' is measured, not assumed); Law 1.",
+  "how": "cairn/machines/rehearsal/rehearsal.py only. (1) rehearse() (~:633): instead of doc['rehearsal'] = rec_rel and _write_ticket, call cairn.tools.base.ticket_log.append_log(ticket, 'rehearsal', {'record': rec_rel}, actor=..., why=...). (2) standing() (~:834) and anything reading doc.get('rehearsal') read the last 'rehearsal' entry of read_log(ticket). (3) retire() (~:715): after its existing refusals pass, append each retired decision whole (with its retired={by,at,because,into}) as kind 'decision_retired', then write the plan with those decisions removed; scope() likewise if it removes lines. decision_ids_of and the retired-filter at :157/:265 keep working (they see no retired lines on a v2 plan). (4) log_reaches: after gaps() in rehearse, for each gap, compare _tokens(gap step+assumption) against _tokens(json.dumps(entry)) for every log entry; a gap with overlap >= 4 tokens on any entry is a reach {gap_step, log_index, kind, overlap}; the record carries 'log_reaches' (list) and 'log_reach_count'. The reader prompt is unchanged: render() is handed the plan file only, which after 29569fca68a3 holds no trail. Depends on 76da3a283277.",
+  "falsifier": "cairn/machines/rehearsal/proofs/test_the_rehearsal_writes_to_the_log.py under PROVES {'fad76bb5d1f5': {'1','2','3'}}, with a stub reader and tmp commons: (1) rehearse on a fixture ticket appends one 'rehearsal' log line naming the record and leaves the plan's bytes unchanged except nothing (no 'rehearsal' key written); standing() returns that record; (2) retire([n]) moves decision n whole to a 'decision_retired' log line and the plan no longer carries it; a live line citing n is still refused as before; (3) a stub reader whose gap text repeats a fixture log entry's words yields log_reach_count 1 naming that entry's index; a gap sharing nothing yields 0. Hollow: writing the pointer onto the plan reds 1; counting every gap as a reach reds 3's zero case. Existing rehearsal proofs stay green.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the migration task 29569fca68a3 rehearses every open ticket and records the log_reach counts in its verdict, the first reading of this instrument; the intention it serves is /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261009T134421-7d72ff02192c.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [
+    "9df0f230a087",
+    "76da3a283277"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "A log reach is measured by token overlap (>= 4 shared tokens, the module's own _tokens) between a gap and a log entry: heuristic, and labeled so on the record; it is what lets the intention's 'wrong intent' clause (gaps only history settles) be counted. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "The reader is never handed the log; plan-only is achieved by the plan carrying no trail after the migration, not by filtering at render. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/machines/rehearsal/rehearsal.py rehearse :602-660, _write_ticket :596, retire :715, scope :772, standing :819, _tokens :866, gaps :460. The log door is cairn.tools.base.ticket_log (ticket 76da3a283277): append_log / read_log. Build after 9df0f230a087 and 76da3a283277.",
+  "from_idea": "2026-10-09-idea-intention-ticket-and-chart-are-planning",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T170030-407a2fe6f98f.json",
+  "cast": "2026-10-10"
+}

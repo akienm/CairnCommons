@@ -1,0 +1,51 @@
+{
+  "id": "76da3a283277",
+  "title": "A ticket's trail is appended to its log through one door",
+  "date": "2026-10-10",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cairn/tools/base owns the ticket log: append_log / read_log / log_path write and read tickets/<id>-<slug>.log.jsonl through the artifact door; split(ticket) moves every v1 trail item off a ticket plan into its log, losslessly; set_phase appends its act record to the log instead of the plan's phase_writes; cast_ticket refuses a field outside the plan's declared field set; and the store charter CairnCommons/tickets/_charter+why.json is schema v2, declaring plan_fields and log_kinds.",
+  "why": "Akien 2026-10-09, verbatim: \"the plan is always the 'current what to do' all questions answered, all intentions clear. the questions and the answering of them is in the ticket log.\" 2026-10-10 he chose the layout \"Flat plan + .log.jsonl (Recommended)\": tickets/<id>-<slug>.json IS the plan, rewritten in place with no superseded lines, and tickets/<id>-<slug>.log.jsonl beside it is the append-only log, one JSON object per line. Then: \"to the best of your ability, get it all closed\", all pre-approved through PROVED. Intention: /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md. Measured 2026-10-10 (/home/akien/dev/src/CairnCommons/measurements/2026-10-10-ticket-field-readers.json): 244 top-level fields over 516 tickets, 166 of them read by no non-proof code, so the trail is mostly fields nobody but a reader-mind opens.",
+  "traces_to": "Law 5 (the plan carries what a mind needs now, the log keeps the trail); Law 1 (a builder reads the standing decisions without digging the trail); Law 6 (tools/base's door is the one writer of the ticket store's log, as cast_ticket is of its entry).",
+  "how": "cairn/tools/base only, plus the store charter it owns the writes of. (1) New module cairn/tools/base/ticket_log.py, public: log_path(plan: Path) -> Path (same dir, plan.name[:-5] + '.log.jsonl'); append_log(ticket: str|Path, kind: str, body: dict, *, actor: str, why: str) -> dict — resolves the plan via transitions._find_ticket when given an id, refuses ValueError on a kind not in the charter's log_kinds or a body key named kind/at/actor, builds {'kind', 'at': isoformat seconds, 'actor', **body}, and writes old_bytes + json.dumps(line, ensure_ascii=False, sort_keys=True) + '\\n' through cairn.tools.artifact.write(path, ..., verb='append', why=why); read_log(ticket) -> list[dict] ([] when no log). split(ticket, *, actor, why) -> dict: reads the plan; for each top-level key not in plan_fields, append kind 'field' {field, value}; for each entry of phase_writes append kind 'phase_write' {record: entry}; a string 'rehearsal' pointer appends kind 'rehearsal' {record: value}; each decision carrying 'retired' appends kind 'decision_retired' {decision: d}; then writes the plan without those keys/entries through artifact.write_json(verb='cast', why=why). Idempotent: a plan already v2-clean appends nothing and writes nothing. Returns {'moved': counts by kind}. (2) transitions.set_phase (~:2759): append the act record with append_log(kind='phase_write', {record}) FIRST, then write the plan's cursor/release WITHOUT touching phase_writes. (3) cast_ticket (~:2887): add to its one-pass lacks every top-level key not in plan_fields ('<key> is not a plan field; trail goes to the log'). (4) The store charter CairnCommons/tickets/_charter+why.json through the artifact door: schema_version 'v2 — 2026-10-10, plan + log'; add 'plan_fields' (the list in this ticket's decisions) and 'log_kinds' (map kind -> body shape) and a 'log' section naming the file, the line shape {kind, at, actor, ...body}, and append-only by the .jsonl rule (9df0f230a087); template entries for phase_writes and rehearsal now point at the log. transitions reads plan_fields/log_kinds from the charter, never a second copy. (5) The probe the_ticket_write_door_has_callers and anything else in tools/base reading phase_writes reads read_log(kind='phase_write') instead. Depends on 9df0f230a087.",
+  "falsifier": "cairn/tools/base/proofs/test_the_ticket_log_door.py under PROVES {'76da3a283277': {'1','2','3','4','5'}}, on a tmp tickets dir with a copied charter: (1) append_log twice lands two lines in order, each with kind/at/actor/body, read_log returns both; unknown kind and a body key 'kind' raise ValueError and write nothing; (2) split over a fixture v1 ticket carrying an ad-hoc field, two phase_writes, a rehearsal pointer and one retired + one live decision: the plan afterwards holds only plan_fields, no phase_writes, no rehearsal, only the live decision; and reconstructing (plan + every 'field' value + phase_writes from 'phase_write' + rehearsal from the last 'rehearsal' + retired decisions re-inserted) equals the v1 doc exactly; (3) split again is a no-op (both files byte-identical); (4) set_phase on a fixture ticket appends one 'phase_write' line whose record.workflow equals the plan's new workflow_and_state, and the plan carries no phase_writes key; (5) cast_ticket with an extra non-plan field is refused naming it, and the same doc without it casts. Hollow: split that drops a field instead of logging it reds 2; set_phase writing phase_writes onto the plan reds 4. Existing tools/base proofs stay green.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the migration task 29569fca68a3 runs split over every ticket and its falsifier reads the lossless reconstruction for all of them; later drift is refused at the artifact door by 1fc53d5d96cc; the intention it serves is /home/akien/dev/src/CairnCommons/intentions-not-beside-code/I-a-ticket-is-a-plan-and-a-log.md",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261009T134421-7d72ff02192c.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [
+    "9df0f230a087"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Layout: tickets/<id>-<slug>.json is the plan, tickets/<id>-<slug>.log.jsonl the log. Akien 2026-10-10 (AskUserQuestion answer 'Flat plan + .log.jsonl (Recommended)')."
+    },
+    {
+      "n": 2,
+      "text": "plan_fields = id, title, date, owner, owning_intention, intention, why, traces_to, how, falsifier, node_class, workflow_and_state, watchme, sorted_berth, intent_berth, task_or_ticket, cast, schema_version, children, parent, dependencies, depends_on, constraints, decisions, builder_notes, chart_claim, chart_notes, questions, deposits, release, fixme, superseded_by, links, linked_ideas, from_idea, priority, gates_bound, filed_edges, writes_to, bounds, proof, verdict_berth, forwarding, migrated_from, stage_needs, measurements_since_cast, rulings, validation, closed_by, proved, author, created, notes, closed. Rule: the 15 cast-door fields, the plan-shaped fields a builder works from (decisions, builder_notes, constraints, dependencies, chart_claim...), and every field the 2026-10-10 reader census (/home/akien/dev/src/CairnCommons/measurements/2026-10-10-ticket-field-readers.json) found quoted in non-proof code, so no code reader breaks; the census over-counts, which only keeps a field in the plan. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 3,
+      "text": "log_kinds: field {field, value} — a trail field: moved off a v1 ticket by the split, or written later instead of an ad-hoc top-level key; phase_write {record} — the set_phase act record that used to append to the ticket's phase_writes; rehearsal {record} — the commons-relative path of a rehearsal record, which used to overwrite the ticket's rehearsal pointer; decision_retired {decision} — a decision line retired from the plan, whole, with its retired={by,at,because,into}. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 4,
+      "text": "set_phase appends the log line first, then writes the plan: a crash between leaves a log record ahead of the cursor, which the phase_write reader sees as a disagreement (loud), never a cursor with no record. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 5,
+      "text": "Questions stay in their own store (CairnCommons/questions/); the plan keeps their ids in 'questions' and the log does not copy them. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 6,
+      "text": "The tester ticket bf1cd5d79805 reads the plan at the existing flat path; there is no plan.json. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/tools/base/transitions.py _TICKETS :866, _find_ticket :869, set_phase :2646 (phase_writes at :2759-2762), cast_ticket :2887; probe cairn/tools/base/probes/the_ticket_write_door_has_callers.py. Store charter CairnCommons/tickets/_charter+why.json. The artifact door is cairn.tools.artifact (write / write_json). Census of sites: /home/akien/dev/src/CairnCommons/measurements/2026-10-09-ticket-json-census.json. Globs of the form '*-{id}.json' and '{id}-*.json' do not match .log.jsonl; the one unsuffixed glob found (devices/tester/isolation.py:349 root.glob(f'{prefix}*')) is the tester's, not yours.",
+  "from_idea": "2026-10-09-idea-intention-ticket-and-chart-are-planning",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261010T170030-aa56fb51f877.json",
+  "cast": "2026-10-10"
+}

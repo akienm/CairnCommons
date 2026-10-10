@@ -5,7 +5,9 @@ components, so no single directory can hold it. Born 2026-10-09 from idea
 `2026-10-09-idea-intention-ticket-and-chart-are-planning`, intent berth
 `~/.cairn/devices/skill_block/0/berths/intent/intent-20261009T134421-7d72ff02192c.json`. Agreed the same
 day ("agreed on all counts"), and ordered ahead of every other queue item ("the split goes FIRST").
-Not yet cast: the format tickets and the migration are cast after the weekly usage reset.*
+Cast 2026-10-10 as six, in build order: 9df0f230a087 (artifact door, append-only .jsonl), 76da3a283277
+(tools/base log door, split, charter v2), fad76bb5d1f5 (rehearsal to the log, log_reaches), 29569fca68a3
+(the migration run), 1fc53d5d96cc (artifact door, declared keys), then bf1cd5d79805 (tester), amended.*
 
 ## Akien, verbatim, 2026-10-09
 
@@ -26,11 +28,15 @@ flight at once. Building one at a time is a usage limit, not the design.
 ## What it is (agreed shape)
 
 - **"Ticket" means the pair.**
-- **`tickets/<id>/plan.json`**: the current what-to-do. It is rewritten in place and carries no
-  superseded lines. The chart folds into it, and the cursor (`workflow_and_state`) lives here, so there is
-  still exactly one copy of where the work stands.
-- **`tickets/<id>/log.json`**: append-only. It holds the questions and their answers, retired decisions,
-  and the trail of how the plan got this way.
+- **The layout, ruled 2026-10-10** (Akien chose "Flat plan + .log.jsonl (Recommended)", superseding the
+  dir pair first agreed): **`tickets/<id>-<slug>.json` is the plan**, the current what-to-do. It is
+  rewritten in place, carries no superseded lines and only the fields the store charter's `plan_fields`
+  declares. The chart folds into it, and the cursor (`workflow_and_state`) lives here, so there is still
+  exactly one copy of where the work stands.
+- **`tickets/<id>-<slug>.log.jsonl` is the log**: append-only by byte prefix at the artifact door, one
+  JSON object per line `{kind, at, actor, ...}`. It holds the trail: retired decisions, phase writes,
+  rehearsal records, and every ad-hoc field. Questions and their answers stay in `questions/`, and the
+  plan carries their ids.
 - **A one-time, deterministic migration** converts every existing flat `tickets/<id>-<slug>.json` file.
 - **The rehearsal reader is handed the plan only.** Every reach into the log is counted as a measurement
   of a decision the plan is missing.
@@ -72,7 +78,7 @@ the migration has to move, and the list the format tickets work from.
 
 ## Falsifier
 
-- **Done** when every ticket is the pair: no flat ticket files remain under `tickets/`, the census's 639
+- **Done** when every ticket is the pair: no plan under `tickets/` carries a field outside `plan_fields`, the census's 639
   sites read the new paths, the build_inspector is green, and a plan-only rehearsal has run over every
   open ticket with its log-reaches counted.
 - **Wrong intent** in either of two cases. The first is if plan-only rehearsals raise gaps that only
