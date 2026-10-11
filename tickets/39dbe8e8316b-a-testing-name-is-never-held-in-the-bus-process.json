@@ -69,13 +69,11 @@
       "text": "D7: SETTLED: scope. Removing the pilot's _TestingBus wrapper from cairn/devices/system_rackmount/proofs/test_system_rackmount.py is a system_rackmount follow-up ticket after this PROVES, not this ticket's. The handles_test_mail disposal and reply-copies-origin parts of the BaseShim child move to a later child, after the bus and bus_client stamp origin."
     }
   ],
-  "build_patch": "diff --git a/cairn/tools/bus_client/remote.py b/cairn/tools/bus_client/remote.py\nindex 4c4f8b95..d03d05aa 100644\n--- a/cairn/tools/bus_client/remote.py\n+++ b/cairn/tools/bus_client/remote.py\n@@ -25,6 +25,8 @@ import time\n from datetime import datetime\n from pathlib import Path\n \n+from cairn.tools.base.origin import is_testing_name\n+\n # cairn/tools/bus_client/remote.py → three parents up is the class root.\n _CLASS_ROOT = Path(__file__).resolve().parents[3]\n _BUS_MODULE = \"cairn.devices.cairn.machines.bus\"\n@@ -335,7 +337,16 @@ class RemoteBus:\n         return self._call({\"op\": \"verbs\", key: device_or_shim, \"verbs\": list(argv)})\n \n     def wire_delivery(self, device_id: str, _deliver=None) -> None:\n-        \"\"\"Delivery happens in the bus process: holding the device there IS the wiring.\"\"\"\n+        \"\"\"Delivery happens in the bus process: holding the device there IS the wiring.\n+\n+        A TESTING NAME IS NEVER HELD THERE (ticket 39dbe8e8316b). A ``testing-`` device exists\n+        only inside the proof that stood it up; no shim in the bus process answers to it\n+        (measured 2026-10-05: the first pulse raised LookupError out of ``hold``), and the\n+        proof's own shim reads the testing id's mail and nobody else's. A bus process wiring a\n+        testing shim it holds itself is a different act and stays legal — this declines only\n+        the crossing.\"\"\"\n+        if is_testing_name(device_id):\n+            return None\n         self.hold(device_id)\n \n     def unwire_delivery(self, device_id: str) -> None:\n",
   "depends_on": "be4a7b3c7caa",
   "chart_claim": {
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T131333-19b3c0f3c98e.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 6abdbd603a51 .. validate 19b3c0f3c98e, each learned)"
   },
-  "cast": "2026-10-05",
-  "rehearsal": "rehearsals/39dbe8e8316b-20261005T191758.json"
+  "cast": "2026-10-05"
 }

@@ -19,7 +19,6 @@
   "questions": [
     "open-637f083600aa"
   ],
-  "queued_after": "4784351e4838",
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/scratch/scratch.py (the function) and cairn/tools/scratch/proofs/test_scratch.py (the tooth move + the new tooth) — nothing else. WHAT EXACTLY? def bare_temp_reach(root: str | Path) -> list[str], placed after git_env: root = Path(root); out = []; for py in sorted(root.rglob('proofs/test_*.py')): skip if '__pycache__' in py.parts; for n, line in enumerate(py.read_text(errors='replace').splitlines(), 1): if not line.lstrip().startswith('#') and ('mkdtemp' in line or 'gettempdir' in line): out.append(f'{py.relative_to(root)}:{n}: {line.strip()}'); return out. Its docstring names the defect (3581 leaked entries, e038544a9b60) and says it names no caller. THE CORPUS TOOTH: me = str(Path(__file__).resolve().relative_to(REPO)); offenders = [o for o in bare_temp_reach(REPO) if not o.startswith(me + ':')]; the assert and message verbatim; import bare_temp_reach at call time inside the tooth so a reverted scratch.py reds teeth instead of breaking the runner. THE NEW TOOTH: as in falsifier_check, PROVES gains 'b4d39f3610f3': {'1': 'test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one'}. PROOF CLEARANCE: question open-637f083600aa; BUILDME waits on it.",
   "cast": "2026-10-08",
   "decisions": [
@@ -69,54 +68,12 @@
       }
     },
     {
-      "n": 6,
-      "text": "D6 (folds D5's last sentence, which named a precedent instead of the steps): T = b4d39f3610f3, proven_by = cairn/tools/scratch/proofs/test_scratch.py; the crossings are each their own command, in this order, all at the component cairn/tools/scratch: BUILDME and PROVEME by cairn.tools.base.transitions.emit(<ticket workflow_and_state>, <target>, history_path='cairn/tools/scratch/history.json', state_path='cairn/tools/scratch/state.json', ticket=T, actor='cc', why=<one line>, proven_by=[<proven_by>] at PROVEME only), the returned cursor written onto the ticket through cairn.tools.artifact.artifact.write(<ticket path>, <json>, verb='cast', why=...); after PROVEME is committed, bin/cairn test --hollow T --seal and commit its record; push BOTH repos; PROVED by cairn.devices.cairn.machines.harbor_master.clearance.clear(<workflow_and_state>, 'PROVED', actor='CC', boat_id=T, proven_by=[<proven_by>], ticket=T, history_path=..., state_path=...), cursor written back the same way; commit and push both repos; then measured_at_build through the artifact door. There is no CLI crossing door — that gap is its own ticket in the cast queue (peer F21) and this ticket does not build it.",
-      "by": "cc",
-      "step": "the crossings",
-      "source": "rehearsal",
-      "at": "2026-10-08T09:48:53+00:00",
-      "retired": {
-        "by": "cc",
-        "at": "2026-10-08T16:02:41+00:00",
-        "because": "Peer F36 (2026-10-08): D6-D7 are crossing scripts and the crossings are ticket 3d9cedf76a7e's, not this ticket's build; D9 existed only to scope them out. The build ends at D5. Kept in the file; out of the reader's view.",
-        "into": 5
-      }
-    },
-    {
-      "n": 7,
-      "text": "D7 (the same invocation D6 names, made exact as on 4784351e4838 D10): Each crossing is one command running this script with its arguments TARGET and, at PROVEME only, the proven_by path (repo cwd ~/dev/src/cairn, PYTHONPATH=., the venv python3): import json, sys; from pathlib import Path; from cairn.tools.base.transitions import emit; from cairn.tools.artifact.artifact import write; T=<ticket id>; target=sys.argv[1]; proven=sys.argv[2:]; tp=next(Path(\"/home/akien/dev/src/CairnCommons/tickets\").glob(f\"{T}-*.json\")); t=json.loads(tp.read_text()); why=f\"{T}: {target}\"+(f\" (proven_by {proven[0]})\" if proven else \"\"); new=emit(t[\"workflow_and_state\"], target, history_path=\"cairn/tools/scratch/history.json\", state_path=\"cairn/tools/scratch/state.json\", ticket=T, actor=\"cc\", why=why, **({\"proven_by\": proven} if proven else {})); print(new); if new != t[\"workflow_and_state\"]: t[\"workflow_and_state\"]=new; write(str(tp), json.dumps(t, indent=2, ensure_ascii=False)+\"\\n\", verb=\"cast\", why=why). PROVED is the same script with emit(...) replaced by cairn.devices.cairn.machines.harbor_master.clearance.clear(t[\"workflow_and_state\"], \"PROVED\", actor=\"CC\", boat_id=T, proven_by=[<proven_by>], ticket=T, history_path=..., state_path=...), after the hollow is sealed and committed and BOTH repos are pushed. The why is exactly that f-string; the ticket JSON is the whole ticket dict re-serialised with indent=2, ensure_ascii=False and a trailing newline. A refusal prints and writes nothing; bring its exact line back.",
-      "by": "cc",
-      "step": "the crossings",
-      "source": "rehearsal",
-      "at": "2026-10-08T10:10:15+00:00",
-      "retired": {
-        "by": "cc",
-        "at": "2026-10-08T16:02:41+00:00",
-        "because": "Peer F36 (2026-10-08): D6-D7 are crossing scripts and the crossings are ticket 3d9cedf76a7e's, not this ticket's build; D9 existed only to scope them out. The build ends at D5. Kept in the file; out of the reader's view.",
-        "into": 5
-      }
-    },
-    {
       "n": 8,
       "text": "D8 (folds 'four' in why, falsifier, D1, D4 and D5): the corpus tooth's standing offenders are FIVE, not four — measured by its inline scan at cairn f7cd3b33, which names verbatim: bin/proofs/test_proof_gate.py:217; cairn/devices/tester/proofs/test_a_command_runs_under_the_seal_by_exec.py:80; cairn/devices/tester/proofs/test_an_unbuildable_network_seal_refuses_the_run.py:74; cairn/devices/tester/proofs/test_exec_runs_in_the_callers_cwd.py:44; cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py:84 (3 tester, 1 tools/base, 1 bin). The bin site landed 2026-10-06 in 16d179a2; its routing is ticket 7afb00d72c6c, queued after this one. Wherever this ticket says 'the four standing offenders' or 'the same four lines', read the list measured at the commit the build runs it — the before/after check in D4/D5 compares the two printed lists for equality, never a count; and the corpus tooth's green is recorded by whichever of 017d8298662a, b2abaa16e590 and 7afb00d72c6c lands last.",
       "by": "cc",
       "step": "the corpus tooth",
       "source": "rehearsal",
       "at": "2026-10-08T10:49:49+00:00"
-    },
-    {
-      "n": 9,
-      "text": "D9 (folds D5's last sentence; scopes D6 and D7; peer F32, as 4784351e4838 D16): D5's last sentence and D6-D7 name the voyage, not build steps. The crossings they describe (transitions.emit, clearance.clear, artifact.write, the hollow, the pushes, measured_at_build) are the workflow's own machinery, with their own components, charters and proofs, and are outside this ticket's build scope under RULE 1; the crossing command is its own ticket, 3d9cedf76a7e. This ticket's build ends at the committed build (D1-D4) plus its verification (D5 up to and including the seal of test_scratch.py and the hollow's revert-and-red expectation). The crossings after it follow the standing code-seam@v2 workflow and are not rehearsed per ticket.",
-      "by": "cc",
-      "step": "the crossings",
-      "source": "rehearsal",
-      "at": "2026-10-08T11:47:39+00:00",
-      "retired": {
-        "by": "cc",
-        "at": "2026-10-08T16:02:41+00:00",
-        "because": "Peer F36 (2026-10-08): D6-D7 are crossing scripts and the crossings are ticket 3d9cedf76a7e's, not this ticket's build; D9 existed only to scope them out. The build ends at D5. Kept in the file; out of the reader's view.",
-        "into": 5
-      }
     },
     {
       "n": 10,
@@ -151,34 +108,6 @@
       "at": "2026-10-08T20:06:49+00:00"
     },
     {
-      "n": 14,
-      "text": "D14 (D5's last sentence, moved here verbatim so it is context and never a step): 'Then cross PROVEME and PROVED through the same crossing door the voyage used for 42075a49c121, each in its own command.' The crossings are the code-seam@v2 workflow's own machinery and ticket 3d9cedf76a7e's, not this ticket's build (peer F36; D9 retired).",
-      "by": "cc",
-      "step": "unlisted: D5's crossing sentence",
-      "source": "rehearsal",
-      "at": "2026-10-08T20:06:49+00:00",
-      "retired": {
-        "by": "cc",
-        "at": "2026-10-08T20:07:13+00:00",
-        "because": "Redundant: D5 itself is scoped as context (peer F41), so D14's verbatim copy of D5's last sentence adds nothing; retiring D5 instead was refused because D8 and D13 cite it.",
-        "into": 13
-      }
-    },
-    {
-      "n": 15,
-      "text": "D15 (settles where D3's tooth runs; measured at cairn 5639f53's parent tree, the sealed record cairn/tools/scratch/validations/test_scratch.json of 2026-10-08T04:46:05): test_scratch.py runs its teeth through _main()'s checks list in order and stops at the first that raises; the tester reads the PASS lines as teeth_green. The corpus tooth test_no_proof_in_this_repo_calls_mkdtemp_bare stays red until the offenders are routed (D8), so every check after it never runs. D3's tooth is therefore added to _main()'s checks list immediately BEFORE test_no_proof_in_this_repo_calls_mkdtemp_bare, and nowhere else in the list; the existing order is otherwise unchanged. D13's 'every other tooth green' reads: every check before the corpus tooth prints PASS; the checks after it are not reached while it is red, as today.",
-      "by": "cc",
-      "step": "D3",
-      "source": "rehearsal",
-      "at": "2026-10-08T20:15:06+00:00",
-      "retired": {
-        "by": "cc",
-        "at": "2026-10-08T20:15:12+00:00",
-        "because": "D15 named the measurement's commit as a CairnCommons hash; D16 is the same line with the cairn HEAD it was measured at.",
-        "into": 16
-      }
-    },
-    {
       "n": 16,
       "text": "D16 (settles where D3's tooth runs; measured at cairn e37ef412 from the sealed record cairn/tools/scratch/validations/test_scratch.json of 2026-10-08T04:46:05): test_scratch.py runs its teeth through _main()'s checks list in order and stops at the first that raises; the tester reads the PASS lines as teeth_green. The corpus tooth test_no_proof_in_this_repo_calls_mkdtemp_bare stays red until the offenders are routed (D8), so every check after it never runs. D3's tooth is therefore added to _main()'s checks list immediately BEFORE test_no_proof_in_this_repo_calls_mkdtemp_bare, and nowhere else in the list; the existing order is otherwise unchanged. D13's 'every other tooth green' reads: every check before the corpus tooth prints PASS; the checks after it are not reached while it is red, as today.",
       "by": "cc",
@@ -194,6 +123,5 @@
       "source": "rehearsal",
       "at": "2026-10-08T20:17:22+00:00"
     }
-  ],
-  "rehearsal": "rehearsals/b4d39f3610f3-20261008T203701.json"
+  ]
 }

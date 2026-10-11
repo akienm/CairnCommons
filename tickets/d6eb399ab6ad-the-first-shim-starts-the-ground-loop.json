@@ -54,51 +54,12 @@
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260906T155923-8e4c2d3c6a6d.json",
   "chart_claim": "validate-20260907T142659-97dfd0c46744.json",
   "cast": "2026-09-06",
-  "cast_by": "CC (Fable session; intent finding a68d658ad1f1, sorted finding d6eb399ab6ad)",
-  "intent": {
-    "what": "Every shim, on start, checks whether the instance's ground loop is running and launches it if not — so the heartbeat is lazy-inited by the first thing that needs a pulse and by nothing else.",
-    "shape": "aside",
-    "challenge": {
-      "better_approach": "A boot-time service (systemd user unit enabled at login) would be simpler and was proposed by CC on 2026-09-06; Akien's chain retires it — the system lazy-inits from the command, and ruling 2026-08-11 already forbids system-level startup. Putting the check in the launcher script instead of the shim was the other candidate; the shim is right because a shim can be started by something other than a launcher (a proof, the web server) and each of those needs the same guarantee.",
-      "prior_art": "launchers/superclaude spawns the loop as a transient user unit with a measured, proven line (launchers charter: 24-arm proof test_ground_loop_survives_its_caller.py; SuccessExitStatus=3, --setenv HOME/PATH, append redirects). guard.claim_singleton makes any second launch safe (ticket an-entry-point-starts-the-loop-only-once). liveness.read_liveness is the one address for LIVE/DEAD at the ruled 5s. This ticket moves the CALL to the shim and reuses all three; it invents nothing.",
-      "hidden_assumption": "That 'shim start' is a single, identifiable event once the bus is one process (ticket one-bus-per-instance): under reading (a) the shim starts when it registers into the bus process, so the check fires at registration. If the bus ticket lands first, this becomes a few lines in the registration path; if it lands second, the check sits in BaseShim.__init__ and moves later. Either order works; the builder should not wait on the other ticket.",
-      "real_collision": "None. The ground_loop charter says the runner is spawned by 'any entry point' — the shim is one. The superclaude launcher's spawn and the shim's spawn both call the same guarded runner, so they cannot both win. The only rule this must not touch is the ground loop's contents, and the how says so.",
-      "back_up": "proceed"
-    }
-  },
-  "why_beneath_the_why": "Akien 2026-09-06: 'if everything goes thru one pipe, we learn faster' and 'everythign automatically lazy inits' — the operator types one command and the system stands itself up behind it, on one pipe, with nothing to remember.",
-  "mechanism": null,
   "stage_needs": null,
   "filed_edges": [],
   "rulings": [
     "2026-09-06-codemother-owns-the-care-of-the-code"
   ],
   "task_or_ticket": "ticket",
-  "repairs": [
-    "2026-09-06 (ticket 3feb201c84ea, one status everywhere): owning_intention 'cairn/cairn/tools/base/intention+why.json' resolved under neither root; stripped the extra 'cairn/' — the one reader surfaced it; data repair, no design change."
-  ],
-  "phase_writes": [
-    {
-      "act": "set_phase",
-      "actor": "CC",
-      "phase": "queued",
-      "release": "48519f4789b1",
-      "standing": "BUILDME",
-      "workflow": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:queued] -> PROVEME -> PROVED",
-      "at": "2026-09-08T15:00:58",
-      "why": "its own links say of 48519f4789b1: 'sibling; DECIDES WHERE THE CALL SITS'. A shim cannot start the ground loop from an address the bus ticket has not settled."
-    },
-    {
-      "act": "set_phase",
-      "actor": "CC",
-      "phase": "waiting",
-      "release": null,
-      "standing": "BUILDME",
-      "workflow": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
-      "at": "2026-09-16T18:13:10",
-      "why": "picked up: the queue on 48519f4789b1 is released by Akien's delegation 2026-09-16 ('the order i leave up to you') and D14 (call site settled at BaseShim.__init__ by D4; the bus ticket changes nothing about where the check sits). Rehearsed clean on pass 5, 2026-09-17T00:12."
-    }
-  ],
   "notes": [
     "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 → BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 — the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
   ],
@@ -215,6 +176,5 @@
       "source": "rehearsal",
       "at": "2026-09-30T22:46:46+00:00"
     }
-  ],
-  "rehearsal": "rehearsals/d6eb399ab6ad-20260917T001213.json"
+  ]
 }

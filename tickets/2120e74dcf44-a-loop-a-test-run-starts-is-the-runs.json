@@ -34,12 +34,10 @@
       "text": "D2: SETTLED: the proof cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py is already on disk, committed red at 9e04330c (1 of 4 at HEAD: tooth 4 green, 1-3 red). After the build it prints four ok lines and exits 0; the regression proofs cairn/tools/base/proofs/test_shim.py and cairn/tools/base/proofs/test_shim_starts_the_loop.py each exit 0."
     }
   ],
-  "build_patch": "diff --git a/cairn/tools/base/shim.py b/cairn/tools/base/shim.py\nindex 1955e6c1..32fde280 100644\n--- a/cairn/tools/base/shim.py\n+++ b/cairn/tools/base/shim.py\n@@ -136,8 +136,14 @@ def ensure_ground_loop(now: datetime, *, home: Path | None = None, log: Path | N\n             \"--working-directory\", str(repo_root),\n             f\"--setenv=HOME={env_home}\", f\"--setenv=PATH={os.environ.get('PATH', '')}\",\n             \"-p\", \"SuccessExitStatus=3\",\n-            \"-p\", f\"StandardOutput=append:{log}\", \"-p\", f\"StandardError=append:{log}\",\n-            \"--\", \"python3\", \"-m\", _LOOP_MODULE]\n+            \"-p\", f\"StandardOutput=append:{log}\", \"-p\", f\"StandardError=append:{log}\"]\n+    # inside a test run the loop is the run's (ticket 2120e74dcf44, the launcher's twin f04d5ef26a48):\n+    # systemd-run hands a unit the MANAGER's environment, so the run's id is carried by hand where\n+    # the tester's stop reads it (the manager's record), and a failed loop of a run collects itself\n+    test_id = os.environ.get(\"CAIRN_TESTER_TEST_ID\")\n+    if test_id:\n+        argv += [f\"--setenv=CAIRN_TESTER_TEST_ID={test_id}\", \"-p\", \"CollectMode=inactive-or-failed\"]\n+    argv += [\"--\", \"python3\", \"-m\", _LOOP_MODULE]\n \n     def run_unit():\n         return subprocess.run(argv, capture_output=True, text=True, timeout=30)\n",
   "cast": "2026-10-05",
   "chart_claim": {
     "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261005T233420-3d0c7508607c.json",
     "chain_complete": true,
     "filled_by": "CC chart chain (orient 11f8be1fdc34 .. validate 3d0c7508607c, each learned)"
-  },
-  "rehearsal": "rehearsals/2120e74dcf44-20261006T053725.json"
+  }
 }
