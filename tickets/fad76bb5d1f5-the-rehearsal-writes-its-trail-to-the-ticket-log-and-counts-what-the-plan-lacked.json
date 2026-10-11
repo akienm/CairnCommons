@@ -27,6 +27,86 @@
     {
       "n": 2,
       "text": "The reader is never handed the log; plan-only is achieved by the plan carrying no trail after the migration, not by filtering at render. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 3,
+      "text": "standing() reads the last 'rehearsal' log line; when the log has none it reads a v1 plan's 'rehearsal' pointer, because 29569fca68a3 has not split the 220 live plans that carry one (0 logs exist, measured 2026-10-10). CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: standing reads the log",
+      "source": "rehearsal",
+      "at": "2026-10-11T01:55:00+00:00"
+    },
+    {
+      "n": 4,
+      "text": "decide() numbers 1 + max(n) over the plan's decisions AND the log's decision_retired lines, so a retired n is never reused. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: decide numbers past retired lines",
+      "source": "rehearsal",
+      "at": "2026-10-11T01:55:00+00:00"
+    },
+    {
+      "n": 5,
+      "text": "scope() is unchanged: a scoped line stays on the plan as context and removes nothing. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: scope is untouched",
+      "source": "rehearsal",
+      "at": "2026-10-11T01:55:01+00:00"
+    },
+    {
+      "n": 6,
+      "text": "A log reach is one per gap: the log entry with the most shared tokens (ties to the lowest index), recorded as {gap_step, gap_kind, log_index, kind (the entry's kind), overlap}; the gap's words are its step plus its assumption and would_settle texts; the entry's words are json.dumps of the whole line. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: log reach shape",
+      "source": "rehearsal",
+      "at": "2026-10-11T01:55:01+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The teeth of test_rehearsal.py and test_a_superseded_decision_is_retired.py that read the pointer or a retired line on the plan are re-pointed to read the log (read_log); the property each pins is kept at its new address, nothing is loosened. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: re-point the old teeth",
+      "source": "rehearsal",
+      "at": "2026-10-11T01:55:01+00:00"
+    },
+    {
+      "n": 8,
+      "text": "D6's gap_kind is the gap's own 'kind' from gaps() (assumes, cannot_proceed, unlisted, step_absent, assumption_differs) — never a read node's state. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-11T02:03:23+00:00"
+    },
+    {
+      "n": 9,
+      "text": "Re-pointing keeps each tooth's invariant: a tooth reading the plan's pointer or retired line reads read_log(ticket, 'rehearsal'|'decision_retired'); where the pointer no longer changes the plan's bytes, the tooth asserts the bytes the pass read are the bytes that stand. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-11T02:03:23+00:00"
+    },
+    {
+      "n": 10,
+      "text": "rehearse() calls append_log(plan path, 'rehearsal', {'record': rec_rel}, actor=its --by or 'rehearsal', why='rehearsal clean on pass N: <rec_rel>') before writing the record. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: rehearse() appends rehearsal record to log via append_log",
+      "source": "rehearsal",
+      "at": "2026-10-11T02:03:23+00:00"
+    },
+    {
+      "n": 11,
+      "text": "retire() calls append_log(plan path, 'decision_retired', {'decision': <the stamped line>}, actor=its --by, why=<its own retire why>) once per retired line, then writes the plan without them. CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: retire() appends retired decisions to log via append_log",
+      "source": "rehearsal",
+      "at": "2026-10-11T02:03:23+00:00"
+    },
+    {
+      "n": 12,
+      "text": "The proof cairn/machines/rehearsal/proofs/test_the_rehearsal_writes_to_the_log.py is written red-first before the build (3/3 red at cairn HEAD 84a2dad8, 2026-10-10). CC's call, per Akien 2026-10-09",
+      "by": "CC",
+      "step": "unlisted: write test_the_rehearsal_writes_to_the_log.py",
+      "source": "rehearsal",
+      "at": "2026-10-11T02:03:23+00:00"
     }
   ],
   "builder_notes": "WHERE: cairn/machines/rehearsal/rehearsal.py rehearse :602-660, _write_ticket :596, retire :715, scope :772, standing :819, _tokens :866, gaps :460. The log door is cairn.tools.base.ticket_log (ticket 76da3a283277): append_log / read_log. Build after 9df0f230a087 and 76da3a283277.",
