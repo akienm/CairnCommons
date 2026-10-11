@@ -1,0 +1,461 @@
+{
+  "ticket": "e194f4b4cb3e",
+  "record": "rehearsals/e194f4b4cb3e-20261011T163453.json",
+  "at": "2026-10-11T16:34:53+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "ae3bb6a6f500bbeca4a87d8383de0e973488e79578fe6f16b63bab1d38a85348",
+  "ticket_sha256_at_read": "ae3bb6a6f500bbeca4a87d8383de0e973488e79578fe6f16b63bab1d38a85348",
+  "design_sha256": "6566f41a08e9a8a98de8137ab8648c89f984c8e2f125e89462af9cae1313e59c",
+  "reads": [
+    {
+      "ticket": "e194f4b4cb3e",
+      "ticket_sha256": "ae3bb6a6f500bbeca4a87d8383de0e973488e79578fe6f16b63bab1d38a85348",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: construct the ticket's decision list",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "Add a 'decisions' array to the ticket JSON, with each entry defining a decision this voyage must build (e.g., decisions[0] for device-list entry, decisions[1] for shim implementation, etc.)",
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "ticket": "e194f4b4cb3e",
+      "ticket_sha256": "ae3bb6a6f500bbeca4a87d8383de0e973488e79578fe6f16b63bab1d38a85348",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: add inference_domain to the rack's device list so lazy-init starts it",
+          "state": "builds_under_assumption",
+          "assumption": "The device list location, filename, and edit mechanism exist and are discoverable from the codebase (the ticket says 'the rack's device list' and 'the ground loop is heartbeat + device list, nothing more' but does not name the file or path)",
+          "would_settle": "Specify the exact file path where the device list is stored and how entries are formatted",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: implement infer and status verbs in inference_domain's shim that forward to hex.local",
+          "state": "builds_under_assumption",
+          "assumption": "The shim.py file has existing verb handler patterns (the ticket names shim.py as a write_to target but does not show the registration mechanism or existing examples)",
+          "would_settle": "Show the verb registration pattern in shim.py or point to an existing verb handler to copy",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: implement bus client loud refusal for missing listeners inside 10s timeout",
+          "state": "builds_under_assumption",
+          "assumption": "The bus client can detect missing listeners and the error format (the ticket specifies 'a refusal naming the host' but not the concrete error format, where detection happens, or how it reaches the caller inside 10s)",
+          "would_settle": "Define the error response format for missing listeners and where/how the bus client or shim generates it",
+          "confidence": 0.55
+        }
+      ]
+    },
+    {
+      "ticket": "e194f4b4cb3e",
+      "ticket_sha256": "ae3bb6a6f500bbeca4a87d8383de0e973488e79578fe6f16b63bab1d38a85348",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: locate and update the rack's device list to add inference_domain",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "ticket specifies the file path to the device list and an example or template entry showing required fields (e.g., name, launch command, port)",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: implement infer verb in inference_domain/shim.py that forwards requests to hex.local",
+          "state": "builds_under_assumption",
+          "assumption": "the verb handler in shim.py receives requests as dicts and returns responses as dicts; the 'sole path' through import_sieve already exists and is importable; hex.local is a reachable hostname with a qwen2.5-compatible infer endpoint; the forwarding call follows existing patterns in cairn",
+          "would_settle": "ticket specifies the exact verb handler signature and the request/response structure for hex.local's infer endpoint",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: implement status verb in inference_domain/shim.py that reports the process pid",
+          "state": "builds_under_assumption",
+          "assumption": "status verb handler returns a dict with at least a 'pid' field; the builder can query the process id from the running inference_domain process (e.g., via os.getpid() or from a stored file)",
+          "would_settle": "ticket specifies what fields status returns and how to obtain the pid (stored file, environment, etc.)",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: update cairn/tools/base/bus_client.py to detect when a listener is unreachable and return a refusal within 10s",
+          "state": "builds_under_assumption",
+          "assumption": "the bus client can distinguish 'no listener' (device not running) from other timeouts or errors; a refusal is raised or returned as an exception with the target device name and reason; the detection completes within the 10s client timeout, not the 20s hang currently observed",
+          "would_settle": "ticket specifies: how to detect 'no listener' vs other failures (network error, device error, timeout), what exception type or response shape represents a refusal, and the exact error message format",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: write proofs to measure the four falsifier conditions",
+          "state": "builds_under_assumption",
+          "assumption": "proof files follow cairn's naming pattern (test_*.py under proofs/); each falsifier condition maps to one or more assertions; test utilities for mocking the bus and hex.local are available or can be created; the builder can run proofs with cairn test tools and seal them",
+          "would_settle": "ticket specifies the exact proof file names, what each test case asserts (one per falsifier condition), and any test fixtures or mocks required",
+          "confidence": 0.7
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: add inference_domain to the rack's device list so lazy-init starts it",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The device list location, filename, and edit mechanism exist and are discoverable from the codebase (the ticket says 'the rack's device list' and 'the ground loop is heartbeat + device list, nothing more' but does not name the file or path)"
+      ],
+      "would_settle": [
+        "Specify the exact file path where the device list is stored and how entries are formatted"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement bus client loud refusal for missing listeners inside 10s timeout",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The bus client can detect missing listeners and the error format (the ticket specifies 'a refusal naming the host' but not the concrete error format, where detection happens, or how it reaches the caller inside 10s)"
+      ],
+      "would_settle": [
+        "Define the error response format for missing listeners and where/how the bus client or shim generates it"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement infer and status verbs in inference_domain's shim that forward to hex.local",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The shim.py file has existing verb handler patterns (the ticket names shim.py as a write_to target but does not show the registration mechanism or existing examples)"
+      ],
+      "would_settle": [
+        "Show the verb registration pattern in shim.py or point to an existing verb handler to copy"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement infer verb in inference_domain/shim.py that forwards requests to hex.local",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the verb handler in shim.py receives requests as dicts and returns responses as dicts; the 'sole path' through import_sieve already exists and is importable; hex.local is a reachable hostname with a qwen2.5-compatible infer endpoint; the forwarding call follows existing patterns in cairn"
+      ],
+      "would_settle": [
+        "ticket specifies the exact verb handler signature and the request/response structure for hex.local's infer endpoint"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement status verb in inference_domain/shim.py that reports the process pid",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "status verb handler returns a dict with at least a 'pid' field; the builder can query the process id from the running inference_domain process (e.g., via os.getpid() or from a stored file)"
+      ],
+      "would_settle": [
+        "ticket specifies what fields status returns and how to obtain the pid (stored file, environment, etc.)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: update cairn/tools/base/bus_client.py to detect when a listener is unreachable and return a refusal within 10s",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the bus client can distinguish 'no listener' (device not running) from other timeouts or errors; a refusal is raised or returned as an exception with the target device name and reason; the detection completes within the 10s client timeout, not the 20s hang currently observed"
+      ],
+      "would_settle": [
+        "ticket specifies: how to detect 'no listener' vs other failures (network error, device error, timeout), what exception type or response shape represents a refusal, and the exact error message format"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write proofs to measure the four falsifier conditions",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "proof files follow cairn's naming pattern (test_*.py under proofs/); each falsifier condition maps to one or more assertions; test utilities for mocking the bus and hex.local are available or can be created; the builder can run proofs with cairn test tools and seal them"
+      ],
+      "would_settle": [
+        "ticket specifies the exact proof file names, what each test case asserts (one per falsifier condition), and any test fixtures or mocks required"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: construct the ticket's decision list",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Add a 'decisions' array to the ticket JSON, with each entry defining a decision this voyage must build (e.g., decisions[0] for device-list entry, decisions[1] for shim implementation, etc.)"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: locate and update the rack's device list to add inference_domain",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "ticket specifies the file path to the device list and an example or template entry showing required fields (e.g., name, launch command, port)"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: add inference_domain to the rack's device list so lazy-init starts it",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: construct the ticket's decision list",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement bus client loud refusal for missing listeners inside 10s timeout",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement infer and status verbs in inference_domain's shim that forward to hex.local",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement infer verb in inference_domain/shim.py that forwards requests to hex.local",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement status verb in inference_domain/shim.py that reports the process pid",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: locate and update the rack's device list to add inference_domain",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: update cairn/tools/base/bus_client.py to detect when a listener is unreachable and return a refusal within 10s",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write proofs to measure the four falsifier conditions",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: add inference_domain to the rack's device list so lazy-init starts it",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the exact file path where the device list is stored and how entries are formatted"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: construct the ticket's decision list",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Add a 'decisions' array to the ticket JSON, with each entry defining a decision this voyage must build (e.g., decisions[0] for device-list entry, decisions[1] for shim implementation, etc.)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement bus client loud refusal for missing listeners inside 10s timeout",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Define the error response format for missing listeners and where/how the bus client or shim generates it"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement infer and status verbs in inference_domain's shim that forward to hex.local",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Show the verb registration pattern in shim.py or point to an existing verb handler to copy"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement infer verb in inference_domain/shim.py that forwards requests to hex.local",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "ticket specifies the exact verb handler signature and the request/response structure for hex.local's infer endpoint"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement status verb in inference_domain/shim.py that reports the process pid",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "ticket specifies what fields status returns and how to obtain the pid (stored file, environment, etc.)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: locate and update the rack's device list to add inference_domain",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "ticket specifies the file path to the device list and an example or template entry showing required fields (e.g., name, launch command, port)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: update cairn/tools/base/bus_client.py to detect when a listener is unreachable and return a refusal within 10s",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "ticket specifies: how to detect 'no listener' vs other failures (network error, device error, timeout), what exception type or response shape represents a refusal, and the exact error message format"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write proofs to measure the four falsifier conditions",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "ticket specifies the exact proof file names, what each test case asserts (one per falsifier condition), and any test fixtures or mocks required"
+      ]
+    }
+  ],
+  "log_reaches": [],
+  "log_reach_count": 0,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.07703109999999999,
+        "duration_ms": 79934,
+        "is_error": false,
+        "session_id": "af47b1eb-63a1-4192-824b-89f9dd1ee677"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.0998691,
+        "duration_ms": 109939,
+        "is_error": false,
+        "session_id": "581c73bd-5cba-429f-a0b6-13b7b8ad14d8"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.08088809999999999,
+        "duration_ms": 75475,
+        "is_error": false,
+        "session_id": "1b8d57bf-39cd-471b-a533-119d572f3bea"
+      }
+    ],
+    "cost_usd": 0.257788,
+    "duration_ms": 265348,
+    "rendered_chars": 24148,
+    "by": null
+  },
+  "divergence": null
+}

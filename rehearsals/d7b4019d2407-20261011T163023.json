@@ -1,0 +1,972 @@
+{
+  "ticket": "d7b4019d2407",
+  "record": "rehearsals/d7b4019d2407-20261011T163023.json",
+  "at": "2026-10-11T16:30:23+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "2f8316dcb4fa3333194eb0ed7c813b5a65ffe1ccb7474203d9a68bf9a20414bc",
+  "ticket_sha256_at_read": "2f8316dcb4fa3333194eb0ed7c813b5a65ffe1ccb7474203d9a68bf9a20414bc",
+  "design_sha256": "9540a507993d6e42012039628f34a01d8a69c340ec4733335c23aee7eaae7ec4",
+  "reads": [
+    {
+      "ticket": "d7b4019d2407",
+      "ticket_sha256": "2f8316dcb4fa3333194eb0ed7c813b5a65ffe1ccb7474203d9a68bf9a20414bc",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: Build the device charter (cairn/devices/aider_shim/intention+why.json)",
+          "state": "builds_under_assumption",
+          "assumption": "The charter schema follows the standard component-charter v0 template (as provided for inference_domain and tester); the charter can express this device's role as an ASKER without naming any changes needed to inference_domain.",
+          "would_settle": "The charter schema and structure conform to the component-charter-v0 template; the how_it_learns field names the probe berth and its carrier without requiring modifications to inference_domain.",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Build the litellm interceptor (Cairn-owned proxy object)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: Build the fence proof (test that a widened model ask is refused)",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.93
+        },
+        {
+          "step": "unlisted: Build a runnable aider (virtualenv with dependencies)",
+          "state": "builds_under_assumption",
+          "assumption": "The venv includes the litellm-free aider closure (23–35 packages after transitive install) PLUS any Cairn-owned packages that the shim will import when running aider (e.g., psycopg2 for db_domain access). The verdict mentions psycopg2 as a required addition, but the ticket does not explicitly state which Cairn packages must be in scope.",
+          "would_settle": "The venv includes the aider closure plus CAIRN_RUNTIME—a named set of packages this shim will need when driving aider in-process (with psycopg2 explicitly named as an example).",
+          "confidence": 0.82
+        },
+        {
+          "step": "unlisted: Build the chart-chain-to-aider translation (input to output mapper)",
+          "state": "builds_under_assumption",
+          "assumption": "The translation produces outputs whose prompts are structured as traceable units (the verdict calls them 'spans,' each with an origin field), not plain strings. This structure is required so that criterion 5's instrument can verify every substantive span is traceable back to a field of a berthed packet. The ticket does not specify the output data structure.",
+          "would_settle": "The translation produces prompts as a list of Span or similar units with origin metadata, so each prompt component can be verified to originate from the berthed chart (not from a conversation).",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: Build the offload_yield_probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+          "state": "builds_under_assumption",
+          "assumption": "The PROBE.carry includes fields {ticket, shimmed, green, rows, asks, reads, extra_context}, with extra_context carrying a declared hole for whether CC had to supply context beyond the piece and bounds. The PROBE.enough filters rows on `cc_calls is not None` before counting to five. The verdict describes this implementation, but the ticket does not explicitly state the carry schema in one place.",
+          "would_settle": "The PROBE.carry schema is defined with named columns for all fields the validator reads (ticket, shimmed, green, rows, asks, reads, extra_context). The PROBE.enough condition is explicitly: filter rows where cc_calls is not None, then retire when count >= 5.",
+          "confidence": 0.87
+        },
+        {
+          "step": "unlisted: Resolve the probe FIXME (un-disable or re-write the probe at probes/offload_yield_probe.py)",
+          "state": "builds_under_assumption",
+          "assumption": "The probe was moved to probes_disabled/ on 2026-08-30 due to an 'encapsulation violation — reaches into inference_domain internals'. The builder must either (a) restore it from probes_disabled and fix the violation, or (b) re-write it to not reach into inference_domain internals. The ticket does not say which, nor does it detail what the violation was.",
+          "would_settle": "Clarify: does the builder restore the disabled probe and fix its internals violation, or write it from scratch? If restoring: what was the violation and how should it be fixed?",
+          "confidence": 0.65
+        }
+      ]
+    },
+    {
+      "ticket": "d7b4019d2407",
+      "ticket_sha256": "2f8316dcb4fa3333194eb0ed7c813b5a65ffe1ccb7474203d9a68bf9a20414bc",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: establish the decisions list",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "The ticket shall include a `decisions` field with entries D1 through D7 (or however many pieces the decompose section identifies), each naming one decision a builder must make, in the order the triage section ranks them.",
+          "confidence": 0.99
+        },
+        {
+          "step": "unlisted: write the charter (cairn/devices/aider_shim/intention+why.json) first, before any module",
+          "state": "builds_under_assumption",
+          "assumption": "The charter content is fully determinable from the ticket's intention, falsifier, constraints, and the triage/hypothesize/validate strata; and that content does not require changes to cairn/devices/inference_domain (a constraint the ticket names but does not decide).",
+          "would_settle": "The charter shall state the device's role without a sentence of the form 'inference_domain must do X for this device'; grep 'inference_domain must' on the finished charter shall return zero matches.",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: build the interceptor (litellm surface replacement)",
+          "state": "builds_under_assumption",
+          "assumption": "The exact set of litellm attributes aider touches is fully specified by the survey's grep finding (six named attributes plus exception classes reached via dir()), and that set does not change at runtime.",
+          "would_settle": "The interceptor shall implement the eight declared attributes; a proof shall assert it is installed and the real litellm module never imported; the touched-attribute set shall be recorded and compared against declared.",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: build the money-fence tooth (refuse widened asks)",
+          "state": "builds_under_assumption",
+          "assumption": "The only path a widened model ask can take is through the interceptor's completion() seam, and that seam is a single call site aider cannot bypass.",
+          "would_settle": "A proof shall drive a Model with weak_model and editor_model set to different names, assert the interceptor refuses by model name, and assert the refusal is outside LiteLLMExceptions so it escapes aider's retry loop.",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: create a runnable aider virtualenv with the measured dependency set, omitting litellm",
+          "state": "builds_under_assumption",
+          "assumption": "The 23-package AST closure (later measured to be 23, not 24, with babel guarded and pydub missed) is both necessary and sufficient to `import aider.coders.Coder`; and that sufficiency holds in the device's own process, not in the foreign program alone.",
+          "would_settle": "The venv shall be created; the import shall succeed with litellm absent from disk; the transitive delta (what pip installed that was not asked for) shall be recorded; telemetry clients shall not transmit under isolation='netns'.",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: build the translation from a chart chain plus one decompose piece into aider's inputs",
+          "state": "builds_under_assumption",
+          "assumption": "One decompose piece plus constrain bounds is sufficient context for a build; aider does not need the whole ticket; and the translation can be statically verified against the berth sources (the piece comes from an existing berthed chain that can be fetched by `python3 -m skills.chart.live`).",
+          "would_settle": "The shim shall be handed one piece per invocation; the produced prompt shall contain only fields traceable to berthed packets; a proof shall assert zero unsourced spans.",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: build and arm the probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "The ticket shall name which rows the probe's `carry` field must deliver, and which observable (not merely which count) the `enough` field must gate on; the probe file location is named but its interior is not specified.",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: run proofs twice, seal under tester in netns, verify import sieve, write verdict artifact, cross to PROVED",
+          "state": "builds_under_assumption",
+          "assumption": "The unchanged physics (the tester's sealing mechanism, the verdict door, the clearance gate) are fully specified elsewhere and do not require any custom handling for this device.",
+          "would_settle": "All four proofs shall pass identically under isolation='netns' and without it; the import sieve shall report green; a verdict artifact shall answer every criterion by its instrument.",
+          "confidence": 0.75
+        }
+      ]
+    },
+    {
+      "ticket": "d7b4019d2407",
+      "ticket_sha256": "2f8316dcb4fa3333194eb0ed7c813b5a65ffe1ccb7474203d9a68bf9a20414bc",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: Write cairn/devices/aider_shim/intention+why.json charter",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows the Cairn device charter format and the composition rules (charter must exist before code, and name state/history berths in the same act)",
+          "confidence": 0.82,
+          "would_settle": "A worked example or template showing the expected charter shape for a new device component"
+        },
+        {
+          "step": "unlisted: Implement the litellm interceptor object with six named attributes",
+          "state": "builds_under_assumption",
+          "assumption": "The six attributes named (completion, get_model_info, model_cost, validate_environment, token_counter, encode) are sufficient, despite the survey finding that aider's actual surface is broader (exception classes reached by dir() are not statically discoverable)",
+          "confidence": 0.62,
+          "would_settle": "Complete static or dynamic analysis of all litellm attributes aider reaches on the measured call path"
+        },
+        {
+          "step": "unlisted: Build and prove the fence tooth (refusal on widened model ask)",
+          "state": "builds_under_assumption",
+          "assumption": "The interceptor from the prior step is complete and working; the refusal mechanism sits at the completion seam and catches all paths (weak_model/editor_model paths reach it because they share the single call site)",
+          "confidence": 0.71,
+          "would_settle": "Complete working interceptor from step 2"
+        },
+        {
+          "step": "unlisted: Install runnable aider in a venv with measured litellm-free dependencies",
+          "state": "cannot_proceed",
+          "assumption": "This is a system-level box change (venv creation), not code-repo work. The triage explicitly states 'the build pauses at' this piece. The list of 24 packages is provided but Akien's explicit approval to perform system setup on his machine is required before this step.",
+          "confidence": 0.92,
+          "would_settle": "Explicit go-ahead from Akien to proceed with the venv installation, or confirmation that this step has been completed off-ticket"
+        },
+        {
+          "step": "unlisted: Implement chart-chain-to-aider translation (file list, prompt, test loop)",
+          "state": "cannot_proceed",
+          "assumption": "Blocked on step 4 (runnable aider). The translation cannot be tested or validated without aider being importable.",
+          "confidence": 0.93,
+          "would_settle": "Completion and verification of step 4"
+        },
+        {
+          "step": "unlisted: Write offload_yield_probe.py at cairn/devices/aider_shim/probes/offload_yield_probe.py",
+          "state": "builds_under_assumption",
+          "assumption": "The WATCHME specification is sufficient to write a frozen Probe with carry/enough; the current FIXME noting the probe 'moved to probes_disabled/' due to 'encapsulation violation' is either temporary or will be resolved before sealing",
+          "confidence": 0.48,
+          "would_settle": "Clarification of the encapsulation violation and whether the probe berth should be restored or the FIXME is expected as a final state"
+        },
+        {
+          "step": "unlisted: Run all proofs twice, seal under tester isolation=netns, write verdict artifact, and cross PROVED",
+          "state": "builds_as_written",
+          "assumption": "",
+          "confidence": 0.96,
+          "would_settle": ""
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: Build a runnable aider (virtualenv with dependencies)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The venv includes the litellm-free aider closure (23–35 packages after transitive install) PLUS any Cairn-owned packages that the shim will import when running aider (e.g., psycopg2 for db_domain access). The verdict mentions psycopg2 as a required addition, but the ticket does not explicitly state which Cairn packages must be in scope."
+      ],
+      "would_settle": [
+        "The venv includes the aider closure plus CAIRN_RUNTIME—a named set of packages this shim will need when driving aider in-process (with psycopg2 explicitly named as an example)."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Build and prove the fence tooth (refusal on widened model ask)",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The interceptor from the prior step is complete and working; the refusal mechanism sits at the completion seam and catches all paths (weak_model/editor_model paths reach it because they share the single call site)"
+      ],
+      "would_settle": [
+        "Complete working interceptor from step 2"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Build the chart-chain-to-aider translation (input to output mapper)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The translation produces outputs whose prompts are structured as traceable units (the verdict calls them 'spans,' each with an origin field), not plain strings. This structure is required so that criterion 5's instrument can verify every substantive span is traceable back to a field of a berthed packet. The ticket does not specify the output data structure."
+      ],
+      "would_settle": [
+        "The translation produces prompts as a list of Span or similar units with origin metadata, so each prompt component can be verified to originate from the berthed chart (not from a conversation)."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Build the device charter (cairn/devices/aider_shim/intention+why.json)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The charter schema follows the standard component-charter v0 template (as provided for inference_domain and tester); the charter can express this device's role as an ASKER without naming any changes needed to inference_domain."
+      ],
+      "would_settle": [
+        "The charter schema and structure conform to the component-charter-v0 template; the how_it_learns field names the probe berth and its carrier without requiring modifications to inference_domain."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: build the interceptor (litellm surface replacement)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The exact set of litellm attributes aider touches is fully specified by the survey's grep finding (six named attributes plus exception classes reached via dir()), and that set does not change at runtime."
+      ],
+      "would_settle": [
+        "The interceptor shall implement the eight declared attributes; a proof shall assert it is installed and the real litellm module never imported; the touched-attribute set shall be recorded and compared against declared."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: build the money-fence tooth (refuse widened asks)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The only path a widened model ask can take is through the interceptor's completion() seam, and that seam is a single call site aider cannot bypass."
+      ],
+      "would_settle": [
+        "A proof shall drive a Model with weak_model and editor_model set to different names, assert the interceptor refuses by model name, and assert the refusal is outside LiteLLMExceptions so it escapes aider's retry loop."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Build the offload_yield_probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The PROBE.carry includes fields {ticket, shimmed, green, rows, asks, reads, extra_context}, with extra_context carrying a declared hole for whether CC had to supply context beyond the piece and bounds. The PROBE.enough filters rows on `cc_calls is not None` before counting to five. The verdict describes this implementation, but the ticket does not explicitly state the carry schema in one place."
+      ],
+      "would_settle": [
+        "The PROBE.carry schema is defined with named columns for all fields the validator reads (ticket, shimmed, green, rows, asks, reads, extra_context). The PROBE.enough condition is explicitly: filter rows where cc_calls is not None, then retire when count >= 5."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: build the translation from a chart chain plus one decompose piece into aider's inputs",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "One decompose piece plus constrain bounds is sufficient context for a build; aider does not need the whole ticket; and the translation can be statically verified against the berth sources (the piece comes from an existing berthed chain that can be fetched by `python3 -m skills.chart.live`)."
+      ],
+      "would_settle": [
+        "The shim shall be handed one piece per invocation; the produced prompt shall contain only fields traceable to berthed packets; a proof shall assert zero unsourced spans."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create a runnable aider virtualenv with the measured dependency set, omitting litellm",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The 23-package AST closure (later measured to be 23, not 24, with babel guarded and pydub missed) is both necessary and sufficient to `import aider.coders.Coder`; and that sufficiency holds in the device's own process, not in the foreign program alone."
+      ],
+      "would_settle": [
+        "The venv shall be created; the import shall succeed with litellm absent from disk; the transitive delta (what pip installed that was not asked for) shall be recorded; telemetry clients shall not transmit under isolation='netns'."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement the litellm interceptor object with six named attributes",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The six attributes named (completion, get_model_info, model_cost, validate_environment, token_counter, encode) are sufficient, despite the survey finding that aider's actual surface is broader (exception classes reached by dir() are not statically discoverable)"
+      ],
+      "would_settle": [
+        "Complete static or dynamic analysis of all litellm attributes aider reaches on the measured call path"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Resolve the probe FIXME (un-disable or re-write the probe at probes/offload_yield_probe.py)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The probe was moved to probes_disabled/ on 2026-08-30 due to an 'encapsulation violation — reaches into inference_domain internals'. The builder must either (a) restore it from probes_disabled and fix the violation, or (b) re-write it to not reach into inference_domain internals. The ticket does not say which, nor does it detail what the violation was."
+      ],
+      "would_settle": [
+        "Clarify: does the builder restore the disabled probe and fix its internals violation, or write it from scratch? If restoring: what was the violation and how should it be fixed?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: run proofs twice, seal under tester in netns, verify import sieve, write verdict artifact, cross to PROVED",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The unchanged physics (the tester's sealing mechanism, the verdict door, the clearance gate) are fully specified elsewhere and do not require any custom handling for this device."
+      ],
+      "would_settle": [
+        "All four proofs shall pass identically under isolation='netns' and without it; the import sieve shall report green; a verdict artifact shall answer every criterion by its instrument."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Write cairn/devices/aider_shim/intention+why.json charter",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The builder knows the Cairn device charter format and the composition rules (charter must exist before code, and name state/history berths in the same act)"
+      ],
+      "would_settle": [
+        "A worked example or template showing the expected charter shape for a new device component"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Write offload_yield_probe.py at cairn/devices/aider_shim/probes/offload_yield_probe.py",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The WATCHME specification is sufficient to write a frozen Probe with carry/enough; the current FIXME noting the probe 'moved to probes_disabled/' due to 'encapsulation violation' is either temporary or will be resolved before sealing"
+      ],
+      "would_settle": [
+        "Clarification of the encapsulation violation and whether the probe berth should be restored or the FIXME is expected as a final state"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write the charter (cairn/devices/aider_shim/intention+why.json) first, before any module",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The charter content is fully determinable from the ticket's intention, falsifier, constraints, and the triage/hypothesize/validate strata; and that content does not require changes to cairn/devices/inference_domain (a constraint the ticket names but does not decide)."
+      ],
+      "would_settle": [
+        "The charter shall state the device's role without a sentence of the form 'inference_domain must do X for this device'; grep 'inference_domain must' on the finished charter shall return zero matches."
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: build and arm the probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket shall name which rows the probe's `carry` field must deliver, and which observable (not merely which count) the `enough` field must gate on; the probe file location is named but its interior is not specified."
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: establish the decisions list",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket shall include a `decisions` field with entries D1 through D7 (or however many pieces the decompose section identifies), each naming one decision a builder must make, in the order the triage section ranks them."
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: Implement chart-chain-to-aider translation (file list, prompt, test loop)",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "Blocked on step 4 (runnable aider). The translation cannot be tested or validated without aider being importable."
+      ],
+      "would_settle": [
+        "Completion and verification of step 4"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: Install runnable aider in a venv with measured litellm-free dependencies",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "This is a system-level box change (venv creation), not code-repo work. The triage explicitly states 'the build pauses at' this piece. The list of 24 packages is provided but Akien's explicit approval to perform system setup on his machine is required before this step."
+      ],
+      "would_settle": [
+        "Explicit go-ahead from Akien to proceed with the venv installation, or confirmation that this step has been completed off-ticket"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build a runnable aider (virtualenv with dependencies)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: build and arm the probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build and prove the fence tooth (refusal on widened model ask)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build the chart-chain-to-aider translation (input to output mapper)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build the device charter (cairn/devices/aider_shim/intention+why.json)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build the fence proof (test that a widened model ask is refused)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: build the interceptor (litellm surface replacement)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build the litellm interceptor (Cairn-owned proxy object)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: build the money-fence tooth (refuse widened asks)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Build the offload_yield_probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: build the translation from a chart chain plus one decompose piece into aider's inputs",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create a runnable aider virtualenv with the measured dependency set, omitting litellm",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: establish the decisions list",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement chart-chain-to-aider translation (file list, prompt, test loop)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement the litellm interceptor object with six named attributes",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Install runnable aider in a venv with measured litellm-free dependencies",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Resolve the probe FIXME (un-disable or re-write the probe at probes/offload_yield_probe.py)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Run all proofs twice, seal under tester isolation=netns, write verdict artifact, and cross PROVED",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: run proofs twice, seal under tester in netns, verify import sieve, write verdict artifact, cross to PROVED",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write cairn/devices/aider_shim/intention+why.json charter",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write offload_yield_probe.py at cairn/devices/aider_shim/probes/offload_yield_probe.py",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write the charter (cairn/devices/aider_shim/intention+why.json) first, before any module",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build a runnable aider (virtualenv with dependencies)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "The venv includes the aider closure plus CAIRN_RUNTIME—a named set of packages this shim will need when driving aider in-process (with psycopg2 explicitly named as an example)."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: build and arm the probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket shall name which rows the probe's `carry` field must deliver, and which observable (not merely which count) the `enough` field must gate on; the probe file location is named but its interior is not specified."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build and prove the fence tooth (refusal on widened model ask)",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Complete working interceptor from step 2"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build the chart-chain-to-aider translation (input to output mapper)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "The translation produces prompts as a list of Span or similar units with origin metadata, so each prompt component can be verified to originate from the berthed chart (not from a conversation)."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build the device charter (cairn/devices/aider_shim/intention+why.json)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "The charter schema and structure conform to the component-charter-v0 template; the how_it_learns field names the probe berth and its carrier without requiring modifications to inference_domain."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build the fence proof (test that a widened model ask is refused)",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: build the interceptor (litellm surface replacement)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The interceptor shall implement the eight declared attributes; a proof shall assert it is installed and the real litellm module never imported; the touched-attribute set shall be recorded and compared against declared."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build the litellm interceptor (Cairn-owned proxy object)",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: build the money-fence tooth (refuse widened asks)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "A proof shall drive a Model with weak_model and editor_model set to different names, assert the interceptor refuses by model name, and assert the refusal is outside LiteLLMExceptions so it escapes aider's retry loop."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Build the offload_yield_probe (cairn/devices/aider_shim/probes/offload_yield_probe.py)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "The PROBE.carry schema is defined with named columns for all fields the validator reads (ticket, shimmed, green, rows, asks, reads, extra_context). The PROBE.enough condition is explicitly: filter rows where cc_calls is not None, then retire when count >= 5."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: build the translation from a chart chain plus one decompose piece into aider's inputs",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The shim shall be handed one piece per invocation; the produced prompt shall contain only fields traceable to berthed packets; a proof shall assert zero unsourced spans."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create a runnable aider virtualenv with the measured dependency set, omitting litellm",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The venv shall be created; the import shall succeed with litellm absent from disk; the transitive delta (what pip installed that was not asked for) shall be recorded; telemetry clients shall not transmit under isolation='netns'."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: establish the decisions list",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket shall include a `decisions` field with entries D1 through D7 (or however many pieces the decompose section identifies), each naming one decision a builder must make, in the order the triage section ranks them."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement chart-chain-to-aider translation (file list, prompt, test loop)",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Completion and verification of step 4"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement the litellm interceptor object with six named attributes",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Complete static or dynamic analysis of all litellm attributes aider reaches on the measured call path"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Install runnable aider in a venv with measured litellm-free dependencies",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Explicit go-ahead from Akien to proceed with the venv installation, or confirmation that this step has been completed off-ticket"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Resolve the probe FIXME (un-disable or re-write the probe at probes/offload_yield_probe.py)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Clarify: does the builder restore the disabled probe and fix its internals violation, or write it from scratch? If restoring: what was the violation and how should it be fixed?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Run all proofs twice, seal under tester isolation=netns, write verdict artifact, and cross PROVED",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: run proofs twice, seal under tester in netns, verify import sieve, write verdict artifact, cross to PROVED",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "All four proofs shall pass identically under isolation='netns' and without it; the import sieve shall report green; a verdict artifact shall answer every criterion by its instrument."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write cairn/devices/aider_shim/intention+why.json charter",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "A worked example or template showing the expected charter shape for a new device component"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write offload_yield_probe.py at cairn/devices/aider_shim/probes/offload_yield_probe.py",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Clarification of the encapsulation violation and whether the probe berth should be restored or the FIXME is expected as a final state"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write the charter (cairn/devices/aider_shim/intention+why.json) first, before any module",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The charter shall state the device's role without a sentence of the form 'inference_domain must do X for this device'; grep 'inference_domain must' on the finished charter shall return zero matches."
+      ]
+    }
+  ],
+  "log_reaches": [],
+  "log_reach_count": 0,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1954071,
+        "duration_ms": 162822,
+        "is_error": false,
+        "session_id": "afde73ff-dc9d-48ce-b9de-1a70a2e5d923"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.15370810000000001,
+        "duration_ms": 60355,
+        "is_error": false,
+        "session_id": "e60986e4-9306-4c9c-8b6c-eddb14d0dc0b"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1761301,
+        "duration_ms": 98359,
+        "is_error": false,
+        "session_id": "b621714f-1153-4de1-ba14-9a87c111ef3b"
+      }
+    ],
+    "cost_usd": 0.525245,
+    "duration_ms": 321536,
+    "rendered_chars": 191701,
+    "by": null
+  },
+  "divergence": null
+}
