@@ -1,0 +1,998 @@
+{
+  "ticket": "95f8c561e742",
+  "record": "rehearsals/95f8c561e742-20261011T172540.json",
+  "at": "2026-10-11T17:25:40+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "8c95be31f66bc0fb1d42edf4b8a575b37eaad27c2ec2858c83409c9ca1c7b5ec",
+  "ticket_sha256_at_read": "8c95be31f66bc0fb1d42edf4b8a575b37eaad27c2ec2858c83409c9ca1c7b5ec",
+  "design_sha256": "0a9ccea0b6b124611b9f672db9d9e1bf870ef31536996f1db5ff4538ea6d0e5d",
+  "reads": [
+    {
+      "ticket": "95f8c561e742",
+      "ticket_sha256": "8c95be31f66bc0fb1d42edf4b8a575b37eaad27c2ec2858c83409c9ca1c7b5ec",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "D1",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows the Cairn system's table-creation pattern (SQL, ORM, migrations, or existing conventions used elsewhere in the codebase)",
+          "would_settle": "Decision: Create the shared nodes table (cairn_nodes) tree-free and vector-free with specified columns; register under librarian ownership in db_domain",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows how to create tables with foreign-key references in the Cairn system and establish ownership registration",
+          "would_settle": "Decision: Create the embeddings table (cairn_embeddings) with columns (embedding_id, node_id referencing cairn_nodes, vector, render_method); register under librarian ownership",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+          "state": "builds_under_assumption",
+          "assumption": "The builder understands the existing trees.py module structure and how to refactor deposit/nearest/corroborate/refute to join across three tables; knows that node_id_for() changes to content-only hash",
+          "would_settle": "Decision: Update trees.py deposit() to write cairn_nodes+cairn_embeddings+leaf; nearest()/neighbors() to join leaf→embedding→node; corroborate()/refute() to update cairn_nodes; split _COLUMNS into three dicts per table",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows how to write and run Cairn data migrations, understands the existing flat-schema row structure, and can dedup nodes by content while preserving row counts in leaf tables",
+          "would_settle": "Decision: Write and run migration: extract unique node+provenance+standing+vector from per-tenant _nodes tables into cairn_nodes/cairn_embeddings; convert _nodes tables to leaf tables with leaf_id/node_id/embedding_id columns; verify 1,314 rows migrated with zero orphans",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows the existing test structure and can rewrite tooth assertions from flat-schema checks (e.g., test_no_edge_table_exists) to three-table checks; understands what teeth need to be updated vs removed",
+          "would_settle": "Decision: Update test_librarian_trees.py (19 teeth) and test_chart_tree.py (11 teeth) to assert deposit writes to all three tables, nearest joins across them, dimension mismatch checks embedding vector; mark derived-edges tooth for succession; all suites must exit 0",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows where resolved inference calls are made (inference_domain or similar), how to extract content/provenance, and how to call the librarian's deposit gate; understands that inference_calls table stays unchanged",
+          "would_settle": "Decision: Update inference domain or calling code to extract resolved-call knowledge and deposit via librarian's admission gate into cairn_nodes; keep inference_calls table for cost dedup; verify with live-fire test using the librarian loop",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+          "state": "builds_under_assumption",
+          "assumption": "The builder knows the charter JSON structure (intention+why.json, what/why/falsifier/how fields) and can write clear prose; understands §6.2 and edge-table succession",
+          "would_settle": "Decision: Update librarian/intention+why.json what field to name three tables and their ownership; update falsifier to acknowledge §6.2's bounded weighted similarity links as designed successor; update tree tool and db_domain charters similarly",
+          "confidence": 0.65
+        }
+      ]
+    },
+    {
+      "ticket": "95f8c561e742",
+      "ticket_sha256": "8c95be31f66bc0fb1d42edf4b8a575b37eaad27c2ec2858c83409c9ca1c7b5ec",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "D1",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+          "state": "builds_under_assumption",
+          "assumption": "the chart validate packet's 6 detailed criteria provide sufficient specification for the builder to infer and execute all 8 pieces of the schema migration described in the ticket's intention",
+          "would_settle": "D2 (or explicit direction): Implement the node-embedding-leaf-separation schema migration—create shared cairn_nodes and cairn_embeddings tables, convert per-tenant tables to leaf tables, migrate existing rows, refactor trees.py and tools/tree/tree.py to use the three-table schema, update all proof suites, wire the inference-to-node pipeline, and update charters—as specified in the chart validate criteria.",
+          "confidence": 0.72
+        }
+      ]
+    },
+    {
+      "ticket": "95f8c561e742",
+      "ticket_sha256": "8c95be31f66bc0fb1d42edf4b8a575b37eaad27c2ec2858c83409c9ca1c7b5ec",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "D1",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.92
+        },
+        {
+          "step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+          "state": "builds_under_assumption",
+          "assumption": "The CHART validate criteria and verdict describe the intended schema structure and behavior completely enough that a builder can infer and implement the full migration without additional design decisions",
+          "would_settle": "Add explicit decisions (or a single decision with 8 sub-steps) for the schema-migration work, describing the table layout, migration strategy, and any deduplication logic for existing rows",
+          "confidence": 0.68
+        },
+        {
+          "step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+          "state": "builds_under_assumption",
+          "assumption": "The CHART's 'deposit/walk/corroborate/refute stack operates through the three-table schema' criterion, plus the 19-tooth proof-suite evidence, fully specify the call signatures and JOIN logic required",
+          "would_settle": "Add a decision specifying the function signature changes and JOIN semantics for deposit(), nearest(), corroborate(), refute()",
+          "confidence": 0.72
+        },
+        {
+          "step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+          "state": "builds_under_assumption",
+          "assumption": "The CHART criterion 'The per-tenant tree tool ... works through the new schema without contract changes to its callers' fully specifies that nexus_table() naming is preserved and delegation is transparent",
+          "would_settle": "Add a decision specifying delegation semantics and confirming that callers see no contract change",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+          "state": "builds_under_assumption",
+          "assumption": "The verdicts' '19 teeth green' and '11 teeth green' observations describe test updates that are already complete; a builder can infer the scope from the falsifier ('A deposit creates rows in fewer than 3 tables; nearest() fails to join across three tables') and the old test names (test_a_node_lands, test_dimension_mismatch, test_no_edge_table_exists)",
+          "would_settle": "Add a decision listing the specific test-file paths and tooth names that need updating",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+          "state": "builds_under_assumption",
+          "assumption": "The CHART criterion 'Resolved inference calls deposit their knowledge into the shared node set' and the disposition 'dev.deposit call site at loop.py deposits through trees.deposit' fully specify the call path and that inference_calls table remains unchanged for cost dedup",
+          "would_settle": "Add a decision specifying the deposit call site(s) in inference_domain or its callers, and the shape of the knowledge content to extract",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+          "state": "builds_under_assumption",
+          "assumption": "The CHART disposition 'Charter what field names three tables... and cites ticket node-embedding-leaf-separation... Falsifier clause (2) reads... acknowledging the designed successor' fully specifies the changes required",
+          "would_settle": "Add a decision specifying which charters change, which fields are updated, and the new falsifier text acknowledging §6.2",
+          "confidence": 0.78
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder knows how to create tables with foreign-key references in the Cairn system and establish ownership registration"
+      ],
+      "would_settle": [
+        "Decision: Create the embeddings table (cairn_embeddings) with columns (embedding_id, node_id referencing cairn_nodes, vector, render_method); register under librarian ownership"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder knows the Cairn system's table-creation pattern (SQL, ORM, migrations, or existing conventions used elsewhere in the codebase)"
+      ],
+      "would_settle": [
+        "Decision: Create the shared nodes table (cairn_nodes) tree-free and vector-free with specified columns; register under librarian ownership in db_domain"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "the chart validate packet's 6 detailed criteria provide sufficient specification for the builder to infer and execute all 8 pieces of the schema migration described in the ticket's intention"
+      ],
+      "would_settle": [
+        "D2 (or explicit direction): Implement the node-embedding-leaf-separation schema migration—create shared cairn_nodes and cairn_embeddings tables, convert per-tenant tables to leaf tables, migrate existing rows, refactor trees.py and tools/tree/tree.py to use the three-table schema, update all proof suites, wire the inference-to-node pipeline, and update charters—as specified in the chart validate criteria."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The CHART validate criteria and verdict describe the intended schema structure and behavior completely enough that a builder can infer and implement the full migration without additional design decisions"
+      ],
+      "would_settle": [
+        "Add explicit decisions (or a single decision with 8 sub-steps) for the schema-migration work, describing the table layout, migration strategy, and any deduplication logic for existing rows"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder knows how to write and run Cairn data migrations, understands the existing flat-schema row structure, and can dedup nodes by content while preserving row counts in leaf tables"
+      ],
+      "would_settle": [
+        "Decision: Write and run migration: extract unique node+provenance+standing+vector from per-tenant _nodes tables into cairn_nodes/cairn_embeddings; convert _nodes tables to leaf tables with leaf_id/node_id/embedding_id columns; verify 1,314 rows migrated with zero orphans"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder knows the existing test structure and can rewrite tooth assertions from flat-schema checks (e.g., test_no_edge_table_exists) to three-table checks; understands what teeth need to be updated vs removed"
+      ],
+      "would_settle": [
+        "Decision: Update test_librarian_trees.py (19 teeth) and test_chart_tree.py (11 teeth) to assert deposit writes to all three tables, nearest joins across them, dimension mismatch checks embedding vector; mark derived-edges tooth for succession; all suites must exit 0"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The verdicts' '19 teeth green' and '11 teeth green' observations describe test updates that are already complete; a builder can infer the scope from the falsifier ('A deposit creates rows in fewer than 3 tables; nearest() fails to join across three tables') and the old test names (test_a_node_lands, test_dimension_mismatch, test_no_edge_table_exists)"
+      ],
+      "would_settle": [
+        "Add a decision listing the specific test-file paths and tooth names that need updating"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The CHART disposition 'Charter what field names three tables... and cites ticket node-embedding-leaf-separation... Falsifier clause (2) reads... acknowledging the designed successor' fully specifies the changes required"
+      ],
+      "would_settle": [
+        "Add a decision specifying which charters change, which fields are updated, and the new falsifier text acknowledging §6.2"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder knows the charter JSON structure (intention+why.json, what/why/falsifier/how fields) and can write clear prose; understands §6.2 and edge-table succession"
+      ],
+      "would_settle": [
+        "Decision: Update librarian/intention+why.json what field to name three tables and their ownership; update falsifier to acknowledge §6.2's bounded weighted similarity links as designed successor; update tree tool and db_domain charters similarly"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The CHART criterion 'The per-tenant tree tool ... works through the new schema without contract changes to its callers' fully specifies that nexus_table() naming is preserved and delegation is transparent"
+      ],
+      "would_settle": [
+        "Add a decision specifying delegation semantics and confirming that callers see no contract change"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The CHART's 'deposit/walk/corroborate/refute stack operates through the three-table schema' criterion, plus the 19-tooth proof-suite evidence, fully specify the call signatures and JOIN logic required"
+      ],
+      "would_settle": [
+        "Add a decision specifying the function signature changes and JOIN semantics for deposit(), nearest(), corroborate(), refute()"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder understands the existing trees.py module structure and how to refactor deposit/nearest/corroborate/refute to join across three tables; knows that node_id_for() changes to content-only hash"
+      ],
+      "would_settle": [
+        "Decision: Update trees.py deposit() to write cairn_nodes+cairn_embeddings+leaf; nearest()/neighbors() to join leaf→embedding→node; corroborate()/refute() to update cairn_nodes; split _COLUMNS into three dicts per table"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The builder knows where resolved inference calls are made (inference_domain or similar), how to extract content/provenance, and how to call the librarian's deposit gate; understands that inference_calls table stays unchanged"
+      ],
+      "would_settle": [
+        "Decision: Update inference domain or calling code to extract resolved-call knowledge and deposit via librarian's admission gate into cairn_nodes; keep inference_calls table for cost dedup; verify with live-fire test using the librarian loop"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "The CHART criterion 'Resolved inference calls deposit their knowledge into the shared node set' and the disposition 'dev.deposit call site at loop.py deposits through trees.deposit' fully specify the call path and that inference_calls table remains unchanged for cost dedup"
+      ],
+      "would_settle": [
+        "Add a decision specifying the deposit call site(s) in inference_domain or its callers, and the shape of the knowledge content to extract"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Create the embeddings table (cairn_embeddings) with columns (embedding_id, node_id referencing cairn_nodes, vector, render_method); register under librarian ownership"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Create the shared nodes table (cairn_nodes) tree-free and vector-free with specified columns; register under librarian ownership in db_domain"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "D2 (or explicit direction): Implement the node-embedding-leaf-separation schema migration—create shared cairn_nodes and cairn_embeddings tables, convert per-tenant tables to leaf tables, migrate existing rows, refactor trees.py and tools/tree/tree.py to use the three-table schema, update all proof suites, wire the inference-to-node pipeline, and update charters—as specified in the chart validate criteria."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add explicit decisions (or a single decision with 8 sub-steps) for the schema-migration work, describing the table layout, migration strategy, and any deduplication logic for existing rows"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Write and run migration: extract unique node+provenance+standing+vector from per-tenant _nodes tables into cairn_nodes/cairn_embeddings; convert _nodes tables to leaf tables with leaf_id/node_id/embedding_id columns; verify 1,314 rows migrated with zero orphans"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Update test_librarian_trees.py (19 teeth) and test_chart_tree.py (11 teeth) to assert deposit writes to all three tables, nearest joins across them, dimension mismatch checks embedding vector; mark derived-edges tooth for succession; all suites must exit 0"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add a decision listing the specific test-file paths and tooth names that need updating"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add a decision specifying which charters change, which fields are updated, and the new falsifier text acknowledging §6.2"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Update librarian/intention+why.json what field to name three tables and their ownership; update falsifier to acknowledge §6.2's bounded weighted similarity links as designed successor; update tree tool and db_domain charters similarly"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add a decision specifying delegation semantics and confirming that callers see no contract change"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add a decision specifying the function signature changes and JOIN semantics for deposit(), nearest(), corroborate(), refute()"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Update trees.py deposit() to write cairn_nodes+cairn_embeddings+leaf; nearest()/neighbors() to join leaf→embedding→node; corroborate()/refute() to update cairn_nodes; split _COLUMNS into three dicts per table"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision: Update inference domain or calling code to extract resolved-call knowledge and deposit via librarian's admission gate into cairn_nodes; keep inference_calls table for cost dedup; verify with live-fire test using the librarian loop"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "Add a decision specifying the deposit call site(s) in inference_domain or its callers, and the shape of the knowledge content to extract"
+      ]
+    }
+  ],
+  "log_reaches": [
+    {
+      "gap_step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 10
+    },
+    {
+      "gap_step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 22
+    },
+    {
+      "gap_step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 18
+    },
+    {
+      "gap_step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 19
+    },
+    {
+      "gap_step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 13
+    },
+    {
+      "gap_step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+      "gap_kind": "assumes",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+      "gap_kind": "assumes",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 14
+    },
+    {
+      "gap_step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+      "gap_kind": "assumes",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+      "gap_kind": "assumes",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 10
+    },
+    {
+      "gap_step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+      "gap_kind": "assumes",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+      "gap_kind": "assumes",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 15
+    },
+    {
+      "gap_step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 14
+    },
+    {
+      "gap_step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 15
+    },
+    {
+      "gap_step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 18
+    },
+    {
+      "gap_step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 13
+    },
+    {
+      "gap_step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+      "gap_kind": "step_absent",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+      "gap_kind": "step_absent",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+      "gap_kind": "step_absent",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+      "gap_kind": "step_absent",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+      "gap_kind": "step_absent",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+      "gap_kind": "step_absent",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Create the embeddings table (cairn_embeddings) with columns embedding_id, node_id, vector, render_method",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: Create the shared nodes table (cairn_nodes) — tree-free with columns node_id, content, provenance, standing, created",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: implement the schema migration (three-table schema, code refactoring, data migration of 1,314 rows, proof updates, pipeline wiring, charter updates)",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 22
+    },
+    {
+      "gap_step": "unlisted: Implement the three-table schema migration — create cairn_nodes (tree-free, vector-free), create cairn_embeddings, migrate 1,314 existing rows across 10 tables into leaf tables referencing the shared tables",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 18
+    },
+    {
+      "gap_step": "unlisted: Migrate 1,314 existing rows from flat schema to three-table schema — move node+embedding to shared tables, convert leaf tables to references",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 19
+    },
+    {
+      "gap_step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py for three-table schema; rewrite assertions about column layout and join paths",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 10
+    },
+    {
+      "gap_step": "unlisted: Update all proof suites — test_librarian_trees.py and test_chart_tree.py — to expect the three-table schema (columns, JOINs, row counts)",
+      "gap_kind": "unlisted",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: Update charters (librarian, tree tool, db_domain) to reflect the three-table schema, and update the librarian's falsifier to acknowledge §6.2's bounded weighted-similarity links as a designed successor to the 'no edge table' assertion",
+      "gap_kind": "unlisted",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: Update charters — librarian, tree tool, db_domain — to reflect three-table schema and §6.2 succession",
+      "gap_kind": "unlisted",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: Update tools/tree/tree.py (nexus_table, deposit_learning, counsel) to delegate to the new trees.py and work through the leaf tables",
+      "gap_kind": "unlisted",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: Update trees.py deposit/nearest/corroborate/refute operations to work through the three-table schema (writes to cairn_nodes + cairn_embeddings + caller's leaf table; joins across all three tables)",
+      "gap_kind": "unlisted",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Update trees.py — deposit/nearest/corroborate/refute methods to operate through three-table schema (nodes+embeddings+leaf)",
+      "gap_kind": "unlisted",
+      "log_index": 3,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Wire inference-to-node pipeline — resolved inference calls deposit knowledge into shared node set through librarian admission gate",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 14
+    },
+    {
+      "gap_step": "unlisted: Wire the inference-to-node pipeline — after a resolved inference call, extract knowledge content and deposit it as a node in the shared cairn_nodes set through the librarian's admission gate",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 13
+    }
+  ],
+  "log_reach_count": 42,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1293141,
+        "duration_ms": 152959,
+        "is_error": false,
+        "session_id": "0f9523f5-b62d-4441-9677-a7d7f07c9dd6"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.10199810000000001,
+        "duration_ms": 109448,
+        "is_error": false,
+        "session_id": "726d8a6b-50c2-4077-9510-1db1d83df00a"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1287681,
+        "duration_ms": 159943,
+        "is_error": false,
+        "session_id": "900148c9-7e75-48ba-b989-51d8d6e4d733"
+      }
+    ],
+    "cost_usd": 0.36008,
+    "duration_ms": 422350,
+    "rendered_chars": 30365,
+    "by": null
+  },
+  "divergence": null
+}

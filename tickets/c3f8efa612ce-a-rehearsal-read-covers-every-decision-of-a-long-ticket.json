@@ -1,0 +1,36 @@
+{
+  "id": "c3f8efa612ce",
+  "title": "A rehearsal read covers every decision of a long ticket",
+  "date": "2026-10-11",
+  "owner": "CC",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "A rehearsal read covers every decision a ticket carries however many it has: when a read's only lacks are missing decision ids, the re-read is asked for exactly those nodes and they are merged into the tree it already returned, instead of the whole tree being read again.",
+  "why": "Measured: the Haiku reader drops the TAIL decisions of a long ticket, and a re-read told 'missing D<n>' drops them again. 2026-09-15 on the rehearsal machine's own ticket (36 decisions): read 3 returned D1..D17 three times running (comment at rehearsal.py read_tree). 2026-10-11, builder's 29569fca68a3 falsifier (4) run: cd8096f9eeca (22 decisions, 26 KB) refused rc 2 twice — first 'missing D19..D22' with D9 doubled, then 'missing D22' after all 3 attempts. So 29569's 'rehearsal ran over every open ticket' cannot hold for a long ticket, and every refused pass is paid in full (Law 1). ",
+  "traces_to": "Law 1 (a refused pass re-pays for a settled read); Law 3 (29569's falsifier (4) measures every open ticket, and a long one cannot be measured today).",
+  "how": "cairn/machines/rehearsal/rehearsal.py read_tree only: after an attempt whose lacks are ALL 'missing D<n>' lacks (validate() is otherwise clean), the next attempt hands the reader the ticket text plus the nodes it returned and asks for nodes for ONLY the missing ids (a new HANDED_BACK_MISSING prompt), validates the reply with decision_ids restricted to the missing set, and appends those nodes to the earlier tree; the merged tree is validated against the full set before it is returned. Any other lack (shape, unknown key, a doubled id, a D<n> the ticket does not carry) keeps today's whole re-read. RETRIES_PER_READ and the attempt meta are unchanged; a patch attempt is recorded in attempts with kind 'patch'.",
+  "falsifier": "cairn/machines/rehearsal/proofs/test_a_long_ticket_is_read_whole.py under PROVES {'c3f8efa612ce': {'1','2','3'}}, with a scripted fake Reader (no model call): (1) a reader that returns D1..D17 of 22 on attempt 1 and, when handed the missing list, D18..D22 — read_tree returns one tree with exactly D1..D22 once each; (2) the patch attempt's prompt names exactly the missing ids and carries the earlier nodes; (3) a reader whose first tree has a doubled id still gets a whole re-read (the prompt is the full HANDED_BACK, not the patch). Hollow: the old read_tree (always whole re-read) reds 1 and 2. Live: cairn rehearse cd8096f9eeca returns rc 0 or 1 (a record written), never 2.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/cairn/machines/rehearsal/rehearsal.py and its live falsifier is one cairn rehearse of cd8096f9eeca at PROVED",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/cairn/cairn/machines/rehearsal/rehearsal.py",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Patch only on missing ids: a doubled id or a shape lack still re-reads whole, because merging cannot say which of two nodes for one id the reader meant. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "The patch is warm only to its own read's nodes, never to the other two reads (rehearsal D1, cold reads, still holds). CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 3,
+      "text": "This ticket's model is opus. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "builder_notes": "WHERE: cairn/machines/rehearsal/rehearsal.py read_tree (~:417) and validate (~:160). If 29569fca68a3 falsifier (4) still cannot rehearse cd8096f9eeca, this goes first in the builder's queue.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261011T111726-ab82d2b02575.json",
+  "cast": "2026-10-11"
+}

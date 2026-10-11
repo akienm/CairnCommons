@@ -1,0 +1,31 @@
+{
+  "id": "114002d08c46",
+  "title": "The trouble drain folds a raise whose detail is text",
+  "date": "2026-10-11",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/trouble/intention+why.json",
+  "intention": "The trouble drain folds a raise emission whose values.detail is a string by carrying it whole as detail {'text': <the string>}, so a malformed raise already on disk lands as a trouble and never holds the lane's watermark.",
+  "why": "Measured 2026-10-11 by cc0: the emission /home/akien/.cairn/logs/harbor_master/0/20261009.000059.516741.harbor_master.raise_trouble.json (pointer no-door-retires-a-proved-tickets-watch-as-superseded, raised by hand 2026-10-09) carries values.detail as a STRING. Every TroubleShim.drain since refuses it: \"TypeError: 'str' object is not a mapping\" at cairn/devices/trouble/shim.py _fold ({**(values.get('detail') or {}), ...}). The trouble never landed in the store, and the drain's break holds harbor_master's raise watermark at that file, so the next harbor_master raise would never land either (0 behind it today). Cause upstream: BaseDiagnostic.raise_trouble (cairn/tools/base/diagnostic.py) types detail as dict but writes whatever it is handed. ",
+  "traces_to": "Law 7 (a record of truth keeps the alarm whole rather than refusing it forever) and the fold's own rule: a permanent refusal in this lane wedges the watermark.",
+  "how": "cairn/devices/trouble/shim.py _fold RAISE_GATE branch only: d = values.get('detail'); base = d if isinstance(d, dict) else ({} if d in (None, '') else {'text': d if isinstance(d, str) else json.dumps(d)}); detail={**base, raised_by, raised_at, emission}. Then one live drain lands /home/akien/.cairn/logs/harbor_master/0/20261009.000059.516741.harbor_master.raise_trouble.json.",
+  "falsifier": "cairn/devices/trouble/proofs/test_a_text_detail_still_lands.py under PROVES {'114002d08c46': {'1','2'}}, scratch roots: (1) a raise emission with values.detail='some text' drains to folded (no refused), the trouble exists, and its detail text equals 'some text' whole; (2) the raise watermark advances past it and a later raise in the same home folds in the same drain. Hollow: the old _fold reds 1 and 2 (TypeError, refused, watermark held). Live: after PROVED, TroubleShim().drain() folds the 2026-10-09 harbor_master emission and its refused list is empty.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/.cairn/logs/harbor_master/0/20261009.000059.516741.harbor_master.raise_trouble.json and the live falsifier is one drain at PROVED",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261011T111935-7a530bca4c94.json",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/.cairn/logs/harbor_master/0/20261009.000059.516741.harbor_master.raise_trouble.json",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Carry the string whole under detail.text; never truncate or drop it, and a non-string non-dict is carried as its JSON. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "No rewrite of the emission file on disk: logs are not edited; the fold reads it as it is. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "cast": "2026-10-11"
+}
