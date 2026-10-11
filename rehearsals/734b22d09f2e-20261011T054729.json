@@ -1,0 +1,480 @@
+{
+  "ticket": "734b22d09f2e",
+  "record": "rehearsals/734b22d09f2e-20261011T054729.json",
+  "at": "2026-10-11T05:47:29+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "d0bc2bf39dc7644dd4d253c197744b54eb07d2357576706d961e2d2317895621",
+  "ticket_sha256_at_read": "d0bc2bf39dc7644dd4d253c197744b54eb07d2357576706d961e2d2317895621",
+  "design_sha256": "44c70ad367f11daae30d5bd4f8a4e5b21b6289c7043d27e8c205476faf79813a",
+  "reads": [
+    {
+      "ticket": "734b22d09f2e",
+      "ticket_sha256": "d0bc2bf39dc7644dd4d253c197744b54eb07d2357576706d961e2d2317895621",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: create cairn/devices/tester/reach/sitecustomize.py with atexit registration",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Decision D1: Create sitecustomize.py that registers an atexit handler logging module reach to CAIRN_TESTER_REACH_LOG",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: modify _subject_env in cairn/devices/tester/device.py to prepend reach dir and set CAIRN_TESTER_REACH_LOG",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Decision D2: Modify _subject_env to configure test environment with reach monitoring enabled",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: modify seal code (~700-735) in cairn/devices/tester/device.py to read reached.jsonl and populate evidence['reached']",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Decision D3: At seal time, map reached files through grammar.component_of and record component digests in evidence['reached']",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: create cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four test cases",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Decision D4: Implement four proof test cases verifying reach recording across imports, subprocesses, isolation, and shadowed sitecustomize",
+          "confidence": 0.8
+        }
+      ]
+    },
+    {
+      "ticket": "734b22d09f2e",
+      "ticket_sha256": "d0bc2bf39dc7644dd4d253c197744b54eb07d2357576706d961e2d2317895621",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: implement cairn/devices/tester/reach/sitecustomize.py",
+          "state": "builds_under_assumption",
+          "assumption": "importlib.util provides safe chain-loading of the next sitecustomize without triggering cairn imports; the cairn root directory is determinable from __file__",
+          "would_settle": "The exact importlib.util pattern for chain-loading (e.g., spec_from_file_location, loader.exec_module, or alternative that avoids importing cairn)",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: modify _subject_env in cairn/devices/tester/device.py to prepend reach dir to PYTHONPATH and set CAIRN_TESTER_REACH_LOG",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.94
+        },
+        {
+          "step": "unlisted: modify seal logic in cairn/devices/tester/device.py to record reached components in evidence['reached']",
+          "state": "builds_under_assumption",
+          "assumption": "grammar.component_of is an accessible function mapping repo-relative file paths to component directory paths or None; validation_store.seal_digest exists and returns a hashable seal value; evidence is a mutable dict at seal time",
+          "would_settle": "The module providing grammar.component_of and its exact input/output contract; the module/function for validation_store.seal_digest",
+          "confidence": 0.76
+        },
+        {
+          "step": "unlisted: implement cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four teeth",
+          "state": "builds_under_assumption",
+          "assumption": "Each falsifier item maps to a discrete proof test/fixture in cairn's test framework; tooth 2 can use cairn.tools.validation_store as the subprocess test subject; tooth 4's 'marker' from shadowed system sitecustomize is a detectable side effect",
+          "would_settle": "How multiple teeth are structured in one cairn proof file; which cairn submodule serves as the test subject in tooth 2 (or confirmation validation_store is correct); what mechanism detects the shadowed sitecustomize's marker",
+          "confidence": 0.68
+        }
+      ]
+    },
+    {
+      "ticket": "734b22d09f2e",
+      "ticket_sha256": "d0bc2bf39dc7644dd4d253c197744b54eb07d2357576706d961e2d2317895621",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: Create cairn/devices/tester/reach/sitecustomize.py with reach logging via atexit",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Modify _subject_env to prepend reach directory to PYTHONPATH and set CAIRN_TESTER_REACH_LOG",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: Implement seal-time reading of reached.jsonl and populate evidence['reached'] with component seal states",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        },
+        {
+          "step": "unlisted: Write test_a_seal_records_what_it_reached.py proof with 4 specified teeth under --netns",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.8
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four teeth",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Each falsifier item maps to a discrete proof test/fixture in cairn's test framework; tooth 2 can use cairn.tools.validation_store as the subprocess test subject; tooth 4's 'marker' from shadowed system sitecustomize is a detectable side effect"
+      ],
+      "would_settle": [
+        "How multiple teeth are structured in one cairn proof file; which cairn submodule serves as the test subject in tooth 2 (or confirmation validation_store is correct); what mechanism detects the shadowed sitecustomize's marker"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement cairn/devices/tester/reach/sitecustomize.py",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "importlib.util provides safe chain-loading of the next sitecustomize without triggering cairn imports; the cairn root directory is determinable from __file__"
+      ],
+      "would_settle": [
+        "The exact importlib.util pattern for chain-loading (e.g., spec_from_file_location, loader.exec_module, or alternative that avoids importing cairn)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: modify seal logic in cairn/devices/tester/device.py to record reached components in evidence['reached']",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "grammar.component_of is an accessible function mapping repo-relative file paths to component directory paths or None; validation_store.seal_digest exists and returns a hashable seal value; evidence is a mutable dict at seal time"
+      ],
+      "would_settle": [
+        "The module providing grammar.component_of and its exact input/output contract; the module/function for validation_store.seal_digest"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four test cases",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create cairn/devices/tester/reach/sitecustomize.py with atexit registration",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create cairn/devices/tester/reach/sitecustomize.py with reach logging via atexit",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four teeth",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement cairn/devices/tester/reach/sitecustomize.py",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement seal-time reading of reached.jsonl and populate evidence['reached'] with component seal states",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify _subject_env in cairn/devices/tester/device.py to prepend reach dir and set CAIRN_TESTER_REACH_LOG",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify _subject_env in cairn/devices/tester/device.py to prepend reach dir to PYTHONPATH and set CAIRN_TESTER_REACH_LOG",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Modify _subject_env to prepend reach directory to PYTHONPATH and set CAIRN_TESTER_REACH_LOG",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify seal code (~700-735) in cairn/devices/tester/device.py to read reached.jsonl and populate evidence['reached']",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify seal logic in cairn/devices/tester/device.py to record reached components in evidence['reached']",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write test_a_seal_records_what_it_reached.py proof with 4 specified teeth under --netns",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four test cases",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision D4: Implement four proof test cases verifying reach recording across imports, subprocesses, isolation, and shadowed sitecustomize"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create cairn/devices/tester/reach/sitecustomize.py with atexit registration",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision D1: Create sitecustomize.py that registers an atexit handler logging module reach to CAIRN_TESTER_REACH_LOG"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create cairn/devices/tester/reach/sitecustomize.py with reach logging via atexit",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py with four teeth",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "How multiple teeth are structured in one cairn proof file; which cairn submodule serves as the test subject in tooth 2 (or confirmation validation_store is correct); what mechanism detects the shadowed sitecustomize's marker"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement cairn/devices/tester/reach/sitecustomize.py",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The exact importlib.util pattern for chain-loading (e.g., spec_from_file_location, loader.exec_module, or alternative that avoids importing cairn)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement seal-time reading of reached.jsonl and populate evidence['reached'] with component seal states",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify _subject_env in cairn/devices/tester/device.py to prepend reach dir and set CAIRN_TESTER_REACH_LOG",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision D2: Modify _subject_env to configure test environment with reach monitoring enabled"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify _subject_env in cairn/devices/tester/device.py to prepend reach dir to PYTHONPATH and set CAIRN_TESTER_REACH_LOG",
+      "reads": [
+        2
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Modify _subject_env to prepend reach directory to PYTHONPATH and set CAIRN_TESTER_REACH_LOG",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify seal code (~700-735) in cairn/devices/tester/device.py to read reached.jsonl and populate evidence['reached']",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Decision D3: At seal time, map reached files through grammar.component_of and record component digests in evidence['reached']"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify seal logic in cairn/devices/tester/device.py to record reached components in evidence['reached']",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The module providing grammar.component_of and its exact input/output contract; the module/function for validation_store.seal_digest"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write test_a_seal_records_what_it_reached.py proof with 4 specified teeth under --netns",
+      "reads": [
+        3
+      ]
+    }
+  ],
+  "log_reaches": [],
+  "log_reach_count": 0,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.07200110000000001,
+        "duration_ms": 67255,
+        "is_error": false,
+        "session_id": "9f39d43e-1a6f-49ad-bd69-28ffe303d5d4"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.10333010000000001,
+        "duration_ms": 132265,
+        "is_error": false,
+        "session_id": "4ab8aa67-37e5-4c90-8aea-873e8eb8b3bc"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [
+          "nodes[0].step: 'D1' names a decision the ticket does not carry (it has [])",
+          "nodes[1].step: 'D2' names a decision the ticket does not carry (it has [])",
+          "nodes[2].step: 'D3' names a decision the ticket does not carry (it has [])",
+          "nodes[3].step: 'D4' names a decision the ticket does not carry (it has [])"
+        ],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.09165110000000001,
+        "duration_ms": 99153,
+        "is_error": false,
+        "session_id": "0f2c225c-5ffb-4485-ab84-9aa7dd776e62"
+      },
+      {
+        "attempt": 2,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.10087709999999998,
+        "duration_ms": 114519,
+        "is_error": false,
+        "session_id": "cf148ce4-9418-4cb0-9e50-48c378d259e1"
+      }
+    ],
+    "cost_usd": 0.367859,
+    "duration_ms": 413192,
+    "rendered_chars": 12665,
+    "by": null
+  },
+  "divergence": null
+}

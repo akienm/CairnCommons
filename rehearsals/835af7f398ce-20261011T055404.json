@@ -1,0 +1,1339 @@
+{
+  "ticket": "835af7f398ce",
+  "record": "rehearsals/835af7f398ce-20261011T055404.json",
+  "at": "2026-10-11T05:54:04+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "8db5236b019fc76d5697a151302291400cab619e5b82056189afaa93367a9c43",
+  "ticket_sha256_at_read": "8db5236b019fc76d5697a151302291400cab619e5b82056189afaa93367a9c43",
+  "design_sha256": "3b1b6d3368c4fd6601827b61952b7b62c7cdcb5ea7681ce8f9ec2a10d0846b26",
+  "reads": [
+    {
+      "ticket": "835af7f398ce",
+      "ticket_sha256": "8db5236b019fc76d5697a151302291400cab619e5b82056189afaa93367a9c43",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+          "state": "builds_under_assumption",
+          "assumption": "superclaude should call a bootstrap script that creates venv, installs cairn editable, and only then exec Claude Code; failure should not abort the launch but should report via --append-system-prompt",
+          "would_settle": "Specify the exact sequence: when superclaude calls bootstrap, what it does on failure, how it captures output, and what it passes to --append-system-prompt",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+          "state": "builds_under_assumption",
+          "assumption": "bootstrap.sh should (1) check CAIRN_VENV or default ~/.cairn/<instance>/venv, (2) create if missing, (3) pip install -e . into it, (4) test import, (5) log all results and errors through bin/logger_for_bash to CAIRN_BOOT_LOG",
+          "would_settle": "Specify bootstrap.sh's exact steps, error handling, and log format (what constitutes an 'unfixed' finding for the probe to detect)",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: bin/cairn dispatcher adds 'test' verb wired to tester.run_proof",
+          "state": "builds_under_assumption",
+          "assumption": "bin/cairn's dispatcher should route 'cairn test --exec <proof>' and 'cairn test --seal <proof>' to the tester device's run_proof, making 'how do I run a proof' answerable at the point of asking (the dispatcher) not buried in a docstring",
+          "would_settle": "Specify exactly what code to add to bin/cairn to register the test verb",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: launchers/proofs/test_bootstrap.py covers 14 test cases with proper fixture isolation",
+          "state": "builds_under_assumption",
+          "assumption": "14 cases: (1 test_cairn_imports_from_outside_the_repo) + (1 test_a_broken_preflight_still_reaches_claude) + (4 in-situ reds with CAIRN_VENV=/proc/cairn-no-such-dir/venv) + (10 mechanism cases); each test must use _env() to isolate its harness state from ~/.cairn production logs (questions section describes the synthetic-finding failure where the test fixture was counted as independent evidence)",
+          "would_settle": "Specify all 14 test case implementations, including the _env() fixture isolation that prevents the test harness from polluting the boot log",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: cairn/devices/tester/proofs/test_cli.py has 8 test cases",
+          "state": "builds_under_assumption",
+          "assumption": "File should have 8 test cases that verify cairn test verb works correctly (exact cases undefined)",
+          "would_settle": "Specify what the 8 CLI test cases should cover",
+          "confidence": 0.35
+        },
+        {
+          "step": "unlisted: pyproject.toml adds psycopg2-binary>=2.9 and updates pip install comment",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+          "state": "builds_under_assumption",
+          "assumption": "Probe should (1) read ~/.cairn/logs/boot, (2) parse lines with 'report: unfixed — <finding>', (3) count occurrences per finding text per PID/launch, (4) fire when >= 5 launches reported something AND >= 1 finding survived >= 3 separate launches, (5) carry the finding text, launch count, and --no-preflight bypass count as the probe payload",
+          "would_settle": "Specify the exact boot log parsing, firing condition, and carrier shape",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+          "state": "cannot_proceed",
+          "assumption": "The verb exists and can receive probe data, but the ticket does not say what it does with it",
+          "would_settle": "Specify what harbor_master.watch verb does when it receives reported_but_unfixed_floor data (opens a question? writes somewhere? notifies Akien?)",
+          "confidence": 0.4
+        },
+        {
+          "step": "unlisted: specify which files are writes_to (affected by the build) vs proof files vs probes",
+          "state": "cannot_proceed",
+          "assumption": "The VOYAGE CRAFT section requires a proof commit, then build commit, then seal commit, but the ticket does not enumerate which paths go where",
+          "would_settle": "Add a writes_to list specifying which files are modified/created and stage order",
+          "confidence": 0.7
+        }
+      ]
+    },
+    {
+      "ticket": "835af7f398ce",
+      "ticket_sha256": "8db5236b019fc76d5697a151302291400cab619e5b82056189afaa93367a9c43",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: Specify proof_files and writes_to file lists required by VOYAGE CRAFT",
+          "state": "cannot_proceed",
+          "assumption": "VOYAGE CRAFT commits require lists of which files are 'proof files' vs 'writes_to files', but the ticket does not provide these fields",
+          "would_settle": "Add 'proof_files': [...paths...] and 'writes_to': [...paths...] fields identifying exactly which files stage in the proof commit vs build commit",
+          "confidence": 1
+        },
+        {
+          "step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+          "state": "builds_under_assumption",
+          "assumption": "Preflight must check/create venv in ~/.cairn/devices/launchers/0/venv, verify editable install, verify dependencies, log failures via logger_for_bash with 'report: unfixed — <reason>' format",
+          "would_settle": "Specify exact paths for venv location, sequence and syntax of checks (venv-create command, pip install -e . details, import test location), which errors report vs exit fatal, logging line format",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: Implement launchers/proofs/test_bootstrap.py with 14 test cases",
+          "state": "builds_under_assumption",
+          "assumption": "Test structure inferred from stage_needs: 1 test for cairn-imports-from-outside-repo + 1 test for preflight-reaching-claude + 4 in-situ tests (CAIRN_VENV pointing to /proc/cairn-no-such-dir) + 10 mechanism tests (venv present)",
+          "would_settle": "Name the 14 test cases and specify each one's assertion: what does test_cairn_imports check? What does test_a_broken_preflight assert? Which of the 4 in-situ tests verify venv-down state vs bootstrap failure vs import failure?",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+          "state": "builds_under_assumption",
+          "assumption": "Probe reads $CAIRN_BOOT_LOG, returns dict with keys (findings: text→count, total_launches, bypass_count), fires when total_launches ≥ 5 AND any finding count ≥ 3, clears when no findings reached ≥ 3 across the ≥ 5 launches",
+          "would_settle": "Define exact probe return dict schema; clarify trigger: does 'some finding survived >= 3 launches' mean >= 3 of the >= 5 launches, or a rolling count? How does --no-preflight bypass map to log entries?",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: Register 'cairn test' dispatcher verb",
+          "state": "builds_under_assumption",
+          "assumption": "bin/cairn dispatcher routes `cairn test --exec <proof>` and `cairn test --seal <proof>` to tester device's run_proof; --hollow flag reverts writes_to files and re-runs",
+          "would_settle": "Specify dispatcher entry format and how it calls run_proof; define --exec, --seal, --hollow routing; confirm these map to the tester device's public_interface",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: Create or update harbor_master.watch verb",
+          "state": "builds_under_assumption",
+          "assumption": "Watch verb receives dict from probe with findings/counts/bypass; stores in harbor_master device state under 'reported_unfixed_floor' keyed by timestamp or arrival order",
+          "would_settle": "Define watch verb signature; specify where in device state it stores probes and how to retrieve them; clarify whether watch fires/clears in state or only emits to operator inbox",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: Update pyproject.toml with psycopg2-binary dependency and history note",
+          "state": "builds_under_assumption",
+          "assumption": "Add psycopg2-binary>=2.9 to [project].dependencies with comment about db_domain needing it for venv per Law 1; amend existing 'pip install -e .' comment to record it was false 2026-07-15 to 2026-07-30 and why",
+          "would_settle": "Provide exact comment text for psycopg2-binary (reference Law 1 re-derivation?); provide exact amendment to the pip-install comment",
+          "confidence": 0.8
+        }
+      ]
+    },
+    {
+      "ticket": "835af7f398ce",
+      "ticket_sha256": "8db5236b019fc76d5697a151302291400cab619e5b82056189afaa93367a9c43",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: modify or create the superclaude launcher script to add venv setup, dependency installation, and environment verification",
+          "state": "builds_under_assumption",
+          "assumption": "the builder will infer WHERE (launchers/superclaude) and HOW (the exact setup sequence) from the intention and typical launcher patterns",
+          "would_settle": "D1: Modify launchers/superclaude to initialize a venv, install dependencies from pyproject.toml, and verify the floor before exec",
+          "confidence": 0.68
+        },
+        {
+          "step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+          "state": "builds_under_assumption",
+          "assumption": "the builder infers the floor-repair sequence (venv create, editable install, verify imports) from the intention and the WATCHME description",
+          "would_settle": "D2: Create launchers/bootstrap.sh with deterministic venv setup, editable install of cairn, and floor status reporting via logger_for_bash",
+          "confidence": 0.72
+        },
+        {
+          "step": "unlisted: create launchers/proofs/test_bootstrap.py with 14 test cases covering venv initialization, import verification, and preflight failure handling",
+          "state": "builds_under_assumption",
+          "assumption": "the test structure can be inferred from falsifier (14 cases total, in-situ + mechanism split), stage_needs (what must be measured), and the description of the fixture namespace defect",
+          "would_settle": "D3: Create launchers/proofs/test_bootstrap.py with organized test cases for: venv creation from scratch, cold-boot verification, import from outside repo, preflight failure propagation, and mechanism correctness",
+          "confidence": 0.76
+        },
+        {
+          "step": "unlisted: register the `test` verb in bin/cairn dispatcher to route to the tester device's run_proof door",
+          "state": "builds_under_assumption",
+          "assumption": "the builder knows to modify the dispatcher based on the dependency callout and will follow existing verb registration patterns",
+          "would_settle": "D4: Add test subcommand to bin/cairn that delegates to cairn/devices/tester/device.py:run_proof",
+          "confidence": 0.78
+        },
+        {
+          "step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+          "state": "builds_under_assumption",
+          "assumption": "the builder will infer the logging format (JSON or structured text to ~/.cairn/logs/boot, with PID-keyed records) from the WATCHME description and the defect notes about fixture namespace isolation",
+          "would_settle": "D5: Create bin/logger_for_bash to write timestamped, PID-keyed records to ~$CAIRN_BOOT_LOG with measured findings and status markers",
+          "confidence": 0.74
+        },
+        {
+          "step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+          "state": "builds_under_assumption",
+          "assumption": "the builder can infer the probe structure from the detailed watchme section (reads boot log, counts persistent findings, fires on thresholds), even though the code itself is not specified",
+          "would_settle": "D6: Create launchers/probes/reported_but_unfixed_floor.py that reads ~/.cairn/logs/boot, aggregates findings by text, fires when >=5 launches report something AND >=3 share a finding, emits to harbor_master watch verb",
+          "confidence": 0.8
+        },
+        {
+          "step": "unlisted: modify pyproject.toml dependencies to declare psycopg2-binary>=2.9 with an explanatory comment",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.88
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: bin/cairn dispatcher adds 'test' verb wired to tester.run_proof",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "bin/cairn's dispatcher should route 'cairn test --exec <proof>' and 'cairn test --seal <proof>' to the tester device's run_proof, making 'how do I run a proof' answerable at the point of asking (the dispatcher) not buried in a docstring"
+      ],
+      "would_settle": [
+        "Specify exactly what code to add to bin/cairn to register the test verb"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: cairn/devices/tester/proofs/test_cli.py has 8 test cases",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "File should have 8 test cases that verify cairn test verb works correctly (exact cases undefined)"
+      ],
+      "would_settle": [
+        "Specify what the 8 CLI test cases should cover"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the builder will infer the logging format (JSON or structured text to ~/.cairn/logs/boot, with PID-keyed records) from the WATCHME description and the defect notes about fixture namespace isolation"
+      ],
+      "would_settle": [
+        "D5: Create bin/logger_for_bash to write timestamped, PID-keyed records to ~$CAIRN_BOOT_LOG with measured findings and status markers"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the builder infers the floor-repair sequence (venv create, editable install, verify imports) from the intention and the WATCHME description"
+      ],
+      "would_settle": [
+        "D2: Create launchers/bootstrap.sh with deterministic venv setup, editable install of cairn, and floor status reporting via logger_for_bash"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the builder can infer the probe structure from the detailed watchme section (reads boot log, counts persistent findings, fires on thresholds), even though the code itself is not specified"
+      ],
+      "would_settle": [
+        "D6: Create launchers/probes/reported_but_unfixed_floor.py that reads ~/.cairn/logs/boot, aggregates findings by text, fires when >=5 launches report something AND >=3 share a finding, emits to harbor_master watch verb"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: create launchers/proofs/test_bootstrap.py with 14 test cases covering venv initialization, import verification, and preflight failure handling",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the test structure can be inferred from falsifier (14 cases total, in-situ + mechanism split), stage_needs (what must be measured), and the description of the fixture namespace defect"
+      ],
+      "would_settle": [
+        "D3: Create launchers/proofs/test_bootstrap.py with organized test cases for: venv creation from scratch, cold-boot verification, import from outside repo, preflight failure propagation, and mechanism correctness"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Create or update harbor_master.watch verb",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Watch verb receives dict from probe with findings/counts/bypass; stores in harbor_master device state under 'reported_unfixed_floor' keyed by timestamp or arrival order"
+      ],
+      "would_settle": [
+        "Define watch verb signature; specify where in device state it stores probes and how to retrieve them; clarify whether watch fires/clears in state or only emits to operator inbox"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Probe reads $CAIRN_BOOT_LOG, returns dict with keys (findings: text→count, total_launches, bypass_count), fires when total_launches ≥ 5 AND any finding count ≥ 3, clears when no findings reached ≥ 3 across the ≥ 5 launches"
+      ],
+      "would_settle": [
+        "Define exact probe return dict schema; clarify trigger: does 'some finding survived >= 3 launches' mean >= 3 of the >= 5 launches, or a rolling count? How does --no-preflight bypass map to log entries?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement launchers/proofs/test_bootstrap.py with 14 test cases",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Test structure inferred from stage_needs: 1 test for cairn-imports-from-outside-repo + 1 test for preflight-reaching-claude + 4 in-situ tests (CAIRN_VENV pointing to /proc/cairn-no-such-dir) + 10 mechanism tests (venv present)"
+      ],
+      "would_settle": [
+        "Name the 14 test cases and specify each one's assertion: what does test_cairn_imports check? What does test_a_broken_preflight assert? Which of the 4 in-situ tests verify venv-down state vs bootstrap failure vs import failure?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Preflight must check/create venv in ~/.cairn/devices/launchers/0/venv, verify editable install, verify dependencies, log failures via logger_for_bash with 'report: unfixed — <reason>' format"
+      ],
+      "would_settle": [
+        "Specify exact paths for venv location, sequence and syntax of checks (venv-create command, pip install -e . details, import test location), which errors report vs exit fatal, logging line format"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "bootstrap.sh should (1) check CAIRN_VENV or default ~/.cairn/<instance>/venv, (2) create if missing, (3) pip install -e . into it, (4) test import, (5) log all results and errors through bin/logger_for_bash to CAIRN_BOOT_LOG"
+      ],
+      "would_settle": [
+        "Specify bootstrap.sh's exact steps, error handling, and log format (what constitutes an 'unfixed' finding for the probe to detect)"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "Probe should (1) read ~/.cairn/logs/boot, (2) parse lines with 'report: unfixed — <finding>', (3) count occurrences per finding text per PID/launch, (4) fire when >= 5 launches reported something AND >= 1 finding survived >= 3 separate launches, (5) carry the finding text, launch count, and --no-preflight bypass count as the probe payload"
+      ],
+      "would_settle": [
+        "Specify the exact boot log parsing, firing condition, and carrier shape"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: launchers/proofs/test_bootstrap.py covers 14 test cases with proper fixture isolation",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "14 cases: (1 test_cairn_imports_from_outside_the_repo) + (1 test_a_broken_preflight_still_reaches_claude) + (4 in-situ reds with CAIRN_VENV=/proc/cairn-no-such-dir/venv) + (10 mechanism cases); each test must use _env() to isolate its harness state from ~/.cairn production logs (questions section describes the synthetic-finding failure where the test fixture was counted as independent evidence)"
+      ],
+      "would_settle": [
+        "Specify all 14 test case implementations, including the _env() fixture isolation that prevents the test harness from polluting the boot log"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: modify or create the superclaude launcher script to add venv setup, dependency installation, and environment verification",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the builder will infer WHERE (launchers/superclaude) and HOW (the exact setup sequence) from the intention and typical launcher patterns"
+      ],
+      "would_settle": [
+        "D1: Modify launchers/superclaude to initialize a venv, install dependencies from pyproject.toml, and verify the floor before exec"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Register 'cairn test' dispatcher verb",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "bin/cairn dispatcher routes `cairn test --exec <proof>` and `cairn test --seal <proof>` to tester device's run_proof; --hollow flag reverts writes_to files and re-runs"
+      ],
+      "would_settle": [
+        "Specify dispatcher entry format and how it calls run_proof; define --exec, --seal, --hollow routing; confirm these map to the tester device's public_interface"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: register the `test` verb in bin/cairn dispatcher to route to the tester device's run_proof door",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "the builder knows to modify the dispatcher based on the dependency callout and will follow existing verb registration patterns"
+      ],
+      "would_settle": [
+        "D4: Add test subcommand to bin/cairn that delegates to cairn/devices/tester/device.py:run_proof"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "superclaude should call a bootstrap script that creates venv, installs cairn editable, and only then exec Claude Code; failure should not abort the launch but should report via --append-system-prompt"
+      ],
+      "would_settle": [
+        "Specify the exact sequence: when superclaude calls bootstrap, what it does on failure, how it captures output, and what it passes to --append-system-prompt"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Update pyproject.toml with psycopg2-binary dependency and history note",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Add psycopg2-binary>=2.9 to [project].dependencies with comment about db_domain needing it for venv per Law 1; amend existing 'pip install -e .' comment to record it was false 2026-07-15 to 2026-07-30 and why"
+      ],
+      "would_settle": [
+        "Provide exact comment text for psycopg2-binary (reference Law 1 re-derivation?); provide exact amendment to the pip-install comment"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The verb exists and can receive probe data, but the ticket does not say what it does with it"
+      ],
+      "would_settle": [
+        "Specify what harbor_master.watch verb does when it receives reported_but_unfixed_floor data (opens a question? writes somewhere? notifies Akien?)"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: Specify proof_files and writes_to file lists required by VOYAGE CRAFT",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "VOYAGE CRAFT commits require lists of which files are 'proof files' vs 'writes_to files', but the ticket does not provide these fields"
+      ],
+      "would_settle": [
+        "Add 'proof_files': [...paths...] and 'writes_to': [...paths...] fields identifying exactly which files stage in the proof commit vs build commit"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: specify which files are writes_to (affected by the build) vs proof files vs probes",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The VOYAGE CRAFT section requires a proof commit, then build commit, then seal commit, but the ticket does not enumerate which paths go where"
+      ],
+      "would_settle": [
+        "Add a writes_to list specifying which files are modified/created and stage order"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: bin/cairn dispatcher adds 'test' verb wired to tester.run_proof",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: cairn/devices/tester/proofs/test_cli.py has 8 test cases",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: create launchers/proofs/test_bootstrap.py with 14 test cases covering venv initialization, import verification, and preflight failure handling",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Create or update harbor_master.watch verb",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement launchers/proofs/test_bootstrap.py with 14 test cases",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: launchers/proofs/test_bootstrap.py covers 14 test cases with proper fixture isolation",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify or create the superclaude launcher script to add venv setup, dependency installation, and environment verification",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: modify pyproject.toml dependencies to declare psycopg2-binary>=2.9 with an explanatory comment",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: pyproject.toml adds psycopg2-binary>=2.9 and updates pip install comment",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Register 'cairn test' dispatcher verb",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: register the `test` verb in bin/cairn dispatcher to route to the tester device's run_proof door",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Specify proof_files and writes_to file lists required by VOYAGE CRAFT",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: specify which files are writes_to (affected by the build) vs proof files vs probes",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Update pyproject.toml with psycopg2-binary dependency and history note",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: bin/cairn dispatcher adds 'test' verb wired to tester.run_proof",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify exactly what code to add to bin/cairn to register the test verb"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: cairn/devices/tester/proofs/test_cli.py has 8 test cases",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify what the 8 CLI test cases should cover"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D5: Create bin/logger_for_bash to write timestamped, PID-keyed records to ~$CAIRN_BOOT_LOG with measured findings and status markers"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D2: Create launchers/bootstrap.sh with deterministic venv setup, editable install of cairn, and floor status reporting via logger_for_bash"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D6: Create launchers/probes/reported_but_unfixed_floor.py that reads ~/.cairn/logs/boot, aggregates findings by text, fires when >=5 launches report something AND >=3 share a finding, emits to harbor_master watch verb"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: create launchers/proofs/test_bootstrap.py with 14 test cases covering venv initialization, import verification, and preflight failure handling",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D3: Create launchers/proofs/test_bootstrap.py with organized test cases for: venv creation from scratch, cold-boot verification, import from outside repo, preflight failure propagation, and mechanism correctness"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Create or update harbor_master.watch verb",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Define watch verb signature; specify where in device state it stores probes and how to retrieve them; clarify whether watch fires/clears in state or only emits to operator inbox"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify what harbor_master.watch verb does when it receives reported_but_unfixed_floor data (opens a question? writes somewhere? notifies Akien?)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Define exact probe return dict schema; clarify trigger: does 'some finding survived >= 3 launches' mean >= 3 of the >= 5 launches, or a rolling count? How does --no-preflight bypass map to log entries?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement launchers/proofs/test_bootstrap.py with 14 test cases",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Name the 14 test cases and specify each one's assertion: what does test_cairn_imports check? What does test_a_broken_preflight assert? Which of the 4 in-situ tests verify venv-down state vs bootstrap failure vs import failure?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify exact paths for venv location, sequence and syntax of checks (venv-create command, pip install -e . details, import test location), which errors report vs exit fatal, logging line format"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify bootstrap.sh's exact steps, error handling, and log format (what constitutes an 'unfixed' finding for the probe to detect)"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify the exact boot log parsing, firing condition, and carrier shape"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: launchers/proofs/test_bootstrap.py covers 14 test cases with proper fixture isolation",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify all 14 test case implementations, including the _env() fixture isolation that prevents the test harness from polluting the boot log"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify or create the superclaude launcher script to add venv setup, dependency installation, and environment verification",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D1: Modify launchers/superclaude to initialize a venv, install dependencies from pyproject.toml, and verify the floor before exec"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: modify pyproject.toml dependencies to declare psycopg2-binary>=2.9 with an explanatory comment",
+      "reads": [
+        3
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: pyproject.toml adds psycopg2-binary>=2.9 and updates pip install comment",
+      "reads": [
+        1
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Register 'cairn test' dispatcher verb",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify dispatcher entry format and how it calls run_proof; define --exec, --seal, --hollow routing; confirm these map to the tester device's public_interface"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: register the `test` verb in bin/cairn dispatcher to route to the tester device's run_proof door",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D4: Add test subcommand to bin/cairn that delegates to cairn/devices/tester/device.py:run_proof"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Specify proof_files and writes_to file lists required by VOYAGE CRAFT",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Add 'proof_files': [...paths...] and 'writes_to': [...paths...] fields identifying exactly which files stage in the proof commit vs build commit"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: specify which files are writes_to (affected by the build) vs proof files vs probes",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Add a writes_to list specifying which files are modified/created and stage order"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Specify the exact sequence: when superclaude calls bootstrap, what it does on failure, how it captures output, and what it passes to --append-system-prompt"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Update pyproject.toml with psycopg2-binary dependency and history note",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Provide exact comment text for psycopg2-binary (reference Law 1 re-derivation?); provide exact amendment to the pip-install comment"
+      ]
+    }
+  ],
+  "log_reaches": [
+    {
+      "gap_step": "unlisted: bin/cairn dispatcher adds 'test' verb wired to tester.run_proof",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: cairn/devices/tester/proofs/test_cli.py has 8 test cases",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 13
+    },
+    {
+      "gap_step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 18
+    },
+    {
+      "gap_step": "unlisted: create launchers/proofs/test_bootstrap.py with 14 test cases covering venv initialization, import verification, and preflight failure handling",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: Create or update harbor_master.watch verb",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 15
+    },
+    {
+      "gap_step": "unlisted: Implement launchers/proofs/test_bootstrap.py with 14 test cases",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 14
+    },
+    {
+      "gap_step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 19
+    },
+    {
+      "gap_step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 19
+    },
+    {
+      "gap_step": "unlisted: launchers/proofs/test_bootstrap.py covers 14 test cases with proper fixture isolation",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 14
+    },
+    {
+      "gap_step": "unlisted: modify or create the superclaude launcher script to add venv setup, dependency installation, and environment verification",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: register the `test` verb in bin/cairn dispatcher to route to the tester device's run_proof door",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 4
+    },
+    {
+      "gap_step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+      "gap_kind": "assumes",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 15
+    },
+    {
+      "gap_step": "unlisted: Update pyproject.toml with psycopg2-binary dependency and history note",
+      "gap_kind": "assumes",
+      "log_index": 0,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+      "gap_kind": "cannot_proceed",
+      "log_index": 0,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: specify which files are writes_to (affected by the build) vs proof files vs probes",
+      "gap_kind": "cannot_proceed",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 4
+    },
+    {
+      "gap_step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 4
+    },
+    {
+      "gap_step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 10
+    },
+    {
+      "gap_step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+      "gap_kind": "step_absent",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: bin/cairn dispatcher adds 'test' verb wired to tester.run_proof",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 4
+    },
+    {
+      "gap_step": "unlisted: cairn/devices/tester/proofs/test_cli.py has 8 test cases",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: create bin/logger_for_bash as a structured logging utility for the boot process",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: create launchers/bootstrap.sh to perform floor verification and repair, with logging to ~/.cairn/logs/boot",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: create launchers/probes/reported_but_unfixed_floor.py to emit the WATCHME",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 15
+    },
+    {
+      "gap_step": "unlisted: create launchers/proofs/test_bootstrap.py with 14 test cases covering venv initialization, import verification, and preflight failure handling",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: harbor_master.watch verb receives reported_but_unfixed_floor probe and handles it",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 9
+    },
+    {
+      "gap_step": "unlisted: Implement launchers/probes/reported_but_unfixed_floor.py WATCHME probe",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 12
+    },
+    {
+      "gap_step": "unlisted: Implement launchers/proofs/test_bootstrap.py with 14 test cases",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: Implement superclaude preflight to verify and bootstrap the floor",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: launchers/bootstrap.sh creates ~/.cairn/venv, installs cairn editable, logs to CAIRN_BOOT_LOG",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: launchers/probes/reported_but_unfixed_floor.py reads boot log and fires when condition met",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 11
+    },
+    {
+      "gap_step": "unlisted: launchers/proofs/test_bootstrap.py covers 14 test cases with proper fixture isolation",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 5
+    },
+    {
+      "gap_step": "unlisted: modify or create the superclaude launcher script to add venv setup, dependency installation, and environment verification",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 8
+    },
+    {
+      "gap_step": "unlisted: superclaude invokes bootstrap to build the floor before exec'ing Claude Code",
+      "gap_kind": "unlisted",
+      "log_index": 1,
+      "kind": "field",
+      "overlap": 8
+    }
+  ],
+  "log_reach_count": 43,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.0920541,
+        "duration_ms": 100708,
+        "is_error": false,
+        "session_id": "a889db6c-f7fb-40e7-944e-6a237e8f1c4b"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.12743809999999997,
+        "duration_ms": 164025,
+        "is_error": false,
+        "session_id": "2a5e94eb-c156-4882-9395-9c3984ac49ea"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1074511,
+        "duration_ms": 124800,
+        "is_error": false,
+        "session_id": "fd68d9b5-c5c5-4cf8-a388-bd88f196ff8c"
+      }
+    ],
+    "cost_usd": 0.326943,
+    "duration_ms": 389533,
+    "rendered_chars": 22464,
+    "by": null
+  },
+  "divergence": null
+}

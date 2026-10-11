@@ -1,0 +1,547 @@
+{
+  "ticket": "4de7baf7e255",
+  "record": "rehearsals/4de7baf7e255-20261011T050614.json",
+  "at": "2026-10-11T05:06:14+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "c58a6e79261096e6eef40a3f34055c88a34d8c4474d17d25855330892adab2bb",
+  "ticket_sha256_at_read": "c58a6e79261096e6eef40a3f34055c88a34d8c4474d17d25855330892adab2bb",
+  "design_sha256": "3d809cddfb95490bdc2b9662fabe36766ef0898b4cdc52e3d21b2411344b6f13",
+  "reads": [
+    {
+      "ticket": "4de7baf7e255",
+      "ticket_sha256": "c58a6e79261096e6eef40a3f34055c88a34d8c4474d17d25855330892adab2bb",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: Implement sleep_cycle.py with token class and mint/close/forward functions",
+          "state": "builds_under_assumption",
+          "assumption": "The token message class has fields cycle_id, roster (list of device IDs in discovery order), and current_index (current position in roster); mint(cycle_id, roster) returns a token ready to post; close(token) marks the cycle complete; forward(token) advances current_index.",
+          "would_settle": "D1: Implement cairn/devices/cairn/machines/ground_loop/sleep_cycle.py with the token class and the three functions (mint, close, forward) as specified above.",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: Integrate token minting into ground loop pulse and post on announce",
+          "state": "builds_under_assumption",
+          "assumption": "D1 is implemented; idle-detection-trigger (9b6b392ebcfe) has proved its idle trigger mechanism; token-rotation-mechanism (bf146e9e3967) has proved per-device probes; the ground loop's spawned pulse can call sleep_cycle.mint() and the bus.post() method works on announce.",
+          "would_settle": "D2: In the ground loop's spawned pulse check, when idle is detected (from system device), call sleep_cycle.mint(cycle_id, roster) and bus.post(to='announce', body=token); when the token returns to cairn, call sleep_cycle.close(token).",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: Add PROVES block declaring the proof teeth for BUILDME",
+          "state": "cannot_proceed",
+          "assumption": "The ticket owes a PROVES block per the 2026-09-10 note ('What is owed at BUILDME: a PROVES block naming a real tooth per falsifier clause'), but the specific teeth are not listed.",
+          "would_settle": "D3: Add a PROVES block with teeth covering the falsifier's proves_green clauses: (a) sleep_cycle.mint/close/forward work correctly, (b) token posts to announce channel in roster order, (c) each device's probe receives and forwards exactly once per rotation, (d) token returns to cairn and cycle closes. Each tooth must state green (as-built) and red (predict) assertions.",
+          "confidence": 0.75
+        }
+      ]
+    },
+    {
+      "ticket": "4de7baf7e255",
+      "ticket_sha256": "c58a6e79261096e6eef40a3f34055c88a34d8c4474d17d25855330892adab2bb",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: wait for children 9b6b392ebcfe (idle-detection-trigger) and bf146e9e3967 (token-rotation-mechanism) to reach PROVED status",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "The ticket should include an explicit decision: 'children 9b6b392ebcfe and bf146e9e3967 must be PROVED before this ticket's BUILDME crossing can proceed'",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: define sleep-cycle TOKEN message shape and mint()/close() function signatures",
+          "state": "builds_under_assumption",
+          "assumption": "TOKEN is a dataclass or namedtuple with fields cycle_id, roster, sender; mint() takes roster and trigger context and returns a TOKEN ready to post; close() takes cycle_id and performs cleanup. The token carries all information needed for devices to route it in alpha order.",
+          "would_settle": "Explicit specification: 'TOKEN(cycle_id: str, roster: list[str], sender: str, triggered_at: float); mint(roster, idle_origin) → TOKEN(...); close(cycle_id) → None; token is posted to announce RECORD channel'",
+          "confidence": 0.55
+        },
+        {
+          "step": "unlisted: write proofs (test_sleep_cycle.py and/or test_rotation.py) validating mint(), token circulation, full rotation completion, and device sleep-cycle execution",
+          "state": "builds_under_assumption",
+          "assumption": "Proofs should validate the four falsifier claims: (1) cairn device can mint a sleep token, (2) each device receives and forwards it, (3) rotation completes back to cairn, (4) at least one device executes sleep work. Current coverage is zero; test_trouble_panel.py mentions sleep nowhere (measured 2026-09-07). Proof files are not named in the ticket.",
+          "would_settle": "The ticket should list: 'write test_sleep_cycle.py [covering mint() creates valid token] and test_rotation.py [covering full circle: mint → forward through each device → complete back to cairn]; these proofs are BUILDME teeth'",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: implement sleep_cycle.mint() and close() in cairn/devices/cairn/machines/ground_loop/sleep_cycle.py",
+          "state": "builds_under_assumption",
+          "assumption": "mint() is called by the idle-detection trigger (child 9b6b392ebcfe) when idle is detected, creates a TOKEN, posts it to announce, and returns it for the caller to track cycle completion. close() is called when the token returns to cairn and completes the cycle. Forward logic is in per-device probes (child bf146e9e3967), not here.",
+          "would_settle": "Specify: Does mint() call announce.post() itself or return a message for the ground loop to post? What is the signature of the trigger callback? Where in ground_loop is mint() invoked?",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: implement token circulation: route token through device roster in alpha order from ground_loop discovery.py using announce channel and per-device probes",
+          "state": "builds_under_assumption",
+          "assumption": "Each device's sleep probe (built by child bf146e9e3967) matches the incoming token, optionally runs sleep work, and forwards the token to the next device in alpha order (discovery.py roster). The circulation is entirely message-driven on the announce channel; no polling, no central loop.",
+          "would_settle": "Specify: Is forwarding logic centralized in sleep_cycle.py (a loop posting to each device in sequence) or distributed (each device's probe forwards)? How does a device determine the next device's address from the roster?",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+          "state": "builds_under_assumption",
+          "assumption": "The probe listens to the announce channel and fires when the token message returns to the cairn device (detected by sender=cairn in the returning message or by cycle completion marker). It measures the full rotation: all N devices forwarded exactly once, in order, and token returned. Specifiable once token message shape is final, created at the WATCHME crossing after PROVEME.",
+          "would_settle": "Specify the trigger condition: 'probe fires when announce channel receives a message with [condition that proves the rotation completed: e.g., sender=cairn and cycle_id matches the original mint, or equivalent]'",
+          "confidence": 0.6
+        }
+      ]
+    },
+    {
+      "ticket": "4de7baf7e255",
+      "ticket_sha256": "c58a6e79261096e6eef40a3f34055c88a34d8c4474d17d25855330892adab2bb",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: the ticket must contain a decisions field",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "add decisions field D1–D4 mapping the four sub-problems: sleep_cycle token, system device, sleep probes, composition",
+          "confidence": 0.95
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: define sleep-cycle TOKEN message shape and mint()/close() function signatures",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "TOKEN is a dataclass or namedtuple with fields cycle_id, roster, sender; mint() takes roster and trigger context and returns a TOKEN ready to post; close() takes cycle_id and performs cleanup. The token carries all information needed for devices to route it in alpha order."
+      ],
+      "would_settle": [
+        "Explicit specification: 'TOKEN(cycle_id: str, roster: list[str], sender: str, triggered_at: float); mint(roster, idle_origin) → TOKEN(...); close(cycle_id) → None; token is posted to announce RECORD channel'"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement sleep_cycle.mint() and close() in cairn/devices/cairn/machines/ground_loop/sleep_cycle.py",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "mint() is called by the idle-detection trigger (child 9b6b392ebcfe) when idle is detected, creates a TOKEN, posts it to announce, and returns it for the caller to track cycle completion. close() is called when the token returns to cairn and completes the cycle. Forward logic is in per-device probes (child bf146e9e3967), not here."
+      ],
+      "would_settle": [
+        "Specify: Does mint() call announce.post() itself or return a message for the ground loop to post? What is the signature of the trigger callback? Where in ground_loop is mint() invoked?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement sleep_cycle.py with token class and mint/close/forward functions",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The token message class has fields cycle_id, roster (list of device IDs in discovery order), and current_index (current position in roster); mint(cycle_id, roster) returns a token ready to post; close(token) marks the cycle complete; forward(token) advances current_index."
+      ],
+      "would_settle": [
+        "D1: Implement cairn/devices/cairn/machines/ground_loop/sleep_cycle.py with the token class and the three functions (mint, close, forward) as specified above."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: implement token circulation: route token through device roster in alpha order from ground_loop discovery.py using announce channel and per-device probes",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Each device's sleep probe (built by child bf146e9e3967) matches the incoming token, optionally runs sleep work, and forwards the token to the next device in alpha order (discovery.py roster). The circulation is entirely message-driven on the announce channel; no polling, no central loop."
+      ],
+      "would_settle": [
+        "Specify: Is forwarding logic centralized in sleep_cycle.py (a loop posting to each device in sequence) or distributed (each device's probe forwards)? How does a device determine the next device's address from the roster?"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Integrate token minting into ground loop pulse and post on announce",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "D1 is implemented; idle-detection-trigger (9b6b392ebcfe) has proved its idle trigger mechanism; token-rotation-mechanism (bf146e9e3967) has proved per-device probes; the ground loop's spawned pulse can call sleep_cycle.mint() and the bus.post() method works on announce."
+      ],
+      "would_settle": [
+        "D2: In the ground loop's spawned pulse check, when idle is detected (from system device), call sleep_cycle.mint(cycle_id, roster) and bus.post(to='announce', body=token); when the token returns to cairn, call sleep_cycle.close(token)."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write proofs (test_sleep_cycle.py and/or test_rotation.py) validating mint(), token circulation, full rotation completion, and device sleep-cycle execution",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Proofs should validate the four falsifier claims: (1) cairn device can mint a sleep token, (2) each device receives and forwards it, (3) rotation completes back to cairn, (4) at least one device executes sleep work. Current coverage is zero; test_trouble_panel.py mentions sleep nowhere (measured 2026-09-07). Proof files are not named in the ticket."
+      ],
+      "would_settle": [
+        "The ticket should list: 'write test_sleep_cycle.py [covering mint() creates valid token] and test_rotation.py [covering full circle: mint → forward through each device → complete back to cairn]; these proofs are BUILDME teeth'"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "The probe listens to the announce channel and fires when the token message returns to the cairn device (detected by sender=cairn in the returning message or by cycle completion marker). It measures the full rotation: all N devices forwarded exactly once, in order, and token returned. Specifiable once token message shape is final, created at the WATCHME crossing after PROVEME."
+      ],
+      "would_settle": [
+        "Specify the trigger condition: 'probe fires when announce channel receives a message with [condition that proves the rotation completed: e.g., sender=cairn and cycle_id matches the original mint, or equivalent]'"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: Add PROVES block declaring the proof teeth for BUILDME",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "The ticket owes a PROVES block per the 2026-09-10 note ('What is owed at BUILDME: a PROVES block naming a real tooth per falsifier clause'), but the specific teeth are not listed."
+      ],
+      "would_settle": [
+        "D3: Add a PROVES block with teeth covering the falsifier's proves_green clauses: (a) sleep_cycle.mint/close/forward work correctly, (b) token posts to announce channel in roster order, (c) each device's probe receives and forwards exactly once per rotation, (d) token returns to cairn and cycle closes. Each tooth must state green (as-built) and red (predict) assertions."
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: the ticket must contain a decisions field",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "add decisions field D1–D4 mapping the four sub-problems: sleep_cycle token, system device, sleep probes, composition"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: wait for children 9b6b392ebcfe (idle-detection-trigger) and bf146e9e3967 (token-rotation-mechanism) to reach PROVED status",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket should include an explicit decision: 'children 9b6b392ebcfe and bf146e9e3967 must be PROVED before this ticket's BUILDME crossing can proceed'"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Add PROVES block declaring the proof teeth for BUILDME",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: define sleep-cycle TOKEN message shape and mint()/close() function signatures",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement sleep_cycle.mint() and close() in cairn/devices/cairn/machines/ground_loop/sleep_cycle.py",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement sleep_cycle.py with token class and mint/close/forward functions",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement token circulation: route token through device roster in alpha order from ground_loop discovery.py using announce channel and per-device probes",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Integrate token minting into ground loop pulse and post on announce",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: the ticket must contain a decisions field",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: wait for children 9b6b392ebcfe (idle-detection-trigger) and bf146e9e3967 (token-rotation-mechanism) to reach PROVED status",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write proofs (test_sleep_cycle.py and/or test_rotation.py) validating mint(), token circulation, full rotation completion, and device sleep-cycle execution",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Add PROVES block declaring the proof teeth for BUILDME",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "D3: Add a PROVES block with teeth covering the falsifier's proves_green clauses: (a) sleep_cycle.mint/close/forward work correctly, (b) token posts to announce channel in roster order, (c) each device's probe receives and forwards exactly once per rotation, (d) token returns to cairn and cycle closes. Each tooth must state green (as-built) and red (predict) assertions."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: define sleep-cycle TOKEN message shape and mint()/close() function signatures",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Explicit specification: 'TOKEN(cycle_id: str, roster: list[str], sender: str, triggered_at: float); mint(roster, idle_origin) → TOKEN(...); close(cycle_id) → None; token is posted to announce RECORD channel'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement sleep_cycle.mint() and close() in cairn/devices/cairn/machines/ground_loop/sleep_cycle.py",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify: Does mint() call announce.post() itself or return a message for the ground loop to post? What is the signature of the trigger callback? Where in ground_loop is mint() invoked?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement sleep_cycle.py with token class and mint/close/forward functions",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "D1: Implement cairn/devices/cairn/machines/ground_loop/sleep_cycle.py with the token class and the three functions (mint, close, forward) as specified above."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement token circulation: route token through device roster in alpha order from ground_loop discovery.py using announce channel and per-device probes",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify: Is forwarding logic centralized in sleep_cycle.py (a loop posting to each device in sequence) or distributed (each device's probe forwards)? How does a device determine the next device's address from the roster?"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Integrate token minting into ground loop pulse and post on announce",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "D2: In the ground loop's spawned pulse check, when idle is detected (from system device), call sleep_cycle.mint(cycle_id, roster) and bus.post(to='announce', body=token); when the token returns to cairn, call sleep_cycle.close(token)."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: the ticket must contain a decisions field",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "add decisions field D1–D4 mapping the four sub-problems: sleep_cycle token, system device, sleep probes, composition"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: wait for children 9b6b392ebcfe (idle-detection-trigger) and bf146e9e3967 (token-rotation-mechanism) to reach PROVED status",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket should include an explicit decision: 'children 9b6b392ebcfe and bf146e9e3967 must be PROVED before this ticket's BUILDME crossing can proceed'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write proofs (test_sleep_cycle.py and/or test_rotation.py) validating mint(), token circulation, full rotation completion, and device sleep-cycle execution",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "The ticket should list: 'write test_sleep_cycle.py [covering mint() creates valid token] and test_rotation.py [covering full circle: mint → forward through each device → complete back to cairn]; these proofs are BUILDME teeth'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the trigger condition: 'probe fires when announce channel receives a message with [condition that proves the rotation completed: e.g., sender=cairn and cycle_id matches the original mint, or equivalent]'"
+      ]
+    }
+  ],
+  "log_reaches": [
+    {
+      "gap_step": "unlisted: write proofs (test_sleep_cycle.py and/or test_rotation.py) validating mint(), token circulation, full rotation completion, and device sleep-cycle execution",
+      "gap_kind": "assumes",
+      "log_index": 0,
+      "kind": "phase_write",
+      "overlap": 7
+    },
+    {
+      "gap_step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+      "gap_kind": "assumes",
+      "log_index": 0,
+      "kind": "phase_write",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: Add PROVES block declaring the proof teeth for BUILDME",
+      "gap_kind": "cannot_proceed",
+      "log_index": 0,
+      "kind": "phase_write",
+      "overlap": 6
+    },
+    {
+      "gap_step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+      "gap_kind": "step_absent",
+      "log_index": 0,
+      "kind": "phase_write",
+      "overlap": 4
+    },
+    {
+      "gap_step": "unlisted: write proofs (test_sleep_cycle.py and/or test_rotation.py) validating mint(), token circulation, full rotation completion, and device sleep-cycle execution",
+      "gap_kind": "unlisted",
+      "log_index": 0,
+      "kind": "phase_write",
+      "overlap": 4
+    },
+    {
+      "gap_step": "unlisted: write sleep_rotation_completion probe at cairn/devices/cairn/probes/sleep_rotation_completion.py that fires when a full token rotation completes",
+      "gap_kind": "unlisted",
+      "log_index": 0,
+      "kind": "phase_write",
+      "overlap": 4
+    }
+  ],
+  "log_reach_count": 6,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1590221,
+        "duration_ms": 189366,
+        "is_error": false,
+        "session_id": "1c8952fc-28cf-40cd-87be-f1f92675701a"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1259411,
+        "duration_ms": 127434,
+        "is_error": false,
+        "session_id": "1f255cc4-669f-4ea7-9059-20000155e540"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.0909971,
+        "duration_ms": 69948,
+        "is_error": false,
+        "session_id": "023b2f1f-c764-4986-91e2-9ab221545899"
+      }
+    ],
+    "cost_usd": 0.37596,
+    "duration_ms": 386748,
+    "rendered_chars": 55873,
+    "by": null
+  },
+  "divergence": null
+}

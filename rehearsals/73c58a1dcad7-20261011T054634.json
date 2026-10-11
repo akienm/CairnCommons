@@ -1,0 +1,780 @@
+{
+  "ticket": "73c58a1dcad7",
+  "record": "rehearsals/73c58a1dcad7-20261011T054634.json",
+  "at": "2026-10-11T05:46:34+00:00",
+  "pass": 1,
+  "clean": false,
+  "ticket_sha256": "6dbbe2d87a7af2b54183b2404824d85b4ad81bf6dbb699a82918036467ae8e46",
+  "ticket_sha256_at_read": "6dbbe2d87a7af2b54183b2404824d85b4ad81bf6dbb699a82918036467ae8e46",
+  "design_sha256": "5baa54cc4ca8d5b34783608eaae1f9b587350abd82604a96ed86fda1870ee716",
+  "reads": [
+    {
+      "ticket": "73c58a1dcad7",
+      "ticket_sha256": "6dbbe2d87a7af2b54183b2404824d85b4ad81bf6dbb699a82918036467ae8e46",
+      "read": 1,
+      "nodes": [
+        {
+          "step": "unlisted: install signal handlers to record SIGTERM/SIGINT/SIGHUP",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Install signal handlers (SIGTERM/SIGINT/SIGHUP) in serve() recording signal and sender pid before shutdown",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: wrap serve_forever to record exceptions",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Wrap serve_forever to catch and record exception type, message, and traceback",
+          "confidence": 0.9
+        },
+        {
+          "step": "unlisted: record bus verbs that trigger stops",
+          "state": "builds_under_assumption",
+          "assumption": "the bus has identifiable verb call sites that can trigger stops, and they can be instrumented to record the caller within serve()",
+          "would_settle": "Identify the specific bus verb(s) that can stop the process and instrument each call site to record verb and caller",
+          "confidence": 0.65
+        },
+        {
+          "step": "unlisted: implement finally block to append stop records",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "In every exit path of serve(), implement a finally block that appends one JSON line {at, pid, cause, detail, maxrss} to stops.jsonl",
+          "confidence": 0.95
+        },
+        {
+          "step": "unlisted: configure stops.jsonl path and 30-day rotation",
+          "state": "builds_under_assumption",
+          "assumption": "the 30-day logging retention system is implemented and the builder knows how to apply it when writing to ~/.cairn/devices/cairn/machines/bus/<instance>/stops.jsonl",
+          "would_settle": "Configure stops.jsonl at ~/.cairn/devices/cairn/machines/bus/<instance>/stops.jsonl with automatic 30-day rotation",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: measure and redirect bus stderr",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "Measure where bus stderr currently goes and redirect it to [specific readable location: log file path, journal, or other surface name]",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: write proof for four bus stop scenarios",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "Write proof under cairn/devices/cairn/machines/bus/proofs/ that starts a bus at a marked scratch home and triggers stops via SIGTERM, SIGINT, exception in serve_forever, and clean return, verifying each produces exactly one new stop record with correct cause and positive maxrss",
+          "confidence": 0.9
+        }
+      ]
+    },
+    {
+      "ticket": "73c58a1dcad7",
+      "ticket_sha256": "6dbbe2d87a7af2b54183b2404824d85b4ad81bf6dbb699a82918036467ae8e46",
+      "read": 2,
+      "nodes": [
+        {
+          "step": "unlisted: Install signal handlers for SIGTERM/SIGINT/SIGHUP and exception wrapper around serve_forever",
+          "state": "builds_under_assumption",
+          "assumption": "Signal handlers and exception handler communicate their cause to the finally block via module-level or closure variables (e.g., _exit_cause).",
+          "would_settle": "Specify how handlers communicate to finally block: 'Set _exit_cause={signal: sig_num, pid: siginfo.si_pid} in signal handler; set _exit_cause={exception: exc_type, detail: traceback} in exception handler; finally block reads _exit_cause and records it.'",
+          "confidence": 0.75
+        },
+        {
+          "step": "unlisted: Implement finally block to write stop record with JSON line {at, pid, cause, detail, maxrss}",
+          "state": "builds_under_assumption",
+          "assumption": "Stop record JSON fields are {at: ISO8601 timestamp string, pid: int, cause: string, detail: string or dict, maxrss: int (bytes from getrusage)}; file at ~/.cairn/devices/cairn/machines/bus/0/stops.jsonl (singleton instance); directory auto-created.",
+          "would_settle": "Specify JSON schema and serialization: '{at: ISO8601 string, pid: int, cause: \"signal SIGTERM\"|\"exception ValueError\"|\"clean\", detail: siginfo dict or traceback string, maxrss: int (bytes)}' to ~/.cairn/devices/cairn/machines/bus/0/stops.jsonl.",
+          "confidence": 0.7
+        },
+        {
+          "step": "unlisted: Implement 30-day rotation of stops.jsonl",
+          "state": "builds_under_assumption",
+          "assumption": "Cairn's '30-day logging retention' refers to an existing rotation mechanism or pattern; apply it to stops.jsonl (delete or archive entries older than 30 days).",
+          "would_settle": "Specify the rotation implementation: 'Use the 30-day retention pattern from [Cairn logging module] or implement: archive stops.jsonl daily with timestamp, delete archives older than 30 days.'",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: Measure bus stderr location and redirect to a readable surface",
+          "state": "builds_under_assumption",
+          "assumption": "Bus stderr is currently uncaptured; should be redirected to a readable log file in the bus home directory (~/.cairn/devices/cairn/machines/bus/0/).",
+          "would_settle": "Specify measurement and redirection: 'Measure where stderr currently goes (journalctl, /proc/pid/fd/2 check); if not captured, redirect to ~/.cairn/devices/cairn/machines/bus/0/stderr.log or similar readable surface.'",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: Write test proof file",
+          "state": "builds_as_written",
+          "assumption": "",
+          "would_settle": "",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "ticket": "73c58a1dcad7",
+      "ticket_sha256": "6dbbe2d87a7af2b54183b2404824d85b4ad81bf6dbb699a82918036467ae8e46",
+      "read": 3,
+      "nodes": [
+        {
+          "step": "unlisted: Install signal handlers in serve() to record SIGTERM/SIGINT/SIGHUP with sender pid",
+          "state": "builds_under_assumption",
+          "assumption": "Signal handler implementation patterns (accessing sender PID from siginfo.si_pid, storing for later) can be derived from Python's signal module; location in serve() is determinable from existing code",
+          "would_settle": "D1: Install handlers for SIGTERM/SIGINT/SIGHUP in serve() that capture signal name and sender pid using siginfo, storing for inclusion in stop record",
+          "confidence": 0.6
+        },
+        {
+          "step": "unlisted: Wrap serve_forever call with exception handler",
+          "state": "builds_under_assumption",
+          "assumption": "serve_forever can be wrapped in try/except to capture exception type/message/traceback; what happens after recording (re-raise vs exit) can be derived from graceful shutdown patterns",
+          "would_settle": "D2: Wrap serve_forever() to catch exceptions, record type/message/traceback, and shut down gracefully",
+          "confidence": 0.5
+        },
+        {
+          "step": "unlisted: Record verb-initiated bus stops with caller context",
+          "state": "cannot_proceed",
+          "assumption": "",
+          "would_settle": "D3: Identify which bus verb mechanism can stop the service, where that code lives, and how to record verb name and calling process information",
+          "confidence": 0.25
+        },
+        {
+          "step": "unlisted: Append JSON stop record to stops.jsonl on every exit path",
+          "state": "builds_under_assumption",
+          "assumption": "Bus instance number is available at runtime from environment/config; JSON format {at, pid, cause, detail, maxrss} with cause being signal name, exception type string, or literal 'clean' matches falsifier expectations; ~/.cairn/devices/cairn/machines/bus/{instance}/stops.jsonl path is writable",
+          "would_settle": "D4: On every exit path (finally block or at-exit), append JSON line {at: ISO timestamp, pid: self pid, cause: signal name/exception type/'clean', detail: detail string, maxrss: from resource.getrusage().ru_maxrss} to stops.jsonl",
+          "confidence": 0.72
+        },
+        {
+          "step": "unlisted: Measure current stderr routing and redirect to readable location",
+          "state": "builds_under_assumption",
+          "assumption": "stderr should be captured to a file under bus home; current destination ('the journal shows none of it') means systemd is not capturing it; redirect target follows bus home path conventions",
+          "would_settle": "D5: Measure where bus stderr currently lands; redirect it to ~/.cairn/devices/cairn/machines/bus/{instance}/bus.stderr or equivalent readable file",
+          "confidence": 0.4
+        },
+        {
+          "step": "unlisted: Write proofs exercising all bus exit paths",
+          "state": "builds_under_assumption",
+          "assumption": "'marked scratch home' initialization follows established proof patterns; spawning a bus and sending signals to it is standard in proofs; proof framework can verify stops.jsonl line count and contents after each exit scenario",
+          "would_settle": "D6: Write proof under cairn/devices/cairn/machines/bus/proofs/ that starts a bus at marked scratch home and exits each way (SIGTERM, SIGINT, exception in serve_forever, clean return), verifying each produces exactly one new stop record with correct cause and positive maxrss",
+          "confidence": 0.6
+        }
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "assumes",
+      "step": "unlisted: Append JSON stop record to stops.jsonl on every exit path",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "Bus instance number is available at runtime from environment/config; JSON format {at, pid, cause, detail, maxrss} with cause being signal name, exception type string, or literal 'clean' matches falsifier expectations; ~/.cairn/devices/cairn/machines/bus/{instance}/stops.jsonl path is writable"
+      ],
+      "would_settle": [
+        "D4: On every exit path (finally block or at-exit), append JSON line {at: ISO timestamp, pid: self pid, cause: signal name/exception type/'clean', detail: detail string, maxrss: from resource.getrusage().ru_maxrss} to stops.jsonl"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: configure stops.jsonl path and 30-day rotation",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the 30-day logging retention system is implemented and the builder knows how to apply it when writing to ~/.cairn/devices/cairn/machines/bus/<instance>/stops.jsonl"
+      ],
+      "would_settle": [
+        "Configure stops.jsonl at ~/.cairn/devices/cairn/machines/bus/<instance>/stops.jsonl with automatic 30-day rotation"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement 30-day rotation of stops.jsonl",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Cairn's '30-day logging retention' refers to an existing rotation mechanism or pattern; apply it to stops.jsonl (delete or archive entries older than 30 days)."
+      ],
+      "would_settle": [
+        "Specify the rotation implementation: 'Use the 30-day retention pattern from [Cairn logging module] or implement: archive stops.jsonl daily with timestamp, delete archives older than 30 days.'"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Implement finally block to write stop record with JSON line {at, pid, cause, detail, maxrss}",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Stop record JSON fields are {at: ISO8601 timestamp string, pid: int, cause: string, detail: string or dict, maxrss: int (bytes from getrusage)}; file at ~/.cairn/devices/cairn/machines/bus/0/stops.jsonl (singleton instance); directory auto-created."
+      ],
+      "would_settle": [
+        "Specify JSON schema and serialization: '{at: ISO8601 string, pid: int, cause: \"signal SIGTERM\"|\"exception ValueError\"|\"clean\", detail: siginfo dict or traceback string, maxrss: int (bytes)}' to ~/.cairn/devices/cairn/machines/bus/0/stops.jsonl."
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Install signal handlers for SIGTERM/SIGINT/SIGHUP and exception wrapper around serve_forever",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Signal handlers and exception handler communicate their cause to the finally block via module-level or closure variables (e.g., _exit_cause)."
+      ],
+      "would_settle": [
+        "Specify how handlers communicate to finally block: 'Set _exit_cause={signal: sig_num, pid: siginfo.si_pid} in signal handler; set _exit_cause={exception: exc_type, detail: traceback} in exception handler; finally block reads _exit_cause and records it.'"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Install signal handlers in serve() to record SIGTERM/SIGINT/SIGHUP with sender pid",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "Signal handler implementation patterns (accessing sender PID from siginfo.si_pid, storing for later) can be derived from Python's signal module; location in serve() is determinable from existing code"
+      ],
+      "would_settle": [
+        "D1: Install handlers for SIGTERM/SIGINT/SIGHUP in serve() that capture signal name and sender pid using siginfo, storing for inclusion in stop record"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Measure bus stderr location and redirect to a readable surface",
+      "reads": [
+        2
+      ],
+      "assumption": [
+        "Bus stderr is currently uncaptured; should be redirected to a readable log file in the bus home directory (~/.cairn/devices/cairn/machines/bus/0/)."
+      ],
+      "would_settle": [
+        "Specify measurement and redirection: 'Measure where stderr currently goes (journalctl, /proc/pid/fd/2 check); if not captured, redirect to ~/.cairn/devices/cairn/machines/bus/0/stderr.log or similar readable surface.'"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Measure current stderr routing and redirect to readable location",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "stderr should be captured to a file under bus home; current destination ('the journal shows none of it') means systemd is not capturing it; redirect target follows bus home path conventions"
+      ],
+      "would_settle": [
+        "D5: Measure where bus stderr currently lands; redirect it to ~/.cairn/devices/cairn/machines/bus/{instance}/bus.stderr or equivalent readable file"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: record bus verbs that trigger stops",
+      "reads": [
+        1
+      ],
+      "assumption": [
+        "the bus has identifiable verb call sites that can trigger stops, and they can be instrumented to record the caller within serve()"
+      ],
+      "would_settle": [
+        "Identify the specific bus verb(s) that can stop the process and instrument each call site to record verb and caller"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Wrap serve_forever call with exception handler",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "serve_forever can be wrapped in try/except to capture exception type/message/traceback; what happens after recording (re-raise vs exit) can be derived from graceful shutdown patterns"
+      ],
+      "would_settle": [
+        "D2: Wrap serve_forever() to catch exceptions, record type/message/traceback, and shut down gracefully"
+      ]
+    },
+    {
+      "kind": "assumes",
+      "step": "unlisted: Write proofs exercising all bus exit paths",
+      "reads": [
+        3
+      ],
+      "assumption": [
+        "'marked scratch home' initialization follows established proof patterns; spawning a bus and sending signals to it is standard in proofs; proof framework can verify stops.jsonl line count and contents after each exit scenario"
+      ],
+      "would_settle": [
+        "D6: Write proof under cairn/devices/cairn/machines/bus/proofs/ that starts a bus at marked scratch home and exits each way (SIGTERM, SIGINT, exception in serve_forever, clean return), verifying each produces exactly one new stop record with correct cause and positive maxrss"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: measure and redirect bus stderr",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Measure where bus stderr currently goes and redirect it to [specific readable location: log file path, journal, or other surface name]"
+      ]
+    },
+    {
+      "kind": "cannot_proceed",
+      "step": "unlisted: Record verb-initiated bus stops with caller context",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D3: Identify which bus verb mechanism can stop the service, where that code lives, and how to record verb name and calling process information"
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Append JSON stop record to stops.jsonl on every exit path",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: configure stops.jsonl path and 30-day rotation",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement 30-day rotation of stops.jsonl",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: implement finally block to append stop records",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Implement finally block to write stop record with JSON line {at, pid, cause, detail, maxrss}",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Install signal handlers for SIGTERM/SIGINT/SIGHUP and exception wrapper around serve_forever",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Install signal handlers in serve() to record SIGTERM/SIGINT/SIGHUP with sender pid",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: install signal handlers to record SIGTERM/SIGINT/SIGHUP",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: measure and redirect bus stderr",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Measure bus stderr location and redirect to a readable surface",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Measure current stderr routing and redirect to readable location",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: record bus verbs that trigger stops",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Record verb-initiated bus stops with caller context",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Wrap serve_forever call with exception handler",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: wrap serve_forever to record exceptions",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: write proof for four bus stop scenarios",
+      "reads": [
+        2,
+        3
+      ],
+      "present_in": [
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write proofs exercising all bus exit paths",
+      "reads": [
+        1,
+        2
+      ],
+      "present_in": [
+        [
+          3
+        ]
+      ]
+    },
+    {
+      "kind": "step_absent",
+      "step": "unlisted: Write test proof file",
+      "reads": [
+        1,
+        3
+      ],
+      "present_in": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Append JSON stop record to stops.jsonl on every exit path",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D4: On every exit path (finally block or at-exit), append JSON line {at: ISO timestamp, pid: self pid, cause: signal name/exception type/'clean', detail: detail string, maxrss: from resource.getrusage().ru_maxrss} to stops.jsonl"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: configure stops.jsonl path and 30-day rotation",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Configure stops.jsonl at ~/.cairn/devices/cairn/machines/bus/<instance>/stops.jsonl with automatic 30-day rotation"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement 30-day rotation of stops.jsonl",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify the rotation implementation: 'Use the 30-day retention pattern from [Cairn logging module] or implement: archive stops.jsonl daily with timestamp, delete archives older than 30 days.'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: implement finally block to append stop records",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "In every exit path of serve(), implement a finally block that appends one JSON line {at, pid, cause, detail, maxrss} to stops.jsonl"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Implement finally block to write stop record with JSON line {at, pid, cause, detail, maxrss}",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify JSON schema and serialization: '{at: ISO8601 string, pid: int, cause: \"signal SIGTERM\"|\"exception ValueError\"|\"clean\", detail: siginfo dict or traceback string, maxrss: int (bytes)}' to ~/.cairn/devices/cairn/machines/bus/0/stops.jsonl."
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Install signal handlers for SIGTERM/SIGINT/SIGHUP and exception wrapper around serve_forever",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify how handlers communicate to finally block: 'Set _exit_cause={signal: sig_num, pid: siginfo.si_pid} in signal handler; set _exit_cause={exception: exc_type, detail: traceback} in exception handler; finally block reads _exit_cause and records it.'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Install signal handlers in serve() to record SIGTERM/SIGINT/SIGHUP with sender pid",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D1: Install handlers for SIGTERM/SIGINT/SIGHUP in serve() that capture signal name and sender pid using siginfo, storing for inclusion in stop record"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: install signal handlers to record SIGTERM/SIGINT/SIGHUP",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Install signal handlers (SIGTERM/SIGINT/SIGHUP) in serve() recording signal and sender pid before shutdown"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: measure and redirect bus stderr",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Measure where bus stderr currently goes and redirect it to [specific readable location: log file path, journal, or other surface name]"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Measure bus stderr location and redirect to a readable surface",
+      "reads": [
+        2
+      ],
+      "would_settle": [
+        "Specify measurement and redirection: 'Measure where stderr currently goes (journalctl, /proc/pid/fd/2 check); if not captured, redirect to ~/.cairn/devices/cairn/machines/bus/0/stderr.log or similar readable surface.'"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Measure current stderr routing and redirect to readable location",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D5: Measure where bus stderr currently lands; redirect it to ~/.cairn/devices/cairn/machines/bus/{instance}/bus.stderr or equivalent readable file"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: record bus verbs that trigger stops",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Identify the specific bus verb(s) that can stop the process and instrument each call site to record verb and caller"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Record verb-initiated bus stops with caller context",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D3: Identify which bus verb mechanism can stop the service, where that code lives, and how to record verb name and calling process information"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Wrap serve_forever call with exception handler",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D2: Wrap serve_forever() to catch exceptions, record type/message/traceback, and shut down gracefully"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: wrap serve_forever to record exceptions",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Wrap serve_forever to catch and record exception type, message, and traceback"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: write proof for four bus stop scenarios",
+      "reads": [
+        1
+      ],
+      "would_settle": [
+        "Write proof under cairn/devices/cairn/machines/bus/proofs/ that starts a bus at a marked scratch home and triggers stops via SIGTERM, SIGINT, exception in serve_forever, and clean return, verifying each produces exactly one new stop record with correct cause and positive maxrss"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write proofs exercising all bus exit paths",
+      "reads": [
+        3
+      ],
+      "would_settle": [
+        "D6: Write proof under cairn/devices/cairn/machines/bus/proofs/ that starts a bus at marked scratch home and exits each way (SIGTERM, SIGINT, exception in serve_forever, clean return), verifying each produces exactly one new stop record with correct cause and positive maxrss"
+      ]
+    },
+    {
+      "kind": "unlisted",
+      "step": "unlisted: Write test proof file",
+      "reads": [
+        2
+      ]
+    }
+  ],
+  "log_reaches": [],
+  "log_reach_count": 0,
+  "meta": {
+    "model": "claude-haiku-4-5-20251001",
+    "attempts": [
+      {
+        "attempt": 1,
+        "read": 1,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.07498010000000001,
+        "duration_ms": 71019,
+        "is_error": false,
+        "session_id": "556a3e0d-2479-4dfd-b24c-d428ff9525c9"
+      },
+      {
+        "attempt": 1,
+        "read": 2,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.1359571,
+        "duration_ms": 174857,
+        "is_error": false,
+        "session_id": "69224ed4-127e-4651-b84d-68cc56491af4"
+      },
+      {
+        "attempt": 1,
+        "read": 3,
+        "schema_lacks": [],
+        "model": "claude-haiku-4-5-20251001",
+        "rc": 0,
+        "cost_usd": 0.0886831,
+        "duration_ms": 110482,
+        "is_error": false,
+        "session_id": "0c07030f-1d22-4ba7-aec5-37d24291c205"
+      }
+    ],
+    "cost_usd": 0.29962,
+    "duration_ms": 356358,
+    "rendered_chars": 13330,
+    "by": null
+  },
+  "divergence": null
+}
