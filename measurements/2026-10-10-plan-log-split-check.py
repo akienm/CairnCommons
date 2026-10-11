@@ -118,10 +118,14 @@ def reds() -> int:
         print(json.dumps({"error": "no after run recorded"}))
         return 2
     out, ok = {"cairn_commit": d.get("cairn_commit")}, True
-    for k in ("inspector", "test"):
-        b, a = set(d["before"][k]), set(d["after"][k])
-        out[k] = {"before": len(b), "after": len(a), "new": sorted(a - b), "gone": sorted(b - a)}
-        ok = ok and a <= b
+    for ph in ("after", "after_rename"):        # after_rename: the D26/D27 rename, when recorded
+        if ph not in d:
+            continue
+        into = out if ph == "after" else out.setdefault(ph, {})
+        for k in ("inspector", "test"):
+            b, a = set(d["before"][k]), set(d[ph][k])
+            into[k] = {"before": len(b), "after": len(a), "new": sorted(a - b), "gone": sorted(b - a)}
+            ok = ok and a <= b
     print(json.dumps(out))
     return 0 if ok else 1
 

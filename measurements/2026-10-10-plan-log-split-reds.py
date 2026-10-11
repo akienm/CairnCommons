@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 phase = sys.argv[1]
-assert phase in ("before", "after")
+assert phase in ("before", "after", "after_rename")  # after_rename: D26/D27, cairn moved with it
 OUT = Path("/home/akien/dev/src/CairnCommons/measurements/2026-10-10-plan-log-split-reds.json")
 S = Path(tempfile.gettempdir())
 cairn_sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
@@ -25,9 +25,10 @@ reds = sorted({m.group(2) for m in re.finditer(r"^\s+(RED|UNRUNNABLE)\s+(\S+)", 
 d = json.loads(OUT.read_text()) if OUT.exists() else {}
 if "cairn_commit" in d and d["cairn_commit"] != cairn_sha:
     print(f"!! cairn moved: before {d['cairn_commit']} now {cairn_sha}", file=sys.stderr)
-d["cairn_commit"] = cairn_sha
+d.setdefault("cairn_commit", cairn_sha)       # the before/after commit; each phase carries its own
 d.setdefault("what", "29569fca68a3 red sets before and after the plan/log split (D6)")
 d[phase] = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "commons_commit": cc_sha,
+            "cairn_commit": cairn_sha,
             "inspector": ins, "test": reds, "suite_exit": rc,
             "inspector_secs": round(t1 - t0), "suite_secs": round(time.time() - t1)}
 OUT.write_text(json.dumps(d, indent=2) + "\n")
