@@ -8,7 +8,7 @@ exits 0 on pass, 1 on fail, 2 when it cannot measure (no split commit yet):
                rename of D26/D27 — oldest first), every tickets/*.json (not '_') at its parent is
                reconstructed from the plan at that commit plus ONLY the log lines it added, and
                compared to the parent's doc; no plan at a split commit carries a key outside
-               plan_fields; and no plan at the last split commit is left with a blank or missing
+               plan_fields; and no plan at HEAD (the plans as they stand) has a blank or missing
                'intention' (the tooth Akien's rename ruling added, via the peer 2026-10-11).
   reds         measurements/2026-10-10-plan-log-split-reds.json: the inspector finding identities
                and the red proofs after the split are each a subset of those before.
@@ -78,9 +78,8 @@ def reconstruct() -> int:
         print(json.dumps({"error": "no commit whose message starts '29569fca68a3: split'"}))
         return 2
     runs = [_one(L, sp) for sp in sps]
-    last = sps[-1]
-    no_intention = [p[:12] for p in plans_at(last)
-                    if _blank(json.loads(blob(last, "tickets/" + p)).get("intention"))]
+    no_intention = [p[:12] for p in plans_at("HEAD")       # the plans as they stand
+                    if _blank(json.loads(blob("HEAD", "tickets/" + p)).get("intention"))]
     print(json.dumps({"commits": runs, "no_intention": no_intention}))
     bad = any(r["mismatches"] or r["extra_keys"] or r["missing"] or not r["tickets"] for r in runs)
     return 0 if not (bad or no_intention) else 1
