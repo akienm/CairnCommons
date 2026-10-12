@@ -10,7 +10,7 @@
   "how": "cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py: _root() (:82-89) takes root = Path(scratch_dir(\"stands-watch-fixture-probes-\")) and drops the atexit.register(shutil.rmtree, root, True) line, because the scratch door owns the sweep; import atexit, import shutil and import tempfile are removed where nothing else in the file uses them, and from cairn.tools.scratch.scratch import scratch_dir is added beside the other imports. cairn/tools/base/proofs gains one tooth file cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py that calls cairn.tools.scratch.scratch.bare_temp_reach (published by b4d39f3610f3) on cairn/tools/base and asserts it names nothing; proven_by is that file.",
   "falsifier": "Falsifier: Done when the new tooth, under PROVES for b2abaa16e590 key '1', calls bare_temp_reach on cairn/tools/base and asserts it names nothing: before the build it names exactly 1 line(s) (cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py:84), after it names nothing; every edited proof resealed green under bin/cairn test --netns with every tooth keeping its assertion. Hollow: revert the edited proof(s) to the pre-build commit and the new tooth reds. Wrong intent if a proof needs a temp path the scratch door cannot give. proven_by = cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because its live reading is its own sealed tooth: /home/akien/dev/src/cairn/cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py reds at cairn/tools/base on every reseal if a bare temp reach returns, and the corpus tooth in /home/akien/dev/src/cairn/cairn/tools/scratch/proofs/test_scratch.py reads the whole repo",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T100835-c64a739d4461.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T100835-f84d1d99032d.json",
@@ -20,5 +20,71 @@
     "open-9d2cfdaded45"
   ],
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py and one new file cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py. WHAT EXACTLY? _root() (:82-89) takes root = Path(scratch_dir(\"stands-watch-fixture-probes-\")) and drops the atexit.register(shutil.rmtree, root, True) line, because the scratch door owns the sweep; import atexit, import shutil and import tempfile are removed where nothing else in the file uses them, and from cairn.tools.scratch.scratch import scratch_dir is added beside the other imports. THE NEW TOOTH: PROVES = {'b2abaa16e590': {'1': 'test_no_proof_in_base_reaches_temp_bare'}}; the tooth imports bare_temp_reach at call time (so the hollow binds it then) and asserts bare_temp_reach(Path(__file__).resolve().parents[1]) == []. ORDER: commit the new tooth first and measure it red (it names the offender lines), then the proof edits, measured green. RUN: bin/cairn test --netns on each edited proof and the new tooth; seal with --seal. HOLLOW: bin/cairn test --hollow b2abaa16e590 --seal after PROVEME; it reverts the edited proof(s), not the tooth file. CLEARANCE: open-9d2cfdaded45, answered. ORDER IN THE QUEUE: after b4d39f3610f3 PROVED.",
-  "cast": "2026-10-08"
+  "cast": "2026-10-08",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The PROVES key is 'all', not '1': the falsifier carries no numbered clause marker, so cairn.tools.proof_coverage.clauses reads its one clause as 'all' (measured 2026-10-12), the precedent b4d39f3610f3 D17 set; the new file cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py declares PROVES = {'b2abaa16e590': {'all': 'test_no_proof_in_tools_base_reaches_temp_bare'}}, its one tooth calls cairn.tools.scratch.scratch.bare_temp_reach(REPO / 'cairn/tools/base') inside the tooth and asserts it returns [], and it was committed red first naming exactly 'proofs/test_a_watch_stands_while_its_probe_is_installed.py:84' — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "PROVES key",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:34:25+00:00"
+    },
+    {
+      "n": 2,
+      "text": "The build edits only cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py: _root() line 84 becomes 'root = scratch_dir(\"stands-watch-fixture-probes-\")' and line 85 (atexit.register(shutil.rmtree, root, True)) is deleted because the scratch door owns the sweep; 'import atexit', 'import shutil' and 'import tempfile' (lines 33, 35, 37) are removed because lines 84-85 were their only uses; 'from cairn.tools.scratch.scratch import scratch_dir' is added after the sys.path insert at line 43, beside the watchme_spec import; every tooth keeps its assertion — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "the build",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:34:25+00:00"
+    },
+    {
+      "n": 3,
+      "text": "The voyage: cross TICKETME->BUILDME at cairn/tools/base with why 'D2: tools/base routes its one bare temp reach through scratch_dir'; build D2; bin/cairn test the new tooth twice (green) and bin/cairn test cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py (green); commit; cross BUILDME->PROVEME with why 'the tooth is green twice and the routed proof is green' and proven_by cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py; bin/cairn test --seal both files; timeout 900 bin/cairn test --hollow b2abaa16e590 --seal reverts the routed proof and must read 0 hollow (Akien's answer to open-9d2cfdaded45: hollow = revert the edits); verdict; push both repos; PROVED with why 'tools/base's proofs reach the temp directory only through the scratch door' — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "the voyage",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:34:25+00:00"
+    },
+    {
+      "n": 4,
+      "text": "REPO in the new tooth file is that file's own module-level constant 'REPO = Path(__file__).resolve().parents[4]' (cairn/tools/base/proofs/<file> -> the repository root), already on disk in the red-first file; bare_temp_reach(REPO / 'cairn/tools/base') is called inside the tooth — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:46:03+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The crossings use the builder's cross helper over cairn.devices.cairn.machines.harbor_master.clearance.clear (component dir cairn/tools/base, target BUILDME then PROVEME, the whys D3 names, proven_by on PROVEME); 'bin/cairn test --seal' is run once per file, two commands — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:46:03+00:00"
+    },
+    {
+      "n": 6,
+      "text": "Re-measured at cairn d7fb1f1b, the line numbers D2 names hold: cairn/tools/base/proofs/test_a_watch_stands_while_its_probe_is_installed.py has 'import atexit' at 33, 'import shutil' at 35, 'import tempfile' at 37, the sys.path insert at 42-43, 'root = Path(tempfile.mkdtemp(prefix=\"stands-watch-fixture-probes-\"))' at 84 and 'atexit.register(shutil.rmtree, root, True)' at 85 — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:58:43+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The crossings are run with the one cross command, exactly: 'PYTHONPATH=. python3 -m cairn.tools.base.cross b2abaa16e590 BUILDME --actor cc --why \"D2: tools/base routes its one bare temp reach through scratch_dir\"' and, after the build is green, 'PYTHONPATH=. python3 -m cairn.tools.base.cross b2abaa16e590 PROVEME --actor cc --why \"the tooth is green twice and the routed proof is green\" --proven-by cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py'; 'bin/cairn test --seal <file>' runs once per file — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:58:43+00:00"
+    },
+    {
+      "n": 8,
+      "text": "The 'cross helper' D5 names is the module cairn.tools.base.cross (cairn/tools/base/cross.py, usage 'cairn cross ticket target --actor --why [--proven-by]'), invoked as the crossing line above spells out — CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-12T19:58:43+00:00"
+    }
+  ]
 }
