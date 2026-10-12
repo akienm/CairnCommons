@@ -1,6 +1,6 @@
 {
   "id": "trouble-drain-has-no-host-the-beat-backstop-is-prose",
-  "standing": "OPEN",
+  "standing": "CLEARED",
   "why": "The three trouble lanes (raise/clear/reconcile) each write one emission file and rely on TroubleShim.drain() to fold it. drain() has exactly two callers: receive_raise (the in-process poke, which needs _trouble_notifier wired in the SAME process) and on_pulse (the shim's beat). MEASURED 2026-09-08: `systemctl --user list-units 'cairn*'` lists two units, cairn-ground-loop and cairn-web-server; pgrep shows those two processes and nothing else. No process hosts the trouble shim, so on_pulse never fires, so the beat backstop the lane's docstrings promise ('the emission is on disk either way, and the beat drains it') does not exist. Emissions pile up until a hand runs the drain. Measured effect today: a hand-run drain folded 39 emissions spanning 22:41 to 00:48 UTC, including a reconcile that cleared 23 stale inspector findings which had been sitting in the operator inbox. The ground loop pulses PROBES (cairn/devices/<d>/probes/*.py), not shims, and a probe that drained would be a probe with authority — so this is not fixed by adding a probe, and not by a daemon (that reflex is drift). It wants the rack, which is the next rung of the ruled ladder and is not built.",
   "count": 1,
   "first_seen": "2026-09-09T00:58:30.659396+00:00",
@@ -28,7 +28,20 @@
   "notified": [
     "cc"
   ],
-  "cleared_by": [],
+  "cleared_by": [
+    {
+      "by": "cc",
+      "at": "2026-10-12T02:06:50.044041+00:00",
+      "what_changed": "3c62020b0d88 PROVED (cairn 811b47a3): every TroubleDevice read calls fold_pending first under an flock beside the watermark, so the next read drains with no beat host; verdict criterion 2 measured 'pending 0' after one TroubleDevice().live()",
+      "at_count": 1
+    }
+  ],
   "recurred_after_clear": null,
-  "prior_attempts": 0
+  "prior_attempts": 0,
+  "resolution": {
+    "by": "cc",
+    "at": "2026-10-12T02:06:50.044041+00:00",
+    "what_changed": "3c62020b0d88 PROVED (cairn 811b47a3): every TroubleDevice read calls fold_pending first under an flock beside the watermark, so the next read drains with no beat host; verdict criterion 2 measured 'pending 0' after one TroubleDevice().live()",
+    "at_count": 1
+  }
 }
