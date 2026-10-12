@@ -351,5 +351,31 @@
     "rendered_chars": 44570,
     "by": null
   },
-  "divergence": null
+  "divergence": {
+    "steps_unproved": [
+      "The read is the event that drains, not a daemon and not the beat: Akien ruled the ground loop is only a heartbeat (bae622881f03) and probes/mail fire on their events; a reader is the consumer asking. CC's call, per Akien 2026-10-09",
+      "The proof is cairn/devices/trouble/proofs/test_a_read_folds_what_is_pending.py, in the same plain-python tooth format as test_a_text_detail_still_lands.py, with three teeth: a_read_folds_what_is_pending (a pending raise in scratch roots folds on TroubleDevice(root, roots=...).live()), a_text_detail_does_not_wedge_the_read (a string-detail raise folds with occurrence text == the string and a later raise from the same source also folds), two_readers_fold_each_emission_once (two forked readers over 20 pending leave every count 1). It is written red first, before the read-path change. CC's call, per Akien 2026-10-09",
+      "_fold_lock(path) is a contextmanager: fcntl.flock LOCK_EX on drained.json.lock beside drained.json (never on the watermark itself: opening it to lock would create it empty, and an empty watermark reads as unreadable and refuses every later drain), and a threading.local set of held lock paths: a fold inside a fold in the same thread yields False and returns {'outcome': 'reentrant', 'folded': []} instead of waiting on itself. CC's call, per Akien 2026-10-09",
+      "The lock file is <watermark dir>/drained.json.lock, where the watermark dir is the directory holding TroubleShim's existing drained.json (shim._watermark_path().parent, WATERMARK_NAME, both unchanged by this build); the re-entrancy guard is one module-level threading.local whose 'held' attribute is a set of lock paths. CC's call, per Akien 2026-10-09",
+      "shim.py gains module-level fold_pending(device, roots=None): it builds TroubleShim(roots=roots, root=device._root), sets shim._device = device (the reading device is handed in, so a read never starts or registers a second device), and runs the walk under _fold_lock. The drain body stays in the shim as _drain_walk, which first sets _watermarks = None so the watermark is re-read inside the lock; drain() takes the same lock BEFORE _ensure_device, because starting the device reads introspect() -> live(), which would otherwise fold first and leave drain reporting nothing. CC's call, per Akien 2026-10-09",
+      "TroubleDevice.__init__(root=None, *, roots=None). A read folds only when root is None (the live store folds the live log homes) or roots is given (a scratch store folds the homes its caller names); a scratch root with no roots folds nothing, so it can never advance the live watermark. TroubleShim._start_device passes roots. CC's call, per Akien 2026-10-09",
+      "The fold hook is TroubleDevice.fold_pending(), called first in all(); live() and state() read through all(). There is no public get/show on TroubleDevice (measured: grep 'def get|def show' in cairn/devices/trouble is empty), and `cairn trouble get status` answers from the shim's cached last_known, so all() is the whole read path. A fold that raises prints 'trouble: fold before read failed: <type>: <text>' to stderr and the read answers from the store as it stands. CC's call, per Akien 2026-10-09",
+      "_drain_walk lists each source directory once with os.listdir and splits names by the '.<gate>.json' suffix, keeping only names above that gate's watermark. Measured 2026-10-11: three globs per source cost 1.2 s per read over ~280,000 log files; one listing costs 0.2 s with nothing pending. CC's call, per Akien 2026-10-09",
+      "Emission filenames begin with a fixed-width UTC stamp (YYYYMMDD.HHMMSS.micro), so 'above the watermark' is plain string comparison name > watermark, exactly the comparison the existing drain already uses; only the enumeration changes (one os.listdir per source instead of one glob per gate). CC's call, per Akien 2026-10-09",
+      "A legacy non-mapping detail folds as {'note': value}; the raise door refusing it going forward is ticket 906ceb765d0a. CC's call, per Akien 2026-10-09",
+      "The non-mapping detail rule is already built and PROVED by 114002d08c46: _fold carries a string detail as {'text': s} and any other non-dict as {'text': json.dumps(v)}. This ticket does not touch it; D2's {'note': ...} shape is read as {'text': ...}, and the proof's tooth 2 asserts the occurrence's 'text' is the string. CC's call, per Akien 2026-10-09",
+      "The falsifier's verdict clause reads 'after one read': `cairn trouble list` lists the device's verbs and reads no trouble (measured 2026-10-11), so the verdict instrument calls TroubleDevice().live() once and then counts emissions above their gate's watermark across every source; exit 0 means pending 0. CC's call, per Akien 2026-10-09",
+      "Wording: shim.py's receive_raise docstring says the ticket exists now, 'not when someone next asks' (was 'not on the next pulse'); the header gains a paragraph 'THE READ IS THE EVENT THAT DRAINS'; the charter's DELIVERY edge says 'the next read folds it' through `cairn artifact write`, with recompile_gate.sh poked at commit. on_pulse and receive_raise stay. CC's call, per Akien 2026-10-09"
+    ],
+    "teeth_unforeseen": [
+      "test_1",
+      "test_2",
+      "test_3"
+    ],
+    "matched": [],
+    "proofs": [
+      "cairn/devices/trouble/proofs/test_a_read_folds_what_is_pending.py"
+    ],
+    "at": "2026-10-12T02:06:17+00:00"
+  }
 }
