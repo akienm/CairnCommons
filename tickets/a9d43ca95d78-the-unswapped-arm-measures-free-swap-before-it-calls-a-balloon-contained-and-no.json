@@ -1,0 +1,73 @@
+{
+  "id": "a9d43ca95d78",
+  "title": "The unswapped arm measures free swap before it calls a balloon contained, and no balloon scope outlives its run",
+  "date": "2026-10-12",
+  "owner": "CC",
+  "owning_intention": "launchers/intention+why.json",
+  "intention": "The memory-scope proof's non-hollow arm cannot be fooled by a swap-starved host: it measures free swap first and reds as a named unmet precondition when there is not enough, and every balloon scope it starts is collected when it fails, so a proof run leaves nothing loaded in the user manager.",
+  "why": "Load-bearing and named: measured 2026-10-12, launchers/proofs/test_superclaude_memory_scope.py's arm 'the same cap WITHOUT MemorySwapMax does not contain' red stdout='' rc=-9 while Swap read 7971/8191 MiB used (220 MiB free; plasmashell held 3.3 GB of swap). After plasmashell restarted (3506 MiB free) the same proof sealed green. The balloon touches 400 MiB under a 100M MemoryMax, so escaping into swap needs at least ~300 MiB free; with less the kernel kills it and the arm cannot tell 'contained' from 'killed for lack of swap'. Second measured fault, same file: systemctl --user list-units shows 10 loaded/failed run-p*.scope units each running the balloon's python -c — _run_ballooned's systemd-run carries no CollectMode, the same shape f04d5ef26a48 fixed for superclaude.",
+  "traces_to": "Law 7 (a record of truth may not collapse 'killed for lack of swap' into 'contained'), Law 9 (a precondition unmet is a red, never a skip), Law 8 (the arm is what makes 4d96964532c2's proof non-hollow); the pattern is f04d5ef26a48's CollectMode mark.",
+  "how": "One file, launchers/proofs/test_superclaude_memory_scope.py: a swap reader and NEED_SWAP_MIB (D1), the arm moved into _unswapped_arm() measuring first (D2), CollectMode on every balloon (D3); the new proof (D4) is written red first (D5).",
+  "falsifier": "launchers/proofs/test_the_unswapped_arm_measures_swap_first.py under PROVES {'a9d43ca95d78': {'1','2'}}, loading launchers/proofs/test_superclaude_memory_scope.py by path at call time: (1) with its swap reader made to return 220 MiB and its balloon runner stubbed to the measured kill (stdout '' rc -9), the unswapped arm records a FAIL whose detail names 'precondition unmet' and the free and needed MiB, and never a PASS; with the reader at 4096 MiB the stubbed REACHED run passes; (2) every balloon run's systemd-run argv carries '-p CollectMode=inactive-or-failed' (read by stubbing the module's subprocess.run and capturing argv). Hollow: today's proof reds 1 (no swap reader, the arm reads the kill as a plain contain-fail with no precondition) and 2 (no CollectMode).",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/launchers/proofs/test_superclaude_memory_scope.py and the new proof's teeth are its falsifier",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261012T132905-9704945f05d0.json",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/cairn/launchers/proofs/test_superclaude_memory_scope.py",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "model": "opus",
+  "questions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "The swap reader is a new module-level _swap_free_mib() in launchers/proofs/test_superclaude_memory_scope.py returning SwapFree from /proc/meminfo in MiB (kB // 1024); NEED_SWAP_MIB = 512 sits beside _BALLOON with a one-line comment: the balloon touches 400 MiB under a 100M cap, so escaping needs ~300 MiB of swap, and 512 is that plus margin, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "The unswapped arm (the check named 'the same cap WITHOUT MemorySwapMax does not contain (why the swap limit is not optional)') moves into its own module-level function _unswapped_arm(), called from half_one_mechanism() where the arm stands today. It reads free = _swap_free_mib() first; if free < NEED_SWAP_MIB it calls check(<the same name>, False, f'precondition unmet: SwapFree {free} MiB < {NEED_SWAP_MIB} MiB needed — this arm cannot tell contained from killed for lack of swap') and returns without running the balloon; otherwise it runs _run_ballooned(['-p', 'MemoryMax=100M']) and checks 'REACHED' in stdout exactly as today. Never a PASS and never a skip when the precondition is unmet, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "_run_ballooned puts '-p', 'CollectMode=inactive-or-failed' into the systemd-run argv directly after '--quiet' and before the caller's limits, so a failed balloon scope is collected on exit (the mark f04d5ef26a48 gave launchers/superclaude). Nothing else in the file changes, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "The new proof is launchers/proofs/test_the_unswapped_arm_measures_swap_first.py with PROVES {'a9d43ca95d78': {'1': 'an_arm_short_of_swap_reds_as_precondition_unmet', '2': 'every_balloon_scope_is_collected_on_failure'}}. Each tooth loads the memory-scope proof by path INSIDE the tooth (importlib.util.spec_from_file_location under a private module name, never at import), so a reverted build reds a tooth rather than crashing. Tooth 1: set mod._swap_free_mib = lambda: 220 and mod._run_ballooned to a stub returning subprocess.CompletedProcess(args=[], returncode=-9, stdout='', stderr=''), clear mod.FAILURES, call mod._unswapped_arm(); pass iff exactly one FAILURES entry contains 'precondition unmet' and '220' and '512'; then set the reader to lambda: 4096 and the stub to stdout 'REACHED 400' rc 0, clear FAILURES, call again, pass iff FAILURES is empty. A missing _unswapped_arm or _swap_free_mib is a FAIL with the AttributeError as detail. Tooth 2: replace mod.subprocess with a namespace whose run(argv, **kw) records argv and returns CompletedProcess(argv, 0, 'REACHED 400', ''), call mod._run_ballooned(['-p', 'MemoryMax=100M']); pass iff the recorded argv contains the adjacent pair '-p', 'CollectMode=inactive-or-failed'. Teeth print PASS/FAIL lines in the tester's shape (name alone on the line, detail on the next) and main() returns 1 on any FAIL, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "The red-first measurement: the new proof is written and run against today's code BEFORE BUILDME and must read red on both teeth (tooth 1 AttributeError: no _unswapped_arm; tooth 2 no CollectMode pair); it is committed red, then the build turns it green, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "The voyage: commit the red proof; cross TICKETME->BUILDME at launchers (the component dir holding intention+why.json) with why 'D1-D3: the unswapped arm measures swap first and the balloon scopes are collected'; build D1-D3; run bin/cairn test launchers/proofs/test_the_unswapped_arm_measures_swap_first.py twice (green both) and bin/cairn test launchers/proofs (all green, with swap free >= 512 MiB as measured at the run); commit; cross BUILDME->PROVEME with why 'the proof is green twice and launchers/proofs is green' and proven_by=['launchers/proofs/test_the_unswapped_arm_measures_swap_first.py']; bin/cairn test --seal on the new proof and on test_superclaude_memory_scope.py; timeout 590 bin/cairn test --hollow a9d43ca95d78 --seal, which reverts test_superclaude_memory_scope.py (reds both teeth); verdict; push both repos; PROVED with why 'the unswapped arm reds a swap-short host as precondition unmet and no balloon scope outlives its run', CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "After PROVED, the standing balloon corpses are reset: for each loaded failed run-p*.scope in systemctl --user list-units whose description carries the balloon's 'for i in range(400)', run systemctl --user reset-failed <unit>; count them before and after and put both counts in the PROVED commit message. Units with any other command are left alone, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 8,
+      "text": "The ticket names no trouble of its own to clear; trouble validation-verdict-changed-test-superclaude-memory-scope is cleared after PROVED with a measured --what-changed naming the precondition red and the seal, CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "source": "cast"
+    }
+  ],
+  "cast": "2026-10-12"
+}
