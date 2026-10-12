@@ -10,7 +10,7 @@
   "how": "cairn/machines/rehearsal/rehearsal.py decide (:691) + retire (:715) + the CLI in bin/cmd/rehearse or the rehearsal __main__ (wherever --decide is parsed; add --supersedes N, repeatable). Implement by computing the new entry, then running retire's lack checks with the new line excluded from the 'still cites' scan, then writing once. Build after fad76bb5d1f5 (which moves retired lines to the ticket log) and use its retire path.",
   "falsifier": "cairn/machines/rehearsal/proofs/test_a_decision_supersedes_in_one_act.py under PROVES {'c70eeeef73ac': {'1','2'}} on a fixture ticket: (1) decide(step='prompt.md', line='... replaces D4 ...', supersedes=[4]) leaves exactly one new live line and D4 retired into it, in one write; (2) decide(step='D4', ...) refuses naming --supersedes and writes nothing. Existing test_a_superseded_decision_is_retired.py stays green. Hollow: dropping the retire from decide reds 1.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the fault is measured at /home/akien/dev/src/CairnCommons/troubles/rehearse-decide-appends-where-an-amend-was-meant.json and the trouble clears with a measured what_changed when this ticket is PROVED; a recurrence re-raises the same identity",
   "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/CairnCommons/troubles/rehearse-decide-appends-where-an-amend-was-meant.json",
   "task_or_ticket": "ticket",
@@ -22,6 +22,46 @@
     {
       "n": 1,
       "text": "Both remedies the trouble named: --supersedes for the act, and refusing a D<n>-shaped step label for the misreading. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "Clause 2 narrowed: decide() refuses a ^D\\d+$ step only when the line's text names that same D<n> as replaced or superseded, naming --supersedes; any other D<n> step lands as today. Census 2026-10-11: 1779/6398 gaps carry a D<n> step, 1039 decision lines landed at one, and the CLI's gap printout advises it. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "clause 2",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:03:02+00:00"
+    },
+    {
+      "n": 3,
+      "text": "'Names D<n> as replaced or superseded' is exactly: re.search(rf\"\\b(replac(?:es|ed|ing)|supersed(?:es|ed|ing))\\s+D{n}\\b\", text, re.I) or re.search(rf\"\\bD{n}\\b(?:'s)?\\s+(?:is\\s+|are\\s+)?(?:replaced|superseded)\\b\", text, re.I), n the step's digits. Measured 2026-10-11 over the live corpus: it catches 6 standing lines, all the 996668 shape (e.g. cff5a197b3c4 D32 'D1 IS REPLACED'), against 99 for a bare word-plus-id match. With supersedes given, this refusal does not apply. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "names as replaced",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:03:02+00:00"
+    },
+    {
+      "n": 4,
+      "text": "decide(ticket, step, line, *, by, root=None, supersedes=None): after the existing lacks, when supersedes is given, factor retire()'s lack checks into a module function _retire_lacks(doc, tk, want, by, because, into, exclude) that retire() also calls (exclude=None), and call it with the new entry's n as into and the new line excluded from the 'still cites' scan (the new line is not yet on the plan, so it is simply not in the scan); because is 'superseded by D<new n>'. Any lack raises Refused naming every lack and writes nothing. Then stamp each retired dict {by, at, because, into: new n}, ticket_log.append_log each (kind decision_retired, as retire()), remove them from the plan, append the new entry, and call _write_ticket ONCE. Without supersedes decide() behaves as today. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "check",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:03:02+00:00"
+    },
+    {
+      "n": 5,
+      "text": "__main__.py: p.add_argument('--supersedes', action='append', metavar='D<n>') (repeatable); valid only with --decide (else p.error); parsed with _decision_id; passed as supersedes=[...] to R.decide; on success it also prints 'retired D<n> into D<new>' per id. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "cli",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:03:02+00:00"
+    },
+    {
+      "n": 6,
+      "text": "The proof is written red-first at cairn: cairn/machines/rehearsal/proofs/test_a_decision_supersedes_in_one_act.py, PROVES {'c70eeeef73ac': {'1','2'}}; tooth 1 counts _write_ticket calls by swapping R._write_ticket (must be 1) and reads D4 off the log retired into D5; tooth 2 is (2a) the 996668 shape refused naming --supersedes with the ticket bytes unchanged and (2b) 'D4 holds: ...' at step D4 landing. Both red 2026-10-11. test_a_superseded_decision_is_retired.py stays green (its decide at step D3 does not name D3 as replaced). CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "proof",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:03:02+00:00"
     }
   ],
   "builder_notes": "WHERE: rehearsal.py decide :691, retire :715 (cite scan :749-751). Depends on fad76bb5d1f5.",

@@ -20,6 +20,30 @@
     {
       "n": 1,
       "text": "Only a leading cd clause is honoured; anything subtler (pushd, subshells) falls back to the hook cwd, which errs toward the current behaviour. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "artifactgate: verdict(tool_name, tool_input) keeps its signature; base = the dir of a leading ^\\s*cd\\s+(\\S+)\\s*(?:&&|;) clause (quotes stripped, expanduser + expandvars) when present, else tool_input.get('cwd'), else os.getcwd(); _main copies the payload's top-level cwd into tool_input['cwd'] when tool_input carries none. A relative base resolves against the cwd. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "resolve",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:11:03+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Redirect targets are every match of (?<![<0-9&])>>?\\s*(?!&)['\"]?([^\\s'\";&|)<>]+) in the command (2>&1 and >&2 are not targets); each target is expanduser+expandvars'd, joined to base unless absolute, resolved, and the Bash branch refuses iff door.locate(str(abs)) is not None for any target. _redirect_re and its text rule are removed from the Bash branch; the WRITE_VERBS co-occurrence branch and DOOR_FORMS are unchanged. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "redirect",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:11:04+00:00"
+    },
+    {
+      "n": 4,
+      "text": "bin/proofs/test_artifact_gate.py gained PROVES 'a55a82b351c6' {'1','2'}: (1) cd <tmp> && git show ... > cairn/machines/rehearsal/intention+why.json is allowed, and the hook with payload cwd=<tmp> exits 0; (2) the same redirect from the repo root, after cd ~/<repo>, after cd <abs repo>;, and to the absolute record path stay refused. The standing refused Bash list is handed cwd=_REPO_ROOT. Tooth 1 red-first 2026-10-11. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "proof",
+      "source": "rehearsal",
+      "at": "2026-10-12T03:11:04+00:00"
     }
   ],
   "builder_notes": "WHERE: bin/cmd/artifactgate _record_re :71, _redirect_re :87, verdict :91. Proof bin/proofs/test_artifact_gate.py.",
