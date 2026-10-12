@@ -1,0 +1,32 @@
+{
+  "id": "d6f0732afe8a",
+  "title": "The delete gate sees a delete written inside a quoted string",
+  "date": "2026-10-11",
+  "owner": "CC",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "bin/cmd/deletegate refuses a delete under the instance root however the deleting verb is quoted: a verb right after a quote or backtick counts as a command start, and the Python delete calls (os.remove, os.unlink, os.rmdir, Path.unlink, shutil.rmtree) count as deleting verbs.",
+  "why": "Measured 2026-10-11 (trouble deletegate-misses-rm-inside-a-quoted-string, /home/akien/dev/src/CairnCommons/troubles/deletegate-misses-rm-inside-a-quoted-string.json): bin/cmd/deletegate ALLOWS (rc 0) python3 -c \"import os; os.system('rm -rf ~/.cairn/foo')\" while the same delete after ';', after '(' or bare is REFUSED (rc 2). DESTRUCTIVE's left boundary is [\\s;&|(] only, so a verb right after a quote or backtick is invisible, and the Python spellings (os.remove, os.unlink, Path.unlink, shutil.rmtree) are not in it at all. Found by the builder proving 76d35575aead, which had to move its proof example to fit the regex. The gate's own comment: a gate narrower than its own defect is the hollow kind. ",
+  "traces_to": "CP6 (the instance root has no undo, so its guard must not be narrower than its defect) and Law 4 (the rule is enforced by the gate, not by care).",
+  "how": "bin/cmd/deletegate DESTRUCTIVE only: widen every left-boundary class from [\\s;&|(] to [\\s;&|('\"`] and add one alternative \\.(?:remove|unlink|rmdir|rmtree)\\s*\\( . The co-occurrence trade (verb anywhere + guarded form anywhere) and the data-heredoc strip from 76d35575aead are unchanged.",
+  "falsifier": "bin/proofs/test_delete_gate.py gains teeth under PROVES {'d6f0732afe8a': {'1','2','3'}}: (1) python3 -c \"import os; os.system('rm -rf ~/.cairn/foo')\" is REFUSED; (2) python3 -c \"import shutil; shutil.rmtree('/home/x/.cairn/foo')\" and a backtick-wrapped `rm ~/.cairn/x` are REFUSED; (3) every existing allow tooth (including 76d35575aead's cat heredoc note) stays ALLOWED. Hollow: today's DESTRUCTIVE reds 1 and 2.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/bin/cmd/deletegate and the proof's teeth are its falsifier",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261011T213126-4b361662d9e5.json",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/cairn/bin/cmd/deletegate",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Widen the boundary and add the Python spellings; do not parse quoting. The gate stays a co-occurrence trade, which already over-refuses rather than under. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "A false refusal this adds is answered with bin/cmd/trash, as every refusal is; no allow flag. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "cast": "2026-10-11",
+  "model": "opus"
+}
