@@ -20,6 +20,38 @@
     {
       "n": 1,
       "text": "Fix the proof, not the tester's matcher: exact id match is what keeps one run from killing another's units. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "launchers/proofs/test_a_unit_a_test_run_starts_is_the_runs.py gains _run_id(fallback) = os.environ.get('CAIRN_TESTER_TEST_ID') or fallback; teeth 1 and 2 hand the launcher _run_id(f'test-unitmark{_TAG}') and _run_id(f'test-unitmark{_TAG}w'), so inside a tester run the units carry the run's own id and the run's kill reaches them; bare, they keep the inner id. Tooth 4 still hands no id by design. launchers/superclaude and the tester are not touched. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "id",
+      "source": "rehearsal",
+      "at": "2026-10-12T04:35:22+00:00"
+    },
+    {
+      "n": 3,
+      "text": "New tooth test_a_killed_run_leaves_no_unit_of_its_own, PROVES {'d50d162c5428': {'all'}} (the falsifier is one clause): it runs `bin/cairn test --timeout 40` over this same file with CAIRN_LAUNCHERS_UNITMARK_HOLD=1 and the outer id stripped; under the hold, tooth 1 prints HELD and sleeps 600s so the inner run's timeout kills it before its finally. The tooth polls systemctl --user list-units every 0.5s for cairn-proof-unitmark-loop-* units not carrying its own pid, and asserts the inner run timed out, it saw a unit start, and every unit it saw is gone 4s after. Timeout 40 not 8, so the launcher surely starts the unit before the kill. Units it saw are added to _UNITS so the outer finally stops them whatever the verdict. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "tooth 5",
+      "source": "rehearsal",
+      "at": "2026-10-12T04:35:22+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Red-first 2026-10-11 with _run_id returning the inner id: tooth 5 FAIL — left after its kill=['cairn-proof-unitmark-loop-1792573-1'], the outer finally then stopped it. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "measured",
+      "source": "rehearsal",
+      "at": "2026-10-12T04:35:22+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Tooth 2's fixed 4s beat is replaced by _wait(_gone(web), 40): since efb670ff1dd8 the listener reaches its bus before binding, and under the scratch HOME that bus never answers, so the failed bind lands after the bus's 15s wait (measured 2026-10-11: web unit active at 4s, rc 1 at 15s). The finally also stops and reset-faileds any cairn-bus-* unit whose ExecStart names this proof's scratch; the bus's missing run marks are trouble a-bus-a-test-run-spawns-is-not-the-runs, out of this ticket (bus_client). CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "tooth 2",
+      "source": "rehearsal",
+      "at": "2026-10-12T04:41:42+00:00"
     }
   ],
   "builder_notes": "WHERE: launchers/proofs/test_a_unit_a_test_run_starts_is_the_runs.py _drive calls in teeth 1 (:146) and 2 (:163); runs.py _units_carrying :109-123 shows the exact-match rule.",
