@@ -429,5 +429,34 @@
     "rendered_chars": 64468,
     "by": null
   },
-  "divergence": null
+  "divergence": {
+    "steps_unproved": [
+      "Read the trouble's own record of whose hand cleared it, through the lane's verb, rather than teaching the artifact journal about requesters: after 4ddc9df3369e the trouble store leaves the commons and its journal altogether, so a journal-based read would go blind anyway. CC's call, per Akien 2026-10-09",
+      "The clears verb (trouble.py _handle_clears, 1c1b18bac2eb) answers {'clears': [row, ...]} where each row is a dict with keys id, standing, by, hand_class, at; block.py reads row['id'] and row['hand_class'] by key, and hand_class is already case-folded ('unknown' when no hand). CC's call, per Akien 2026-10-09",
+      "compile(journals, rules=None, clears=None) takes the clears rows {id, standing, by, hand_class, at}. Each row is applied in time order (at parsed with datetime.fromisoformat) before the first journal entry whose at is later, so a raise before the clear gets its disposition and an entry after it is judged against the taught row; rows later than every entry are applied after the walk. A row sets disposition cleared:<hand_class> on every raise whose identity_slug equals its id and, for hand_class akien only, adds 1 to slug_to_triple[id]'s row and appends to increments. The journal clear branch at block.py:164-176 is deleted: a journal clear is counted as an ordinary write of its own triple, whatever its caller class. CC's call, per Akien 2026-10-09",
+      "pulse gains ask=None, a zero-argument callable returning a bus reply; None means reach('trouble').request(sender='counting_block', to='trouble', verb='clears', why=..., body={'prefix': IDENTITY_PREFIX}) from cairn.tools.bus_client, imported at call time (measured live 2026-10-11: 0.6s, 8 rows). It is called once per pulse and the rows are reply['body']['clears']. Any exception from ask: the fold runs with clears=[], the table's increments is the string 'unknown', and table['clears_error'] carries the exception type and text; nothing else changes. CC's call, per Akien 2026-10-09",
+      "test_counting_block.py's World gains a clears list and World.pulse passes an ask returning {'body': {'clears': that list}}, so no World pulse reaches the live bus. Clause 3 keeps its journal clear entries and appends beside each one a clears row with the same id, hand_class akien or cc to match, and at equal to that journal entry's at; its assertions stand unchanged. The in-process CLI pulse of clause 4 keeps the default ask, because it is the live path. CC's call, per Akien 2026-10-09",
+      "The why passed to request() is the literal 'counting_block learns whose hand cleared each who-writes-what trouble (0539e85f8b2d)'; it is a required keyword of the bus request. IDENTITY_PREFIX is block.py:63's own module constant 'who-writes-what-', already defined there; nothing is imported for it. CC's call, per Akien 2026-10-09",
+      "compile() returns a dict whose 'raises' list holds one dict per raised trouble with keys including 'identity_slug' and 'disposition' (initially 'raised'); a clears row whose id equals a raise's identity_slug sets that raise's disposition to 'cleared:<hand_class>'. 'increments' is a list of {clear, at, triple, count}, and 'rows' maps triple -> count; an akien row adds 1 to rows[triple]. CC's call, per Akien 2026-10-09",
+      "pulse(roots, raiser, where, now, ask=None) calls (ask or _ask_clears)() exactly once, reads reply['body']['clears'] (missing reads as []), and passes that list to compile(read_journals(roots), clears=...). If the ask raises, compile runs with clears=[] and the table gets increments='unknown' and clears_error='<Type>: <text>'. CC's call, per Akien 2026-10-09",
+      "Clause 3 is the tooth an_akien_clearance_teaches_the_row_and_a_cc_clearance_does_not in proofs/test_counting_block.py. The World fixture gains a clears list and a clear(slug, hand_class, why) method that appends the journal clear AND a clears row {id, standing:'CLEARED', by, hand_class, at}; World.pulse passes ask=lambda: {'body': {'clears': list(self.clears)}}. Clause 3's two journal clears become w.clear(...) calls; its assertions are unchanged. CC's call, per Akien 2026-10-09",
+      "probes/raise_rate_falls.py: _measure carries table['increments'] as len() when it is a list and as the word 'unknown' otherwise (len('unknown') would read 7 increments), and _enough requires increments to be an int >= 1, so a pulse that could not reach the trouble lane never satisfies the probe. CC's call, per Akien 2026-10-09",
+      "Measured 2026-10-11: _runs_the_block matches the tester's own argv 'cairn/machines/counting_block/proofs' (no trailing slash, so the '/proofs/' exclusion misses it) when the directory is passed; the predicate is untouched by this build and the proofs are run by file. Out of this ticket's bounds; reported to Akien. CC's call, per Akien 2026-10-09",
+      "Today clause 3 writes each clear as w.append('CairnCommons', f'troubles/{block.slug(ident)}.json', 'clear', <hand>, <why>) — one journal entry, hand 'akien' then 'cc'. Each becomes w.clear(block.slug(ident), <hand>, <why>) with the same hand and why. World.clear(slug, hand_class, why) calls self.append(...) exactly as before and appends {'id': slug, 'standing': 'CLEARED', 'by': hand_class, 'hand_class': hand_class, 'at': self.t.isoformat(timespec='seconds')} to self.clears: 'by' is the hand_class argument and 'at' is the World's own clock, the same stamp the journal entry carries. CC's call, per Akien 2026-10-09",
+      "_ask_clears() is a module-level function in block.py, defined just above pulse(): it imports reach from cairn.tools.bus_client inside the function and returns reach('trouble').request(sender=COMPONENT, to='trouble', verb='clears', why=<D4's literal>, body={'prefix': IDENTITY_PREFIX}). CC's call, per Akien 2026-10-09",
+      "World.clear(self, slug: str, hand_class: str, why: str) -> None; 'by' and 'hand_class' are both the hand_class argument, 'at' is self.t.isoformat(timespec='seconds'), 'id' is slug, 'standing' is 'CLEARED'. CC's call, per Akien 2026-10-09",
+      "COMPONENT is block.py:55's existing module constant COMPONENT = 'counting_block'; _ask_clears uses it as sender and nothing new is defined. CC's call, per Akien 2026-10-09",
+      "D11 carries no build step: this build does not edit _runs_the_block, and its proofs are run by file path. The predicate's fix is not part of this ticket and goes to Akien in the session report, not to a ticket here. CC's call, per Akien 2026-10-09"
+    ],
+    "teeth_unforeseen": [
+      "test_1",
+      "test_2",
+      "test_3"
+    ],
+    "matched": [],
+    "proofs": [
+      "cairn/machines/counting_block/proofs/test_an_akien_hand_teaches_the_row.py"
+    ],
+    "at": "2026-10-12T02:07:29+00:00"
+  }
 }
