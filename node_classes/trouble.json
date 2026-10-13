@@ -1,0 +1,26 @@
+{
+  "class": "trouble",
+  "role": "node-class-definition",
+  "schema_version": "v0",
+  "what": "A system alarm: a failure that could not escalate anywhere else, held by the trouble lane until a recipient says the change was made.",
+  "why": "A trouble carries the same fields as a development ticket (node_class, schema_version, workflow_and_state) so one parser and one inspector read both, but its path is its own: it is born red when raised and turns green when cleared (Akien, open-178c9f4b537c: 'it's born red and becomes green when cleared'). Its liveness is its location, top of the store or cleared/ (ticket 4ddc9df3369e), and the cursor mirrors that location.",
+  "invariant": "proved + feeds-back-to-origin-on-failure (Laws 3 + 8)",
+  "workflow_versions": {
+    "v1": {
+      "path": [
+        "OPEN",
+        "CLEARED"
+      ],
+      "skippable_summons": [],
+      "free_summons": [],
+      "repair_summons": {},
+      "why": "Two states. A raise writes [OPEN] at the top of the store; a clear moves the file into cleared/ and writes [CLEARED]; a recurrence moves it back and writes [OPEN] again."
+    }
+  },
+  "dispositions": [],
+  "prove_gate": "the clear itself: a recipient's what_changed, recorded through the trouble device's door (cairn/devices/trouble/trouble.py).",
+  "extra_gates": "none — a trouble is a logging artifact and ages out of ~/.cairn/logs on the 30-day sweep.",
+  "kicks_back_on": "a recurrence after a clear: the file returns to the top with prior_attempts incremented and the clear that did not hold still on cleared_by.",
+  "provenance": "defined 2026-10-12 under ticket 4ddc9df3369e, on Akien's answer to open-178c9f4b537c.",
+  "members_derived_by": "find ~/.cairn/logs/cairn/0/troubletickets -name '*.json' 2>/dev/null"
+}
