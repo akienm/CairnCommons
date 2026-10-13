@@ -29,6 +29,46 @@
     {
       "n": 3,
       "text": "A call with arguments is always hot: last_known holds one snapshot per view with no arguments, so answering a parameterised read from it would be a wrong answer presented as cached. CC's call, per Akien 2026-10-12"
+    },
+    {
+      "n": 4,
+      "text": "The proof cairn/tools/base/proofs/test_a_view_takes_arguments.py is already written and committed before the build; the builder does NOT write or edit it. It drives the shim in a subprocess per command under a scratch HOME carrying a LIVE ground_loop liveness record, as test_root_verbs.py does. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "write the proof",
+      "source": "rehearsal",
+      "at": "2026-10-13T18:34:06+00:00"
+    },
+    {
+      "n": 5,
+      "text": "device.py gains 'import inspect' and a module-level function view_args_refusal(name, view_fn, args) -> str | None: None when args is empty or the view takes **kwargs; otherwise the first key not among the view's POSITIONAL_OR_KEYWORD/KEYWORD_ONLY parameter names returns 'view <name> takes no argument <key> — it takes: <names space-joined, or (none)>'. shim.py imports it from cairn.tools.base.device, so both mouths share one check. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "the shared signature check",
+      "source": "rehearsal",
+      "at": "2026-10-13T18:34:07+00:00"
+    },
+    {
+      "n": 6,
+      "text": "In _handle_get and _handle_show, after the 'no view' refusal: args = body.get('args') or {}; a non-dict args is refused accepted False with reason 'view <what> args must be a mapping, got <type>'; a view_args_refusal is refused accepted False with that reason; otherwise data = view_fn(**args). CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "the bus handlers",
+      "source": "rehearsal",
+      "at": "2026-10-13T18:34:07+00:00"
+    },
+    {
+      "n": 7,
+      "text": "In shim.py _resolve, right after rest/hot are computed: for verb show or get with tokens after the view name, those tokens are parsed into args and removed from rest; a token not starting with '--' (or exactly '--') returns exit 2 'cairn <dev>: <tok> is not an argument — arguments are --key value'; then hot = True. Before the root/device_views dispatch, view_args_refusal over device_views[name] (a root view counts as taking none) returns exit 2 'cairn <dev>: <refusal>'; the call becomes device_views[name](**args). CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "the command-line parse",
+      "source": "rehearsal",
+      "at": "2026-10-13T18:34:07+00:00"
+    },
+    {
+      "n": 8,
+      "text": "_resolve already picks root (status/settings) or device_views[name] before calling; the --key value parse runs for every show/get, and just before the existing 'if root is not None:' branch the check is view_args_refusal(name, (lambda: None) if root is not None else device_views[name], args) — so a root view is checked against a zero-parameter stand-in and refuses any argument (exit 2), while a device view is checked against its own signature and then called as device_views[name](**args). Root views' own code is unchanged. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "D7a root views versus device views in _resolve",
+      "source": "rehearsal",
+      "at": "2026-10-13T18:51:59+00:00"
     }
   ],
   "cast": "2026-10-13",
