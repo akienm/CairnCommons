@@ -29,6 +29,46 @@
     {
       "n": 3,
       "text": "95f8c561e742 builds only the librarian side and depends on this ticket; its build waits for this one at PROVED. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 4,
+      "text": "Write cairn/devices/inference_domain/proofs/test_the_domain_answers_for_its_calls.py FIRST (red first) with PROVES = {'b905340f8162': {'1','2','3','4'}} mapped to four teeth over a scratch table from domain.scratch_cache('calls_verb') seeded with three rows at known created times via store.write(table, domain.CACHE_OWNER, row): (1) 'calls' is in InferenceDomainDevice().declared_verbs() and some entry of the charter's public_interface contains 'calls'; (2) body {limit: 2} returns the two newest rows, newest first; (3) since = the oldest row's created returns the two later rows, since = the newest returns []; (4) json.dumps of the reply succeeds. The teeth call InferenceDomainDevice()._handle_calls({'body': body}, table=<scratch>). Measured 2026-10-13: all four red on today's code. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "Step 1: write the proof",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:23:08+00:00"
+    },
+    {
+      "n": 5,
+      "text": "In cairn/devices/inference_domain/domain.py, read_ticket gains the keyword 'since: str | None = None' (placed before table). After the existing sort (most recent first) and BEFORE the limit, when since is given, keep only rows whose created is strictly later than since. Both sides are compared as aware UTC datetimes: a small helper _as_utc(when) parses an ISO string with datetime.fromisoformat and takes a naive value as UTC. Canonical, table and conn behave as today. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "Step 2: add since to domain.read_ticket",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:23:08+00:00"
+    },
+    {
+      "n": 6,
+      "text": "In cairn/devices/inference_domain/device.py, declared_verbs adds 'calls': self._handle_calls. _handle_calls(self, envelope, *, table=None) reads body = envelope['body'] (or {}), limit = clamp(int(body.get('limit') or 100), 1, 1000), since = body.get('since'), calls domain.read_ticket(limit=limit, since=since, table=table when given), and returns {'calls': [_json_safe(row) for row in rows]}. It needs no connection of its own: read_ticket opens and closes one when conn is None, and the table defaults to domain.CACHE (inference_calls). The table kwarg is a proof seam only; the bus never passes it. A module-level _json_safe(value) walks dicts and lists, turning datetime/date into isoformat() and Decimal (cost) into float. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "Step 3: add the calls verb",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:23:08+00:00"
+    },
+    {
+      "n": 7,
+      "text": "Append ONE prose entry to public_interface in cairn/devices/inference_domain/intention+why.json (the existing 'cairn.devices.inference_domain.host' stays): \"bus verb 'calls' (ticket b905340f8162): body {limit (default 100, cap 1000), since (ISO)} -> {'calls': [inference_calls rows, most recent first, JSON-safe]}; the domain does not know who asks\". Written through bin/cairn artifact write --verb charter, then cairn/tools/intentions_model_compiler/recompile_gate.sh in the same act. Prose entries are allowed in public_interface. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "Step 4: the charter names the verb",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:23:09+00:00"
+    },
+    {
+      "n": 8,
+      "text": "The verb takes no connection or table from the caller: read_ticket opens its own connection when conn is None and reads domain.CACHE (inference_calls) by default; canonical is not used by this verb (recency order, bounded by limit and since). See Step 3. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:23:09+00:00"
     }
   ],
   "cast": "2026-10-13",
