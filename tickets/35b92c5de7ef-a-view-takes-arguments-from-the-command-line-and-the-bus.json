@@ -1,0 +1,36 @@
+{
+  "id": "35b92c5de7ef",
+  "title": "A view takes arguments from the command line and the bus",
+  "date": "2026-10-13",
+  "owner": "CC",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cairn <device> show|get <view> --key value ... passes the pairs to the view as keyword arguments, over the bus, so any read a device offers is reachable from the command line: show renders it for a human, get returns JSON for a machine.",
+  "why": "Akien 2026-10-13: \"cairn's intention is to be the command line access to the bus\" and \"it would be: cairn inference_domain show/get calls --limit 20 --- show for me (formatted), get for you (json)\". Measured 2026-10-13: cairn <device> show/get already resolves over the bus (shim.py cli_main -> RemoteBus().verbs), but a view is called with no arguments: shim.py _resolve calls device_views[name]() and device.py _handle_get/_handle_show call view_fn(). So a parameterised read (the inference calls, bounded by limit and since) cannot be a view, and b905340f8162 had to make it a bus verb the command line cannot reach ('no such verb calls'). ",
+  "traces_to": "RULE 1 and the cairn command's intention as Akien stated it 2026-10-13 (the command line access to the bus: every read a device offers is reachable from a terminal through the device's public interface), and Law 1 (one resolver for every device instead of a script per read).",
+  "how": "cairn/tools/base only. (a) shim.py _resolve: after the view name, parse the remaining tokens as --key value pairs (a bare --flag is value 'true'; a token not starting with -- is exit 2 naming it) into args (keys with - folded to _). (b) Check args against inspect.signature(view_fn): a key the view does not declare is exit 2, text 'cairn <dev>: view <name> takes no argument <key> — it takes: <params or (none)>'. (c) With args, call view_fn(**args) (values stay strings; the view coerces). A parameterised call is never answered from last_known: args imply hot (the device is woken as the hot modifier does). (d) device.py _handle_get/_handle_show read envelope body 'args' (dict, default {}), apply the same signature check (accepted False, reason naming the key and the params) and call view_fn(**args). No-argument calls are unchanged.",
+  "falsifier": "cairn/tools/base/proofs/test_a_view_takes_arguments.py under PROVES {'35b92c5de7ef': {'1','2','3','4','5'}} over an inline device whose view echo(limit=None) returns {'limit': limit} and whose view bare() takes none: (1) shim resolve(['get','echo','--limit','3']) is exit 0 and its JSON data is {'limit': '3'}; (2) resolve(['show','echo','--limit','3']) is exit 0 and its text is _render_view('echo', {'limit': '3'}); (3) resolve(['get','echo','--bogus','1']) is exit 2 and the text names bogus and limit; (4) resolve(['get','bare','--limit','1']) is exit 2; (5) device._handle_get({'body': {'what': 'echo', 'args': {'limit': '3'}}}) returns accepted True with data {'limit': '3'}. Hollow: today's shim.py and device.py red 1, 2, 3 and 5.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/cairn/tools/base/shim.py and the proof's teeth are its falsifier",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261013T101830-65c51e50387d.json",
+  "intent_berth": "none, because Akien specified it in conversation 2026-10-13, his words recorded verbatim at /home/akien/dev/src/CairnCommons/ideas/2026-10-13-so-lets-talk-first-about-the-cairn.json and quoted in why",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "show is formatted for Akien, get is JSON for Claude, per Akien 2026-10-13 verbatim (in why). Arguments ride both identically."
+    },
+    {
+      "n": 2,
+      "text": "Arguments are --key value strings and the view coerces: the resolver stays ignorant of each view's types, and a view's signature is its argument contract. CC's call, per Akien 2026-10-12"
+    },
+    {
+      "n": 3,
+      "text": "A call with arguments is always hot: last_known holds one snapshot per view with no arguments, so answering a parameterised read from it would be a wrong answer presented as cached. CC's call, per Akien 2026-10-12"
+    }
+  ],
+  "cast": "2026-10-13",
+  "model": "opus"
+}
