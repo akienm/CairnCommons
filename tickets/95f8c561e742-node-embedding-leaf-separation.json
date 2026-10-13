@@ -108,6 +108,118 @@
       "step": "dependency b905340f8162",
       "source": "rehearsal",
       "at": "2026-10-13T14:07:57+00:00"
+    },
+    {
+      "n": 9,
+      "text": "The re-crossing, in order, and nothing else: (1) the hollow seal 'cairn test --hollow 95f8c561e742 --seal' run on 2026-10-13 and its seal committed; (2) cross BUILDME --why 'FIXME 1 answered: Akien ruled no WATCHME; the probe is deleted (859425e8)'; (3) commit records; (4) cross PROVEME --proven-by cairn/devices/librarian/proofs/test_librarian_trees.py --why 'build stands at a9458714; test_librarian_trees.py green 2026-10-13'; (5) PROVED, answered by the standing verdict bb1aba9cbb19 (no new verdict is written). No WATCHME is crossed: the workflow carries none. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "FIXME 1",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:25:46+00:00"
+    },
+    {
+      "n": 10,
+      "text": "New file cairn/devices/librarian/ingest.py holds the logic as plain functions: call_id(row) -> str, answer_text(row) -> str | None, and ingest(ask, embed, *, table='librarian_inference_calls', conn=None) -> dict. ask(body) -> {'calls': [...]} and embed(text) -> list[float] are passed in, so the module imports neither the bus nor inference_domain; it imports only trees (deposit, NODES_TABLE, DepositRefused) and db_domain's store. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "ingest module",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:52+00:00"
+    },
+    {
+      "n": 11,
+      "text": "inference_calls has no id column (measured 2026-10-13: read_ticket rows carry canonical, verdict, answer, falsifier, horizon, provenance, cost, created). call_id(row) = sha256(canonical + '|' + created)[:16] hex, computed by the librarian from the row the 'calls' verb returns; b905340f8162 is not touched. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "call_id",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:52+00:00"
+    },
+    {
+      "n": 12,
+      "text": "A row is resolved when verdict == 'miss' and answer.body.response is a non-empty string (a generate call the host answered). A 'hit' re-serves an answer already ingested at its miss, a 'refused' row has answer NULL, and an embed row carries a vector but no answer text: all three deposit nothing and are counted in the result under skipped. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "which rows are resolved",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:52+00:00"
+    },
+    {
+      "n": 13,
+      "text": "A generate row carries no embedding, so the vector is one embed(text) through the inference door: the device handler passes embed_via_bus(reach('inference_domain')) from cairn/devices/librarian/live.py:103 (imported inside the handler, since live.py imports device.py). CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "the vector",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:52+00:00"
+    },
+    {
+      "n": 14,
+      "text": "Each resolved row: trees.deposit(content=answer_text(row), vector=embed(text), provenance={'source': 'inference_calls', 'call_id': call_id(row), 'call_created': row['created']}, tree='inference_calls', table=<the table arg>, conn=conn). A DepositRefused (content under the 8-char floor) is caught and counted under skipped['refused'], never raised. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "deposit call",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:52+00:00"
+    },
+    {
+      "n": 15,
+      "text": "Before depositing, ingest reads cairn_nodes for provenance->>'call_id' = cid OR provenance->'attestations' @> [{'call_id': cid}] (the second form catches a call whose answer text matched an older node and landed as an attestation). A hit skips the row (skipped['already']). So a second ingest over the same calls writes no node, no embedding, no leaf and no attestation. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "idempotence on call_id",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:52+00:00"
+    },
+    {
+      "n": 16,
+      "text": "ingest asks ask({'limit': 1000, 'since': S}) where S = the max provenance->>'call_created' over cairn_nodes rows whose provenance source is 'inference_calls' (or attestations carrying one); none yet means since is omitted. S is derived from the nodes themselves: no high-water file, no instance-space state. Rows at exactly S are dropped by the verb and were ingested already. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "since",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
+    },
+    {
+      "n": 17,
+      "text": "LibrarianDevice gains declared_verbs() = {**super().declared_verbs(), 'ingest': self._handle_ingest}. _handle_ingest(envelope) builds ask = lambda body: bus.request(sender='librarian', to='inference_domain', verb='calls', why='librarian ingest', body=body)['body'] and embed = embed_via_bus(bus), with bus = reach('inference_domain'), and returns ingest(ask, embed)'s dict {'asked', 'deposited', 'skipped': {'unresolved', 'already', 'refused'}}. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "the bus verb",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
+    },
+    {
+      "n": 18,
+      "text": "The trigger is the 'ingest' bus verb: whoever wants the calls in the tree asks, and the ask is the event. No poller, no beat, no timer, and inference_domain sends nothing (D2). CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "trigger",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
+    },
+    {
+      "n": 19,
+      "text": "cairn/devices/librarian/intention+why.json public_interface (empty today) gains one line through the artifact door with verb charter, then recompile_gate.sh: \"bus verb 'ingest' (ticket 95f8c561e742): asks inference_domain 'calls' since the newest ingested call and deposits each resolved generate answer as a node with provenance {source: inference_calls, call_id}; idempotent on call_id\". CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "charter",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
+    },
+    {
+      "n": 20,
+      "text": "Three new teeth in cairn/devices/librarian/proofs/test_librarian_trees.py, added to main()'s checks list, over a scratch leaf _t('ingest') and a fake ask returning three rows shaped as the 'calls' verb returns them (JSON-safe, created ISO, content carrying _RUN): (1) test_an_inference_call_becomes_one_node: one resolved row yields exactly one cairn_nodes row whose provenance call_id == call_id(row), one cairn_embeddings row for that node and one leaf row; the refused row and the hit row yield no node carrying their call_id. (2) test_a_second_ingest_adds_nothing: a second ingest over the same rows returns deposited 0 and the node's provenance, the embeddings count and the leaf count are unchanged. (3) test_ingest_asks_and_never_imports: the AST of ingest.py and device.py imports nothing under cairn.devices.inference_domain, and LibrarianDevice().declared_verbs() carries 'ingest'. embed in the teeth is a deterministic 768-dim vector function, so no host is touched. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "teeth",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
+    },
+    {
+      "n": 21,
+      "text": "The falsifier is one unnumbered clause list, so PROVES = {'95f8c561e742': {'all': 'test_an_inference_call_becomes_one_node'}} as a module-level dict in test_librarian_trees.py. The other clauses map to standing teeth that run in the same main(): three tables -> test_a_node_lands_and_is_born_a_hypothesis; the nearest() join -> test_nearest_ranks_by_proximity_and_derives_the_path; suites exit 0 -> the seal itself; charters -> the librarian charter already describes the three-table schema (measured 2026-10-13). CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "PROVES",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
+    },
+    {
+      "n": 22,
+      "text": "Order: (1) b905340f8162 PROVED first (D3). (2) cross BUILDME. (3) write the teeth, run red-first against today's code. (4) write ingest.py and the device verb. (5) charter line plus recompile_gate. (6) run the proof twice green and commit '95f8c561e742: build — the librarian ingests the inference calls'. (7) seal, PROVEME --proven-by cairn/devices/librarian/proofs/test_librarian_trees.py, hollow seal, PROVED, rehearse --proved. (8) live fire: ask the librarian 'ingest' over the bus once and record the counts. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+      "by": "cc",
+      "step": "build order",
+      "source": "rehearsal",
+      "at": "2026-10-13T14:27:53+00:00"
     }
   ],
   "build_commits": [
