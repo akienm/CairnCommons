@@ -1,0 +1,36 @@
+{
+  "id": "217c82fe7b57",
+  "title": "A ticket built before hex ids names its build commits for the hollow",
+  "date": "2026-10-13",
+  "owner": "CC",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A ticket whose build commits do not carry its id can name them in a build_commits field, and the hollow counts each named commit as a build commit exactly when it resolves and changes a measured writes_to file, so an August build is anchored before itself and a wrong name reds instead of greening.",
+  "why": "Measured 2026-10-13 by the builder: hollow.py _build_commits (:215) finds a build only by `git log -F --grep=<hex id>` over the writes_to files, and _anchor_without_a_crossing (:316) also by subjects '^<hex>: build'. Tickets built before hex ids (2026-09-01, b76256f6) name neither: d48d54dccde6's commits name the old slug (3b11ccd2) and its sieve most likely landed in auto-commit cfdc7ced 'saveslate boundary: auto-commit cairn'; 95f8c561e742's build commits 9bf34b67, a6857240, a9458714 name no id at all. So the grep finds 0 commits, a fresh BUILDME puts the journal anchor AFTER the build, hollow reverts nothing and reds: every such ticket, most of the BUILT-but-stale-cursor queue, is unsealable. Grepping the title slug was weighed and rejected: an auto-commit carries no slug, and a slug is prose that other commits can contain. ",
+  "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build could not pass: the pre-hex-id builds become measurable rather than exempt) and Law 3 (the anchor is a named, checked measurement, not inference from prose).",
+  "how": "cairn/devices/tester/hollow.py only. A helper _named_build_commits(ticket, files, repo_root) reads ticket.get('build_commits') (absent or [] = []); for each entry: `git rev-parse --verify -q <sha>^{commit}` must resolve, and `git show --format= --name-only <sha>` must intersect files (the measured writes_to, after _classify); either failure raises HollowUnmeasurable naming the sha and which test failed. It returns [(full_sha, committer_iso)]. _build_commits' callers union it in: build_anchor's `builds` and _anchor_without_a_crossing's `seen` both add the named commits (dedupe by sha, sort by time), so the existing first-build-commit / ancestry / bound logic is unchanged. Docstring of build_anchor gains one paragraph citing this ticket.",
+  "falsifier": "cairn/devices/tester/proofs/test_a_ticket_names_its_build_commits.py under PROVES {'217c82fe7b57': {'1','2','3','4'}} over a scratch git repo with a writes_to file w.py whose build commit message names no ticket id: (1) without build_commits, build_anchor (crossing absent) raises HollowUnmeasurable (today's behaviour, kept); (2) with build_commits=[<that sha>], the anchor is that commit's parent and anchor_first_build is the sha; (3) a named sha that changes no writes_to file raises HollowUnmeasurable naming the sha; (4) a named sha that does not resolve raises HollowUnmeasurable. Hollow: today's hollow.py reds 2, 3 and 4.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/cairn/devices/tester/hollow.py and the proof's teeth are its falsifier",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261013T024200-c608881d8fe8.json",
+  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/cairn/cairn/devices/tester/hollow.py",
+  "task_or_ticket": "ticket",
+  "children": [],
+  "dependencies": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "A ticket field naming the commits, verified to change a measured file, rather than grepping the title slug: an auto-commit carries no slug and a slug can match unrelated commits. Falsifiable both ways: a too-late name leaves the build in place and the hollow reds; a name that changed no measured file is refused. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 2,
+      "text": "build_commits is written onto a ticket through the artifact door (verb cast) with a decision line saying how the commit was measured (git log -S, blame, or the diff of an auto-commit); hollow only verifies what is named. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 3,
+      "text": "The named commits are UNIONED with the grep, never replace it, so a ticket whose later repair commits do name its id still bounds and anchors as today. CC's call, per Akien 2026-10-09"
+    }
+  ],
+  "cast": "2026-10-13",
+  "model": "opus"
+}
