@@ -226,5 +226,72 @@
     "rendered_chars": 58979,
     "by": null
   },
-  "divergence": null
+  "divergence": {
+    "steps_unproved": [
+      "git_env() is defined at cairn/tools/scratch/scratch.py (def git_env, the _GIT_LOCATION_VARS scrub), not in hollow.py — hollow.py imports it from there. cairn.tools.scratch.scratch is in the scratch tool's declared public_interface, so device.py imports it with 'from cairn.tools.scratch.scratch import git_env' beside its other top-level imports (RULE 1 satisfied by the declared door, no second list). CC's call, per Akien 2026-10-12 'approved thru PROVED'"
+    ],
+    "teeth_unforeseen": [],
+    "matched": [
+      [
+        "D1 (the /sorted builder_check): A Haiku builder needs: (a) the one place — _env_pinned_to in cairn/devices/tester/device.py; (b) reuse hollow.git_env()'s scrub (read it at cairn/devices/tester/hollow.py, def git_env) rather than a second list — same component, so importing it is inside RULE 1; (c) proof at cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py: a scratch outer repo whose pre-commit hook runs the tester over a tiny subject proof that does `git init` + `git commit` in its own tmp dir; teeth T1-T3; (d) a commit touching device.py triggers the ~40-min reseal of tester proofs — budget for it.",
+        "test_plain_commit_hook_seals_green"
+      ],
+      [
+        "D1 (the /sorted builder_check): A Haiku builder needs: (a) the one place — _env_pinned_to in cairn/devices/tester/device.py; (b) reuse hollow.git_env()'s scrub (read it at cairn/devices/tester/hollow.py, def git_env) rather than a second list — same component, so importing it is inside RULE 1; (c) proof at cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py: a scratch outer repo whose pre-commit hook runs the tester over a tiny subject proof that does `git init` + `git commit` in its own tmp dir; teeth T1-T3; (d) a commit touching device.py triggers the ~40-min reseal of tester proofs — budget for it.",
+        "test_path_commit_hook_seals_green"
+      ],
+      [
+        "In cairn/devices/tester/device.py _env_pinned_to, replace 'env = dict(os.environ)' with 'env = git_env()'; the PYTHONPATH pin below it is unchanged; add one docstring paragraph naming ticket 25ee4866642e and the a135 measurement (a git commit -- <paths> hook's GIT_INDEX_FILE reached the subject). Nothing else in the tester changes: reseal.staged_files keeps the caller's index on purpose and is out of bounds. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_plain_commit_hook_seals_green"
+      ],
+      [
+        "In cairn/devices/tester/device.py _env_pinned_to, replace 'env = dict(os.environ)' with 'env = git_env()'; the PYTHONPATH pin below it is unchanged; add one docstring paragraph naming ticket 25ee4866642e and the a135 measurement (a git commit -- <paths> hook's GIT_INDEX_FILE reached the subject). Nothing else in the tester changes: reseal.staged_files keeps the caller's index on purpose and is out of bounds. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_path_commit_hook_seals_green"
+      ],
+      [
+        "The proof is pre-written and committed red-first (6b9ee94c) at cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py: three teeth (T1 bare, T2 plain-commit pre-commit hook, T3 git commit -- <path> hook), each running a subject that git-inits and commits in its own tmp dir under _env_pinned_to; PROVES {'25ee4866642e': {'all': 'test_path_commit_hook_seals_green'}} because the falsifier parses as one clause. Today T1/T2 green and T3 red. The builder does not edit it. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_bare_call_seals_green"
+      ],
+      [
+        "The proof is pre-written and committed red-first (6b9ee94c) at cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py: three teeth (T1 bare, T2 plain-commit pre-commit hook, T3 git commit -- <path> hook), each running a subject that git-inits and commits in its own tmp dir under _env_pinned_to; PROVES {'25ee4866642e': {'all': 'test_path_commit_hook_seals_green'}} because the falsifier parses as one clause. Today T1/T2 green and T3 red. The builder does not edit it. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_plain_commit_hook_seals_green"
+      ],
+      [
+        "The proof is pre-written and committed red-first (6b9ee94c) at cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py: three teeth (T1 bare, T2 plain-commit pre-commit hook, T3 git commit -- <path> hook), each running a subject that git-inits and commits in its own tmp dir under _env_pinned_to; PROVES {'25ee4866642e': {'all': 'test_path_commit_hook_seals_green'}} because the falsifier parses as one clause. Today T1/T2 green and T3 red. The builder does not edit it. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_path_commit_hook_seals_green"
+      ],
+      [
+        "Every command runs from ~/dev/src/cairn with the system python3 (PYTHONPATH=. python3 ...) or bin/cairn. Cross BUILDME (PYTHONPATH=. python3 -m cairn.tools.base.cross 25ee4866642e BUILDME --actor cc --why ...), build, then 'git add -- cairn/devices/tester/device.py', check git diff --cached holds only it, plain 'git commit' as '25ee4866642e: build — ...' (never git commit -- <paths>, never -a); the pre-commit hook reseals the tester proofs (~40 min). Run the proof twice, seal it (bin/cairn test --seal cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py), cross PROVEME with --proven-by cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py, hollow-seal (bin/cairn test --hollow 25ee4866642e --seal), write the verdict against ~/.cairn/devices/chart/0/packets/validate-20261013T140131-06e1e04bbe8e.json, cross PROVED with the same --proven-by; cross.py writes the cursor back through the artifact door itself. No WATCHME: the ticket's watchme is 'none, because' the tester's pre-commit reseal. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_plain_commit_hook_seals_green"
+      ],
+      [
+        "Every command runs from ~/dev/src/cairn with the system python3 (PYTHONPATH=. python3 ...) or bin/cairn. Cross BUILDME (PYTHONPATH=. python3 -m cairn.tools.base.cross 25ee4866642e BUILDME --actor cc --why ...), build, then 'git add -- cairn/devices/tester/device.py', check git diff --cached holds only it, plain 'git commit' as '25ee4866642e: build — ...' (never git commit -- <paths>, never -a); the pre-commit hook reseals the tester proofs (~40 min). Run the proof twice, seal it (bin/cairn test --seal cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py), cross PROVEME with --proven-by cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py, hollow-seal (bin/cairn test --hollow 25ee4866642e --seal), write the verdict against ~/.cairn/devices/chart/0/packets/validate-20261013T140131-06e1e04bbe8e.json, cross PROVED with the same --proven-by; cross.py writes the cursor back through the artifact door itself. No WATCHME: the ticket's watchme is 'none, because' the tester's pre-commit reseal. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_path_commit_hook_seals_green"
+      ],
+      [
+        "'Run the proof twice' means two separate bare invocations, 'bin/cairn test cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py', each printing GREEN, and only then the seal ('bin/cairn test --seal <same path>'), which runs it a third time under the tester and writes the validation; the seal is not one of the two. The validate berth ~/.cairn/devices/chart/0/packets/validate-20261013T140131-06e1e04bbe8e.json exists (berthed 2026-10-13 by the chart chain for this ticket); write_verdict is handed that path. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_bare_call_seals_green"
+      ],
+      [
+        "'Run the proof twice' means two separate bare invocations, 'bin/cairn test cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py', each printing GREEN, and only then the seal ('bin/cairn test --seal <same path>'), which runs it a third time under the tester and writes the validation; the seal is not one of the two. The validate berth ~/.cairn/devices/chart/0/packets/validate-20261013T140131-06e1e04bbe8e.json exists (berthed 2026-10-13 by the chart chain for this ticket); write_verdict is handed that path. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_path_commit_hook_seals_green"
+      ],
+      [
+        "The --why strings are exactly: BUILDME 'scrub git location vars from the proof subject env (scratch.git_env)'; PROVEME 'T1/T2 green and T3 red before the build; T1-T3 green twice after'; PROVED 'a proof that commits in its own scratch repo seals green bare, from a plain-commit hook and from a commit -- <path> hook; verdict written'. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_bare_call_seals_green"
+      ],
+      [
+        "The --why strings are exactly: BUILDME 'scrub git location vars from the proof subject env (scratch.git_env)'; PROVEME 'T1/T2 green and T3 red before the build; T1-T3 green twice after'; PROVED 'a proof that commits in its own scratch repo seals green bare, from a plain-commit hook and from a commit -- <path> hook; verdict written'. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_plain_commit_hook_seals_green"
+      ],
+      [
+        "The --why strings are exactly: BUILDME 'scrub git location vars from the proof subject env (scratch.git_env)'; PROVEME 'T1/T2 green and T3 red before the build; T1-T3 green twice after'; PROVED 'a proof that commits in its own scratch repo seals green bare, from a plain-commit hook and from a commit -- <path> hook; verdict written'. CC's call, per Akien 2026-10-12 'approved thru PROVED'",
+        "test_path_commit_hook_seals_green"
+      ]
+    ],
+    "proofs": [
+      "cairn/devices/tester/proofs/test_a_proof_does_not_inherit_the_callers_git_env.py"
+    ],
+    "at": "2026-10-13T22:16:11+00:00"
+  }
 }
