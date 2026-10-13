@@ -95,7 +95,7 @@
   "links": [],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [FIXME:waiting] -> BUILDME -> PROVEME -> WATCHME(aider_shim_offload_yield) -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> [BUILDME:waiting] -> PROVEME -> WATCHME(aider_shim_offload_yield) -> PROVED",
   "watchme": {
     "object": "aider_shim_offload_yield",
     "trigger": "each ticket built through the shim reaches its verdict artifact — the exit gate's deposit is the event that already fires; no poll",
@@ -134,6 +134,30 @@
       "step": "D1",
       "source": "rehearsal",
       "at": "2026-10-13T08:27:42+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Measured 2026-10-13: cairn/devices/aider_shim/proofs_disabled/test_probe.py line 30 binds the probe at module level ('from cairn.devices.aider_shim.probes import offload_yield_probe as probe  # noqa: E402'). This build adds the probe at probes/, so PROVEME's proof_binds_its_subject_at_call_time (cairn/tools/proof_coverage/proof_coverage.py:647) reds that line and the hollow would read UNRAN. In the moved proof, that line becomes exactly 'probe = None  # bound in main(): this build adds the probe, so the hollow takes it away', and the first two lines of the body of the main function at line 454 become 'global probe' and a try: 'from cairn.devices.aider_shim.probes import offload_yield_probe as probe' / except ImportError: pass — so with the probe reverted each tooth fails on its own (None has no attribute) and prints red. No other line of the proof changes beyond D1's ticket path. The claimed chain for this repair was written 2026-10-13: the decompose berth that PYTHONPATH=. python3 -m skills.chart.live chain d7b4019d2407 prints, writes_to cairn/devices/aider_shim/probes/offload_yield_probe.py and cairn/devices/aider_shim/proofs/test_probe.py; the August validate and verdict stand. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "D4 the probe binds at call time",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:15:42+00:00"
+    },
+    {
+      "n": 4,
+      "text": "This step is decision n=3 (its step label 'D4 the probe binds at call time'), and n=3 is self-contained: its text is the whole instruction. It is part of the build commit of D1, applied after the git mv and before the commit. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "bind the probe at call time",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:26:01+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Yes: line numbers in D3 (30, 454) are those of proofs_disabled/test_probe.py before the move; after the git mv (a pure rename, so they still hold) the edit is located by structure — the one module-level 'from cairn.devices.aider_shim.probes import offload_yield_probe as probe' line, and the first statements of the body of def main() — exactly as D3 words them. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "D3 by structure",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:33:22+00:00"
     }
   ]
 }

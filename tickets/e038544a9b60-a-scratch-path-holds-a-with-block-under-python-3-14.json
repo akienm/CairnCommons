@@ -10,7 +10,7 @@
   "how": "In cairn/devices/tester/scratch.py, scratch_dir returns a ScratchPath — a subclass of type(Path()) whose __enter__ returns itself and whose __exit__ does nothing, exactly the contract Path carried before 3.13; removal stays with the atexit sweep, as the module docstring says. Proved by a new tooth in cairn/devices/tester/proofs/test_scratch.py that enters `with scratch_dir(...)` in a dead process and finds the directory gone after exit.",
   "falsifier": "RED if: (1) `with scratch_dir('x') as d:` raises under the venv interpreter; (2) d is not a pathlib Path usable as before (is_dir, /, write_text); (3) the directory survives its process after a with-block; (4) test_component_color, test_history_integrity or test_inspector still fail with the context-manager TypeError. Horizon: the tester seal.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the consumer is the pre-commit reseal itself (cairn/devices/tester/cli.py --reseal), which reruns every proof a staged change touches and seals red when scratch_dir breaks again",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261001T173927-cba92e9ed5f7.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261001T173831-1d622e18ab39.json",
@@ -60,35 +60,27 @@
       "at": "2026-10-01T23:55:44+00:00"
     },
     {
-      "n": 5,
-      "text": "The proof moved to cairn/tools/scratch/proofs/test_scratch.py (it carries PROVES for e038544a9b60); no code changes. Cross BUILDME forward, then PROVEME with --proven-by cairn/tools/scratch/proofs/test_scratch.py, hollow-seal, verdict, PROVED with history at cairn/devices/tester. CC's call, per Akien 2026-10-09",
+      "n": 11,
+      "text": "This voyage moves nothing, edits nothing and writes no verdict. Already done before it: the proof sits at cairn/tools/scratch/proofs/test_scratch.py (moved by 2aa6bc4f, ticket 9245b9cbce53; cairn/devices/tester/proofs/test_scratch.py no longer exists), it carries PROVES for e038544a9b60 at line 30, and its _main reports every tooth (commit ef6e6220, answering FIXME 1: measured 7 FAIL / 1 PASS with scratch.py reverted to bd2be8beb27a, 8 PASS live). The steps, in order and nothing else: (1) PYTHONPATH=. python3 -m cairn.tools.base.cross e038544a9b60 BUILDME --actor cc --why 'FIXME 1 answered: every tooth reports itself, hollow no longer UNRAN'; (2) commit records; (3) PYTHONPATH=. python3 -m cairn.tools.base.cross e038544a9b60 PROVEME --actor cc --why 'scratch proof green 8/8 as built' --proven-by cairn/tools/scratch/proofs/test_scratch.py; (4) timeout 1500 bin/cairn test --hollow e038544a9b60 --seal; (5) commit; (6) PYTHONPATH=. python3 -m cairn.tools.base.cross e038544a9b60 PROVED --actor cc --why '<the hollow's measured red count>' --proven-by cairn/tools/scratch/proofs/test_scratch.py. write_verdict is NOT called: the exit gate reads the standing verdict-20261001T204942-7fe303b44a31 from disk. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "this voyage",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:45:27+00:00"
+    },
+    {
+      "n": 12,
+      "text": "FIXME 1 (hollow unreadable) is answered by editing the proof only: cairn/tools/scratch/proofs/test_scratch.py _main now runs every tooth in a try/except, prints '  FAIL  <name>: <error>' per failed tooth and returns 1, instead of stopping at the first assertion. Measured 2026-10-13 in a worktree with scratch.py reverted to bd2be8beb27a: 7 of 8 teeth print FAIL, 1 PASS, so the hollow reads red teeth rather than UNRAN; the live tree prints 8 PASS. The edit is committed as ef6e6220 'e038544a9b60: proof — every scratch tooth reports itself' (proofs-only, an instrument commit, so the hollow anchor is unchanged). The crossings are D11's steps. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
       "by": "cc",
       "step": "FIXME 1",
       "source": "rehearsal",
-      "at": "2026-10-13T08:11:41+00:00"
-    },
-    {
-      "n": 6,
-      "text": "Nothing is moved in this voyage: commit 2aa6bc4f (ticket 9245b9cbce53) already moved the proof to cairn/tools/scratch/proofs/test_scratch.py, and cairn/devices/tester/proofs/test_scratch.py no longer exists (ls, 2026-10-13). CC's call, per Akien 2026-10-09",
-      "by": "cc",
-      "step": "move the proof",
-      "source": "rehearsal",
-      "at": "2026-10-13T08:21:45+00:00"
-    },
-    {
-      "n": 7,
-      "text": "PROVES is already in the file: test_scratch.py line 30 holds a module-level dict PROVES = {'e038544a9b60': {'1': 'test_a_with_block_holds_the_scratch', ...}}; nothing is added. Crossings: PYTHONPATH=. python3 -m cairn.tools.base.cross e038544a9b60 BUILDME --actor cc --why 'FIXME 1 answered: the proof moved to cairn/tools/scratch/proofs/test_scratch.py' then the same with PROVEME --proven-by cairn/tools/scratch/proofs/test_scratch.py, then timeout 1500 bin/cairn test --hollow e038544a9b60 --seal, then the verdict, then PROVED. CC's call, per Akien 2026-10-09",
-      "by": "cc",
-      "step": "PROVES and crossings",
-      "source": "rehearsal",
-      "at": "2026-10-13T08:21:45+00:00"
+      "at": "2026-10-13T10:06:01+00:00"
     }
   ],
   "fixme": [
     {
       "n": 1,
-      "kind": "stale_proof_name",
-      "missing": "the PROVEME crossing names cairn/devices/tester/proofs/test_scratch.py, which moved to cairn/tools/scratch/proofs/test_scratch.py; only a forward BUILDME cuts the stale name"
+      "kind": "hollow_unreadable",
+      "missing": "reverting cairn/tools/scratch/scratch.py stopped the proof reaching a check at all — a broken import, a timeout, or a crash — rather than failing a tooth, so the run printed no teeth and nothing measured says whether this file is checked at all: not covered, not hollow, UNREAD. FIX: make the proof survive its subject being taken away (resolve this build's new names at call time, and allow a timeout that outlasts the reverted world's waits), then `cairn test --hollow e038544a9b60 --seal` again"
     }
   ]
 }

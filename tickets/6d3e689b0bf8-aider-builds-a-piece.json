@@ -61,7 +61,7 @@
   "links": [],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [FIXME:waiting] -> BUILDME -> PROVEME -> WATCHME(aider_shim_edit_survival) -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> [BUILDME:waiting] -> PROVEME -> WATCHME(aider_shim_edit_survival) -> PROVED",
   "watchme": {
     "object": "aider_shim_edit_survival",
     "trigger": "each driven piece reaches a disposition — the driver's own result write is the event that already fires, and the comparison is read at the ticket's PROVED crossing. No poll: the driver records the hunks it applied, and the crossing that already happens is what closes the pair.",
@@ -100,6 +100,30 @@
       "step": "D1",
       "source": "rehearsal",
       "at": "2026-10-13T08:27:42+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Measured 2026-10-13 (ls cairn/devices/aider_shim): proofs/ already exists, so no mkdir for it; probes/ does not exist, so 'mkdir -p cairn/devices/aider_shim/probes' runs before the probe's git mv. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "D1 directories",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:08:43+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Measured 2026-10-13: cairn/devices/aider_shim/proofs_disabled/test_edit_survival_probe.py line 41 binds the probe at module level ('from cairn.devices.aider_shim.probes import edit_survival_probe as probe  # noqa: E402'). This build adds the probe at probes/, so PROVEME's proof_binds_its_subject_at_call_time (cairn/tools/proof_coverage/proof_coverage.py:647) reds that line and the hollow would read UNRAN. In the moved proof, that line becomes exactly 'probe = None  # bound in main(): this build adds the probe, so the hollow takes it away', and the first two lines of the body of the main function at line 280 become 'global probe' and a try: 'from cairn.devices.aider_shim.probes import edit_survival_probe as probe' / except ImportError: pass — so with the probe reverted each tooth fails on its own (None has no attribute) and prints red. No other line of the proof changes beyond D1's ticket path. The claimed chain for this repair was written 2026-10-13: the decompose berth that PYTHONPATH=. python3 -m skills.chart.live chain 6d3e689b0bf8 prints, writes_to cairn/devices/aider_shim/probes/edit_survival_probe.py and cairn/devices/aider_shim/proofs/test_edit_survival_probe.py; the August validate and verdict stand. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "D4 the probe binds at call time",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:15:42+00:00"
+    },
+    {
+      "n": 5,
+      "text": "'from cairn.tools.chain.grammar import ticket_path' goes at function scope, as the FIRST line of the body of test_the_probe_is_armed_at_the_path_the_TICKET_names (line 90 of the proof), before the line that uses it; nothing is added at module scope. CC's call, per Akien 2026-10-09; approved thru PROVED (Akien 2026-10-12)",
+      "by": "cc",
+      "step": "D1 the import",
+      "source": "rehearsal",
+      "at": "2026-10-13T09:26:01+00:00"
     }
   ]
 }
