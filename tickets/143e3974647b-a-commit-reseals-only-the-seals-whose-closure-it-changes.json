@@ -8,7 +8,7 @@
   "why": "RULE 1 in Akien's words: \"we'd only have to run the tests for the changed files and not for all files.\" On 2026-10-05 a commit adding one proof to cairn/devices/tester ran past a 30-minute limit inside the pre-commit reseal: proofs_touching selects all 33 of the owning component's proofs and reseals them serially; one, test_the_hollow_skips_only_the_instrument.py, took 793s alone (a measurement, its own smell). The lived symptom is a builder's one-file commit that cannot land in half an hour, re-deriving verdicts whose closures never moved (Law 1).",
   "traces_to": "RULE 1 (Akien, 2026-10-01: 'we'd only have to run the tests for the changed files and not for all files'); Law 1 (re-running a proof whose closure did not move re-derives a settled verdict); foreground-decisions item 7 ('tool proofs: agreed' — the reseal door re-runs only the changed component's proofs, 'via fingerprint_closure')",
   "how": "In cairn/devices/tester/reseal.py proofs_touching(): keep the owner filter (Akien's 'tool proofs: agreed', foreground-decisions item 7) and narrow within it — a proof of an owning component is selected when it is itself staged, or its standing seal's fingerprint_closure (closure_of) contains a staged path, or it has no seal, or its seal predates closures (closure_of is None: the whole-component recipe answers, conservative). Everything else in the owning component is left alone; component_color still reds any seal whose fingerprint moved. Proof under cairn/devices/tester/proofs/, written red. The census of closures follows the CENSUS SPLIT recorded in the falsifier. Clause 2 (KILLED MID-RUN, in the falsifier): stage each seal in the act of writing it, or adopt a reproducing leftover at the next run's start — the builder picks whichever is smaller in reseal.py, and the tooth judges both.",
-  "falsifier": "GREEN when a proof under cairn/devices/tester/proofs/ builds a fixture component with three sealed proofs whose closures are disjoint, stages one NEW proof file, and proofs_touching returns exactly that one proof; staging a file named in one sealed proof's closure returns exactly that proof plus none of the others; a proof with no seal and a pre-closure seal are each selected. WRONG INTENT if the recorded closures are too coarse to separate proofs (every tester seal naming every tester file), which a census of the 33 tester seals' fingerprint_closure measures first. Measured beside it: the 793s proof is test_the_hollow_skips_only_the_instrument.py. CENSUS SPLIT (the peer akiendelllinux_cc_0, 2026-10-05): 184d211153ff narrowed a seal's closure to its own component's files (validation_store.repo_relative_closure + _owned_by_the_proofs_component, build f5376a4a 15:10:18, PROVED ae004432 15:11:52 -0600). The n=1 measurement above — test_the_hollow_skips_only_the_instrument's 45-file multi-component closure — was sealed at 15:05:44, BEFORE that build, so it is an old wide closure and says nothing about separation. The census splits every tester seal by sealed-before vs after ae004432 and judges 'can closures separate proofs' ONLY on post-184d closures, or on what repo_relative_closure returns for each proof now (computable without resealing). A pre-184d wide closure counted as evidence would fire WRONG INTENT falsely. KILLED MID-RUN (clause 2, the peer akiendelllinux_cc_0, 2026-10-05; measured on b312: the 17:06 pre-commit was killed after writing 16 green seals it never staged, and the PROVED clearance's working_tree_clean lane refused until they were committed by hand at e8182202): GREEN also when a reseal killed mid-run leaves no unstaged seal that blocks the next clearance — either reseal stages each seal as it writes it, or the next run adopts a leftover unstaged seal whose fingerprint reproduces at HEAD (sealed_fingerprint_now == evidence.source_fingerprint) and leaves a non-reproducing one red. Tooth: a fixture reseal interrupted after writing one seal, followed by the next run, leaves the working tree clean of that seal with it staged or committed; a leftover whose fingerprint does not reproduce is not adopted. The tester owns what a run it started leaves behind (foreground-decisions 8d/8e), whatever killed it: timeout, lost session, OOM.",
+  "falsifier": "(1) GREEN when a proof under cairn/devices/tester/proofs/ builds a fixture component with three sealed proofs whose closures are disjoint, stages one NEW proof file, and proofs_touching returns exactly that one proof; staging a file named in one sealed proof's closure returns exactly that proof plus none of the others; a proof with no seal and a pre-closure seal are each selected. WRONG INTENT if the recorded closures are too coarse to separate proofs (every tester seal naming every tester file), which a census of the 33 tester seals' fingerprint_closure measures first. Measured beside it: the 793s proof is test_the_hollow_skips_only_the_instrument.py. CENSUS SPLIT (the peer akiendelllinux_cc_0, 2026-10-05): 184d211153ff narrowed a seal's closure to its own component's files (validation_store.repo_relative_closure + _owned_by_the_proofs_component, build f5376a4a 15:10:18, PROVED ae004432 15:11:52 -0600). The n=1 measurement above — test_the_hollow_skips_only_the_instrument's 45-file multi-component closure — was sealed at 15:05:44, BEFORE that build, so it is an old wide closure and says nothing about separation. The census splits every tester seal by sealed-before vs after ae004432 and judges 'can closures separate proofs' ONLY on post-184d closures, or on what repo_relative_closure returns for each proof now (computable without resealing). A pre-184d wide closure counted as evidence would fire WRONG INTENT falsely. KILLED MID-RUN (clause 2, the peer akiendelllinux_cc_0, 2026-10-05; measured on b312: the 17:06 pre-commit was killed after writing 16 green seals it never staged, and the PROVED clearance's working_tree_clean lane refused until they were committed by hand at e8182202): (2) GREEN also when a reseal killed mid-run leaves no unstaged seal that blocks the next clearance — either reseal stages each seal as it writes it, or the next run adopts a leftover unstaged seal whose fingerprint reproduces at HEAD (sealed_fingerprint_now == evidence.source_fingerprint) and leaves a non-reproducing one red. Tooth: a fixture reseal interrupted after writing one seal, followed by the next run, leaves the working tree clean of that seal with it staged or committed; a leftover whose fingerprint does not reproduce is not adopted. The tester owns what a run it started leaves behind (foreground-decisions 8d/8e), whatever killed it: timeout, lost session, OOM.",
   "node_class": "code-seam",
   "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
   "watchme": "none, because the consumer is the next commit that touches cairn/devices/tester: the pre-commit hook cairn/devices/tester/hooks/pre-commit prints which proofs it resealed, and that count is the measurement this ticket bounds",
@@ -18,6 +18,63 @@
   "children": "none, because the change is one selection function in one device with one proof",
   "parent": null,
   "questions": [],
-  "decisions": [],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "proofs_touching keeps selecting the whole owning component (adc1b5df, 3e80b61b7acf; the owner filter Akien agreed). The narrowing clause 1 asks for is delivered by rung 1 instead: reseal() returns outcome 'unchanged' and runs nothing for a proof whose standing seal still reproduces (reseal.py, 'if before[\"proven\"]', standing() in validation_store). Measured 2026-10-13 on commit 8f6cbf8e: 17 inference_domain proofs selected for one staged file, '1 resealed · 16 unchanged'. Clause 1's tooth is test_a_change_that_moves_no_seal_runs_no_proof: a change moving no fingerprint runs no proof; a change moving it runs both. proofs_touching is NOT edited. Settled by measurement per the peer akiendelllinux_cc_0 2026-10-13. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
+      "by": "cc",
+      "step": "unlisted: D1 clause 1 reshaped to the fingerprint skip",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:04:37+00:00"
+    },
+    {
+      "n": 2,
+      "text": "Census 2026-10-13 of cairn/devices/tester/validations/*.json: 45 standing seals, 0 without a closure, 0 naming a file outside cairn/devices/tester/, closure sizes 1..12 over 18 tester source files. Closures do separate proofs; WRONG INTENT does not fire. Clause 1 no longer depends on it (D1). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
+      "by": "cc",
+      "step": "unlisted: D2 the census measured, WRONG INTENT not fired",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:04:38+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Build in cairn/devices/tester/reseal.py stage_clean_seals only: an 'unchanged' result whose validation file differs from the index (git diff --name-only or untracked) is staged under the same dirty_against_index clean-closure test as a fresh seal, with the artifact journal. An 'unchanged' result whose validation the index already carries stages nothing. 'unchanged' only ever means standing() proven, i.e. the fingerprint reproduces, so a non-reproducing leftover is re-run and its NEW seal is what stages. The smaller of the two options; the peer agreed 2026-10-13. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
+      "by": "cc",
+      "step": "unlisted: D3 clause 2 build, adopt at the next run",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:04:38+00:00"
+    },
+    {
+      "n": 4,
+      "text": "New proof cairn/devices/tester/proofs/test_a_killed_reseal_leaves_nothing_unstaged.py, in a scratch git repo, never the live index. Teeth: 1 test_a_change_that_moves_no_seal_runs_no_proof; 2 test_a_killed_runs_leftover_that_still_reproduces_is_adopted_by_the_next_run (a fake tester raises KeyboardInterrupt at proof B after A sealed, so reseal_all exits before stage_clean_seals; the next run reads A unchanged, runs nothing, and stages the leftover's own bytes); 2b test_a_leftover_that_no_longer_reproduces_is_rerun_not_adopted; 2c test_an_unchanged_seal_already_in_the_index_stages_nothing. Written red first: measured 2026-10-13 before the build, tooth 2 red with staged: [], the rest green. Its reseal imports sit inside the functions (bound at call time). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
+      "by": "cc",
+      "step": "unlisted: D4 the proof",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:04:38+00:00"
+    },
+    {
+      "n": 5,
+      "text": "cairn/devices/tester/proofs/test_reseal_stages_clean_seals.py::test_only_an_outcome_that_wrote_a_seal_is_staged asserted that 'unchanged' over a validation file dirty against the index stages nothing; that is exactly the leftover D3 adopts, so the tooth reds by design. Reshape: 'settled-red' and 'timeout' over the dirty validation stage nothing (unchanged), and 'unchanged' over a validation the index already carries (committed in the fixture) stages nothing. The test name stays. Settled by measurement. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
+      "by": "cc",
+      "step": "unlisted: D5 the reshaped existing tooth",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:04:38+00:00"
+    },
+    {
+      "n": 6,
+      "text": "Order: chart (no berths exist) -> rehearse clean -> BUILDME cross -> commit the build (reseal.py + both proofs) -> each proof green twice -> bin/cairn test --hollow 143e3974647b --proof <each proof> reads 'measured · 0 hollow' -> PROVEME --proven-by the new proof -> bin/cairn test --hollow 143e3974647b --seal -> verdict over the validate berth by its instruments -> PROVED through clearance.clear -> rehearse --proved. writes_to: cairn/devices/tester/reseal.py. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
+      "by": "cc",
+      "step": "unlisted: D6 the voyage",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:04:38+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The KILLED MID-RUN text sits after the WRONG INTENT cut, so proof_coverage reads only clause (1). Falsifier clause (2) is added by this line: a reseal killed mid-run leaves no unstaged seal; the next run adopts a leftover that still reproduces and re-runs one that does not. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "D7",
+      "source": "rehearsal",
+      "at": "2026-10-13T23:09:56+00:00"
+    }
+  ],
   "cast": "2026-10-05"
 }
