@@ -29,6 +29,78 @@
     {
       "n": 3,
       "text": "No backfill from git history: the three rows lost at 3113bb7 relearn on Akien's next clear; under the 2026-10-12 blanket approval cc clears their recurrences meanwhile. CC's call, per Akien 2026-10-09"
+    },
+    {
+      "n": 4,
+      "text": "The proof cairn/machines/counting_block/proofs/test_a_taught_row_stays_taught.py is committed (cairn c7fbfebf) with PROVES {'01d34298ecae': {'1','2','3'}}; measured on today's code 2026-10-12: tooth 1 red (row_first 2, row_after 0, the :30 entry raised again, taught []), teeth 2 and 3 green (no ledger exists, and the pulse is today's). The builder does not edit the proof. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "red first",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:01+00:00"
+    },
+    {
+      "n": 5,
+      "text": "In cairn/machines/counting_block/block.py add the constant TAUGHT_FILE = \"taught.json\" beside TABLE_FILE, ACK_FILE and LEDGER_FILE. taught.json is a JSON list of clear rows exactly as the trouble lane served them ({id, standing, by, hand_class, at}), sorted by (at, id), written with json.dumps(rows, sort_keys=True) + newline through _atomic. A missing or unparseable taught.json reads as [] (a list read through a small helper: _load returns the parsed value or None; anything that is not a list is []). table.json gains no field: tooth 3 needs table.json byte-identical to today's when taught.json is absent. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "the ledger file",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:01+00:00"
+    },
+    {
+      "n": 6,
+      "text": "In pulse(), after the ask (live clears or [] on error) and before compile: taught = the ledger rows; union = taught + every live clear whose key (str(id), str(at), str(hand_class)) is not already in taught; compile(read_journals(roots), clears=union). compile() is unchanged and stays pure. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "pulse unions the ledger",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:01+00:00"
+    },
+    {
+      "n": 7,
+      "text": "After compile and only when the ask did not error: applied = {(i['clear'], str(i['at'])) for i in table['increments']}; new = every row in union whose hand_class == 'akien', whose (str(id), str(at)) is in applied, and whose key is not in taught; if new is non-empty, write taught + new (sorted by (str(at), str(id))) to where/TAUGHT_FILE through _atomic. A cc or unknown clear never enters the ledger. When the ask errored, taught.json is not written. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "pulse appends akien clears",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:01+00:00"
+    },
+    {
+      "n": 8,
+      "text": "pulse()'s docstring paragraph 'THREE FILES, BECAUSE THEY ARE THREE THINGS' becomes 'FOUR FILES, BECAUSE THEY ARE FOUR THINGS' and gains two sentences: taught.json is the ledger of akien clears the fold has applied, unioned with the live clears on every pulse so a taught row survives its trouble being re-raised or expiring (ticket 01d34298ecae); delete it and the next pulse is today's (only the clears the lane serves now teach). Nothing else in the docstring changes. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "docstring",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:02+00:00"
+    },
+    {
+      "n": 9,
+      "text": "Run 'bin/cairn test cairn/machines/counting_block/proofs/test_a_taught_row_stays_taught.py cairn/machines/counting_block/proofs/test_counting_block.py cairn/machines/counting_block/proofs/test_an_akien_hand_teaches_the_row.py' twice; all green both times. If test_counting_block.py or the sibling reds, fix block.py, never the proofs. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "prove twice",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:02+00:00"
+    },
+    {
+      "n": 10,
+      "text": "Cross BUILDME with 'PYTHONPATH=. python3 -m cairn.tools.base.cross 01d34298ecae BUILDME --actor cc --why \"rehearsal clean; red proof committed c7fbfebf\"', commit the commons, then commit block.py alone in a cairn commit whose message starts '01d34298ecae: build'. After proving twice and firing the reflection (skills.sail.reflection), commit the commons and cross PROVEME with --proven-by cairn/machines/counting_block/proofs/test_a_taught_row_stays_taught.py and why 'proof green twice; build <sha>'. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "crossings and commit",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:02+00:00"
+    },
+    {
+      "n": 11,
+      "text": "Seal with 'bin/cairn test --seal --timeout 900 cairn/machines/counting_block/proofs/test_a_taught_row_stays_taught.py', commit the seal records, then 'timeout 900 bin/cairn test --hollow 01d34298ecae --seal': it must report 0 hollow (reverting block.py reds tooth 1). Re-run the hollow after any reseal. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "seal and hollow",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:02+00:00"
+    },
+    {
+      "n": 12,
+      "text": "validate_ref is exactly /home/akien/.cairn/devices/chart/0/packets/validate-20261012T185523-ad8d3e113f62.json and the hypotheses come from exactly /home/akien/.cairn/devices/chart/0/packets/hypothesize-20261012T183732-f17c229b1499.json. The verdict's instrument is the validate criterion's own; discriminating_observation is the red-first line in 'red first', copied as text. Learn the verdict, push both repos, cross PROVED at cairn/machines/counting_block with clearance.clear (proven_by the taught-row proof, history_path and state_path that component's), then 'bin/cairn rehearse 01d34298ecae --proved cairn/machines/counting_block/proofs/test_a_taught_row_stays_taught.py', 'bin/cairn cleanup', commit and push both. The ticket names no trouble, so none is cleared. CC's call, per Akien 2026-10-09",
+      "by": "cc",
+      "step": "verdict and PROVED",
+      "source": "rehearsal",
+      "at": "2026-10-13T00:56:02+00:00"
     }
   ],
   "cast": "2026-10-12",
