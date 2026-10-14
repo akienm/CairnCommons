@@ -1,0 +1,32 @@
+{
+  "id": "41f57726a609",
+  "title": "A verb handler that raises still answers its asker",
+  "date": "2026-10-14",
+  "owner": "CC",
+  "model": "opus",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Every request a shim dispatches is answered: a verb handler that raises sends its asker a correlated bounce naming the error, while the error stays loud locally and as a trouble.",
+  "why": "An asker of a raising handler waits out its whole timeout and is told the target did not reply, which is false: the target replied with an error and swallowed it. The user sees a hang, then a misleading cause (Law 7: errors are loud at diagnostic surfaces).",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces and permanent in records of truth) and CP1 (an answer that names the wrong cause is a confabulation the system tells).",
+  "how": "A Haiku builder needs: (a) the place: cairn/tools/base/shim.py dispatch around :796, wrap only the handler(envelope) call in try/except Exception as e; in the except, call self._bounce_to_sender(envelope, f'{self.device_id} verb {verb!r} handler raised {type(e).__name__}: {e}', trouble=f'mail-{self.device_id}-verb-{verb}-raised') and then re-raise so the batch at :600 still records it in refused; (b) check _bounce_to_sender (:871) already skips is_bounce envelopes, else guard; (c) proof at cairn/tools/base/proofs/test_a_raising_handler_still_answers.py modelled on test_a_bounce_answers_the_request_that_bore_it.py, teeth 1-5; (d) bind subjects at call time inside the runner (module-level import makes the hollow revert UNRAN).",
+  "falsifier": "RED if after the build, in a fixture shim with a device whose verb handler raises ValueError('boom'): (1) the asker receives, inside its timeout, an envelope with reply_to equal to the request id and body.is_bounce true, its reason naming ValueError and boom; (2) the delivery batch still records the failure in refused (the error is not swallowed); (3) a trouble is raised for it via _bounce_to_sender's trouble argument; (4) a raising handler on an envelope that is itself a bounce posts nothing; (5) test_a_bounce_answers_the_request_that_bore_it.py stays green. Wrong-intent signal: a synchronous asker of a raising handler still times out with did-not-reply.",
+  "node_class": "bug",
+  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "task_or_ticket": "ticket",
+  "watchme": "none, because the regression event is every verb dispatch through cairn/tools/base/shim.py, and the raised trouble mail-<device>-verb-<verb>-raised counts each occurrence in ~/.cairn/logs/cairn/0/troubletickets/",
+  "children": "none, because it is one try/except in cairn/tools/base/shim.py dispatch",
+  "questions": [],
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261014T083644-b560ab085816.json",
+  "intent_berth": "none, because a bug enters at TICKET (skills/intent/SKILL.md); the measurement is BUILDER's on ticket e194f4b4cb3e, shim.py:796, 2026-10-14",
+  "cast": "2026-10-14",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 (the /sorted builder_check): A Haiku builder needs: (a) the place: cairn/tools/base/shim.py dispatch around :796, wrap only the handler(envelope) call in try/except Exception as e; in the except, call self._bounce_to_sender(envelope, f'{self.device_id} verb {verb!r} handler raised {type(e).__name__}: {e}', trouble=f'mail-{self.device_id}-verb-{verb}-raised') and then re-raise so the batch at :600 still records it in refused; (b) check _bounce_to_sender (:871) already skips is_bounce envelopes, else guard; (c) proof at cairn/tools/base/proofs/test_a_raising_handler_still_answers.py modelled on test_a_bounce_answers_the_request_that_bore_it.py, teeth 1-5; (d) bind subjects at call time inside the runner (module-level import makes the hollow revert UNRAN).",
+      "by": "cc",
+      "step": "cast",
+      "source": "sorted",
+      "at": "2026-10-14T14:36:44+00:00"
+    }
+  ]
+}
