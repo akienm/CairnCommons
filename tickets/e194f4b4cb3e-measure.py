@@ -3,11 +3,14 @@
 Run from ~/dev/src/cairn with PYTHONPATH=. — exits 0 only if every clause reads as the
 measurement record (e194f4b4cb3e-measured-satisfied.md) states. ``--control`` swaps clause 2's
 model for one no rung carries, so the same instrument must read red (exit 1).
+A clause digit (1-4) judges that clause alone; the full run still prints all four.
 """
 import glob, json, os, sys, time
 
 control = "--control" in sys.argv[1:]
+only = [a for a in sys.argv[1:] if a in "1234"]  # e.g. `3` judges clause (3) alone
 ok = True
+res = {}
 
 # (1) listed: the rack's device list names inference_domain, and its status view answers over the bus.
 from cairn.tools.bus_client.bus_client import reach
@@ -19,6 +22,7 @@ s1 = round(time.monotonic() - t0, 2)
 import subprocess
 listed = "inference_domain" in subprocess.run(["bin/cairn", "list"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout.split()
 c1 = listed and isinstance(st, dict) and "spent" in json.dumps(st.get("body", st))
+res["1"] = c1
 print(f"(1) listed in `cairn list`: {listed}; yield view answered over the bus in {s1}s: {c1}")
 ok &= c1 and s1 < 10
 
@@ -31,6 +35,7 @@ s2 = round(time.monotonic() - t0, 2)
 b = (r or {}).get("body") or {}
 host = ((b.get("provenance") or {}).get("host") or "")
 c2 = b.get("answer") is not None and "hex.local" in host and s2 < 10
+res["2"] = c2
 print(f"(2) infer model={model} answered in {s2}s from {host or b.get('refused')}: {c2}")
 ok &= c2
 
@@ -45,6 +50,7 @@ except h.HostUnreachable as e:
     why = str(e)
     c3 = "127.0.0.1:9" in why
 s3 = round(time.monotonic() - t0, 2)
+res["3"] = c3
 print(f"(3) unreachable host refused in {s3}s naming it: {c3} ({why[:120]})")
 ok &= c3 and s3 < 10
 
@@ -53,7 +59,10 @@ P = os.path.expanduser("~/.cairn/devices/chart/0/packets")
 late = [p for p in glob.glob(f"{P}/orient-*.json") if os.path.basename(p)[7:15] > "20260907"]
 bad = [p for p in late if "tree stratum unavailable" in open(p).read()]
 c4 = len(late) > 0 and not bad
+res["4"] = c4
 print(f"(4) {len(late)} orient packets after 2026-09-07, {len(bad)} carry 'tree stratum unavailable': {c4}")
 ok &= c4
 
+if only:
+    ok = all(res[k] for k in only) and (s1 < 10 if "1" in only else True) and (s3 < 10 if "3" in only else True)
 sys.exit(0 if ok else 1)
