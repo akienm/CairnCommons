@@ -32,7 +32,7 @@ DEFAULT, and the device overrides when it must.
   `cairn/devices/inference_domain/machines/route/stacks/domains.json` holds `general`
   (`default: true`), `coding` and `research`; each row carries `why`, `prompts`,
   `escalation` and `prefers`. `domain.resolve()` dresses a request through
-  `_domain_dressed` (`cairn/devices/inference_domain/domain.py:374`): the row is looked up
+  `_domain_dressed` (`cairn/devices/inference_domain/domain.py:381`): the row is looked up
   by name from `route.domain_rows` (`machines/route/route.py:89`), an unknown name refuses
   loudly, a bare request rides the default row. There is no class hierarchy to belong to —
   a device names a domain per ask, so it can name a different one on the next ask.
@@ -46,12 +46,12 @@ DEFAULT, and the device overrides when it must.
   specialises pays nothing for the machinery (the row's own `why`).
 - **A custom domain overrides the common one's strategy** by authoring a row whose
   `escalation`/`prefers`/`prompts` differ; a caller's own `system` outranks the row's
-  prompt (`domain.py:374` docstring), so the device keeps its reasoning and the row supplies
+  prompt (`domain.py:381` docstring), so the device keeps its reasoning and the row supplies
   only what the device left unsaid.
 - **Each domain owns its question list** as `(question, owner)` tuples: the question-tree
   embeddings generator (ticket 0b22c0e39c35, PROVED) registers every question with its
   owner, and the librarian's nexus verbs take `owner=` on every call
-  (`cairn/devices/librarian/trees.py:183`). A domain's questions are the rows it owns there.
+  (`cairn/devices/librarian/tools/trees/trees.py:185`). A domain's questions are the rows it owns there.
 - **Progression** is a device changing the name it composes: the librarian starts on
   `general` and declares `research` from its own seam, never inferred from message content
   (`domains.json`, the research row's `why`).
