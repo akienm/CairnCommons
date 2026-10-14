@@ -11,7 +11,7 @@
   "how": "A Haiku builder needs: (a) the place: _handle_resolve in cairn/devices/inference_domain/device.py:113; replace the literal default with a lookup of the request's kind in a declared defaults table; (b) the data: add a 'kind_defaults' object (e.g. {'embed': 'nomic-embed-text'}) to cairn/devices/inference_domain/machines/route/stacks/models.json or a sibling defaults.json in that dir, read through whatever loader route.py already uses for stacks; (c) validate at load that each default's model 'serves' lists that kind; (d) refusal for a missing default is a returned error body the shim replies with (the device's existing refusal shape), raised before host.ollama_resolver is built; (e) proof at cairn/devices/inference_domain/proofs/test_a_request_naming_no_model_gets_its_kind_default.py, teeth 1-5, fixture stacks with no network (tooth 2 must show no dial: use a transport that fails the test if called); (f) bind subjects at call time inside the runner.",
   "falsifier": "RED if after the build: (1) an embed request naming no model resolves with nomic-embed-text, read from the stacks data, not a code literal (grep device.py for the literal 'nomic-embed-text' finds none); (2) a generate/chat request naming no model is refused before any host is dialed, the refusal naming the missing model, the request's kind, and the kinds that declare a default; (3) a request naming a model is unchanged (model passes through); (4) the declared defaults are validated: a default naming a model whose 'serves' does not include that kind is refused at load; (5) the existing inference_domain proofs stay green. Wrong-intent signal: a no-model generate request is answered by any model the code picked.",
   "node_class": "bug",
-  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "bug@v1: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "task_or_ticket": "ticket",
   "watchme": "none, because the regression event is every resolve through cairn/devices/inference_domain/device.py, and its refusals already land in the inference call log read by cairn inference_domain calls",
   "children": "none, because it is one lookup in cairn/devices/inference_domain/device.py plus one data table beside the route stacks",
@@ -27,6 +27,54 @@
       "step": "cast",
       "source": "sorted",
       "at": "2026-10-14T14:41:57+00:00"
+    },
+    {
+      "n": 2,
+      "text": "test_task_ticket.py's bus-refusal tooth posted a model-less generate and leaned on the old embed default to reach the host; it now names qwen2.5:7b. Instrument repaired to current names, same claim measured (a host refusal over the bus returns a ticket naming its caller). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "existing proofs",
+      "source": "rehearsal",
+      "at": "2026-10-14T15:29:12+00:00"
+    },
+    {
+      "n": 3,
+      "text": "kind_defaults is a top-level key of machines/route/stacks/models.json, a flat object kind->model name ({\"embed\": \"nomic-embed-text\"}); load_stacks validates it and route.kind_default(kind) reads it. The refusal reuses _handle_resolve's existing refusal dict {outcome:'refused', refused:<exc type>, detail, ticket:None, model:None, hit:False, answer:None}. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "D1 shape",
+      "source": "rehearsal",
+      "at": "2026-10-14T15:37:39+00:00"
+    },
+    {
+      "n": 4,
+      "text": "'Bind subjects at call time' means the proof imports device, route and load_stacks inside each tooth (never at module level) and patches host.ollama_resolver and domain.resolve inside the call, so the hollow reading can revert the build. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "D1 call time",
+      "source": "rehearsal",
+      "at": "2026-10-14T15:37:39+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The ticket's model field (opus) is the builder; D1's 'a Haiku builder needs' means the decisions are written so even a Haiku reader could build from them, not that Haiku runs the build. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "builder model",
+      "source": "rehearsal",
+      "at": "2026-10-14T15:45:14+00:00"
+    },
+    {
+      "n": 6,
+      "text": "The tooth is test_a_refusal_raises_a_trouble_naming_the_ticket_and_the_shim_returns_a_value (test_task_ticket.py:226). Its claim is unchanged: the HOST refuses (a patched resolver raising _Unreachable) and the shim returns that refusal with a ticket. The only edit is adding \"model\": \"qwen2.5:7b\" to its request body so it reaches the host instead of the new no-default refusal; it does not test the no-default refusal (959b's own proof does). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "D2 tooth",
+      "source": "rehearsal",
+      "at": "2026-10-14T15:54:58+00:00"
+    },
+    {
+      "n": 7,
+      "text": "The proof is already written and on disk: cairn/devices/inference_domain/proofs/test_a_request_naming_no_model_gets_its_kind_default.py (five teeth, fixture stacks copied into a tmpdir, resolver and domain patched, no network). Tooth 4 requires only that RouteRefused names the kind and the model. The builder runs it; it does not rewrite it. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "D1 proof",
+      "source": "rehearsal",
+      "at": "2026-10-14T16:04:55+00:00"
     }
   ]
 }
