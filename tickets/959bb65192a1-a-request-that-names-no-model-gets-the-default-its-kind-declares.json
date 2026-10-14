@@ -1,0 +1,32 @@
+{
+  "id": "959bb65192a1",
+  "title": "A request that names no model gets the default its kind declares",
+  "date": "2026-10-14",
+  "owner": "CC",
+  "model": "opus",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "A resolve request that names no model gets the default declared for its kind in the route stacks data; a kind with no declared default is refused by name before any host is dialed. The code picks no model.",
+  "why": "Measured 2026-10-14: a bus generate request naming no model was sent to nomic-embed-text and refused as if the route had failed, so the asker is told the wrong cause. The default was a code literal valid for one kind only, and nomic's duty is embed only (Akien 2026-08-08).",
+  "traces_to": "Law 7 (an error names its real cause at the diagnostic surface) and Law 4 (a rule that matters lives in data or physics, not a literal one kind happened to fit).",
+  "how": "A Haiku builder needs: (a) the place: _handle_resolve in cairn/devices/inference_domain/device.py:113; replace the literal default with a lookup of the request's kind in a declared defaults table; (b) the data: add a 'kind_defaults' object (e.g. {'embed': 'nomic-embed-text'}) to cairn/devices/inference_domain/machines/route/stacks/models.json or a sibling defaults.json in that dir, read through whatever loader route.py already uses for stacks; (c) validate at load that each default's model 'serves' lists that kind; (d) refusal for a missing default is a returned error body the shim replies with (the device's existing refusal shape), raised before host.ollama_resolver is built; (e) proof at cairn/devices/inference_domain/proofs/test_a_request_naming_no_model_gets_its_kind_default.py, teeth 1-5, fixture stacks with no network (tooth 2 must show no dial: use a transport that fails the test if called); (f) bind subjects at call time inside the runner.",
+  "falsifier": "RED if after the build: (1) an embed request naming no model resolves with nomic-embed-text, read from the stacks data, not a code literal (grep device.py for the literal 'nomic-embed-text' finds none); (2) a generate/chat request naming no model is refused before any host is dialed, the refusal naming the missing model, the request's kind, and the kinds that declare a default; (3) a request naming a model is unchanged (model passes through); (4) the declared defaults are validated: a default naming a model whose 'serves' does not include that kind is refused at load; (5) the existing inference_domain proofs stay green. Wrong-intent signal: a no-model generate request is answered by any model the code picked.",
+  "node_class": "bug",
+  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "task_or_ticket": "ticket",
+  "watchme": "none, because the regression event is every resolve through cairn/devices/inference_domain/device.py, and its refusals already land in the inference call log read by cairn inference_domain calls",
+  "children": "none, because it is one lookup in cairn/devices/inference_domain/device.py plus one data table beside the route stacks",
+  "questions": [],
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261014T084157-5a110aaeec3a.json",
+  "intent_berth": "none, because a bug enters at TICKET (skills/intent/SKILL.md); the measurement is BUILDER's at cairn/devices/inference_domain/device.py:113, 2026-10-14",
+  "cast": "2026-10-14",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 (the /sorted builder_check): A Haiku builder needs: (a) the place: _handle_resolve in cairn/devices/inference_domain/device.py:113; replace the literal default with a lookup of the request's kind in a declared defaults table; (b) the data: add a 'kind_defaults' object (e.g. {'embed': 'nomic-embed-text'}) to cairn/devices/inference_domain/machines/route/stacks/models.json or a sibling defaults.json in that dir, read through whatever loader route.py already uses for stacks; (c) validate at load that each default's model 'serves' lists that kind; (d) refusal for a missing default is a returned error body the shim replies with (the device's existing refusal shape), raised before host.ollama_resolver is built; (e) proof at cairn/devices/inference_domain/proofs/test_a_request_naming_no_model_gets_its_kind_default.py, teeth 1-5, fixture stacks with no network (tooth 2 must show no dial: use a transport that fails the test if called); (f) bind subjects at call time inside the runner.",
+      "by": "cc",
+      "step": "cast",
+      "source": "sorted",
+      "at": "2026-10-14T14:41:57+00:00"
+    }
+  ]
+}
