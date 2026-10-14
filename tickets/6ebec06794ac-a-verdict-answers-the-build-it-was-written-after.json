@@ -11,7 +11,7 @@
   "how": "A Haiku builder needs: (a) the place: the lane the_claiming_chart_is_answered behind _exit_gate/inspect_exit in cairn/tools/base/transitions.py, which composes verdict_contract.unanswered by identity — add the freshness predicate in verdict_contract (its owner; keep unanswered's arity, add a sibling function the lane calls), do not inline a second reading in transitions.py; (b) the verdict's written time is its artifact field (read write_verdict in cairn/devices/codemother/machines/verdict/verdict.py for the field name); (c) the latest forward BUILDME crossing time comes from the ticket's .log.jsonl beside it in CairnCommons/tickets/; (d) proof at cairn/tools/chain/proofs/test_a_verdict_answers_the_build_it_was_written_after.py, teeth 1-5 in a fixture commons; tooth 6 reads the live 6890 ticket and its 09-02 verdict path; (e) every PROVED crossing after this lands needs a verdict written after its BUILDME — tickets already mid-sail with old verdicts will bounce once; that is the intended effect.",
   "falsifier": "RED if after the build, in a fixture world: (1) a ticket whose latest forward BUILDME crossing is at T and whose only claiming verdict was written before T: the PROVED crossing is refused, the refusal naming the verdict's time and T; (2) the same ticket with a verdict written after T crosses; (3) two verdicts, one stale one fresh: the fresh one is the one the gate reads; (4) a ticket with no BUILDME crossing but build_commits: freshness is bounded by the latest build commit's time; with neither, refused naming both; (5) the gate still runs no instrument and reaches no tree (the existing netns-sealed crossing proof stays green); (6) live: the 6890cf7e4053 2026-09-02 verdict, re-presented against its 2026-10-13/14 BUILDME crossing, is refused. Wrong-intent signal: a verdict written legitimately between hollow seal and PROVED is refused.",
   "node_class": "bug",
-  "workflow_and_state": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "bug@v1: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "task_or_ticket": "ticket",
   "watchme": "none, because the regression event is every PROVED crossing, which runs the_claiming_chart_is_answered lane, and the reseal hook re-runs the ticket proof on every commit touching cairn/tools/chain",
   "children": "none, because it is one predicate in cairn/tools/chain/verdict_contract.py read by one lane",
@@ -27,6 +27,54 @@
       "step": "cast",
       "source": "sorted",
       "at": "2026-10-14T06:21:03+00:00"
+    },
+    {
+      "n": 2,
+      "text": "HOW (b) corrected by measurement: a verdict artifact has no time field; its written time is its berth filename stamp verdict-%Y%m%dT%H%M%S-<digest>.json (local time, verdict.py write_verdict), parsed by verdict_contract._verdict_time. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "read the verdict's written time",
+      "source": "rehearsal",
+      "at": "2026-10-14T08:11:29+00:00"
+    },
+    {
+      "n": 7,
+      "text": "HOW (c) corrected by measurement: the ticket .log.jsonl carries no crossings; crossings live in component history.json journals. inspector.build_started(ticket, *, roots, root, tickets_dir) -> (buildme_at, commit_times) gathers them: crossings.buildme_crossing(ticket, roots)['at'] (naive local ISO, tools/base public_interface, imported lazily); with none, each of the ticket's build_commits timed by 'git show -s --format=%ct' through the inspector's _git_lines in this repo or the ticket's commons. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "read the latest forward BUILDME crossing",
+      "source": "rehearsal",
+      "at": "2026-10-14T08:23:06+00:00"
+    },
+    {
+      "n": 8,
+      "text": "verdict_contract stays pure (peer review 2026-10-14: its import allowlist must not widen): predates_the_build(ticket, verdict_path, *, buildme_at, commit_times=()) -> list[str], a sibling of unanswered (arity kept), reading no journal and running nothing; inspector.proved_answers_the_chart calls build_started(ticket, roots=_crossing_roots()) and prepends the predicate's lines to unanswered's on the latest claiming verdict; _crossing_roots() is a no-argument seam returning None (live), precedent clearance._crossing_roots. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "wire the predicate into the gate",
+      "source": "rehearsal",
+      "at": "2026-10-14T08:23:06+00:00"
+    },
+    {
+      "n": 9,
+      "text": "Fixture proofs that cross the exit gate over a chart in a world with no BUILDME (test_transitions, test_the_stones_are_pushed, test_inspector tooth 28, test_chart_verdict two-mouths) stand a fixture BUILDME crossing dated before their verdicts behind inspector._crossing_roots; test_chart_verdict's verdict_contract import allowlist is unchanged, and was measured to red when an import is added (2026-10-14). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "keep the exit-gate fixture proofs green",
+      "source": "rehearsal",
+      "at": "2026-10-14T08:23:06+00:00"
+    },
+    {
+      "n": 10,
+      "text": "Proof cairn/tools/chain/proofs/test_a_verdict_answers_the_build_it_was_written_after.py, PROVES keyed 6ebec06794ac clauses 1-6, house runner printing PASS/FAIL per tooth, subject imports bound at call time; teeth 1-3 at proved_answers_the_chart in a fixture world, tooth 4 composes inspector.build_started with the pure predicate over a fixture git commons, tooth 5 a fresh interpreter spying subprocess.run and sys.modules, tooth 6 live 6890cf7e4053 through the same composition, asserting invariants only. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "write the proof",
+      "source": "rehearsal",
+      "at": "2026-10-14T08:23:06+00:00"
+    },
+    {
+      "n": 11,
+      "text": "D1's points (b) and (c) are superseded in their implementation detail: the verdict's written time is read per D2 (berth filename stamp) and the build's start per D7 (inspector.build_started: latest forward BUILDME crossing, else build_commits); D1's (a) place and arity rule stand. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-14T08:28:24+00:00"
     }
   ]
 }
