@@ -11,7 +11,7 @@
   "falsifier": "Falsifier, from the intent berth and refined. DONE when (1) a deliver() while the named session's record says idle writes a 'poked' ledger line and launches exactly one headless SendMessage to that name; (2) a deliver() while it says busy writes a 'not-poked: busy' line and launches nothing; (3) a second deliver() before any 'consumed' line launches nothing ('not-poked: already poked'); (4) live: a bus message to device 'cc' while CC is idle is followed within 60 s by a 'consumed' ledger line carrying the CC session id. (1)-(3) are a tester proof with a fixture sessions dir and a stand-in claude command; (4) is a measurement recorded at PROVEME. WRONG INTENT if (4) fails twice with the record showing idle (the wake was luck), or a poke is held for approval.",
   "node_class": "code-seam",
   "task_or_ticket": "ticket",
-  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because cairn/devices/cc/probes/the_shim_delivers_mail.py already reads ~/.cairn/devices/cc/0/mail_ledger.jsonl and reds mail unread for more than a day; with poked/not-poked lines in the same ledger, an idle poke that fails to wake shows there as delivered + poked with no consumed",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261017T101438-2733b99744dd.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261017T101340-def7dfe8d06f.json",
@@ -32,6 +32,46 @@
       "step": "cast",
       "source": "sorted",
       "at": "2026-10-17T16:14:54+00:00"
+    },
+    {
+      "n": 2,
+      "text": "poke_if_idle() takes no arguments: it reads module constants shim._SESSIONS_DIR (~/.claude/sessions), shim._CLAUDE_CMD (['claude']), shim._LEDGER and shim._MAIL_DIR, which proofs reassign; <mail dir> in the PROMPT is str(shim._MAIL_DIR), a path only, never content; an OSError from Popen ledgers not-poked with reason f'launch failed: {exc}'; deliver() calls it only when _MAIL_DIR is still the instance's own mailbox (_INSTANCE_ROOT/'mail'), so a proof that moves only _MAIL_DIR pokes nobody",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-17T16:32:19+00:00"
+    },
+    {
+      "n": 3,
+      "text": "the existing shim.py constants stand unchanged: _INSTANCE_ROOT = address.instance_path('cc', 0) (~/.cairn/devices/cc/0), _MAIL_DIR = _INSTANCE_ROOT / 'mail', _LEDGER = _INSTANCE_ROOT / 'mail_ledger.jsonl' (the file _ledger() already appends to); the build adds only _SESSIONS_DIR = Path.home()/'.claude'/'sessions' and _CLAUDE_CMD = ['claude'] beside them",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-17T16:39:53+00:00"
+    },
+    {
+      "n": 4,
+      "text": "two or more session records named the target is its own case: no launch, ledger not-poked with reason f'two sessions are named {target}' (builder can share the name before its rename; never pick one); a torn or non-dict record is skipped, and no match at all or an unreadable dir is reason f'no session named {target}'",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-17T16:46:19+00:00"
+    },
+    {
+      "n": 5,
+      "text": "every poked / not-poked line carries at = datetime.now(timezone.utc).isoformat(), the same format deliver() and consume_mail() already write, so the live tooth can subtract delivered.at from consumed.at",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-17T16:55:16+00:00"
+    },
+    {
+      "n": 6,
+      "text": "the new proof's sandbox reassigns shim._INSTANCE_ROOT, _MAIL_DIR (= _INSTANCE_ROOT/'mail'), _LEDGER, _SESSIONS_DIR and _CLAUDE_CMD together, so the guard passes in every sandboxed tooth; one extra tooth (test_mail_outside_the_instance_pokes_nobody) then moves only _MAIL_DIR and asserts no launch, which is the case the older cc proofs are in",
+      "by": "cc",
+      "step": "D1",
+      "source": "rehearsal",
+      "at": "2026-10-17T17:02:16+00:00"
     }
   ]
 }
