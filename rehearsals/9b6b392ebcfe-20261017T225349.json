@@ -388,5 +388,50 @@
     "rendered_chars": 100391,
     "by": null
   },
-  "divergence": null
+  "divergence": {
+    "steps_unproved": [
+      "Defaults: latest_activity and pulse take transcripts=None and pts=None; None means the module constants TRANSCRIPTS = Path.home()/'.claude'/'projects' and PTS = Path('/dev/pts'); roots=None means address.ROOTS (live ~/.cairn). The proof passes temp paths for all three; the live pulse passes none.",
+      "Transcript entry shape (measured 2026-10-17): one JSON object per line; type=='user' for a turn; timestamp is ISO-8601 UTC with a trailing Z (e.g. '2026-10-17T21:00:12.345Z', parsed by datetime.fromisoformat after Z->+00:00); origin is an optional dict whose kind is 'human'|'peer'|'task-notification'; entrypoint is 'cli'|'sdk-cli'; isMeta optional bool; message.content is a string or a list of blocks, a block {type:'tool_result'} marking a tool result. A line that is not JSON is skipped. Any exception from a reader (missing folder raises FileNotFoundError on purpose) is caught per source and recorded unread='<ExceptionType>: <message>'.",
+      "idle.py declares IDLE_THRESHOLD_S = 3*3600 and IDLE_THRESHOLD_PROVENANCE = 'Akien 2026-08-24, ticket 9b6b392ebcfe: three hours idle'; pulse() and decide() take threshold_s as a parameter defaulting to it; CairnDevice.settings() returns {idle_threshold_s, idle_threshold_provenance}.",
+      "idle.py holds away_path(roots)=instance_path('cairn',0,roots)/away.json with read_away, set_away(start,end,why) (ValueError unless start<end; atomic write of {start,end,why,set_at}) and clear_away. CairnDevice.declared_verbs adds 'away' -> _handle_away: act set|show|clear over those helpers; a bad act or a bad window answers {accepted: False, reason}.",
+      "away.json shape: {start, end, why, set_at}, all times ISO-8601 UTC strings via datetime.isoformat() (start/end accepted as any fromisoformat string, Z allowed, normalised to UTC); set_at = now. Atomic write = write away.json.tmp then os.replace. read_away returns None when the file is missing (no window); show answers {away: <window>|None}; clear unlinks with missing_ok and answers {cleared: <the old window>|None}; set answers {away: <window>}.",
+      "Exact signatures and shapes. decide(sources: dict, last_activity: datetime, *, now: datetime, threshold_s: float, away: dict|None, cycle: dict|None) -> (due: bool, why: str); pure, reads no module state. pulse(*, roots=None, now=None, threshold_s=IDLE_THRESHOLD_S, transcripts=None, pts=None, ask=None) -> record. ask() is called with no arguments and returns the sleep-cycle verb's BODY; the default is _ask_mint(): reach('cairn').request(sender='cairn', to='cairn', verb='sleep-cycle', why=..., body={'act': 'mint'})['body'], and that body is {'cycle': {cycle_id, roster, position, visited, opened_at, closed_at, closed_by}} (plus 'logs' when the cycle closed at mint) — so minted = answer['cycle']['cycle_id'], or the whole answer when it carries no cycle. pulse.json record, exactly: {at: ISO str, due: bool, why: str, threshold_s: number, last_activity: ONE ISO str (the single latest activity across all sources, not a dict), sources: {cc|command_line|web_server|librarian: {at: ISO str|None, unread: str|None}} (a dict of all four, not a list), minted: cycle_id str|None}.",
+      "The proof is the one file named in the line for 'test_idle_trigger.py proofs exercising five teeth' — built with the code, run twice, sealed with bin/cairn test --seal, hollow-run at PROVEME."
+    ],
+    "teeth_unforeseen": [],
+    "matched": [
+      [
+        "Reshaped by Akien's rulings, all later than this ticket's cast: (1) 2026-09-30 — it lives on the cairn device, which holds the system's only two clock uses, AWAY WINDOWS and SLEEP; the check runs when the ground loop's spawned pulse reaches the cairn device (entry `python3 -m cairn.devices.cairn pulse`), which decides for itself whether sleep is due, and mints the cycle through cairn/devices/cairn/machines/sleep_cycle/token.py. No new system device (that answers open-91f17c211689's placement half). (2) 2026-09-29 (open-91f17c211689) — human activity is 'any time i interact with you, or any of our creations in cairn … you, the librarian, the web server, or the command line'; the check reads the latest of those four, each from a record its owner already writes, and a source it cannot read is named in the record, never treated as silence. (3) 2026-08-31 note — away windows: Akien declares 'away from x to y' (a `cairn away` verb on the cairn device, held in ~/.cairn/devices/cairn/0/away.json); inside a window sleep is due at once, without waiting for the threshold. (4) The 3h threshold is a declared config value on the cairn device whose provenance is Akien 2026-08-24 ('3 hours without a human'). The roster the cycle walks is devices whose shim answers `sleep` — 164da559823d's work, not this ticket's.",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ],
+      [
+        "Corrects D1's last sentence: the sleep roster (rack devices whose device declares the `sleep` verb) is a808e21d646f's work, not 164da559823d's — measured 2026-09-30, 164da559823d does not carry it, and no sleeps_when_the_token_arrives.py exists, so the roster is empty until a device declares `sleep`. This ticket mints over whatever that roster returns; an empty roster closes at mint (sleep_cycle falsifier).",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ],
+      [
+        "cairn/devices/cairn/machines/sleep_cycle/idle.py latest_activity(since, roots, transcripts, pts) returns per source {at: iso|None, unread: reason|None}. cc = Claude Code's own transcripts at ~/.claude/projects/*/*.jsonl (NOT under ~/.cairn/logs; only files modified after since are opened): a user entry counts when origin.kind=='human', or when it has no origin, entrypoint=='cli', and is neither a tool_result nor isMeta (typed slash commands carry no origin, measured 2026-10-17); peer, task-notification and sdk-cli entries never count. command_line = newest atime over /dev/pts/<digits>. web_server = newest UTC stamp in file names <yyyymmdd.hhmmss.us>.WebServerDevice.serve.json under log_path('web_server',0,roots); librarian = the same for .LibrarianDevice.chat.json under log_path('librarian',0,roots). A missing folder or any read error is recorded unread with its exception text, never as silence. No import from cc, librarian or web_server code (RULE 1).",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ],
+      [
+        "_handle_away(self, envelope) is a new method on CairnDevice in cairn/devices/cairn/device.py, registered in declared_verbs as 'away' beside 'sleep-token' and 'sleep-cycle'; it reads body=envelope['body'] and dispatches body['act']: 'set' -> idle.set_away(body['start'], body['end'], body.get('why') or '', roots=self._roots); 'show' -> idle.read_away(self._roots); 'clear' -> idle.clear_away(self._roots); anything else -> {accepted: False, reason}.",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ],
+      [
+        "cairn/devices/cairn/__main__.py parses one subcommand 'pulse' and calls idle.pulse(), prints DUE/not due with the why, names each unread source on stderr, exits 0. idle.pulse(roots, now, threshold_s, transcripts, pts, ask): since = later of pulse.json's carried last_activity and now-threshold; last_activity = later of what was seen and the carried one, else now-threshold. decide(): an open cycle -> not due; anchor = the away window's start when inside it, else last_activity; a cycle opened at or after the anchor -> not due (one sleep per quiet spell); inside the window -> due; any unread source -> not due; quiet >= threshold -> due. When due, ask() (default reach('cairn').request(sender='cairn', to='cairn', verb='sleep-cycle', body={act: mint})) and record the minted cycle_id. pulse.json = token.cycle_dir(roots)/pulse.json, one record {at, due, why, threshold_s, last_activity, sources, minted}, atomically replaced.",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ],
+      [
+        "Existing code, verbatim, in cairn/devices/cairn/machines/sleep_cycle/token.py (public, no underscore; standing() and _write() already use it): `def cycle_dir(roots: dict | None = None) -> Path: return instance_path(DEVICE, 0, roots) / 'machines' / 'sleep_cycle'` with DEVICE='cairn'. idle.pulse_path(roots) = token.cycle_dir(roots) / 'pulse.json', mkdir(parents=True) before the write. Nothing about it is built by this ticket.",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ],
+      [
+        "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py declares PROVES {'9b6b392ebcfe': {'all': 'test_the_cairn_device_sleeps_after_quiet_and_never_while_active'}}, one composite tooth running nine narrow teeth each printing PASS/FAIL: (a) quiet past threshold mints once and pulse.json records it; (b) a human turn 10 min old holds; (c) peer, task-notification and sdk-cli turns are not activity; (d) a serve record, a chat record and a pts atime each hold alone; (e) one mint per quiet spell, again after fresh activity and a new spell; (f) a missing librarian logs folder is unread and holds; (g) the away verb's window mints at once over fresh activity, show/clear work, a bad window is refused; (h) the same 2h quiet is due under 1h and not under 3h, and settings carry 10800 with 2026-08-24; (i) python3 -m cairn.devices.cairn pulse under a scratch HOME names cc unread and asks nothing. World: temp roots, temp transcripts, temp pts with os.utime, an injected asker writing a closed cycle via token._write. Subjects imported at call time.",
+        "test_the_cairn_device_sleeps_after_quiet_and_never_while_active"
+      ]
+    ],
+    "proofs": [
+      "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py"
+    ],
+    "at": "2026-10-17T22:59:15+00:00"
+  }
 }
