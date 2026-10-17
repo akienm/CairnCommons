@@ -32,7 +32,7 @@
   ],
   "priority": "",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:queued] -> PROVEME -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:waiting] -> PROVEME -> PROVED",
   "watchme": "none, because the falsifier is checkable in one proof session — the idle detection either fires or it doesn't, and the proof exercises both paths. The parent ticket carries WATCHME(sleep-rotation-completes) for the full end-to-end rotation.",
   "deposits": {},
   "sorted_berth": "none, because berth file sorted-20260828T181151-67595350002a.json was purged from instance-space (measured 2026-09-06: /home/akien/.cairn/devices/skill_block/0/berths/sorted/ holds 1 file(s): sorted-20260904T171337-82d43e9e4c65.json; none from 2026-08-28); the original /sorted firing for tickets/9b6b392ebcfe-idle-detection-trigger.json (ticket 9b6b392ebcfe) is recorded on the ticket, dated 2026-08-28",
@@ -88,6 +88,70 @@
       "step": "unlisted: correction to D1's roster pointer",
       "source": "rehearsal",
       "at": "2026-09-30T21:39:09+00:00"
+    },
+    {
+      "n": 3,
+      "text": "cairn/devices/cairn/machines/sleep_cycle/idle.py latest_activity(since, roots, transcripts, pts) returns per source {at: iso|None, unread: reason|None}. cc = Claude Code's own transcripts at ~/.claude/projects/*/*.jsonl (NOT under ~/.cairn/logs; only files modified after since are opened): a user entry counts when origin.kind=='human', or when it has no origin, entrypoint=='cli', and is neither a tool_result nor isMeta (typed slash commands carry no origin, measured 2026-10-17); peer, task-notification and sdk-cli entries never count. command_line = newest atime over /dev/pts/<digits>. web_server = newest UTC stamp in file names <yyyymmdd.hhmmss.us>.WebServerDevice.serve.json under log_path('web_server',0,roots); librarian = the same for .LibrarianDevice.chat.json under log_path('librarian',0,roots). A missing folder or any read error is recorded unread with its exception text, never as silence. No import from cc, librarian or web_server code (RULE 1).",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "unlisted: idle.py — read latest human activity per source (CC transcripts, /dev/pts atime, web_server serve records, librarian chat records)",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:41:28+00:00"
+    },
+    {
+      "n": 4,
+      "text": "idle.py declares IDLE_THRESHOLD_S = 3*3600 and IDLE_THRESHOLD_PROVENANCE = 'Akien 2026-08-24, ticket 9b6b392ebcfe: three hours idle'; pulse() and decide() take threshold_s as a parameter defaulting to it; CairnDevice.settings() returns {idle_threshold_s, idle_threshold_provenance}.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "unlisted: IDLE_THRESHOLD_S = 3h declared in idle.py and exposed via CairnDevice.settings()",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:41:29+00:00"
+    },
+    {
+      "n": 5,
+      "text": "idle.py holds away_path(roots)=instance_path('cairn',0,roots)/away.json with read_away, set_away(start,end,why) (ValueError unless start<end; atomic write of {start,end,why,set_at}) and clear_away. CairnDevice.declared_verbs adds 'away' -> _handle_away: act set|show|clear over those helpers; a bad act or a bad window answers {accepted: False, reason}.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "unlisted: away window — away.json store under ~/.cairn/devices/cairn/0/ and `away` verb on CairnDevice with acts set|show|clear",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:41:29+00:00"
+    },
+    {
+      "n": 6,
+      "text": "cairn/devices/cairn/__main__.py parses one subcommand 'pulse' and calls idle.pulse(), prints DUE/not due with the why, names each unread source on stderr, exits 0. idle.pulse(roots, now, threshold_s, transcripts, pts, ask): since = later of pulse.json's carried last_activity and now-threshold; last_activity = later of what was seen and the carried one, else now-threshold. decide(): an open cycle -> not due; anchor = the away window's start when inside it, else last_activity; a cycle opened at or after the anchor -> not due (one sleep per quiet spell); inside the window -> due; any unread source -> not due; quiet >= threshold -> due. When due, ask() (default reach('cairn').request(sender='cairn', to='cairn', verb='sleep-cycle', body={act: mint})) and record the minted cycle_id. pulse.json = token.cycle_dir(roots)/pulse.json, one record {at, due, why, threshold_s, last_activity, sources, minted}, atomically replaced.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "unlisted: __main__.py pulse entry — python3 -m cairn.devices.cairn pulse decider that compares idle time against threshold, checks away window, verifies no cycle is open, mints via sleep-cycle verb when due, writes pulse.json",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:41:29+00:00"
+    },
+    {
+      "n": 7,
+      "text": "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py declares PROVES {'9b6b392ebcfe': {'all': 'test_the_cairn_device_sleeps_after_quiet_and_never_while_active'}}, one composite tooth running nine narrow teeth each printing PASS/FAIL: (a) quiet past threshold mints once and pulse.json records it; (b) a human turn 10 min old holds; (c) peer, task-notification and sdk-cli turns are not activity; (d) a serve record, a chat record and a pts atime each hold alone; (e) one mint per quiet spell, again after fresh activity and a new spell; (f) a missing librarian logs folder is unread and holds; (g) the away verb's window mints at once over fresh activity, show/clear work, a bad window is refused; (h) the same 2h quiet is due under 1h and not under 3h, and settings carry 10800 with 2026-08-24; (i) python3 -m cairn.devices.cairn pulse under a scratch HOME names cc unread and asks nothing. World: temp roots, temp transcripts, temp pts with os.utime, an injected asker writing a closed cycle via token._write. Subjects imported at call time.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "unlisted: test_idle_trigger.py proofs exercising five teeth: fires after threshold, holds during activity, names unread sources, fires at once in away window, mints only once per idle period",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:41:29+00:00"
+    },
+    {
+      "n": 8,
+      "text": "The proof is the one file named in the line for 'test_idle_trigger.py proofs exercising five teeth' — built with the code, run twice, sealed with bin/cairn test --seal, hollow-run at PROVEME.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "unlisted: building test_idle_trigger.py",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:41:29+00:00"
+    },
+    {
+      "n": 10,
+      "text": "Existing code, verbatim, in cairn/devices/cairn/machines/sleep_cycle/token.py (public, no underscore; standing() and _write() already use it): `def cycle_dir(roots: dict | None = None) -> Path: return instance_path(DEVICE, 0, roots) / 'machines' / 'sleep_cycle'` with DEVICE='cairn'. idle.pulse_path(roots) = token.cycle_dir(roots) / 'pulse.json', mkdir(parents=True) before the write. Nothing about it is built by this ticket.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-17T21:56:34+00:00"
+    },
+    {
+      "n": 11,
+      "text": "Defaults: latest_activity and pulse take transcripts=None and pts=None; None means the module constants TRANSCRIPTS = Path.home()/'.claude'/'projects' and PTS = Path('/dev/pts'); roots=None means address.ROOTS (live ~/.cairn). The proof passes temp paths for all three; the live pulse passes none.",
+      "by": "cc (builder), CC's call, per Akien 2026-10-09 and 2026-10-12 \"approved thru PROVED, fastest route\"",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-17T22:20:53+00:00"
     }
   ]
 }
