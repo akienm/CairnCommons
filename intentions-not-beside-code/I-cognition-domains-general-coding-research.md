@@ -33,7 +33,7 @@ DEFAULT, and the device overrides when it must.
   (`default: true`), `coding` and `research`; each row carries `why`, `prompts`,
   `escalation` and `prefers`. `domain.resolve()` dresses a request through
   `_domain_dressed` (`cairn/devices/inference_domain/domain.py:381`): the row is looked up
-  by name from `route.domain_rows` (`machines/route/route.py:89`), an unknown name refuses
+  by name from `route.domain_rows` (`machines/route/route.py:118`), an unknown name refuses
   loudly, a bare request rides the default row. There is no class hierarchy to belong to —
   a device names a domain per ask, so it can name a different one on the next ask.
 - **The glue IS the escalation strategy.** `escalation.allow` lists the provider rungs the
