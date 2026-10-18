@@ -100,5 +100,15 @@
     "rendered_chars": 55832,
     "by": null
   },
-  "divergence": null
+  "divergence": {
+    "steps_unproved": [
+      "D2 (supersedes D1, which pointed at a diff without carrying it): Only cairn/tools/base/transitions.py changes, inside _berth_lacks's isinstance(berth, dict) branch, right after the node_class check. Apply this unified diff verbatim (git apply):\ndiff --git a/cairn/tools/base/transitions.py b/cairn/tools/base/transitions.py\nindex af2983c1..28cc2725 100644\n--- a/cairn/tools/base/transitions.py\n+++ b/cairn/tools/base/transitions.py\n@@ -2879,6 +2879,13 @@ def _berth_lacks(doc: dict) -> list[str]:\n                 if ans.get(\"node_class\") != doc.get(\"node_class\"):\n                     lacks.append(\"sorted_berth's answers.node_class differs from the doc's \"\n                                  \"node_class\")\n+                # A berth carries the title it was fired under; bound by slug, as the filename is,\n+                # so another ticket's berth is refused (c24c5310a727). A titleless berth is\n+                # judged by workflow and node_class alone.\n+                bt = berth.get(\"title\") or ans.get(\"title\")\n+                if not _blank(bt) and _slug(str(bt)) != _slug(str(doc.get(\"title\") or \"\")):\n+                    lacks.append(f\"sorted_berth was fired for {bt!r}, not for the doc's title \"\n+                                 f\"{doc.get('title')!r}\")\n             elif berth is not None:\n                 lacks.append(f\"sorted_berth {sb!r} does not hold a JSON object\")\n     ib = doc.get(\"intent_berth\")\nThe proof cairn/tools/base/proofs/test_a_cast_refuses_another_tickets_sorted_berth.py is committed red-first; edit nothing there. Run it, cairn/tools/base/proofs/test_cast_ticket.py and cairn/tools/base/proofs/test_a_cast_seeds_decisions_from_builder_check.py with bin/cairn test; all three read green. — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'"
+    ],
+    "teeth_unforeseen": [],
+    "matched": [],
+    "proofs": [
+      "cairn/tools/base/proofs/test_a_cast_refuses_another_tickets_sorted_berth.py"
+    ],
+    "at": "2026-10-18T14:43:36+00:00"
+  }
 }
