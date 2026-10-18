@@ -25,6 +25,47 @@
       "step": "cast",
       "source": "sorted",
       "at": "2026-10-17T21:23:22+00:00"
+    },
+    {
+      "n": 2,
+      "text": "The red-first proof already exists at cairn/devices/cairn/machines/bus/proofs/test_two_shims_ask_each_other.py (4 teeth, PROVES {'c2036433beaf': {'all': ...}}); measured red 0 of 4 under the seal against the pre-fix code, both exchange teeth 'still waiting at 10.0s'. Commit it before BUILDME; do not rewrite it. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "unlisted: write the proof",
+      "source": "rehearsal",
+      "at": "2026-10-18T03:36:12+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Fix in server.py: each held shim gets a mailbox (its RLock, a deque of envelopes, the original hook). The delivery hook _wire installs appends the envelope to the deque, then loops while the deque is non-empty: try lock.acquire(blocking=False); if it fails, return (the holder drains); else push device_id on a thread-local held-stack, pop and run hook(env) for each queued envelope, catching exceptions into bus.emit('delivery_failed', ...) as post() does, finally pop the stack and release. The outer loop re-checks the deque after release so no poke is stranded. The RLock stays re-entrant so a handler posting to its own shim on the same thread still delivers inline. op_verbs keeps a blocking acquire but goes through the same context manager (push stack; after release drain the queue). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "unlisted: the fix",
+      "source": "rehearsal",
+      "at": "2026-10-18T03:36:12+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Fix in bus.py: add BusDevice.set_while_waiting(fn), installed by BusProcess.__init__ exactly like set_no_receiver. request()'s poll loop calls the installed fn once per iteration before sleeping (no-op when none installed). BusProcess's fn drains the queues of every shim whose lock the current thread holds (read from the thread-local held-stack), so a handler blocked in request() still serves envelopes queued for its own shim and two handlers that ask each other both get answers. Nothing waits on a clock tick beyond request()'s own existing 0.1s poll (bus falsifier clause 5). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "unlisted: the waiting request",
+      "source": "rehearsal",
+      "at": "2026-10-18T03:36:13+00:00"
+    },
+    {
+      "n": 5,
+      "text": "If the every_envelope_is_delivered_once tooth reds after the fix (a nested drain re-delivering an envelope an outer _check_mail snapshot still holds), add one guard in cairn/tools/base/shim.py _check_mail: skip an envelope already receipted (record_delivery set) before delivering it. Only if the tooth reds; otherwise shim.py is untouched. CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "unlisted: exactly once",
+      "source": "rehearsal",
+      "at": "2026-10-18T03:36:13+00:00"
+    },
+    {
+      "n": 6,
+      "text": "PROVEME crosses with --proven-by cairn/devices/cairn/machines/bus/proofs/test_two_shims_ask_each_other.py after it reads 4 of 4 under bin/cairn test --exec and the standing bus proofs (test_bus.py, test_one_bus_process.py, test_mail_without_a_receiver.py, measured green before the fix 2026-10-17) still read green. Then hollow seal, verdict, push both repos, then the PROVED gate: the bus verb clear, housed in harbor_master (which only reports; the gate refuses on the ticket's behalf). CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'.",
+      "by": "cc",
+      "step": "unlisted: proving",
+      "source": "rehearsal",
+      "at": "2026-10-18T03:36:13+00:00"
     }
-  ]
+  ],
+  "chart_claim": "validate-20261017T213415-3c93147530be.json"
 }
