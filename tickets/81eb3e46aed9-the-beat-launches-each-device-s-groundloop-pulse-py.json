@@ -20,7 +20,34 @@
   "builder_notes": "Q: which proof teeth of 164da559823d change? A: test_the_beat_calls_nothing.py — tooth 1 drops its */groundloop/pulse.py assertion (beat_probes.py stays forbidden); tooth 2 drops its 'no pulse called' half and keeps 'no triggers key'; _STATE_KEYS gains 'spawned'; each change cites open-a322e5166e5d. Q: charter? A: ground_loop intention+why.json 'what' item (4) and filed edge (b) say the loop spawns each device's pulse.py; written through the artifact door. Q: interpreter? A: sys.executable. Q: which roots? A: class_root as main() already receives it (rack_ids(class_root)); None means repo_root() from discovery.py.",
   "model": "opus",
   "decisions": [
-    "Launch is a detached child process per device per beat (Popen, DEVNULL, start_new_session), never an in-process import, and finished children are reaped by poll() on the next beat — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'"
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-19",
+      "text": "D1: SETTLED: in cairn/devices/cairn/machines/ground_loop/heartbeat.py add `import os`, `import subprocess`, `import sys` (heartbeat.py already has `from pathlib import Path` at its top, measured 2026-10-19; keep it) and the function `spawn_pulses(class_root, held=None) -> tuple[list[dict], list]`: `root = Path(class_root)`; `still = [h for h in (held or []) if h.poll() is None]` (reap, never wait); `env = {**os.environ, 'PYTHONPATH': str(root)}`; for each `path` in `sorted((root / 'cairn' / 'devices').glob('*/groundloop/pulse.py'))` build `entry = {'device': path.parent.parent.name, 'path': str(path)}`, then `subprocess.Popen([sys.executable, str(path)], cwd=str(root), env=env, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL, start_new_session=True)`; on OSError set `entry['error'] = f'{type(err).__name__}: {err}'` and go on to the next path, else set `entry['pid'] = child.pid` and append the handle to `still`; return `(entries, still)`. Never import a pulse.py, never wait, no skip/overlap/timeout logic. Do not use the names Triggers, pulse_sites, load_pulse or beat_probes anywhere (test_the_beat_calls_nothing.py tooth 4). — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'"
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-19",
+      "text": "D2: SETTLED: in cairn/devices/cairn/machines/ground_loop/__main__.py extend the existing absolute import line `from cairn.devices.cairn.machines.ground_loop.heartbeat import changed, mtimes, own_files` to also import `spawn_pulses`, and add `from cairn.devices.cairn.machines.ground_loop.discovery import repo_root` (discovery.py:62 defines `def repo_root() -> Path`, measured 2026-10-19; __main__.py already has `from pathlib import Path`); set `pulse_root = Path(class_root) if class_root is not None else repo_root()` and `held: list = []` before the loop; the beat-0 state written before the loop carries `'spawned': []`; each beat inside the loop calls `spawned, held = spawn_pulses(pulse_root, held)` before building state and adds `'spawned': spawned` to the state dict. Update the module docstring: the beat launches each device's groundloop/pulse.py as a detached child (ticket 81eb3e46aed9) instead of 'it calls nothing'; drop 'no pulse calls' from the 'No bus, ...' line and say pulses are launched, never called in-process. — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'"
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-19",
+      "text": "D3: SETTLED: in cairn/devices/cairn/machines/ground_loop/proofs/test_the_beat_calls_nothing.py, citing Akien's answer to open-a322e5166e5d: tooth 1 keeps only the beat_probes.py assertions (drop the `*/groundloop/pulse.py` tracked check); tooth 2 drops `assert not marker.exists()` (its fixture's on_pulse marker) and keeps the exact key set; `_STATE_KEYS` gains 'spawned'. Leave PROVES keys and test names unchanged. — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'"
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-19",
+      "text": "D4: SETTLED: in cairn/devices/cairn/machines/ground_loop/intention+why.json (copy the charter JSON to a scratch file, edit the two strings there, then land it with `bin/cairn artifact write cairn/devices/cairn/machines/ground_loop/intention+why.json --verb cast --why '81eb3e46aed9: the loop launches each device pulse.py' --from <scratch file>`; never write the charter path directly), 'what' item (4) becomes 'launches each device's cairn/devices/<device>/groundloop/pulse.py as a separate process it does not wait on, with no skip or overlap logic, and records what it spawned (ticket 81eb3e46aed9; 164da559823d had retired the in-process pulse calls)'; filed edge (b) becomes DONE: 164da559823d deleted the in-process calls, 81eb3e46aed9 restored the launch as detached child processes. Falsifiers unchanged. — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'"
+    }
   ],
   "cast": "2026-10-19"
 }
