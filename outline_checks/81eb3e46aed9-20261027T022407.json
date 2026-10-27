@@ -1,0 +1,166 @@
+{
+  "ticket": "81eb3e46aed9",
+  "at": "2026-10-27T02:24:07+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.150961,
+      "duration_ms": 120796,
+      "is_error": false,
+      "session_id": "a60963a3-2bb9-4eac-af07-ede712eaea28"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt",
+  "outline_sha256": "987f2f811bf6100962b161eaed6b5475494af095c71252fe4597967fde55fe37",
+  "ticket_sha256": "370d2a0d0d993a3c9d3a5189e8a288cac3bafd329c5267a4edd4e975e6a14fba",
+  "touches": [
+    {
+      "number": "5.5",
+      "text": "ground_loop (machine): the heartbeat"
+    },
+    {
+      "number": "5.5.1",
+      "text": "PURPOSE: Cairn system daemon"
+    },
+    {
+      "number": "5.5.2",
+      "text": "ANTI-INTENTION:"
+    },
+    {
+      "number": "5.5.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "5.5.3.1",
+      "text": "It is the only daemon in the system"
+    },
+    {
+      "number": "5.5.3.1.1",
+      "text": "[Q#14: The bus process and the device processes also stay up. I read \"daemon\" here as \"the only thing that wakes on a clock\"; everything else wakes on an event. Right?]"
+    },
+    {
+      "number": "5.5.3.2",
+      "text": "It re-starts itself when its own files change, unless COMMAND_DO_NOT_RESTART is set. COMMAND_EXIT stops it with exit code 0."
+    },
+    {
+      "number": "5.5.3.3",
+      "text": "A second copy refuses to start."
+    },
+    {
+      "number": "5.5.3.4",
+      "text": "it launches a script in each device's cairn/devices/<device>/groundloop called pulse.py, each as its own process."
+    },
+    {
+      "number": "5.5.3.5",
+      "text": "It writes one JSON record at the end of a pass with a list of each device: beat time, found device (folder), NOT FOUND or name, file mtime, pid it spawned. It does no checks and no takeover."
+    },
+    {
+      "number": "5.5.3.6",
+      "text": "[Q#15: Beat interval: 60 s today. Fixed, or a setting?]"
+    },
+    {
+      "number": "5.5.4",
+      "text": "HISTORY: I once made daemons for everything and couldn't shut them down. So there is one loop, kept as simple as possible. In your words: \"this is ENTIERLY an event driven system EXCEPT: Akien can say he'll be away from x to y times. and sleep.\""
+    },
+    {
+      "number": "5.5.5",
+      "text": "TOOLS: base"
+    },
+    {
+      "number": "5.5.6",
+      "text": "VERBS: None"
+    },
+    {
+      "number": "5.6",
+      "text": "rack (machine)"
+    },
+    {
+      "number": "5.6.3",
+      "text": "HISTORY: today there is also a rack TOOL (19.20) that lists device folders. The machine holds running instances; the folder list may stay a tool."
+    },
+    {
+      "number": "5.7.3.4",
+      "text": "pulse.py is part of the shim. The ground loop calling it tells the shim the pulse has arrived, and starts the shim if it isn't running."
+    },
+    {
+      "number": "5.7.3.4.1",
+      "text": "The ground loop finds one pulse.py per device. pulse.py reads its own device's instances from the rack and pulses each one, so the ground loop never needs to know instances exist."
+    },
+    {
+      "number": "5.7.3.4.2",
+      "text": "Any device's shim (through its pulse.py) can bring the bus up if it's down: whatever is called brings up what it needs (5.2.5.1)."
+    },
+    {
+      "number": "5.7.3.4.3",
+      "text": "pulse.py asks nobody anything. It starts the shim if it's down, else tells the mechanisms inside the shim that need a pulse \"here ya go!\" Only daemon-shaped things hang there, things that actually need a heartbeat; everything else fires on events. Eg cc's Gmail fetch, which IS messaging (12.3.6)."
+    },
+    {
+      "number": "5.7.3.4.3.1",
+      "text": "WHY (Akien, 2026-10-26): \"you were shoving more and more things into the ground loop. making it slower and slower. the point behind the ground loop firing pulse.py was to give you a structure to hang deamons from, not managers.\""
+    },
+    {
+      "number": "19.20",
+      "text": "liveness: \"is the system up?\" as a file read. [Q#53: the ground loop's JSON record (5.5.3.5) already answers that. Retire liveness for it?]"
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [
+    {
+      "n": 14,
+      "number": "5.5.3.1.1",
+      "section": "5.5",
+      "text": "The bus process and the device processes also stay up. I read \"daemon\" here as \"the only thing that wakes on a clock\"; everything else wakes on an event. Right?"
+    },
+    {
+      "n": 15,
+      "number": "5.5.3.6",
+      "section": "5.5",
+      "text": "Beat interval: 60 s today. Fixed, or a setting?"
+    },
+    {
+      "n": 16,
+      "number": "5.6.2.2.1",
+      "section": "5.6",
+      "text": "A shim that isn't running isn't connected, so it isn't in the rack. Then pulse.py (5.7.3.4.1) can't learn its instances from the rack; it needs the declared list (5.6.2.4). Right?"
+    },
+    {
+      "n": 17,
+      "number": "5.6.2.3",
+      "section": "5.6",
+      "text": "The sleep token goes in \"the rack's order\" (5.2.1.2). What is that order: alphabetical, order added, or declared?"
+    },
+    {
+      "n": 18,
+      "number": "5.6.2.4",
+      "section": "5.6",
+      "text": "Where are instances declared, so the rack knows to build cc 1? Draft: the existence of cairn/devices/<device>/<instance>/ in class-space (CLAUDE.md: one address in two roots)."
+    },
+    {
+      "n": 19,
+      "number": "5.7.3.2.4",
+      "section": "5.7",
+      "text": "Does the shim ever stop its device when idle (eg the librarian after N minutes unused), or only on `stop`?"
+    },
+    {
+      "n": 53,
+      "number": "19.20",
+      "section": "19.20",
+      "text": "the ground loop's JSON record (5.5.3.5) already answers that. Retire liveness for it?"
+    }
+  ],
+  "unresolved": [],
+  "questions_opened": [
+    "open-9c0c69874075",
+    "open-80f256311de6",
+    "open-b8ef5903af51",
+    "open-709f9cbf090d",
+    "open-a71d403794f0"
+  ],
+  "questions_already_open": [
+    "open-e2f52cbbd971",
+    "open-552bf7a8debb"
+  ]
+}
