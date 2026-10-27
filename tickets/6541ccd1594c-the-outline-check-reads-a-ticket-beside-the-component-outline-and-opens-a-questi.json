@@ -1,0 +1,120 @@
+{
+  "id": "6541ccd1594c",
+  "title": "The outline check reads a ticket beside the component outline and opens a question for each conflict or open outline question it touches",
+  "date": "2026-10-26",
+  "owner": "CC builds it; CodeMother owns the outline_check machine (cairn/devices/codemother/machines/outline_check)",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "`cairn outlinecheck <ticket>` has the cheapest reader read the ticket beside CairnCommons/CairnComponentOutline.txt as it stands, and opens one question on the ticket for each outline line the ticket contradicts and each open [Q#n] in a section the ticket touches, writing one record of what it read and found.",
+  "why": "Akien 2026-10-26: 'the reason we did all this was so you'll know if somebody files a ticket withuot one of us investing the cognition to go look. i think what we want to do is make that kind of thing work.' Outline 10.3.5.1 (CodeMother), agreed the same day. A question on the ticket already holds its BUILDME crossing (lane the_ticket_has_every_answer_it_needs), so a conflict reaches him before code is built against the wrong picture.",
+  "traces_to": "outline 10.3.5.1 and 0.6 (CairnCommons/CairnComponentOutline.txt); Law 1 (the settled picture is not re-derived by hand per ticket); Law 9 (no past artifact outranks his head \u2014 a ticket contradicting his outline is red until he says which stands); rulings-as-questions (ticket 9adc6fddf185)",
+  "how": "New machine cairn/devices/codemother/machines/outline_check/ modeled on cairn/machines/rehearsal: parse the outline into numbered entries, find its open [Q#n], hand the outline and ticket to one cheap read that names touched and contradicted line numbers, resolve those numbers against the file, open de-duplicated questions through the question door, write a record through the artifact door (new verb outline_check, new records dir outline_checks). Decisions D1-D13 carry every detail.",
+  "falsifier": "Proof cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py, scratch commons, stub reader: (1) parse joins continuation lines onto their numbered entry and open_questions finds both '[Q#7: ...]' and bare '[Q#8]', and not the digitless '[Q#n: ...]'; (2) a reader conflict on '2.1' opens exactly one question, source outline_check, whose text quotes 2.1's text from the outline file, not words the reader supplied; (3) running the check again opens no new question and lists the first in questions_already_open; (4) a touched '2.1' with Q#7 on line 2.3 opens one question naming Q#7, and a Q#9 on line 3.1 opens none; (5) a reader citing '9.9', absent from the outline, opens nothing and the record lists '9.9' under unresolved; (6) the record lands under <commons>/outline_checks/ with a journal entry of verb outline_check and carries the outline's and ticket's sha256; (7) a reader returning a dict that fails the schema twice writes a ran:false record, opens no question, and the CLI's run function returns 2. (8) standing() reads not-ok with no record and with only a ran:false record, and ok after a run that read. Live: `cairn outlinecheck 81eb3e46aed9` writes a record. Horizon: this ticket's build.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the first live measurement is the child ticket's cast and tickets (a) and (b) from slate 2026-10-26-hold-lifted-81eb-proved-shims-are-processes: each check writes a record under CairnCommons/outline_checks/ and each question it opens carries source outline_check in CairnCommons/questions/, so how many were real conflicts versus false alarms is countable from Akien's answers there.",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261026T192726-e3a2dcb9dc03.json",
+  "intent_berth": "none, because the intention was agreed in chat and written at CairnCommons/CairnComponentOutline.txt line 10.3.5.1 (commit f26da2c7) rather than fired through /intent",
+  "questions": [],
+  "model": "opus",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-26",
+      "text": "D1: SETTLED: berth is cairn/devices/codemother/machines/outline_check/ holding __init__.py (empty), outline_check.py (the logic), __main__.py (the CLI, D12), prompt.md (D5), schema.json (D5), intention+why.json (charter: owner codemother; why = outline 10.3.5.1 and Akien 2026-10-26 'so you'll know if somebody files a ticket without one of us investing the cognition to go look'; public_interface = ['cairn.devices.codemother.machines.outline_check.outline_check', 'cairn outlinecheck <ticket>']) and proofs/ (D13). Model it on cairn/machines/rehearsal/ \u2014 same file set."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-26",
+      "text": "D2: SETTLED: the outline is read from <commons>/CairnComponentOutline.txt every run, where <commons> is cairn.machines.rehearsal.rehearsal.commons(root) (composed, public interface of rehearsal); the ticket file is found with rehearsal.ticket_file(ticket, root). Never cache the outline: Akien edits it, and the check reads it as it stands."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-26",
+      "text": "D3: SETTLED: parse(text) -> list of {'number': str, 'text': str}. A line matching r'^\\s*(\\d+(?:\\.\\d+)*)\\s+(\\S.*)$' starts an entry (number = group 1, text = group 2). Every following line that does not match is a continuation: strip it and join it onto the current entry's text with one space. Lines before the first entry and blank lines are skipped."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-26",
+      "text": "D4: SETTLED: open_questions(entries) -> list of {'n': int, 'number': str, 'text': str}. In each entry's joined text, re.finditer(r'\\[Q#(\\d+):\\s*(.*?)\\]', text) gives n and the question text; also re.finditer(r'\\[Q#(\\d+)\\]', text) (the bare form, eg Q#60), whose question text is the entry's text with that marker removed and stripped. The '[Q#n: ...]' example in outline line 0.2 has no digits, so it matches neither."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-26",
+      "text": "D5: SETTLED: one read. prompt.md says: 'You read a component outline and one ticket. In touches, list the outline number of every line the ticket\\'s work changes, depends on, or names. In conflicts, list each outline line the ticket contradicts: number, what the ticket says (ticket_says), and why both cannot stand (why). A ticket doing more than the outline mentions is not a conflict; only a contradiction is. Write numbers exactly as the outline writes them.' The text handed to the reader is prompt.md, then a line '=== OUTLINE ===', the outline file's text, a line '=== TICKET ===', the ticket file's text. schema.json: {type: object, required: [touches, conflicts], additionalProperties: false, properties: {touches: {type: array, items: {type: string}}, conflicts: {type: array, items: {type: object, required: [number, ticket_says, why], additionalProperties: false, properties: {number: {type: string}, ticket_says: {type: string}, why: {type: string}}}}}}."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-26",
+      "text": "D6: SETTLED: the reader is injectable: check(ticket, *, reader=claude_reader, root=None), reader(prompt_text, schema_doc) -> (dict|None, meta). claude_reader here is a copy of cairn/machines/rehearsal/rehearsal.py:409-447 with env['CAIRN_USER'] = 'outline_check' and MODEL imported from rehearsal (the cheapest reader). The result is checked BY HAND against D5's shape (validate(doc) -> list of lacks); a failed read is read once more; two failures write a ran:false record (D11) with the lacks and meta, open no questions, and the CLI exits 2."
+    },
+    {
+      "n": 7,
+      "by": "cc",
+      "step": "D7",
+      "date": "2026-10-26",
+      "text": "D7: SETTLED: resolve the reader's numbers against parse(): a touches number or a conflict number not found among entry numbers goes to 'unresolved' (a list of the strings as given) and nothing else is done with it. A resolved conflict takes its text from the parsed entry, never from the reader."
+    },
+    {
+      "n": 8,
+      "by": "cc",
+      "step": "D8",
+      "date": "2026-10-26",
+      "text": "D8: SETTLED: the section of a number is its first two dot components ('5.6.2.2' -> '5.6'; '3' -> '3'). An open question is in a touched section when its entry number equals that section or starts with section + '.'. Each Q#n is listed once however many touched lines share its section."
+    },
+    {
+      "n": 9,
+      "by": "cc",
+      "step": "D9",
+      "date": "2026-10-26",
+      "text": "D9: SETTLED: questions open through cairn.tools.question.question.open_question(ticket, q, why_it_blocks, source='outline_check', root=<commons>/'questions'). Conflict: q = f'Ticket {ticket} says {ticket_says!r}, but outline {number} reads \"{text}\" ({why}). Which stands, the ticket or the outline?'; why_it_blocks = 'the ticket and the component outline disagree; building it would build one of them wrong'. Open outline question: q = f'Ticket {ticket} touches outline section {section}, where Q#{n} stands open: \"{qtext}\" What is the answer?'; why_it_blocks = f'the ticket works inside outline section {section}, and the answer to Q#{n} may change it'."
+    },
+    {
+      "n": 10,
+      "by": "cc",
+      "step": "D10",
+      "date": "2026-10-26",
+      "text": "D10: SETTLED: no duplicate questions. Before opening, take Q.open_for(ticket, root=<commons>/'questions') with source == 'outline_check'. Skip a conflict when f'\"{text}\"' already appears in one of their question texts; skip a Q#n when f'where Q#{n} stands open' already appears. Skipped ids go in the record's questions_already_open."
+    },
+    {
+      "n": 11,
+      "by": "cc",
+      "step": "D11",
+      "date": "2026-10-26",
+      "text": "D11: SETTLED: every run writes one record at <commons>/outline_checks/<ticket>-<YYYYmmddTHHMMSS>.json through cairn.tools.artifact.artifact.write(path, json_text, verb='outline_check', why=f'outline check of {ticket}'). Add 'outline_check' to VERBS in cairn/tools/artifact/artifact.py (with a comment like the rehearse one at lines 66-67) and {'under': 'outline_checks', 'name': '*.json'} to the CairnCommons records in cairn/tools/artifact/jurisdiction.json \u2014 exactly how rehearse joined on 2026-09-15. Fields: ticket, at, ran (bool), model, meta, outline_path, outline_sha256, ticket_sha256, touches [{number, text}], conflicts [{number, text, ticket_says, why}], open_questions [{n, number, section, text}], unresolved, questions_opened [ids], questions_already_open [ids], lacks (only when ran is false)."
+    },
+    {
+      "n": 12,
+      "by": "cc",
+      "step": "D12",
+      "date": "2026-10-26",
+      "text": "D12: SETTLED: CLI `python3 -m cairn.devices.codemother.machines.outline_check <ticket>` prints the record path, then one line per conflict ('conflict <number>: <question id>') and per open question ('Q#<n> open in <section>: <question id>'). Exit 0 when nothing stands, 1 when any question was opened or was already open, 2 when the read failed. bin/cmd/outlinecheck is a copy of bin/cmd/rehearse ending in exec \"$PY\" -m cairn.devices.codemother.machines.outline_check \"$@\", chmod +x, so `cairn outlinecheck <ticket>` runs it."
+    },
+    {
+      "n": 13,
+      "by": "cc",
+      "step": "D13",
+      "date": "2026-10-26",
+      "text": "D13: SETTLED: the proof is cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py, with PROVES = {'6541ccd1594c': {'1':..., ..., '7':...}} keyed by the falsifier's numbered teeth. Each tooth builds a scratch world the way cairn/machines/rehearsal/proofs/test_rehearsal.py:179 does (door.set_diagnostic_roots({'cairn': ..., 'CairnCommons': scratch_commons}), cleared after), writes a small outline and a ticket into the scratch commons, and passes a stub reader returning a fixed dict. No tooth calls the live reader. The proof imports outline_check inside each tooth, never at module level. Every tooth prints its verdict."
+    },
+    {
+      "n": 14,
+      "by": "cc",
+      "step": "D14",
+      "date": "2026-10-26",
+      "text": "D14: SETTLED: outline_check.py exposes standing(ticket, root=None) -> {'ok': bool, 'lack': str|None, 'record': str|None}: ok is True iff some record under <commons>/outline_checks/ named <ticket>-*.json has ran == true (the latest such record's path goes in 'record'); otherwise lack = f'no outline check has run over {ticket}: cairn outlinecheck {ticket}'. It reads records only \u2014 it never runs a check. It is part of the public interface, for the BUILDME lane cast as this ticket's child. Falsifier tooth (8): standing() is False with no record, False with only a ran:false record, True after a clean run."
+    }
+  ],
+  "cast": "2026-10-26"
+}
