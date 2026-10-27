@@ -7,7 +7,7 @@
   "intention": "Each certification a gate issues (a ticket's crossing, journaled by emit) reaches CC's bus address as one 'personal' message, so CC, today's builder, prover and every other summons handler, hears the event without standing at the gate.",
   "why": "Akien 2026-10-27, verbatim on open-a89d15043c7c: 'that certification being completed is an event. that event triggers probes for any device in the system that can handle that event... over the bus. no orchestrator'; on open-c345acf7f373: 'right now you are the builder and the prover and the so on... we can build out the pieces that would send you email for each of these event changes'; on open-a44f6aadde21: 'a message to your bus address', because mail is an open prompt-injection hole.",
   "traces_to": "Akien's answers on open-a89d15043c7c, open-c345acf7f373, open-a44f6aadde21; the bus intention (cairn/devices/cairn/machines/bus/intention+why.json: the only device-to-device path); Law 1; ticket 1e2640bad4dd (PROVED: the receiving half, bus -> CC mailbox -> poke); ticket 48519f4789b1 decision 14 (the removed post this answers).",
-  "how": "One never-raising function in cairn/tools/base/transitions.py, called in emit right after projector.append_entry writes the crossing's journal. It lazily imports cairn.tools.bus_client.remote and posts through RemoteBus (the one bus process, never a private ring, never ensure_bus/connect_bus) one envelope: sender 'cairn', to 'cc', channel 'personal', verb 'certified', body {ticket, component, from, to, direction, fingerprint} plus the testing mark when CAIRN_TESTER_TEST_ID is set. Any failure is caught and reported on stderr; the crossing already stands. CC's shim (built) delivers and pokes. Decisions D1-D5.",
+  "how": "A gate's probes are JSON files in instance-space, one per probe, at ~/.cairn/devices/codemother/0/machines/gate/<gate>/probes/ (D8). A new tool module cairn/tools/base/gate_probes.py loads, seeds, clears and fires them (D10, D12). emit in cairn/tools/base/transitions.py, right after projector.append_entry journals a ticket-carrying crossing at a class-space address, calls gate_probes.fire for the gate the crossing entered; each probe whose event is 'certified' becomes one 'personal' envelope to its 'to' through the one bus process (RemoteBus; never ensure_bus/connect_bus), carrying the crossing's fields, the rendered message and the testing mark when set (D3, D4, D9). Every failure is caught and reported on stderr; the crossing already stands (D5). Seeded with one cc probe per gate. CC's shim (built, 1e2640bad4dd) delivers and pokes. Decisions D2-D5 and D7-D12; D1 and D6 were superseded into D7 and removed.",
   "falsifier": "DONE when (1) a live crossing of a real ticket puts exactly one 'personal' envelope to 'cc' with verb 'certified' on the bus naming that ticket, component and summons, and ~/.cairn/devices/cc/0/mail_ledger.jsonl shows it delivered (plus 'poked' if CC was idle); (2) with the bus unreachable, emit still journals, returns the new workflow string and raises nothing; (3) under CAIRN_TESTER_TEST_ID the body carries testing_mark.mark(<id>). (2)-(3) are proofs in cairn/tools/base/proofs/; (1) is measured live at PROVEME. WRONG INTENT if the mail-ledger rate shows notices CC never acts on, or if a second handler makes the address 'cc' a consumer registry, in which case the event moves to subscription.",
   "node_class": "code-seam",
   "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
@@ -59,6 +59,70 @@
       "step": "D8",
       "source": "rehearsal",
       "at": "2026-10-27T18:33:25+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D9: FIRING. The event of every crossing is 'certified'. For each probe file in the entered gate's folder, in filename order, whose 'event' equals 'certified', post one envelope through RemoteBus: sender 'cairn', to=probe['to'], channel 'personal', verb=probe['event'], why=the rendered message, body = D3's six fields + {'probe': <file stem>, 'message': <rendered>} + D4's 'testing' when set. Rendering is str.format(event=probe['event'], ticket=<ticket id>) and nothing else. A probe whose event is not 'certified' fires nothing today. A malformed probe is reported on stderr and skipped: not a JSON object, a missing or non-string to/event/message, or a template naming any other key. The rendered message replaces D3's why.",
+      "by": "cc",
+      "step": "D9",
+      "source": "rehearsal",
+      "at": "2026-10-27T18:52:01+00:00"
+    },
+    {
+      "n": 10,
+      "text": "D10: SEED AND CLEAR. New module cairn/tools/base/gate_probes.py owns the folder, with every path built from cairn.tools.base.address.instance_path('codemother', 0, roots)/'machines'/'gate'/<gate>/'probes' (the roots argument lets proofs point at a temp dir). GATES = ('build','prove','fix','watch','ticket','proved'). gate_for(summons) maps BUILDME->build, PROVEME->prove, FIXME->fix, WATCHME->watch, TICKETME->ticket, PROVED->proved, and anything else to None, which fires nothing. load(gate, roots=None) returns (probes, errors). seed(device, roots=None) writes <device>.json = {to: device, event: 'certified', message: '{event} on {ticket}'} into each of the six gates and leaves an existing file untouched. clear(device, roots=None) deletes every devices/*/*/machines/gate/*/probes/*.json under the instance root whose 'to' is device and returns the deleted paths. CLI: python3 -m cairn.tools.base.gate_probes seed|clear|list <device>. The live step runs 'seed cc' once. emit's firing function (D2) calls load().",
+      "by": "cc",
+      "step": "D10",
+      "source": "rehearsal",
+      "at": "2026-10-27T18:52:01+00:00"
+    },
+    {
+      "n": 11,
+      "text": "D11: PROOFS (extends D5's teeth). Proofs live in cairn/tools/base/proofs/ over a temp roots table and a stand-in RemoteBus, binding the subject at call time. Teeth: envelope shape (one probe, one personal envelope with D9's fields); unreachable bus (emit returns and journals, nothing raises); testing mark under CAIRN_TESTER_TEST_ID; missing or empty folder posts nothing; malformed probe skipped with a stderr line while a good sibling still fires; seed writes six files and is idempotent; clear removes only the named device's files.",
+      "by": "cc",
+      "step": "D11",
+      "source": "rehearsal",
+      "at": "2026-10-27T18:52:01+00:00"
+    },
+    {
+      "n": 12,
+      "text": "D12: API AND SCOPE. gate_probes.load(gate, roots=None) returns (probes, errors): probes is a list of (file_stem, dict) in filename order, and errors is a list of strings. gate_probes.fire(*, ticket, component, from_, to, direction, fingerprint, roots=None, bus=None) does D9's posting; bus=None means cairn.tools.bus_client.remote.RemoteBus() (no args = the live bus home), posted as bus.post(sender='cairn', to=..., channel='personal', why=..., verb=..., body=...). A missing socket raises FileNotFoundError or ConnectionRefusedError, which D5 catches. In emit, history_path is emit's own keyword argument. When it is None, or does not resolve under the cairn repo root (Path(transitions.__file__).resolve().parents[3]), or the crossing carries no ticket in journal_extra, nothing fires: a proof's temp-dir crossing never reaches the live bus. Otherwise emit computes component = history_path's parent relative to that root and calls gate_probes.fire inside D5's catch-all. Proof files follow cairn/tools/base/proofs/test_crossing_fingerprint.py: plain test_* functions plus a __main__ runner, exit 0 = green. The proof stand-in bus is an object whose post(**kw) appends kw to a list (or raises ConnectionRefusedError for the unreachable tooth), passed as bus=.",
+      "by": "cc",
+      "step": "D12",
+      "source": "rehearsal",
+      "at": "2026-10-27T18:59:16+00:00"
+    },
+    {
+      "n": 13,
+      "text": "D2A: THE D14 COMMENT, located. It stands in cairn/tools/base/transitions.py emit, directly under 'projector.append_entry(history_path, state_path, record)' (line 2355 at HEAD e52c486c), and begins '# No bus post to harbor_master here (removed, ticket 48519f4789b1 decision 14).' Its two whys: the post went through a private BusDevice whose ring nothing flushed (563 notices to 2026-09-02, none since), and posting through the one bus process would put a socket on the inspector's verdict path, since the inspector imports this module. Replace those six lines with a comment citing 32f500e517d7 that answers both: the one bus process (RemoteBus) replaces the private ring, and the post runs after the journal, inside a catch-all, only for class-space crossings (D12), so it never decides a verdict. The firing call goes right after that comment, still inside the 'if history_path' block.",
+      "by": "cc",
+      "step": "D2",
+      "source": "rehearsal",
+      "at": "2026-10-27T19:14:47+00:00"
+    },
+    {
+      "n": 14,
+      "text": "D3A: FIELD MAP. In emit's gated record (transitions.py ~line 2288): from = record['from'] (wf.here, the summons left), to = record['to'] (target, the summons entered, which also picks the gate via gate_for), direction = record['direction'] ('forward'|'back'), fingerprint = record['fingerprint'], ticket = journal_extra['ticket']. A disposition (the early-return branch with direction 'disposition', ~line 2125) passes no gate, so it is not a certification and fires nothing: no call is added there.",
+      "by": "cc",
+      "step": "D3",
+      "source": "rehearsal",
+      "at": "2026-10-27T19:21:32+00:00"
+    },
+    {
+      "n": 15,
+      "text": "D10A: WHEN SEED RUNS. Once, by hand, by the builder at the live-fire step after PROVEME: 'python3 -m cairn.tools.base.gate_probes seed cc'. Never at startup, install or on any beat: probes are data a device adds when it wants to hear a gate, and an empty folder firing nothing is the agreed default (Akien 2026-10-27, 'agreed on empty folder fires nothing'). The PROVED crossing is then the first live fire that reaches CC.",
+      "by": "cc",
+      "step": "D10",
+      "source": "rehearsal",
+      "at": "2026-10-27T19:27:40+00:00"
+    },
+    {
+      "n": 16,
+      "text": "D12A: HOLDINGS MEASURED at HEAD e52c486c (each exists, nothing to build): cairn/tools/base/address.py:instance_path(device: str, instance: int = 0, roots: dict[str, Path] | None = None) -> Path, giving <instance root>/devices/<device>/<instance>, where roots={'repo','commons','instance'} paths; cairn/tools/bus_client/remote.py:RemoteBus(home=None) with no args = the live bus home, and RemoteBus.post(**kw) forwards to the bus process's BusDevice.post(*, sender, to, channel, why, verb='', body=None, reply_to=None) (cairn/devices/cairn/machines/bus/bus.py:426); cairn/tools/base/testing_mark.py:mark(test: str, kind='return') -> dict, and its FIELD = 'testing' is the body key.",
+      "by": "cc",
+      "step": "D12",
+      "source": "rehearsal",
+      "at": "2026-10-27T19:35:08+00:00"
     }
   ],
   "cast": "2026-10-27",
