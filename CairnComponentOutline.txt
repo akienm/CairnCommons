@@ -1,0 +1,1004 @@
+CAIRN COMPONENT OUTLINE — V2, FIRST FULL DRAFT (CC, 2026-10-22)
+Built from 20261017.CairnComponentOutlineV1.txt (left untouched) plus the charters.
+Akien's V1 text is kept as written wherever it stood; CC's additions fill the rest.
+
+0 HOW TO READ THIS
+  0.1 Every line has an outline number. Refer to anything by its number ("5.4.6").
+  0.2 A question is [Q#n: ...]. Its #n is its own and never changes, so refer to a
+      question by its #n. The line it sits on gives it a place, not a name.
+  0.3 Entry shape: PURPOSE / WHY / INTENTION / ANTI-INTENTION / HISTORY (only where
+      needed) / COMMANDS (or VERBS, or USERS for a tool).
+  0.4 "was x" means the code's current name; the outline name is the one we keep.
+  0.5 Section 20 is where things went that I could not place. Its job is to empty.
+  0.6 Lines are renumbered after each round of edits, so a line number holds within
+      one conversation, not across them. Question numbers (#n) hold forever; a new
+      question takes the next unused #n. (Akien, 2026-10-26)
+  0.7 This file lives at CairnCommons/CairnComponentOutline.txt; git keeps every
+      version. Akien edits it there.
+
+1 THE RUNGS (the complexity axis)
+  1.1 PURPOSE: Name what every component is, so it has one place to live.
+  1.2 INTENTION:
+    1.2.1 Tool: a complete primitive. Has users, not an owner. Lives in cairn/tools/.
+          Its data for a holder lives under that holder:
+          ~/.cairn/devices/<device>/<instance>/tools/<tool>/
+    1.2.2 Machine: tools plus the glue that holds them together. Has an owner. Lives
+          inside its device (cairn/devices/<device>/machines/<machine>/), or in
+          cairn/machines/ if several devices hold one.
+    1.2.3 Device: its own process, in the rack, on the bus. See 2.
+    1.2.4 Instance: every device has at least one; a singleton is 0.
+    1.2.5 First class object (not a device): a thing with a charter that is not a
+          rung of its own (Rescue, Graph Trees, Ticket).
+    1.2.6 [Q#1: Test from the charters: "a thing that holds state is a machine, not a
+          tool" (verdict machine, 2026-08). Is that still the line between 1.2.1 and
+          1.2.2, or is it "has glue / has several tools"?]
+
+2 DEVICE (Implemented as BaseDevice, part of the base tool; a first class object)
+  2.1 PURPOSE: A device is a top level cairn entity.
+  2.2 INTENTION:
+    2.2.1 HARD BOUNDARY: TO ENCAPSULATE EVERYTHING ABOUT A DEVICE IN ITSELF.
+    2.2.2 An internal device is its own process. External devices depend on
+          implementation.
+      2.2.2.1 A device may also own other processes besides its own. They are inside
+              the device's boundary. Eg Cairn owns the bus process (where the shims
+              run) and the ground loop.
+    2.2.3 Devices are all peers with different jobs. See Operator (8).
+    2.2.4 A device lives in its own folder in cairn/devices/<device>
+    2.2.5 A device's data lives in ~/.cairn/devices/<device>/<instance>/
+      2.2.5.1 The instance folder is a number, eg ~/.cairn/devices/cc/0/. A
+              singleton is 0.
+      2.2.5.2 A device may be a singleton or not, but nothing in its code differs by
+              instance.
+      2.2.5.3 A bare device name addresses instance 0 (`cc` means `cc 0`); the number
+              is written only when it isn't 0. So instance 0 is the default: eg when
+              one CC is the orchestrator, it's cc 0 unless directed otherwise.
+    2.2.6 A device owns its state: only the device writes under its own
+          ~/.cairn/devices/<device>/<instance>/ tree.
+    2.2.7 A device holds machines and uses tools (from cairn/tools/). A tool's data
+          for that device lives under the device:
+          ~/.cairn/devices/<device>/<instance>/tools/<tool>/
+    2.2.8 A device talks to other devices only over the bus, never by importing them.
+      2.2.8.1 The bus is the only door, with exceptions (Akien 2026-10-22). Each
+              is a client tool the device publishes:
+        2.2.8.1.1 Database: because faster (13.2.5).
+        2.2.8.1.2 Librarian: the embedding links will, I think, work better without
+                  device boundaries. Talked about during the first pass at memory;
+                  the words came later (4.5.2).
+        2.2.8.1.3 Trouble: it has to be able to report when nothing else can, so
+                  direct lines to trouble make sense for recovery reasons (7.3.4).
+    2.2.9 Every device has the panes defined by base device (19.1.2.5.1): status,
+          controls, chat, feed. The web server draws them (18).
+  2.3 WHY: Because without hard boundaries Claude creates a tangled mess that exceeds
+      Claude's own complexity limit far in advance of completion.
+  2.4 COMMANDS:
+    2.4.1 get - return a json of some requested thing
+    2.4.2 help - the verb list with help strings; always human readable
+    2.4.3 list - enumerates verbs, views and panes, any list of things that might be
+          published; returns json (show list <foo> formats it for humans)
+    2.4.4 put - is given mail or other future push things
+    2.4.5 set <setting> <value> - change one of this device's settings (if any); see
+          them with list settings
+    2.4.6 send <to whom> <what> - this device sends mail to another device, eg
+          cairn operator send librarian research <topic>
+    2.4.7 show - same as get or list but formatted for humans
+    2.4.8 start - start the device
+    2.4.9 stop - stop the device
+    2.4.10 A machine the device owns that has settings is reached through its device,
+           with the same help/list/show/get/set: cairn <device> <machine> <command>
+           (eg cairn cairn scheduler list). The bus only ever sees the device, which
+           passes the rest down. Machines with no settings (eg base) don't need this.
+    2.4.11 [Q#2: A device's own verbs beyond these (eg tester's run, librarian's ask):
+           are they always reached as `cairn <device> <verb>`, and does `help` list
+           them beside the common ones?]
+
+3 TICKET (Abstract class - not a device, but a first class object; abstract)
+  3.1 PURPOSE: A unit of work or attention, written down so it can be followed.
+  3.2 INTENTION:
+    3.2.1 TICKET is abstract. Every real ticket is one of the kinds below.
+    3.2.2 The abstract ticket owns what every kind shares: its birth (cast), its plan
+          file and its trail (the log beside it).
+    3.2.3 [Q#3: Today tickets live in CairnCommons/tickets/ and their workflow gates
+          are housed in harbor_master (5.9). Is the abstract Ticket a tool (code in
+          cairn/tools/ticket/, data wherever each kind says), with harbor_master
+          only reporting over it?]
+  3.3 KINDS:
+    3.3.1 Coding Ticket: what we usually mean.
+      3.3.1.1 Has its own workflow stamped on it (the state string, with the cursor).
+      3.3.1.2 Each workflow step declares what it needs.
+      3.3.1.3 Carries its WATCHME spec.
+      3.3.1.4 Lives in CairnCommons/tickets/ while staged; its trail migrates beside
+              its code as that component's history while under way, and back to the
+              commons after (Law 5).
+      3.3.1.5 The ticket owns its refusals: a gate refuses a crossing on the ticket's
+              behalf (ruling 2026-08-10). The gates are housed in harbor_master.
+    3.3.2 Inference Ticket: the record of one call to the inference proxy, everything
+          that happened to that request.
+      3.3.2.1 The call runs the request against our graph trees first. If they can't
+              answer, it asks the cloud "what nodes do I need to understand this?",
+              integrates them, and runs the query against the trees again.
+      3.3.2.2 When it asks an upstream LLM, the nest and its sieves sort out the
+              lowest cost way to resolve it (eg by the request's domain), and the
+              call is made the way the current constraint set says is best.
+      3.3.2.3 Models can be specified, but shouldn't be most of the time. The graph
+              trees can be bypassed, but shouldn't be most of the time.
+      3.3.2.4 The call returns two pieces: the resolution of the request, and the
+              inference ticket.
+      3.3.2.5 Used for learning, or for debugging when something fails. A logging
+              artifact, so disposable after 30 days.
+      3.3.2.6 [Q#4: Lives in the transient tree (4.3.2) with a 30 day lifetime?]
+    3.3.3 Trouble Ticket: an error that needs a non-automated fixer (CC or Akien).
+      3.3.3.1 The intention for a trouble ticket is that it is a diagnostic report.
+              EXACTLY like the Trouble Tickets in the Number Five Crossbar Telephone
+              Switch. It MUST include EVERYTHING needed to diagnose, isolate, and
+              repair the trouble.
+      3.3.3.2 In the event a second trouble is observed while the first is open, a
+              new ticket is NEVER issued, we just increment a counter on the ticket.
+        3.3.3.2.1 A trouble has a point of origin, and that is how we match them up.
+                  When raised with a condition, its emission source AND error message
+                  are checked against open tickets. If found, increment the counter;
+                  either way, pass the ticket back to the caller.
+        3.3.3.2.2 The incrementing is part of the trouble ticket class.
+        3.3.3.2.3 So the error a raiser reports is the same words every time it
+                  happens; whatever changes from one time to the next (a pid, a
+                  timestamp, a temp path) goes in the details, not the error.
+      3.3.3.3 Trouble Tickets are disposable artifacts once closed. They are file
+              artifacts, live in the logging tree, and are cleared out on a 30 day
+              cycle by the cairn device during a sleep cycle.
+      3.3.3.4 If a device experiences an error while servicing a request for another
+              device, it can return a pointer to the trouble ticket, and the receiver
+              can add new details if they wish.
+      3.3.3.5 The test before raising one: can only CC or Akien fix this? If not, it
+              is a log line, not a trouble. One problem, one trouble.
+      3.3.3.6 They show on the operator's to-do list (8.2.6).
+      3.3.3.7 Trouble tickets live inside the recovery device (7.3.4), since
+              recovery has to work when other things don't.
+      3.3.3.8 [Q#5: Who clears a trouble when it's fixed: whoever fixed it, by a
+              command (cairn trouble clear <id>)? And does a fixed-then-recurring
+              trouble reopen the same file or start a new one?]
+    3.3.4 Task Ticket: work the system needs done that does not change code, eg
+          deploying our environment onto a second computer to use its compute.
+      3.3.4.1 [Q#6: Does a task ticket have a workflow (cast → done) and gates like a
+              coding ticket, or just open/closed?]
+    3.3.5 [Q#7: Ideas, intents and questions (the open-question lane) are not tickets
+          today, but each is born, followed and closed. Kinds of Ticket, or their
+          own thing? See 19.18 (question tool).]
+
+4 GRAPH TREES MEMORY SERVICE (not a device, but a first class object)
+  4.1 PURPOSE: Where Cairn keeps what it knows, and what it holds for a little while.
+  4.2 WHY: So everything the system learns is one connected body the librarian can
+      see whole, and patterns can be exported from all of it. And so no device
+      invents its own way of storing things: there are two ways, and every device
+      uses them.
+  4.3 INTENTION:
+    4.3.1 Knowledge: one list of nodes, owned by the librarian.
+      4.3.1.1 Other devices (codemother, chart, ...) keep no node tables of their
+              own. They put what they learn into the librarian's nodes through the
+              librarian's verbs on the bus.
+      4.3.1.2 Each depositor gets its own index over the shared nodes, because each
+              asked different questions first while assimilating the data.
+      4.3.1.3 The librarian becomes aware of what other parts of the system learned,
+              because it is all in its own store, so it can surface what others would
+              find useful.
+      4.3.1.4 Nodes are kept. The librarian can hand out the next free node.
+    4.3.2 Transient: the transient tree (what the logging tree becomes).
+      4.3.2.1 Everything held for seconds to days lives here: mail, logs, test runs,
+              trouble tickets, inference tickets.
+      4.3.2.2 Each kind of thing declares its lifetime, and it ages out on that clock.
+      4.3.2.3 [Q#8: Who owns the transient tree? Draft: the Cairn device (it already
+              owns clearing it in sleep, 5.2.1.4). And is it files on disk (as
+              troubles are today, under ~/.cairn/logs/) or rows in the database?]
+    4.3.3 A device's own state lives in its ~/.cairn/devices/<device>/<instance>/
+          tree.
+    4.3.4 Shareable provenance (charters, tickets, validations) is git JSON beside
+          the code, never a row.
+  4.4 ANTI-INTENTION:
+    4.4.1 Each device growing its own pool of tables (today: 16 node tables, several
+          owners).
+    4.4.2 Any device reaching into the librarian's code other than through the trees
+          tool it publishes (today chart does).
+  4.5 COMMANDS:
+    4.5.1 The librarian's verbs for depositing and walking. See 9.4.
+    4.5.2 Walks go through the librarian's published trees tool, not the bus
+          (2.2.8.1.2).
+
+5 CAIRN DEVICE (cairn/devices/cairn/)
+  5.1 PURPOSE: Represents the cairn system in aggregate
+    5.1.1 Cairn owns everything about the system that is Cairn and hasn't been
+          delegated elsewhere. A delegated domain belongs to its device, not to
+          Cairn, even though it is of Cairn: eg the librarian is delegated learning,
+          research and answering queries on what's learned; the embeddings device is
+          delegated producing the embeddings we search with. The OS and hardware
+          belong to Recovery (7.6).
+    5.1.2 [Q#9: "the embeddings device" — there is no such device today; embeddings go
+          through the inference proxy's embed verb. A device of its own to come?]
+  5.2 INTENTION:
+    5.2.1 Drive sleep process for devices
+      5.2.1.1 Cairn keeps a list of scheduled things (the scheduler, 5.8). Each
+              ground loop pulse, its shim has Cairn check that list against the
+              clock: no match (eg 2245), the pulse is dropped; a match (eg 2300) is a
+              PROBE, and it kicks off that thing in the Cairn device.
+      5.2.1.2 Sleep is one of those scheduled things. At its time Cairn kicks off
+              sleep by running its own sleep routine, then hands the sleep token over
+              the bus to the next device, and so on. The rack's order is the token's
+              order.
+      5.2.1.3 What each device does in its sleep depends on the device: the librarian
+              consolidates memory; the learning blocks do the same on their smaller
+              memory sets; Recovery might run backups or SSD checks; some (eg the word
+              graph embeddings device) do nothing.
+      5.2.1.4 Cairn's own sleep has a lot to do, including clearing the logging tree
+              of things older than 30 days.
+      5.2.1.5 [Q#10: Earlier (2026-08-06) sleep's trigger was idle, "3 hours without a
+              human", not an hour of the day. Now it's a clock entry (2300). Is it
+              the clock now, or both (at 2300, if no human for N hours)?]
+      5.2.1.6 [Q#11: "Away windows" (you tell Cairn you'll be gone x to y) were ruled to
+              the cairn device 2026-09-30. Are they entries on the same scheduled
+              list? What does Cairn do differently while you're away?]
+    5.2.2 Own foundational components (bus, ground loop, rack, shims, scheduler,
+          launcher, harbor_master).
+    5.2.3 Owns the cairn command line launcher (5.3).
+    5.2.4 Owns the transient tree and its 30 day sweep (4.3.2). [see Q 4.3.2.3]
+    5.2.5 `cairn start` (= cairn cairn start) brings the system up: ground loop, bus,
+          shims. `cairn stop` takes it down.
+      5.2.5.1 Any cairn command brings up whatever it needs, including the whole
+              install on the very first run (7.3.2). A well designed tool should
+              disappear in use.
+  5.3 launcher (machine)
+    5.3.1 PURPOSE: The operator's ramp onto the bus.
+    5.3.2 INTENTION:
+      5.3.2.1 The launcher is a machine owned by the Cairn device. It is mostly a
+              router.
+      5.3.2.2 cairn <command>: first look for <command> in cairn/bin; if it isn't
+              there, resolve it on the bus.
+      5.3.2.3 The scripts in cairn/bin are the shortcuts. The folder IS the list: add
+              a file to add one, delete it to remove one. A script may wrap a bus
+              call (eg `cairn superclaude` → `cairn cc superclaude`; `cairn show
+              temp` → `cairn recovery show temp`, added while we're chasing a heat
+              problem) or do work itself (eg initialization, install).
+      5.3.2.4 Scripts are Python wherever possible, run by Cairn's own interpreter,
+              so one file works on every platform. Platform-specific ones match their
+              platform: executable or .sh on Linux; .bat, .cmd or .ps1 on Windows.
+      5.3.2.5 If a shortcut has the same name as a device, the launcher warns "x
+              hides y" and then runs x.
+      5.3.2.6 `cairn` speaks as the Operator (8).
+      5.3.2.7 If Cairn isn't set up, or won't come up, the launcher calls the
+              recovery device directly, not over the bus (7.3.1).
+    5.3.3 HISTORY: today it is bin/cairn dispatching to bin/cmd/<name>, 31 commands,
+          most of which do the work themselves. Where each goes: 5.10.
+    5.3.4 [Q#12: cairn/bin (inside the package) or bin/ at the repo root (where it is
+          now)?]
+  5.4 bus (machine)
+    5.4.1 PURPOSE: To provide an inspectable message passing system.
+    5.4.2 INTENTION:
+      5.4.2.1 It is the only way devices talk to one another.
+      5.4.2.2 The shims all run in the same process with the bus.
+      5.4.2.3 The bus handles two kinds of requests:
+        5.4.2.3.1 Send - Asynchronous. Like sending an email.
+        5.4.2.3.2 Show/Get - Synchronous. Like requesting a web page.
+      5.4.2.4 The messages are stored in a SMALL buffer in memory. The bus keeps no
+              database. A shim that needs to hold mail puts it in the transient tree
+              (see Graph trees).
+      5.4.2.5 The shims, in the same process with the bus, pick up the messages and
+              route them to their device in whatever manner is appropriate.
+      5.4.2.6 The Operator Device and the 'cairn' command are the operator's route
+              onto the bus.
+      5.4.2.7 The bus makes this messaging inspectable, the messages show on the
+              bus' web panel as a "Murderbot Diaries" "Public Feed" the operator can
+              review for purposes such as diagnostics.
+        5.4.2.7.1 The feed is for debugging: "did the thing go by when I typed the
+                  command?"
+        5.4.2.7.2 It holds about the last 5 minutes, in the bus's memory buffer, and
+                  is empty after a bus restart. The Cairn device owns it, since the
+                  bus is its machine.
+        5.4.2.7.3 The panel is drawn by the public_feed tool (19.3).
+        5.4.2.7.4 Each line: from, to, time, sync/async, message.
+      5.4.2.8 One bus per cairn instance (not per host). The bus owns cross system
+              communication: extending the bus services to other host systems so
+              we can run multiple heavy tasks at once.
+      5.4.2.9 [Q#13: A sync request to a device whose shim must wake it: how long does
+              the caller wait before it gets "not now" back? (V1 had 600 s then a
+              trouble, before the wake moved to the shim, 5.7.3.2.2.)]
+    5.4.3 HISTORY: the bus once wrote its ring to the database on each pulse
+          (2026-09-06). V1's "keeps no database" replaces that.
+    5.4.4 TOOLS: base, public_feed
+    5.4.5 VERBS: None
+  5.5 ground_loop (machine): the heartbeat
+    5.5.1 PURPOSE: Cairn system daemon
+    5.5.2 ANTI-INTENTION:
+      5.5.2.1 What it must never grow back: a bus, a shim, probes, other kinds of
+              pulses, staleness
+    5.5.3 INTENTION:
+      5.5.3.1 It is the only daemon in the system
+        5.5.3.1.1 [Q#14: The bus process and the device processes also stay up. I read
+                  "daemon" here as "the only thing that wakes on a clock"; everything
+                  else wakes on an event. Right?]
+      5.5.3.2 It re-starts itself when its own files change, unless
+              COMMAND_DO_NOT_RESTART is set. COMMAND_EXIT stops it with exit code 0.
+      5.5.3.3 A second copy refuses to start.
+      5.5.3.4 it launches a script in each device's cairn/devices/<device>/groundloop
+              called pulse.py, each as its own process.
+      5.5.3.5 It writes one JSON record at the end of a pass with a list of each
+              device: beat time, found device (folder), NOT FOUND or name, file
+              mtime, pid it spawned. It does no checks and no takeover.
+      5.5.3.6 [Q#15: Beat interval: 60 s today. Fixed, or a setting?]
+    5.5.4 HISTORY: I once made daemons for everything and couldn't shut them down. So
+          there is one loop, kept as simple as possible. In your words: "this is
+          ENTIERLY an event driven system EXCEPT: Akien can say he'll be away from x
+          to y times. and sleep."
+    5.5.5 TOOLS: base
+    5.5.6 VERBS: None
+  5.6 rack (machine)
+    5.6.1 PURPOSE: The place that holds the devices: a stack of rackmount devices,
+          with the bus connecting them all.
+    5.6.2 INTENTION: Just a dict with the device instances in it, in the form of
+          their shims.
+      5.6.2.1 It holds instances, not classes: one shim per instance. If we have cc 0
+              and cc 1, two shims are running.
+      5.6.2.2 It is the shims connected to the bus: who's in the rack is who's
+              connected, which the bus can measure (agreed 2026-10-26, since each
+              shim is its own process, 5.7.3.1).
+        5.6.2.2.1 [Q#16: A shim that isn't running isn't connected, so it isn't in the
+                  rack. Then pulse.py (5.7.3.4.1) can't learn its instances from the
+                  rack; it needs the declared list (5.6.2.4). Right?]
+      5.6.2.3 [Q#17: The sleep token goes in "the rack's order" (5.2.1.2). What is that
+              order: alphabetical, order added, or declared?]
+      5.6.2.4 [Q#18: Where are instances declared, so the rack knows to build cc 1? Draft:
+              the existence of cairn/devices/<device>/<instance>/ in class-space
+              (CLAUDE.md: one address in two roots).]
+    5.6.3 HISTORY: today there is also a rack TOOL (19.20) that lists device folders.
+          The machine holds running instances; the folder list may stay a tool.
+  5.7 shims
+    5.7.1 PURPOSE: Integrates its device into the system.
+    5.7.2 WHY: So any program, ours or not, can live in Cairn as a device.
+    5.7.3 INTENTION:
+      5.7.3.1 Every device has a shim. Each shim is its own process, one per
+              instance, and connects to the bus as a client (agreed 2026-10-26).
+        5.7.3.1.1 WHY: in the bus process, updating one shim meant bringing the
+                  whole bus down, and one shim's stall (or lock) was everyone's
+                  (bug c2036433beaf: two shims' locks deadlocked in the bus).
+                  Separate, a shim restarts itself when its own files change, like
+                  the ground loop (5.5.3.2), and the bus stays up.
+      5.7.3.2 The shim always starts its device. Nothing else does.
+        5.7.3.2.1 It wakes the device when it's not running and is needed.
+        5.7.3.2.2 If the device won't come up, the shim retries; after many retries
+                  it files a trouble ticket for Akien and CC to check. This holds for
+                  every wake: a request, a pulse, the sleep token (eg the web server
+                  failing to come up).
+        5.7.3.2.3 It answers what it can itself; when it can't (eg a health question
+                  it holds no answer to), it wakes the device and asks.
+        5.7.3.2.4 [Q#19: Does the shim ever stop its device when idle (eg the librarian
+                  after N minutes unused), or only on `stop`?]
+      5.7.3.3 Processes all messages from the bus for its device.
+      5.7.3.4 pulse.py is part of the shim. The ground loop calling it tells the shim
+              the pulse has arrived, and starts the shim if it isn't running.
+        5.7.3.4.1 The ground loop finds one pulse.py per device. pulse.py reads its
+                  own device's instances from the rack and pulses each one, so the
+                  ground loop never needs to know instances exist.
+        5.7.3.4.2 Any device's shim (through its pulse.py) can bring the bus up if
+                  it's down: whatever is called brings up what it needs (5.2.5.1).
+        5.7.3.4.3 pulse.py asks nobody anything. It starts the shim if it's down,
+                  else tells the mechanisms inside the shim that need a pulse "here
+                  ya go!" Only daemon-shaped things hang there, things that actually
+                  need a heartbeat; everything else fires on events. Eg cc's Gmail
+                  fetch, which IS messaging (12.3.6).
+          5.7.3.4.3.1 WHY (Akien, 2026-10-26): "you were shoving more and more
+                      things into the ground loop. making it slower and slower. the
+                      point behind the ground loop firing pulse.py was to give you a
+                      structure to hang deamons from, not managers."
+      5.7.3.5 Processes the sleep cycle, if its device needs one: when the sleep token
+              arrives, it wakes its device to do its sleep (the device does the
+              sleeping, not the shim), then passes the token on. If its device won't
+              come up, the shim files the trouble and still passes the token on, so
+              the rest of the rack sleeps.
+      5.7.3.6 Writes its runtime data, if any, to ~/.cairn/devices/<device>/<instance>/
+      5.7.3.7 Three kinds of device sit behind a shim:
+        5.7.3.7.1 Internal (eg librarian): ours, engineered to work with its shim, so
+                  the shim adapts little.
+        5.7.3.7.2 External (eg Claude Code): a program we don't control; the shim does
+                  the adapting that lets it exist here.
+        5.7.3.7.3 Virtual: the shim is the whole device. Eg a calibre device that
+                  talks to calibre's own database, or a weather device over the
+                  acurite data, for when something else in Cairn (say, a personal
+                  assistant scheduling outdoor events) wants the weather.
+      5.7.3.8 The shims handle all interfacing with the outside world (ruling
+              2026-09-11): a device that needs to speak a foreign protocol (eg
+              OpenAI's wire format) does it in its shim.
+    5.7.4 COMMANDS: The Device commands. The shim answers start and stop itself.
+  5.8 scheduler (machine; was sleep_cycle): uses tools base, rack
+    5.8.1 PURPOSE: Holds Cairn's list of scheduled things.
+    5.8.2 INTENTION:
+      5.8.2.1 The pulse triggers the check: each pulse, the list is checked against
+              the clock. No match, the pulse is dropped; a match is a probe that
+              kicks off that thing in the Cairn device.
+      5.8.2.2 Sleep is one entry on the list. Its routine runs Cairn's own sleep,
+              then hands the token to the first device in the rack.
+      5.8.2.3 [Q#20: Can other devices put entries on the list (eg Recovery asks for a
+              weekly SSD check), by `cairn cairn scheduler set`/a send verb? Or only
+              Cairn?]
+    5.8.3 COMMANDS: list, show, get, set (2.4.10).
+  5.9 harbor_master (machine)
+    5.9.1 PURPOSE: Reports where every ticket stands.
+    5.9.2 INTENTION:
+      5.9.2.1 "HARBOR MASTER IS A REPORTING SYSTEM AND NOTHING MORE. IT REPORTS WHERE
+              EVERYTHING IS AND NOTHING ELSE PERIOD. THATS ITS INTENTION."
+      5.9.2.2 "it owns the gates only because we had to have some place to put them,
+              but it does not control anything." The gates refuse on the ticket's
+              behalf (ruling 2026-08-10: "the gate is the refuser but it's doing so
+              on behalf of the ticket. so the ticket owns the refusal.")
+      5.9.2.3 It keeps the register of every ticket: open, at sea, in port.
+    5.9.3 TOOLS: base, artifact, charter, operator_inbox, proof_coverage, question,
+          system_word; machine learning_block
+    5.9.4 VERBS: crossing, watch, clear. clear is the PROVED gate it houses on the
+          ticket's behalf.
+    5.9.5 COMMANDS: cairn harbor_master → "652 boats (570 open, 82 in port)"
+    5.9.6 [Q#21: Is harbor_master a Cairn machine (as today), or does it belong with
+          Ticket (3) since all it reports is tickets? If the gates move to the
+          Ticket tool (3.2.3), harbor_master is left as a pure report.]
+  5.10 Root commands today (bin/cmd/), and where each would go
+    5.10.1 This is an inventory, not an intention. Each becomes a device verb or a
+           cairn/bin shortcut; the shortcut stays only if you type it often.
+    5.10.2 To the Tester (11): test, proofgate (hook: proofs run by hand)
+    5.10.3 To CodeMother (10): cast, rehearse, tickets (ticket_inspector),
+           determinism, feedbackmap, probescan, cleanup, whatsnext, edges
+    5.10.4 To Operator (8): operator, operator_inbox, review, question
+    5.10.5 To CC (12): mailcheck, askscan, turnscan, artifactgate, deletegate (all
+           Claude Code hooks), slate, skilldial
+    5.10.6 To Cairn (5): groundloop, compile (intentions_model_compiler), cairnmap,
+           artifact, trash
+    5.10.7 To Recovery (7): install, sudorelay
+    5.10.8 Retired already: recordverdict (→ review), ruling and ruled (→ question)
+    5.10.9 [Q#22: Are the Claude Code hooks (5.10.5) the CC device's, since they adapt
+           an external program (5.7.3.7.2)? Draft: yes, they are CC's shim reaching
+           into Claude Code.]
+  5.11 tools the device uses itself today (device.py, shim.py, logs_sweep.py; its
+       machines not counted): base, system_word, liveness, bus_client, rack,
+       operator_inbox, question, proof_coverage, instanceizer, data_recorder,
+       charter, artifact; machine learning_block; db_domain client
+  5.12 cairn cairn: prints only device and class, so it has no commands of its own
+       today. Draft: the Device commands (2.4) plus start/stop for the whole system.
+
+6 (SYSTEM DEVICE — merged into Recovery 2026-10-22; now 7.6. Number kept so the
+  numbers after it don't move.)
+
+7 RECOVERY DEVICE (cairn/devices/recovery/; Recovery And Installation Manager;
+  holds the host (was the System device), install, upgrades, root, Rescue and
+  trouble tickets)
+  7.1 PURPOSE: Owns the host Cairn runs on. Gets Cairn installed and running, gets
+      it running again when it breaks, and reports usefully when things don't work.
+  7.2 WHY:
+    7.2.1 A well designed tool should disappear in use: so little friction it's
+          almost an extension of the user. Traditional software makes installing,
+          opening and using it three separate tasks; Cairn makes them one command.
+    7.2.2 It's part of our recovery system, so it has to work when other things
+          don't, so I can report usefully on them.
+  7.3 INTENTION:
+    7.3.1 It operates when the bus is down, and when nothing is installed at all.
+          The cairn command calls it directly.
+    7.3.2 The very first run:
+      7.3.2.1 A user downloads Cairn for the very first time. The readme says
+              `cairn/bin/cairn librarian` (the full path, because no paths to the
+              cairn command are set up). No database is installed. Nothing.
+      7.3.2.2 The cairn command sees that, and calls the recovery device directly,
+              reporting that we're not set up.
+      7.3.2.3 It explains to the user that before we can start the librarian we need
+              to do a few things first. Easy setup or DIY setup? Most people will
+              take the easy setup.
+      7.3.2.4 It asks for your password so it can install a, b, c, d. The password
+              is kept only in an env var, and goes away when the program ends.
+      7.3.2.5 If we can sort our location, we don't ask the user. If Cairn needs a
+              password of its own (highly likely at some point), it asks during this
+              setup.
+      7.3.2.6 We install and set up everything, and the user is presented with a web
+              based chat window (the librarian's).
+      7.3.2.7 So the user entered a single command, and all needed setup was complete
+              with an absolute minimum of interaction.
+    7.3.3 Later the user changes something and breaks it. Recovery is called again,
+          and invokes Claude (Rescue, 7.5) if needed to get it all fixed up.
+    7.3.4 Trouble tickets (3.3.3) live here. Any device has a direct line to raise
+          one, not over the bus (2.2.8.1.3).
+    7.3.5 Install and upgrades live here. If xyz library needs an update, this is
+          the component that does it. Any change to what the host is goes through
+          here (7.6.2.1.1). The installer machine (today cairn/machines/installer)
+          walks the host-seam intentions, verifies each, offers what's missing,
+          applies, re-verifies.
+    7.3.6 It has a shim, like every device, so it's on the bus when the bus is up
+          (upgrades, its troubles, its last repair). It's still called directly
+          when the bus is down or Cairn isn't installed (7.3.1).
+    7.3.7 The setup panels (easy and DIY alike):
+      7.3.7.1 Each panel is a block of text asking a question, with the default
+              answer selected, so the user can go next, next, next until they reach
+              the thing they want to change.
+      7.3.7.2 A panel isn't one question each: a set of simple, related questions
+              (eg 10) goes on one panel, to approve all or adjust before next.
+      7.3.7.3 Or a statement: "the following necessary things will be installed:"
+              and the list, with the why for each one.
+    7.3.9 sudo_relay (machine; today its own device, cairn/devices/sudo_relay):
+          Recovery's way to root on Linux, needed for installs and upgrades.
+      7.3.9.1 A command goes in, runs as root, and a permanent audit record comes
+              out: the command line, return code, stdout, stderr, plus an id and
+              date. The audit folder keeps a rolling one month.
+      7.3.9.2 A machine, not a tool: it keeps the audit records (state it must gate),
+              and runs as its own root process inside Recovery's boundary (2.2.2.1).
+      7.3.9.3 Other platforms get their own way to root (eg on Windows, Rescue and
+              the installer run from an elevated PowerShell, 7.5.3.3).
+      7.3.9.4 [Q#23: May other devices ask Recovery to run something as root (eg CC
+              today uses it for ops), or is root only for install, upgrade and
+              repair?]
+  7.4 COMMANDS:
+    7.4.1 cairn recovery: run setup, upgrade or repair by hand.
+    7.4.2 cairn rescueclaude (7.5.4.1).
+    7.4.3 cairn trouble live | clear (the trouble tickets, 7.3.4).
+    7.4.4 cairn recovery sudo <command>: run one command as root through the relay
+          (7.3.9).
+  7.5 Rescue (Claude Code outside Cairn; part of recovery, not a device of its own)
+    7.5.1 PURPOSE: The mechanic. Claude Code running outside the system, called when
+          Cairn won't run or isn't set up yet: "help, it's broken, come pick up the
+          pieces or get us set up."
+    7.5.2 WHY: A broken system can't fix itself, and a deterministic installer can't
+          handle what it didn't foresee. CC is a senior builder INSIDE Cairn; Rescue
+          is Claude outside it, getting it running and keeping it running.
+    7.5.3 INTENTION:
+      7.5.3.1 Each platform gets a good deterministic installer. When it fails, it
+              falls over to Rescue.
+      7.5.3.2 When something won't start (eg the database), Rescue is who gets
+              called.
+      7.5.3.3 Bringing Cairn to a new platform is a Rescue job, done on that platform
+              (eg Windows, built from inside an elevated PowerShell, because Claude
+              writes better Windows code on Windows).
+      7.5.3.4 Needs nothing of Cairn's to run: no bus, no tmux.
+      7.5.3.5 Launched automatically by a failed install or start, with "read this"
+              and a file saying what happened and what it wants to make happen. The
+              operator can also launch it by hand.
+      7.5.3.6 Always launched with dangerous permissions, so it CAN do what's needed.
+      7.5.3.7 What Rescue fixes by hand, it turns into a step in that platform's
+              deterministic installer, so next time the installer handles it alone.
+              Each rescue makes the next one less likely: the system keeps learning.
+      7.5.3.8 On a new platform (eg Windows) a simple cairn.bat comes first: at the
+              start it takes only the rescueclaude option, launching Claude with 200K
+              context and dangerous permissions.
+      7.5.3.9 Code home: launchers/ (bootstrap.sh, the python floor that comes up
+              before anything else) [Q#24: rename launchers/ into the recovery device,
+              and does superclaude (the CC launcher, 12) leave it for the CC device?]
+    7.5.4 COMMANDS:
+      7.5.4.1 cairn rescueclaude - launch Rescue's Claude Code. It starts nothing
+              else. (Contrast cairn superclaude, which brings the rest of Cairn up
+              first; both run with dangerous permissions.)
+  7.6 The host (was the System device, cairn/devices/system_rackmount; merged
+      2026-10-22)
+    7.6.1 PURPOSE: Abstracts the swarm of systems that Cairn is running on.
+    7.6.2 INTENTION:
+      7.6.2.1 Recovery owns the OS and hardware Cairn runs on. Everything that is
+              Cairn itself belongs to the Cairn device or to whichever device it's
+              been delegated to.
+        7.6.2.1.1 The line is using vs changing. Any device may USE the OS's
+                  services (write a file, open a socket, start or stop its own unit
+                  with systemctl). CHANGING what the host is (installing or updating
+                  systemd unit files, packages, udev rules, cron entries) goes
+                  through Recovery. Eg Cairn restarts the bus itself; putting the
+                  bus's unit file in place goes through Recovery.
+      7.6.2.2 It is aware of and makes available CPU use, system temps, SSD space,
+              etc.
+        7.6.2.2.1 A device that wants a trigger on a host reading (eg CPU over 80)
+                  subscribes; Recovery pokes it when it crosses. The reading stays
+                  in Recovery.
+      7.6.2.3 It owns app probes related to the hardware and network.
+      7.6.2.4 It owns all system metrics, which are stored in relevant graph
+              tree(s).
+      7.6.2.5 Cross system communication belongs to the bus (5.4.2.8).
+      7.6.2.6 The host readings Recovery needs to diagnose (disk full? is postgres
+              running?) work when the bus is down, like the rest of Recovery
+              (7.3.1).
+    7.6.3 COMMANDS:
+      7.6.3.1 show/get health - cpu use, memory, ip, uptime, temps, network up/down
+              values
+      7.6.3.2 show/get env - show the env vars relevant to cairn as they are set at
+              the moment
+
+8 OPERATOR DEVICE (cairn/devices/operator/)
+  8.1 PURPOSE: This device represents the operator(s) of the system
+  8.2 INTENTION:
+    8.2.1 This device receives mail sent to the operator.
+    8.2.2 This device interacts with the operator via the web page to make that mail
+          available.
+    8.2.3 This device represents the user on the bus
+    8.2.4 This device retains information related to the operator
+    8.2.5 This device processes queries from the cairn command sent to operator
+    8.2.6 This device's web panel is the operator's to do list...
+      8.2.6.1 Email
+      8.2.6.2 Trouble Tickets
+      8.2.6.3 Open questions (the ones only the operator can answer)
+      8.2.6.4 The list is live: items appear as they arrive and leave as they're
+              answered or resolved.
+      8.2.6.5 [Q#25: The session-open banner today also shows "artifacts awaiting
+              review" (101 of them: ideas, intents, sorted tickets). On the to-do
+              list, or not? You've said you review intentions top-down rather than
+              artifacts.]
+    8.2.7 Machine: the operator inbox (today the operator_inbox tool, 19.17) builds
+          the to-do list from live state, storing nothing.
+    8.2.8 [Q#26: "operator(s)": more than one operator means instances (operator 0 =
+          you, operator 1 = someone else)? And does CC ever act as an operator, or
+          always as the CC device?]
+  8.3 WHY:
+    8.3.1 Give me a command line access to the bus, eating my own dogfood
+  8.4 COMMANDS:
+    8.4.1 The Device commands only; `cairn` already speaks as Operator, so `send` is
+          how the operator talks to any other device.
+    8.4.2 Answering a question: [Q#27: `cairn operator answer <id> "<words>"`, or a
+          verb on whoever asked (cairn codemother answer ...)?]
+
+9 LIBRARIAN DEVICE (cairn/devices/librarian/)
+  9.1 PURPOSE: Owns what Cairn knows: the knowledge graph trees (4.3.1), and answers
+      questions from them.
+  9.2 WHY: "the librarian as chat bot, learning, and summarizing. learning always
+      and summarizing when asked" (2026-07-27). A query resolves by walking the
+      trees, cheap and with no inference; on a miss the LLM supplies the missing
+      nodes, which are kept, so the next time is a walk.
+  9.3 INTENTION:
+    9.3.1 Owns the graph trees: the one list of nodes, and each depositor's index
+          over them (4.3.1.2).
+    9.3.2 Learns always: takes what other devices deposit, and decides itself what
+          else to learn from the work going on around it.
+    9.3.3 Summarizes when asked. Its chat pane is its face.
+    9.3.4 Surfaces to each device what others learned that it would find useful
+          (4.3.1.3).
+    9.3.5 Its sleep is consolidation.
+    9.3.6 Owns the embed seam every tree-writer uses (vectors come from the inference
+          proxy's embed verb).
+    9.3.7 Structural embeddings: matching how things work, across domains, not
+          surface similarity.
+    9.3.8 [Q#28: Research (V1 5.1.1: "delegated learning, research and answering
+          queries") means the librarian goes out (web, books via calibre) on its
+          own? Through which device?]
+  9.4 VERBS: ingest (deposit), ask. [Q#29: walk/nearest/neighbors as bus verbs, or
+      only through the trees tool? See 4.5.2.]
+  9.5 TOOLS: trees (its own, published as a client tool); base, question,
+      bus_client, system_word, gate; machine learning_block; db client
+  9.6 COMMANDS: cairn librarian ask <question>. A bare `cairn librarian` prints the
+      web URLs today; [Q#30: should it be `show` (the Device default) instead?]
+
+10 CODEMOTHER DEVICE (cairn/devices/codemother/)
+  10.1 PURPOSE: The mother that looks after the codebase.
+  10.2 WHY: CC papers over things and doesn't hold a boundary across a session, and
+       memory doesn't stick. "I do not fear you papering over something, you've done
+       it over and over. And I watch for it. CodeMother is a response to that."
+  10.3 INTENTION:
+    10.3.1 She is NOT a builder: Claude and aider build. She owns the care of the
+           code: the inspectors, gates, processes and workflows the builders pass
+           through are hers to own and, eventually, to optimize.
+    10.3.2 Prebuild face: the chart chain, eight machines, each answering one
+           question before a build begins: orient (what is asked, where does it
+           live), constrain (what bounds it), survey (what already exists),
+           decompose (how does it split), triage (what first, by what standard),
+           hypothesize (what do we expect, how would we know we're wrong), validate
+           (what does DONE mean, measured), and after the build, verdict (what done
+           actually meant).
+    10.3.3 Watcher face: watches the code and the builders' work over time, reasons
+           over it with graph trees (deposited with the librarian), and learns the
+           failure modes.
+    10.3.4 Learns from: code, chat logs, books, past projects, CC's failure modes.
+    10.3.5 Owns the inspectors and gates (draft, moving from standalone):
+           build_inspector, plan_inspector, diagnostic_inspector, ticket_inspector,
+           corrosion, exemptions, rehearsal, determinism, import_sieve. [Q#31: all of
+           these to CodeMother? See 17.]
+      10.3.5.1 Outline check (Akien, 2026-10-26): when a ticket is cast, the cheapest
+               model reads it beside the outline sections it touches. A conflict, or
+               an open question in those sections, becomes a question on the ticket,
+               which holds its build until answered. It reads the outline as it
+               stands each time, so editing the outline costs nothing.
+    10.3.6 Holds the charter tool's instance (build-quality feedback is hers).
+  10.4 HISTORY: "There is no builder device. The builder is a CC session, and the
+       chart stages it uses are machines inside CodeMother."
+  10.5 TOOLS: base, chain, tree, gate, bus_client, instanceizer, system_word,
+       proof_coverage, orient, operator_inbox
+  10.6 VERBS: activate, charter, commit, cross, deposit, drain, feedback, question,
+       sealed (plus get and show)
+       10.6.1 [Q#32: `commit` and `cross` are verbs here: is moving a ticket across its
+              workflow CodeMother's job (she owns the workflows), or the ticket's
+              (it owns its refusals, 3.3.1.5)?]
+  10.7 COMMANDS: cairn codemother cross | watch | question | seed | show dashboard
+
+11 TESTER DEVICE (cairn/devices/tester/)
+  11.1 PURPOSE: The system's notary: runs proofs and seals their verdicts.
+  11.2 WHY: Law 8 — nothing enters proven-space without a proof a hollow build
+       couldn't pass, and the verdict must come from a hand the builder did not
+       guide. A green cannot be self-granted.
+  11.3 INTENTION:
+    11.3.1 Runs a proof as its own process and writes a validation record (claim,
+           caller, date, method, verdict, evidence, falsifier, horizon).
+    11.3.2 Hollow runs: proves a proof goes red when the build is removed.
+    11.3.3 Seals: one current validation per proof, beside the proof. A seal holds
+           while the code it measured is unchanged.
+    11.3.4 A timed-out run is its own outcome, not red (ticket 3dfceaa272ec).
+    11.3.5 Notices: what a run saw that nobody asked about, surfaced to the operator.
+    11.3.6 Test runs are transient (30 days, 4.3.2); seals are records of truth
+           (git).
+  11.4 TOOLS: base, validation_store, proof_coverage, scratch, question,
+       proof_discovery, chain, bus_client, artifact, system_word; machines ruling,
+       build_inspector; db client
+       11.4.1 [Q#33: The tester holds build_inspector, and CodeMother uses it. One
+              owner: CodeMother (10.3.5), with the tester running it?]
+  11.5 VERBS: run, notices
+  11.6 COMMANDS: cairn test (--hollow, --seal, --exec, …) → cairn tester run
+
+12 CC DEVICE (cairn/devices/cc/)
+  12.1 PURPOSE: Claude Code's presence in the rack: an external device (5.7.3.7.2).
+  12.2 WHY: CC is the main resolver in the system and needs an address mail can
+       reach, and a second Cairn instance needs its own CC (cc 1).
+  12.3 INTENTION:
+    12.3.1 Its shim delivers mail to CC and pokes an idle session awake (proved
+           2026-10-17: woken in 8.6 s).
+    12.3.2 Owns the CC launcher (superclaude): starts Claude Code with Cairn's
+           session contract, in its own memory-capped cgroup (Claude can OOM the box
+           at ~12-14 GB).
+    12.3.3 Owns the Claude Code hooks (5.10.5): mail check, the turn-shape and ask
+           scans, the gates on record writes and deletes.
+    12.3.4 Owns the slate (session continuity: where the last session stopped).
+    12.3.5 [Q#34: CC's own memory (~/.claude/projects/.../memory) is Claude Code's, not
+           Cairn's. Should it berth under ~/.cairn/devices/cc/0/ eventually, or stay
+           where Claude Code puts it?]
+    12.3.6 Will have its own email account (for CC, not Igor's; created
+           2026-10-26 as cc0atcairn@gmail.com; its credentials are at ~/.cairn/devices/cc/0/.env, the only record). Its
+           shim fetches the mail, since shims handle all interfacing with the
+           outside world (5.7.3.8). CC never checks the mailbox itself.
+    12.3.7 The shim watches the tickets on our repos for CC. The simplest way is
+           mail too: the repos send their notifications to CC's address, so the
+           one fetch covers them.
+    12.3.8 One inbox: whatever reaches CC from outside, the shim has already
+           fetched and turned into Cairn mail, then pokes "you've got mail"
+           (12.3.1).
+    12.3.9 A GitHub account for CC, from that email (Akien, 2026-10-25), so CC's
+           commits and comments are its own. DONE 2026-10-26: cc0atcairn, write
+           access on all 18 unarchived akienm repos; its profile says it's Claude.
+           Its credentials (password, a token expiring 2027-01-24) and the Google
+           OAuth files for Gmail and Calendar sit beside the email's, under
+           ~/.cairn/devices/cc/0/.
+    12.3.10 [Q#35: "Tickets on our repos": GitHub issues and pull requests on the
+            public repos (eg CC0AC-Weather), or Cairn's own tickets too?]
+  12.4 TOOLS: base, cgroup
+    12.4.1 To come in: the Gmail/Calendar code (today ~/.local/bin/ccgoogle) and CC's
+           browser (~/.local/bin/ccfox), both outside the class now (RULE 1). Their
+           data moves to ~/.cairn/devices/cc/0/tools/<tool>/ (1.2.1).
+  12.5 VERBS: none in a verb table today
+  12.6 COMMANDS: cairn cc → pending mail count; cairn cc superclaude (shortcut:
+       cairn superclaude)
+
+13 PROXY DEVICES (a proxy device: the one way to a service; subclasses base proxy)
+  13.1 PURPOSE: Wrap a service so there is exactly one way to it.
+  13.2 DATABASE PROXY DEVICE (cairn/devices/dbproxy/; was db_domain)
+    13.2.1 A proxy device. The only way to the database, because the authentication
+           is wrapped up in it.
+    13.2.2 Device name on the command line and bus: database (eg cairn database show)
+    13.2.3 Its main customer is the librarian, which owns the graph trees; other
+           devices reach the trees through the librarian's commands, not the
+           database proxy, which keeps its bus traffic small.
+    13.2.4 Every table has exactly one owner, and the owner gates every write; an
+           ownerless table can't be made (Postgres refuses it).
+    13.2.5 Publishes a client tool (connect, read, write, query ...) that talks to
+           the database over its socket, no bus hop: faster (2.2.8.1.1).
+    13.2.6 Postgres itself: a host service, installed and upgraded by Recovery
+           (7.3.5); Rescue when it won't start (7.5.3.2).
+    13.2.7 [Q#36: Which devices besides the librarian hold tables? Today six components
+           use the client. Draft: only the librarian (trees) and the transient tree's
+           owner, if the transient tree is rows.]
+  13.3 INFERENCE PROXY DEVICE (cairn/devices/inferenceproxy/; was inference_domain)
+    13.3.1 A proxy device. The only way to the inference host because we said so,
+           and anything that goes around it is an error.
+    13.3.2 Device name on the command line and bus: inference
+    13.3.3 Every call makes an inference ticket (3.3.2): trees first, then the
+           cheapest route the nest finds.
+    13.3.4 A request seen before is answered from the stored answer, if it still
+           holds, and the host is not touched. That untouched call is compilation.
+    13.3.5 Routes from authored stacks beside the code: providers (cost,
+           connection), models (names, parameters, scores), combos (which pairs
+           route).
+    13.3.6 Machine: route — the sieves (enabled, never_routed, serves_kind, keyed,
+           addressed), built with the nest tool, cheapest survivor first.
+    13.3.7 Hosts: the cloud, and hex.local (the local GPU box).
+    13.3.8 TOOLS: base, import_sieve, nest; database client
+    13.3.9 VERBS: infer, embed, resolve, calls
+    13.3.10 COMMANDS: cairn inference show
+    13.3.11 [Q#37: Claude Code itself calls Anthropic directly, around the proxy. Is that
+            "an error" to fix someday (CC's calls routed through it), or is CC
+            outside the rule as an external device?]
+
+14 INTENTION EXTRACTOR DEVICE (cairn/devices/intention_extractor/)
+  14.1 PURPOSE: Turn raw design prose (a chat excerpt, a note) into a candidate
+       intention: what, why, anchors, read.
+  14.2 WHY: CC is the most expensive resolver; moving extraction to a watchable stage
+       a cheaper model can do lets it be measured and improved until it's settled
+       (Akien 2026-07-24).
+  14.3 INTENTION:
+    14.3.1 The draft comes from the inference proxy; the judgment is deterministic
+           (machine judge: the record has the right shape, and every anchor is
+           really in the source).
+  14.4 TOOLS: gate, bus_client, base; machine judge
+  14.5 [Q#38: Still wanted as its own device? It's the first "cocoon" stage around CC.
+       Or does it become a CodeMother machine (prebuild), or a librarian verb?]
+
+15 AIDER DEVICE (cairn/devices/aider/; was aider_shim)
+  15.1 PURPOSE: Hold aider, so a cheap coder model types the code CC has already
+       settled.
+  15.2 WHY: Every line is typed by the most expensive model, including lines whose
+       shape was settled three chart stages earlier. That typing is transcription,
+       which a 30B coder model on Hex can do.
+  15.3 INTENTION:
+    15.3.1 An external device (5.7.3.7.2): aider is a program we don't control; the
+           shim adapts it.
+    15.3.2 Every model call aider makes goes through the inference proxy.
+    15.3.3 Standing goal: "Claude has an assistant" — build until it works.
+  15.4 TOOLS: base, chain, bus_client; db client; machine openai_wire (aider speaks
+       OpenAI's wire format; the shim translates it to the inference proxy, per
+       5.7.3.8)
+  15.5 [Q#39: You said "come back to hermes, aider and cline after the review" (idea
+       9b935ff3c938). Is this a Builder-agents family (aider now, others later),
+       which is what V1's "Builder Device (common components shared by build agents)"
+       meant? If so: a base class for build agents, not a device. See 20.2.]
+
+16 (reserved — the embeddings device, if 5.1.2 says yes)
+
+17 STANDALONE MACHINES (cairn/machines/) — each needs a home or a reason to stay
+  17.1 build_inspector: python sieves run after a build; reds a component that fails
+       one (no charter, no proofs, a silent device, ...). "We find a new thing, we
+       add a new sieve." → CodeMother (10.3.5)
+  17.2 plan_inspector: reads charters' own admissions of what they don't yet do, so
+       nothing reads as done while it says otherwise. → CodeMother
+  17.3 diagnostic_inspector: the smart reader of the dumb breadcrumbs base's logging
+       leaves; complete diagnosis on the first pass. → CodeMother? [Q#40: or base,
+       since it reads base's logs?]
+  17.4 corrosion: catches a constraint that stopped constraining with no decision
+       behind it. → CodeMother
+  17.5 exemptions: the declared list of places a check skips something, each with
+       its reason. → CodeMother
+  17.6 rehearsal: the cheapest model reads a ticket cold three times and tries to
+       build it on paper, so "buildable as written" is measured. → CodeMother
+  17.7 installer: → Recovery (7.3.5)
+  17.8 learning_block: the engine of a learning block (input → candidates →
+       evaluate → decide or escalate). Used by many devices. Stays a shared machine.
+       [Q#41: a machine with many holders, or a tool, since each holder keeps its own
+       data?]
+  17.9 skill_block: the door a skill's firing passes through, so a skill can't skip
+       its gate. [Q#42: belongs to CC (skills are Claude Code's), or CodeMother
+       (workflows)?]
+  17.10 openai_wire: speaks OpenAI's wire format to an injected resolver. → Aider's
+        shim (15.4)
+  17.11 counting_block: RETIRE. It was not the trouble incrementor (that lives in
+        trouble's own fold, and moves into the trouble ticket class, 3.3.3.2.2). It
+        counted who-writes-what from the artifact journal and raised a trouble on any
+        write it hadn't seen before: the adjudication ruled out 2026-10-19.
+  17.12 ruling: the old ruling intake. Retired 2026-09-14 for questions;
+        decisions/ stays read-only. [Q#43: delete the code?]
+  17.13 quarry_index: one-time compiler over TheIgorsProject's ideas; ran once, done.
+        [Q#44: delete the code, keep its output in the commons?]
+
+18 WEB SERVER DEVICE (cairn/devices/web_server/)
+  18.1 PURPOSE: The one web surface: shows the running system.
+  18.2 WHY: Cairn has a user; the operator, and the librarian's chat, need a web
+       face.
+  18.3 INTENTION:
+    18.3.1 One web server. A device gets a PANE in it, never a server of its own.
+    18.3.2 The devices across the top (from the rack); the selected device's panes
+           below: status, controls, chat, feed (2.2.9).
+    18.3.3 A presentation surface: it may collapse an error into a shape, but
+           never hides that there was one (Law 7).
+    18.3.4 It asks devices for what to draw over the bus (get/show).
+  18.4 TOOLS: bus_client, base, public_feed; machine learning_block
+  18.5 [Q#45: The bus feed is "on the bus' web panel" (5.4.2.7). The bus is a Cairn
+       machine, not a device: its pane sits inside the Cairn device's page?]
+
+19 STANDALONE TOOLS (cairn/tools/, which have users, not owners)
+  19.1 base
+    19.1.1 PURPOSE: What every device is built on.
+    19.1.2 INTENTION:
+      19.1.2.1 The six truths (CP1-CP6) everything else is predicated on.
+      19.1.2.2 Logging and diagnostics. These can be in different files, mixed in
+               together.
+      19.1.2.3 The core patterns.
+      19.1.2.4 A tool, not a machine, even though it spans several files.
+      19.1.2.5 The base classes all inherit from base, and so bring its logging,
+               diagnostics and core patterns with them:
+        19.1.2.5.1 base device: the base class for every internal device. It defines
+                   the panes every device has:
+          19.1.2.5.1.1 status: lights, switches, values
+          19.1.2.5.1.2 controls: settings, controls, or whatever the device can be
+                       told to change
+          19.1.2.5.1.3 chat: a chat window, if relevant
+          19.1.2.5.1.4 feed: the device's public feed, drawn by the public_feed tool
+        19.1.2.5.2 base shim: the base class for every shim, customized for the
+                   device it interfaces with, internal or external.
+        19.1.2.5.3 base proxy: the base class for every proxy device, a device that
+                   is the one way to a service (13).
+  19.2 nest
+    19.2.1 PURPOSE: A nest of sieves that lets out just the parts we want.
+    19.2.2 INTENTION:
+      19.2.2.1 Each question is a sieve; sieves can come after others.
+      19.2.2.2 Bands are phases: preprocess, measure, postprocess.
+      19.2.2.3 Sieves measure, never judge: deterministic Python.
+    19.2.3 USERS: the inference proxy (the lowest cost way to resolve a request), the
+           build inspector.
+    19.2.4 [Q#46: It lives inside base today (cairn.tools.base.nest). Its own tool?]
+  19.3 public_feed
+    19.3.1 PURPOSE: Draws a feed panel of bus messages, debug messages, or both, for
+           any device. By default it filters for the device it's in. Viewed from the
+           bus's own pane, it lists everybody.
+    19.3.2 WHY: Debugging: "did the thing go by when I typed the command?" One tool,
+           so every device's feed looks and filters the same way.
+    19.3.3 INTENTION:
+      19.3.3.1 The panel keeps its own short-lived memory buffer (about the last 5
+               minutes): short-time file(s), db, array, however we want to do it.
+      19.3.3.2 Channels: console (operator-directed messages and logging info),
+               public feed (the bus messages), debug (logging debug messages).
+      19.3.3.3 Filtering is always available, eg by channel, device, sender,
+               addressee or verb.
+    19.3.4 USERS: every device's pane (its own traffic); the bus's pane (everybody's).
+  19.4 artifact: the one door a record of truth changes through, and the journal of
+       who came through it (hash-chained, caller read from the kernel).
+       USERS: everyone who writes a record.
+       19.4.1 [Q#47: With 17.11 retired, does the journal still earn its keep? It's
+              what showed a ticket moved by hand (481221f45884). Draft: keep the
+              door and the journal, drop the adjudication.]
+  19.5 bus_client: gets a process onto the bus (reach a device, or connect).
+       19.5.1 [Q#48: One face, `connect_system`, also beats. Under 5.5 nothing but the
+              ground loop beats. Remove that face?]
+  19.6 cairnmap: the help surface, compiled from the charters with no inference. →
+       part of `help` (2.4.2)? [Q#49: one tool every device's help uses?]
+  19.7 cgroup: reads which cgroup a process lives in. USERS: CC, artifact.
+  19.8 chain: the grammar every chart stage speaks. [Q#50: → CodeMother tool (its
+       machines are the only real users)?]
+  19.9 charter: compiles a component's bounded state from its history. Held by
+       CodeMother.
+  19.10 data_recorder: a mailbox for feedback records until an inspection reads them.
+        [Q#51: replaced by the transient tree (4.3.2)?]
+  19.11 determinism: for each component, where is the LLM? Deterministic, mostly
+        deterministic, or not. → CodeMother
+  19.12 edges: the frontier view: every charter's admitted gaps plus the open
+        questions. → CodeMother (or the operator's to-do list?)
+  19.13 feedback: where a component's failing findings go (the -2-> edge).
+  19.14 gate: the == compare, in one place. A gate opens when every expected equals
+        its actual. No oracle, ever.
+  19.15 import_sieve: one parse of every .py into an import graph; what reaches what.
+        Enforces "only the proxy reaches the host/database" and RULE 1. → CodeMother
+  19.16 instanceizer: gives a non-device folder (eg press_office) an instance-space
+        address the bus can deliver to. [Q#52: if only devices are on the bus, retire?]
+  19.17 operator_inbox: builds the operator's to-do list from live state. →
+        Operator's machine (8.2.7)
+  19.18 question: the open-question door: a decision only you can make, bound to its
+        ticket, answered in your words. → Ticket (3.3.5)? Operator?
+  19.19 intentions_model_compiler: copies every intention into
+        intentions-congruency-lab/, so that folder can regrow the system on a bare
+        machine. → Cairn
+  19.20 liveness: "is the system up?" as a file read. [Q#53: the ground loop's JSON
+        record (5.5.3.5) already answers that. Retire liveness for it?]
+  19.21 orient: the measuring scans before a build (where is X called, what's in
+        each component). → CodeMother (the orient machine composes it)
+  19.22 post_commit: the one git post-commit, fanned out to each component's own
+        hook. A commit is an event. → Recovery? (a host-seam) [Q#60]
+  19.23 proof_coverage: joins a ticket's falsifier clauses to the proofs that cover
+        them and the seals that ran green. → Tester
+  19.24 proof_discovery: resolves `cairn test` targets to proof files. → Tester
+  19.25 rack: lists device folders. (5.6.3)
+  19.26 scratch: a proof's throwaway temp dirs and worktrees, cleaned up by the door.
+        → Tester
+  19.27 system_word: case-folding for system words (device names, verbs, statuses),
+        so anything you type is case-insensitive.
+  19.28 ticket_inspector: completeness checks over tickets at rest. → CodeMother
+  19.29 tree: the nexus graph-tree face (deposit, counsel, propose) over the
+        librarian's trees. [Q#54: fold into the librarian's verbs (4.4.2)?]
+  19.30 validation_store: reads and writes seals. → Tester
+  19.31 [Q#55: The "→" marks above are where a tool's main user is, but a tool has users
+        not owners, so it stays in cairn/tools/. Do you want tools with exactly one
+        user moved inside that device (cairn/devices/<d>/tools/), or left here?]
+
+20 UNPLACED — things that need a home or a ruling
+  20.1 Trouble Device (cairn/devices/trouble/): → Recovery (7.3.4). Its store
+       tool stays as the direct line (2.2.8.1.3).
+  20.2 Builder Device ("common components shared by build agents"). V1 also said
+       "There is no builder device." Draft: no device; a base class for build agents
+       if 15.5 says there will be several.
+  20.3 skills/ (cairnhelp, challenge, chart, commit, intent, sorted, ...): Claude
+       Code skills. [Q#56: CC device's (12)? Some become device verbs as the
+       deterministic parts move out of markdown.]
+  20.4 learning/ (the learning store's code: per-gate compiled views of CC's
+       learning records). [Q#57: CC device's, or the librarian's?]
+  20.5 press_office/: Cairn explaining itself to people outside, authored prose.
+       [Q#58: a concept-piece in the commons, not a component?]
+  20.6 MAP.md: transitional; dissolves into intentions and tickets. [Q#59: does this
+       outline replace it?]
