@@ -1,0 +1,92 @@
+{
+  "id": "7c41e2b09d5a",
+  "title": "The crossing stands on a certificate",
+  "date": "2026-10-28",
+  "owner": "cairn (cairn/tools/base; CC builds)",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Every ticketed forward crossing that enters a gate stands on a certificate: emit in cairn/tools/base/transitions.py has the gate certify the green record it just compared, the journaled crossing names that certificate, the gate's probes carry it, and TransitionGate.certify refuses to write a live certificate from anywhere but inside emit.",
+  "why": "Parent e41a94da3fd0's falsifier is 'every crossing past an entry gate names the certificate it stands on'. Children 1 to 3 built the certificate, the one writer and the inspector's measurement, but nothing calls certify yet, so no crossing stands on one; and a hand (an LLM) calling certify directly could still mint a live certificate. Akien 2026-10-28: the only writer question is whether an LLM or deterministic code wrote a gate-pass certificate.",
+  "traces_to": "Parent ticket e41a94da3fd0 (child 4) and its falsifier. Akien on open-f17382e51f4f (the probe tells the passing ticket it can advance) and open-6dbeb274245e ('only a gate can write a certificate ... you bump your nose if you try'). Akien 2026-10-28: LLM vs deterministic code is the only writer question, only for gate-pass certificates. Law 4 (physics at certify), Law 8 (prove, then trust). RULE 1 (all three files are cairn/tools/base).",
+  "how": "emit certifies forward ticketed class-space crossings into a gate before journaling and the record names the certificate (D1, D2, D3). certify refuses outside emit against the live commons (D4, D5). The probe carries the certificate (D6). The proof is pre-written (D7); the net is D8.",
+  "falsifier": "Green when cairn/tools/base/proofs/test_the_crossing_stands_on_a_certificate.py passes its four teeth under PROVES {'7c41e2b09d5a': {'1'..'4'}} (D7) and the D8 regression net stays green with no live certificate leaked: (1) a ticketed forward class-space crossing into a gate names one certificate that verifies, carries the gate, ticket and target, and holds exactly the record's proved list; (2) a back-edge, a ticketless crossing and a crossing outside the door's cairn root name no certificate and write none; (3) certify called directly against the live commons raises CertifyRefused and writes nothing, while under emit it writes; (4) the gate probe's envelope body carries the certificate when given one. Wrong intent if Akien means the certificate should be written by the ticket rather than the gate, or that a crossing with no gate should also certify.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the outcome is visible on every journaled crossing: the record's 'certificate' field (written by emit in cairn/tools/base/transitions.py) names a file under CairnCommons/certificates/ that cairn.tools.base.gate_class.verify_certificate re-checks, and the proof's tooth 1 pins that",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261028T162849-70f176aaa5fa.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261028T162516-d269d3930f78.json",
+  "model": "opus",
+  "parent": "e41a94da3fd0",
+  "children": "none, because the build is three edits inside cairn/tools/base (transitions.py, gate_class.py, gate_probes.py) at the addresses D1 to D6 name",
+  "questions": [
+    "open-18172e166127"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "step": "decision 1",
+      "text": "emit certifies, in cairn/tools/base/transitions.py, in the non-disposition branch: after the PROVED deposit enqueue (the line 'enqueued = _enqueue_verdict(...)') and immediately before 'record = {', so a refused certificate leaves no record. It fires only when ALL hold: target_idx > wf.cursor (forward); journal_extra.get('ticket') is truthy; gate_probes.gate_for(target) returns a gate name (BUILDME->build, PROVEME->prove, FIXME->fix, WATCHME->watch, TICKETME->ticket, PROVED->proved); and Path(history_path).resolve() is relative to door.roots()['cairn'].resolve() (door = cairn.tools.artifact.artifact). Every import (gate_probes, artifact, gate_class) is at call time inside emit. A disposition never reaches it: that branch returns earlier. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 2,
+      "step": "decision 2",
+      "text": "The certificate step is exactly: path = TransitionGate(gate_name, exception_class=CertificateRed).certify(proved, ticket=str(ticket), target=target); faults = verify_certificate(path); if faults: raise CertificateRed('certificate %s does not verify: %s' % (path, '; '.join(faults)), []). Then cert_rel = Path(path).resolve().relative_to(Path(door.roots()['CairnCommons']).resolve()).as_posix(). The record dict gains '**({\"certificate\": cert_rel} if cert_rel else {})' on the line after 'checks_proved': len(proved), before **journal_extra. cert_rel is None when the step did not fire. TransitionGate and verify_certificate come from cairn.tools.base.gate_class. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 3,
+      "step": "decision 3",
+      "text": "transitions.py gains class CertificateRed(IllegalTransition), placed after FixmeGateRed, with the same __init__(self, message, findings=None) shape as its siblings and a docstring saying the crossing is refused because its certificate could not be written or does not verify, so nothing was journaled. A certify failure is a refused crossing (Law 7: a record of truth may not claim a certificate it lacks); this is deliberately unlike the probes, which never gate. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 4,
+      "step": "decision 4",
+      "text": "cairn/tools/base/gate_class.py gains, at module level after the imports: _LIVE_COMMONS = Path(__file__).resolve().parents[3].parent / 'CairnCommons' (the patch point the proof rebinds); _TRANSITIONS = Path(__file__).resolve().parent / 'transitions.py'; class CertifyRefused(Exception) with a docstring quoting Akien 2026-10-27 'only a gate can write a certificate ... you bump your nose if you try'; and def _under_emit() -> bool, which walks frames from sys._getframe(1) through f_back and returns True when a frame has f_code.co_qualname == 'emit' and Path(f_code.co_filename).resolve() == _TRANSITIONS. gate_class adds 'import sys'. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 5,
+      "step": "decision 5",
+      "text": "TransitionGate.certify's first statements, before self.run(record): from cairn.tools.artifact import artifact as door; commons = Path(door.roots()['CairnCommons']).resolve(); if commons == Path(_LIVE_COMMONS).resolve() and not _under_emit(): raise CertifyRefused('certify writes a live certificate only inside transitions.emit; called from %s' % <the caller's co_filename:co_qualname>). _LIVE_COMMONS is read at call time (module global), so the proof's rebinding is seen. A fixture world whose commons is not the live one is not refused, which keeps child 1's proof (test_only_the_gate_writes_a_certificate.py, which calls certify directly in its own world) green. The certify docstring gains one line naming this guard and ticket 7c41e2b09d5a. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 6,
+      "step": "decision 6",
+      "text": "cairn/tools/base/gate_probes.py: fire gains a keyword-only parameter certificate: str | None = None after fingerprint; the crossing dict gets 'certificate': certificate only when certificate is not None, so every existing exact-body tooth sees the same body. fire_crossing passes certificate=record.get('certificate'). Nothing else in gate_probes changes. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 7,
+      "step": "decision 7",
+      "text": "The proof is cairn/tools/base/proofs/test_the_crossing_stands_on_a_certificate.py, written red-first and committed before BUILDME; the builder only runs it. PROVES {'7c41e2b09d5a': {'1','2','3','4'}}. Its world is a git-init'd scratch CairnCommons (with certificates/) and cairn, set as the door's diagnostic roots; crossings are THINKME->TICKETME on code-seam@v2 under <cairn>/cairn/tools/example, with node_class_root resolved beside the repo or under $HOME. (1) a ticketed forward crossing writes exactly one certificate, the record names it commons-relative, it verifies, its gate is 'ticket', ticket and target match, findings == record['proved']. (2) a back-edge, a ticketless crossing and a crossing whose history is outside the door's cairn root name no certificate and write none, while a control gated crossing in the same world does name one. (3) with gate_class._LIVE_COMMONS rebound to the fixture commons, a direct TransitionGate.certify raises CertifyRefused and writes nothing, and a crossing through emit still names a certificate. (4) gate_probes.fire with certificate= puts it in the envelope body; without it the body has no 'certificate' key. At HEAD it reads RED on 1, 3 and 4. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 8,
+      "step": "decision 8",
+      "text": "Regression net, green before BUILDME and after the build, any red a FIXME: the 13 proofs in the 66ee1ffc1ec7 net (cairn/tools/base/proofs/test_transitions.py, test_emission_gate.py, test_a_fixme_answer_binds_to_its_kick_back.py, test_proveme_names_its_proof.py, test_a_dead_proof_name_is_refused_at_proveme.py, test_the_stones_are_pushed.py, test_proveme_entry_needs_a_clean_tree.py, test_watchme_vocabulary.py, test_v2_migration.py, test_light_modules_keep_the_crossing_off_the_inspector_path.py; cairn/devices/cairn/machines/harbor_master/proofs/test_clearance.py; cairn/machines/build_inspector/proofs/test_inspector_nexus.py; cairn/tools/system_word/proofs/test_system_word.py) plus cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py and cairn/tools/base/proofs/test_a_certification_fires_the_gates_probes.py. A baseline at HEAD is taken first; a proof red at HEAD is recorded, never counted against the build. Leak check: the file list of ~/dev/src/CairnCommons/certificates (absent at HEAD) is read before and after the net and must not change. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 9,
+      "step": "decision 9",
+      "text": "Live consequence, accepted: once built, this ticket's own PROVEME and PROVED crossings (and every later ticketed forward crossing in class space) write a certificate into CairnCommons/certificates/ through the door; the door creates the directory. Each is committed with the crossing's commons commit, as the clean-tree seat already requires. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 10,
+      "step": "decision 10",
+      "text": "Out of scope: the ticket advancing itself on the probe (today the crossing's caller writes the cursor back through the door, which already satisfies Akien's open-f17382e51f4f answer); who may enter PROVED (still the harbor's clearance); certificates for dispositions or back-edges; a signing key (open-6dbeb274245e: the block on writing is enough); moving gates under CodeMother (outline Q#31). CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    },
+    {
+      "n": 11,
+      "step": "decision 11",
+      "text": "The ticket's builder is opus (transitions.ticket_model). The build is one cairn commit for the three files turning the proof green; ticket edits ride the artifact door in CairnCommons. CC's call, per Akien 2026-10-28 'keep going without stopping until you need me. we're all pre-approved thru proved.'",
+      "by": "cc"
+    }
+  ],
+  "cast": "2026-10-28"
+}
