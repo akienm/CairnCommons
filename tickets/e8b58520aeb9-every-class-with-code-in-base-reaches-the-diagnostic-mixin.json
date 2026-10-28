@@ -1,0 +1,89 @@
+{
+  "id": "e8b58520aeb9",
+  "title": "Every class with code in base reaches the diagnostic mixin",
+  "date": "2026-10-27",
+  "owner": "cairn (cairn/tools/base owns the classes; CC builds)",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Every class with code in cairn/tools/base reaches DiagnosticBase, so base's 18 classes can produce a diagnostic report when we are stuck and the every_class_reaches_the_diagnostic_mixin sieve reads base green.",
+  "why": "Akien 2026-10-27: 'any class with code it in should be able to run a diagnostic report when we need it' and 'everybody must inherit it. that's why it's a mixin.' The sieve from 339a45cee6a1 now holds PROVED for base, which blocks children 3 (632edb992aa3) and 1 (5dc4d8a0b4d2) of e41a94da3fd0.",
+  "traces_to": "Law 3 (nothing is known until measured); Law 10 (nothing in the system is immeasurable); concept-piece CairnCommons/intentions-not-beside-code/I-complete-diagnostic-on-first-pass.md",
+  "how": "Make diagnostic.py stdlib-only at load (D1, D4); add DiagnosticBase first in the bases of seven classes and IllegalTransition (D2); reorder BaseShim's bases (D3); accept loud setters on the frozen Workflow (D5); restate child 3's grammar tooth (D6); prove it (D7).",
+  "falsifier": "Done when the sieve returns no findings for base, diagnostic.py's top-level imports are stdlib only, every converted exception keeps str, args and a pickle round-trip, Workflow keeps frozenness, equality and hash, every base module imports in a fresh interpreter, and no base proof green before the build is red after it. Wrong intent if inheriting the mixin changes any class's observable behaviour.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the every_class_reaches_the_diagnostic_mixin sieve in cairn/machines/build_inspector/inspector.py already reds any base class that stops reaching the mixin, at every crossing for component base",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261027T225744-ef60c376951a.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261027T225619-8d81ffee5533.json",
+  "model": "opus",
+  "parent": "339a45cee6a1",
+  "questions": [
+    "open-6784771aa29d"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-27",
+      "text": "D1: IMPORT-LIGHT AT LOAD. In cairn/tools/base/diagnostic.py, delete the two module-level lines 'from cairn.tools.base.address import component_of_module' and 'from cairn.tools.base.breadcrumb_log import BreadcrumbLog'. Put 'from cairn.tools.base.address import component_of_module' as the first line inside the diagnostic_device property body, and 'from cairn.tools.base.breadcrumb_log import BreadcrumbLog' as the first line inside each method body that names BreadcrumbLog (find them with grep -n BreadcrumbLog cairn/tools/base/diagnostic.py; the address helpers diagnostic_trail uses get the same treatment). After the edit, diagnostic.py's top-level import statements are only 'from __future__ import annotations' and stdlib. Add one sentence to address.py's module docstring where it says it imports pathlib and nothing else: that it now also imports cairn.tools.base.diagnostic, which is itself stdlib-only at load, so the boot-order property holds."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-27",
+      "text": "D2: WHERE THE MIXIN GOES, AND IN WHICH POSITION. DiagnosticBase is added as the FIRST base, ahead of any builtin, so its cooperative __init__(*args, **kwargs) runs and chains through super() to the builtin's. Edits, each importing 'from cairn.tools.base.diagnostic import DiagnosticBase' at module top: workflow_grammar.py: 'class IllegalTransition(DiagnosticBase, ValueError)' (this converts all 11 transitions.py classes EntryGateRed, BuildGateRed, ExitGateRed, WatchmeEmissionRed, ProofNamedRed, WorkingTreeDirtyRed, TicketRequiredRed, ClearanceRequiredRed, DemoGateRed, FixmeGateRed, CastRefused, which all subclass it) and 'class Workflow(DiagnosticBase)' under its existing @dataclass(frozen=True); address.py: 'class AmbiguousComponent(DiagnosticBase, LookupError)'; breadcrumb_log.py: 'class BreadcrumbLog(DiagnosticBase)'; core_values.py: 'class CoreValuesMixin(DiagnosticBase)'; external.py: 'class ExternalParticipant(DiagnosticBase)'; gate_class.py: 'class TransitionGate(DiagnosticBase)'; probe.py: the nested 'class _Loud(DiagnosticBase, dict)'. MalformedWorkflow is not touched (no def in its body, so the sieve does not judge it). No class's own __init__ is changed."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-27",
+      "text": "D3: MRO REPAIR. cairn/tools/base/shim.py:206 'class BaseShim(DiagnosticBase, CoreValuesMixin, ABC)' becomes 'class BaseShim(CoreValuesMixin, DiagnosticBase, ABC)', the same order as BaseDevice at device.py:109. Without this, importing shim.py raises TypeError (cannot create a consistent method resolution order) once CoreValuesMixin inherits DiagnosticBase. Before editing, grep -rnE 'class \\w+\\(.*DiagnosticBase.*(CoreValuesMixin|TransitionGate|ExternalParticipant|BreadcrumbLog|IllegalTransition|Workflow)' over cairn bin skills; any further hit gets the same reorder."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-27",
+      "text": "D4: NOT_WIRED SURVIVES PICKLE. Add to class _NotWired in diagnostic.py: 'def __reduce__(self): return \"NOT_WIRED\"'. pickle treats a string from __reduce__ as the module-global name, so an unpickled exception's _diagnostic_receiver is the same NOT_WIRED object and the identity checks still hold."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-27",
+      "text": "D5: FROZEN DATACLASS. Workflow stays @dataclass(frozen=True). Its generated __init__ does not call DiagnosticBase.__init__; emit, diagnostic_records, held_diagnostics and diagnostic_trail work through the __dict__ lazy-init path. The explicit setters (set_diagnostic_receiver, set_diagnostic_instance, set_diagnostic_roots, set_trouble_notifier) assign with setattr and raise dataclasses.FrozenInstanceError on a Workflow; that is loud and accepted, and nothing in the repo calls them on a Workflow."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-27",
+      "text": "D6: CHILD 3's TOOTH 1 RESTATED. In cairn/tools/base/proofs/test_light_modules_keep_the_crossing_off_the_inspector_path.py, rename test_the_grammar_imports_only_the_standard_library to test_the_grammar_loads_nothing_that_posts (in the def, the check name and main()'s tuple). New body: collect the TOP-LEVEL import names of workflow_grammar.py (statements directly in ast.parse(...).body, not ast.walk) and require each to be stdlib, __future__, or exactly cairn.tools.base.diagnostic / cairn.tools.base.diagnostic.DiagnosticBase; then collect diagnostic.py's TOP-LEVEL import names the same way and require each to be stdlib or __future__. Fail with the stray names. Docstring line: Akien 2026-10-27, open-d32047bb1759, the inspector may write its own logs but not decide from them, so the grammar may carry the mixin as long as nothing that posts loads with it. Tooth 2 (ticket_file never reaches transitions, gate_probes, bus_client) is unchanged; measured 2026-10-27, import_sieve.reaches from diagnostic.py hits 11 files and none of those."
+    },
+    {
+      "n": 7,
+      "by": "cc",
+      "step": "D7",
+      "date": "2026-10-27",
+      "text": "D7: THE PROOF. cairn/tools/base/proofs/test_every_base_class_reaches_the_diagnostic_mixin.py, house runner shape (check() printing PASS/FAIL per tooth, a FAILURES list, main() catching each tooth's exception as a FAIL, exit 1 on any failure). Imports of the code under test happen inside each tooth. Teeth: (1) the sieve: from cairn.machines.build_inspector import inspector; inspector.every_class_reaches_the_diagnostic_mixin({'component': 'base', 'dir': 'cairn/tools/base'}, Path('cairn/tools/base')) returns [] (run with cwd at the repo root; print each finding's 'about' on failure). (2) diagnostic.py's top-level imports are stdlib or __future__ only. (3) each base module listed in D2 plus diagnostic, shim and device imports cleanly in a fresh interpreter: subprocess.run([sys.executable, '-c', 'import <module>'], cwd=repo) returns 0 for each. (4) each of the 11 transitions exceptions and AmbiguousComponent: e = Cls('msg') (for classes whose __init__ needs more arguments, read its signature and pass the minimal ones) has str(e) and e.args equal to what ValueError/LookupError would give for the same message, isinstance(e, DiagnosticBase), and pickle.loads(pickle.dumps(e)) keeps args and str and its _diagnostic_receiver is NOT_WIRED. (5) Workflow: two equal Workflows (parse_workflow of the same string twice) are == and have equal hash, setattr on a field raises FrozenInstanceError, and w.emit('probe-gate') returns a dict without raising. (6) BaseShim's MRO lists CoreValuesMixin before DiagnosticBase."
+    },
+    {
+      "n": 8,
+      "by": "cc",
+      "step": "D8",
+      "date": "2026-10-27",
+      "text": "D8: OUT OF SCOPE. The Probe root class stays as it is: the sieve already exempts it, per Akien 'determination isn't made at the rootmost level, but as each subclass needs' (open-d7983cf68dd2). The other 17 components the sieve reds (44 classes) are their own sibling tickets under 339a45cee6a1 D7. No behaviour change to any class beyond gaining the mixin."
+    },
+    {
+      "n": 9,
+      "text": "PICKLE SCOPE, measured 2026-10-27. Before the build, pickle.loads(pickle.dumps(e)) round-trips the ten gate reds (EntryGateRed..FixmeGateRed) with equal args and str, but CastRefused round-trips with changed args/str and AmbiguousComponent raises TypeError (missing 'homes'), because their __init__ takes arguments args does not carry. The falsifier's 'pickle round-trip' therefore means: pickle behaviour unchanged by the build. D7 tooth 4 checks the round-trip and NOT_WIRED identity for the ten; for CastRefused and AmbiguousComponent it checks only str, args, isinstance. Making those two picklable is out of scope. CC's call, per Akien 2026-10-09 (measurement settles proof shape).",
+      "by": "cc",
+      "step": "D9",
+      "source": "rehearsal",
+      "at": "2026-10-28T05:05:19+00:00"
+    }
+  ],
+  "cast": "2026-10-27"
+}
