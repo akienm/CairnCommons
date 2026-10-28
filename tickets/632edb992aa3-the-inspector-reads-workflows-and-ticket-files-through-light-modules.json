@@ -56,6 +56,30 @@
     {
       "n": 9,
       "text": "Regression floor: after the build, bin/cairn test over cairn/tools/base/proofs/ and cairn/machines/build_inspector/proofs/ shows no proof red that was green at HEAD 7dfc3990. The bus post in emit (gate_probes.fire_crossing) is NOT touched; where it belongs is children 1 and 4 of e41a94da3fd0. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 10,
+      "text": "Amends D4: transitions.py does NOT import _TICKETS from ticket_file. It adds 'from cairn.tools.base import ticket_file as _tf', and every remaining _TICKETS in transitions.py's body becomes _tf._TICKETS, so ticket_file._TICKETS is the one patch point and find_ticket reads it at call time. Why: measured 2026-10-27, four proofs redirect lookups by assigning transitions._TICKETS (cairn/machines/build_inspector/proofs/test_buildme_rides_the_outline_check.py:84-89, cairn/machines/rehearsal/proofs/test_rehearsal.py:369-374, cairn/tools/base/proofs/test_the_stones_are_pushed.py:187-259, cairn/tools/base/proofs/test_the_ticket_log_door.py:143-148); a copied name would let those assignments silently miss find_ticket. So in those four the assigned and restored name becomes ticket_file._TICKETS (import 'from cairn.tools.base import ticket_file' beside the existing transitions import), and the readers cairn/tools/base/cross.py:56, cairn/tools/base/cast.py:103-104 and cairn/tools/base/proofs/test_phase_write_rate.py:57 and :169 read ticket_file._TICKETS the same way. A reader missed reds loudly with AttributeError. cairn/machines/rehearsal/proofs/test_rehearsal.py joins D9's regression floor. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'",
+      "by": "cc",
+      "step": "unlisted: one patch point for the tickets directory",
+      "source": "rehearsal",
+      "at": "2026-10-27T23:40:11+00:00"
+    },
+    {
+      "n": 11,
+      "text": "The proof cairn/tools/base/proofs/test_light_modules_keep_the_crossing_off_the_inspector_path.py already exists and is committed (cairn e937037e, red 5/5 at HEAD) before BUILDME. The builder neither writes nor edits it; it only runs it with bin/cairn test <path> until it is green 5/5. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'",
+      "by": "cc",
+      "step": "D6",
+      "source": "rehearsal",
+      "at": "2026-10-27T23:50:21+00:00"
+    },
+    {
+      "n": 12,
+      "text": "D5's line numbers were measured at HEAD e937037e on 2026-10-27 and each line reads exactly: inspector.py:95 'from cairn.tools.base.transitions import MalformedWorkflow, is_terminal, parse_workflow  # noqa: E402 (...)'; inspector.py:239 'from cairn.tools.base.transitions import verify_crossing_fingerprint'; skill_block.py:468 'from cairn.tools.base.transitions import MalformedWorkflow, parse_workflow'; skill_block.py:496 'from cairn.tools.base.transitions import is_terminal'; crossings.py:346 and chain.py:413 'from cairn.tools.base.transitions import _write_ticket'; crossings.py:368 and chain.py:414 'from cairn.tools.base.transitions import _ticket_shape as _shape_of'; ticket_log.py:56 'from cairn.tools.base.transitions import _find_ticket  # at call time: transitions imports us'. The builder locates each by that text, not by number, and changes only the module path (and the imported name to the public one, aliased back to the local name). Every name imported there is in D2's workflow_grammar list or ticket_file list. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'",
+      "by": "cc",
+      "step": "D5",
+      "source": "rehearsal",
+      "at": "2026-10-27T23:57:09+00:00"
     }
   ],
   "cast": "2026-10-27"

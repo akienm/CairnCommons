@@ -1,0 +1,58 @@
+{
+  "id": "5dc4d8a0b4d2",
+  "title": "A certificate is a record type only the base gate class writes",
+  "date": "2026-10-27",
+  "owner": "cairn (cairn/tools/base and cairn/tools/artifact; CC builds)",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A certificate is a record type only the base gate class writes: TransitionGate.certify writes it through the artifact door, CC bumps its nose on any other way of writing one, and a hand-written or edited certificate fails verification on read.",
+  "why": "So a gate's output is something nothing else can produce. Outline 19.14.2: 'The certificate is one file type you can't write'; 19.14.3: signing belongs in the base gate class so every gate has it. Akien's answer to open-6dbeb274245e: 'only a gate can write a certificate. how we get there is less important to me than that you bump your nose if you try.' Today TransitionGate writes only unsigned feedback, and no certificate exists anywhere in cairn/.",
+  "traces_to": "Akien 2026-10-27, outline 19.14.2-19.14.3 and open-6dbeb274245e. Law 4 (the rule is enforced by the door, not by policy). Law 8 (a peer leans on a certificate because it verifies). Parent e41a94da3fd0, child 1.",
+  "how": "One new jurisdiction rule in cairn/tools/artifact/jurisdiction.json declares CairnCommons certificates/*.cert.json as records, with the one verb and the one writer allowed. The door (cairn/tools/artifact/artifact.py) gains the verb 'certify' and refuses, on a rule that declares verbs or a writer, any other verb, any other calling function, and any rewrite of a certificate that already exists. TransitionGate.certify in cairn/tools/base/gate_class.py runs the verdict, then writes the certificate (gate name, ticket, target, time, gate code hashes, the findings and their hash, and a hash over the whole body). verify_certificate(path) recomputes the hashes and checks the door journal's last entry for the path. bin/cmd/artifactgate and the pre-commit check cover the new rule without change, because both read the jurisdiction.",
+  "falsifier": "Green when cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py passes under PROVES {'5dc4d8a0b4d2': {'1','2','3','4','5','6'}}: (1) TransitionGate.certify over a green record writes a certificate under certificates/ that verify_certificate returns [] for, and over a red record raises the gate's exception and writes nothing; (2) bin/cmd/artifactgate's verdict refuses a Write, an Edit and a shell redirect onto a certificate path; (3) artifact.write refuses verb 'cast' on a certificate path, and refuses verb 'certify' on a ticket path; (4) artifact.write with verb 'certify' called from anywhere but TransitionGate.certify is refused, and so is a second write to an existing certificate; (5) a certificate written around the door, or edited after certify, gets a non-empty fault list from verify_certificate and from artifact.check_staged; (6) every hash field is recomputed by verify_certificate, so changing any one body field, the findings, or a hash alone is a fault. Hollow: before the build there is no certify verb, no rule and no certify method, so every tooth reds. Wrong intent if Akien wanted a key CC cannot read rather than a block CC bumps into.",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because the outcome is measured by the proof cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py, and every later use of certificates is child 4 of e41a94da3fd0, whose crossings verify one on every read",
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261027T180706-77c1af6ba4ff.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261027T180544-51b5105f1605.json",
+  "model": "opus",
+  "parent": "e41a94da3fd0",
+  "children": "none, because the build is one jurisdiction rule, a verb check in cairn/tools/artifact/artifact.py, and two functions in cairn/tools/base/gate_class.py",
+  "questions": [
+    "open-fb1deb0d27eb"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "No key. Per Akien's answer to open-6dbeb274245e, the guarantee is the nose-bump: the PreToolUse block, the door's verb and writer check, and the pre-commit check. A certificate's hashes say whether its bytes are intact; the door journal says the certify verb wrote them. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!' and his key-custody answer."
+    },
+    {
+      "n": 2,
+      "text": "jurisdiction.json gets one more CairnCommons record rule, appended last: {\"under\": \"certificates\", \"name\": \"*.cert.json\", \"verbs\": [\"certify\"], \"writer\": \"cairn/tools/base/gate_class.py:TransitionGate.certify\", \"write_once\": true}. It is written through artifact.write_json(path, doc, verb='cast', why='certificates are records only TransitionGate.certify writes (5dc4d8a0b4d2)'). CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 3,
+      "text": "artifact.py: 'certify' is appended to VERBS with a comment naming this ticket. A new function _refuse_by_rule(name, rel, p, verb, exists) is called from write() right after locate() succeeds, and from remove() with verb 'remove'. It finds the matching rule the same way _refuse_undeclared_keys does. It refuses (raises Refused, message ending in '(5dc4d8a0b4d2)') when: the rule declares 'verbs' and verb is not in it; verb is 'certify' and the rule declares no 'verbs' containing it; the rule declares 'writer' and the function that called write() is not that writer; the rule declares write_once and the file exists. The writer test reads sys._getframe(2) inside _refuse_by_rule (frame 0 is _refuse_by_rule, 1 is write, 2 is its caller): its co_filename, made relative to _REPO, must equal the part before ':', and its f_code.co_qualname must equal the part after. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 4,
+      "text": "gate_class.py gets TransitionGate.certify(self, record, *, ticket, target) -> Path. It first calls self.run(record), so a red record raises the gate's exception and nothing is written. Then it builds body = {\"kind\": \"certificate\", \"gate\": self.name, \"ticket\": ticket, \"target\": target, \"certified_at\": UTC time as '%Y-%m-%dT%H:%M:%SZ', \"gate_code\": [{\"path\", \"sha256\"} for every class in type(self).__mro__ except object, path repo-relative from inspect.getsourcefile, sha256 of that file's bytes], \"findings\": record, \"findings_sha256\": sha256 of canon(record)}, then sets body['body_sha256'] = sha256 of canon(body without body_sha256). canon(x) is json.dumps(x, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8'). The path is door.roots()['CairnCommons'] / 'certificates' / f'{ticket}-{target}-{stamp}-{os.urandom(2).hex()}.cert.json', stamp being certified_at with ':' and '-' removed. It writes with door.write(str(path), json.dumps(body, indent=2, ensure_ascii=False) + '\\n', verb='certify', why=f'{self.name} certifies {ticket} -> {target}'), calling door.write directly (not write_json) so the writer check sees certify as the caller. The door is imported inside the method: 'from cairn.tools.artifact import artifact as door'. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 5,
+      "text": "gate_class.py gets a module-level verify_certificate(path) -> list[str]: empty means it verifies, each string names one fault. It reports: a body that does not parse; a missing key of the body in D4; body_sha256 not equal to the recomputed one; findings_sha256 not equal to sha256 of canon(findings); any findings entry that gate.passed() says did not pass; a path door.locate() does not name as a record; a journal (door.read_journal of the located root) whose last entry for the path is absent, is not verb 'certify', or has a sha_after that is not the sha256 of the file's bytes. It does NOT compare gate_code against the current files: a certificate says what code wrote it then, and gate code changing later does not unmake it. The door is imported inside the function. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 6,
+      "text": "bin/cmd/artifactgate and artifact.check_staged are NOT edited; both read the jurisdiction, so the new rule covers certificates. If the proof shows either does not cover them, that is a FIXME on this ticket, not a silent edit. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 7,
+      "text": "The proof cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py is written and committed red-first before BUILDME, with PROVES {'5dc4d8a0b4d2': {'1'..'6'}} keyed to the falsifier's six clauses. It runs over scratch roots through artifact.set_diagnostic_roots and binds the new names at call time. The builder does not write or edit it; it only runs it with bin/cairn test <path>. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    },
+    {
+      "n": 8,
+      "text": "PROVEME's proven_by is the new proof plus cairn/tools/artifact/proofs/test_artifact_door.py and bin/proofs/test_artifact_gate.py. Regression floor: after the build, bin/cairn test over cairn/tools/artifact/proofs/, cairn/tools/base/proofs/ and bin/proofs/test_artifact_gate.py shows no proof red that was green before BUILDME. No gate is changed to call certify in this ticket; that wiring is child 4. CC's call, per Akien 2026-10-27 'yes, cast child 3 and go go go!'"
+    }
+  ],
+  "cast": "2026-10-27"
+}
