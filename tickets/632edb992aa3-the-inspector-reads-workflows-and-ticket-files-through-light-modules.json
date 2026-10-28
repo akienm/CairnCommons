@@ -8,9 +8,9 @@
   "why": "So the inspector's verdict path cannot reach a host. Today it does, by import: inspector -> transitions -> gate_probes -> bus_client.remote (socket). Akien's answer to open-495f7be4789b is that the inspector stops reaching emit, and outline 17.1.1 says the inspector outputs only findings. test_inspector_nexus is red until this lands, and 339a45cee6a1's PROVED waits on it.",
   "traces_to": "Akien 2026-10-27, outline 17.1.1 and his answer to open-495f7be4789b: the inspector outputs only findings and stops reaching emit. Law 8 (the verdict path may not consult a host; test_inspector_nexus is that proof). RULE 1 (callers outside base ask through base's declared public interface). Precedent ticket 03ea6f93df03 (a light door re-exported, callers repointed).",
   "how": "New cairn/tools/base/workflow_grammar.py takes, verbatim, the grammar: MalformedWorkflow, IllegalTransition, TERMINAL_STATES, is_terminal, is_summons, Workflow, parse_workflow with its regexes and phase vocabulary, and the crossing fingerprint pair. New cairn/tools/base/ticket_file.py takes find_ticket, ticket_shape and write_ticket (the artifact door import stays inside write_ticket). transitions.py imports them back under their old names, so every existing caller keeps working and the objects are the same objects. The five import edges measured 2026-10-27 from the inspector into transitions are repointed: inspector.py and skill_block.py to workflow_grammar; crossings.py, chain.py and ticket_log.py to ticket_file. The base charter's public_interface names both modules.",
-  "falsifier": "Green when cairn/tools/base/proofs/test_light_modules_keep_the_crossing_off_the_inspector_path.py passes under PROVES {'632edb992aa3': {'1','2','3','4','5'}}: (1) workflow_grammar.py imports only the standard library; (2) ticket_file.py's import closure (import_sieve.reaches) contains neither cairn/tools/base/transitions.py, nor cairn/tools/base/gate_probes.py, nor any file under cairn/tools/bus_client/; (3) transitions.parse_workflow, is_terminal, MalformedWorkflow, IllegalTransition, Workflow, TERMINAL_STATES, verify_crossing_fingerprint, _find_ticket, _ticket_shape and _write_ticket are the very objects defined in workflow_grammar / ticket_file; (4) crossings.py and ticket_log.py import nothing from cairn.tools.base.transitions; (5) the base charter's public_interface names both modules. Also green: cairn/machines/build_inspector/proofs/test_inspector_nexus.py, with _FIRE_PATH unchanged. Hollow: before the build both modules are absent, so 1-5 red and the nexus fire-path tooth reds on inspector -> transitions -> gate_probes -> bus_client.remote.",
+  "falsifier": "Green when cairn/tools/base/proofs/test_light_modules_keep_the_crossing_off_the_inspector_path.py passes under PROVES {'632edb992aa3': {'1','2','3','4','5','6'}}: (1) workflow_grammar.py imports only the standard library; (2) ticket_file.py's import closure (import_sieve.reaches) contains neither cairn/tools/base/transitions.py, nor cairn/tools/base/gate_probes.py, nor any file under cairn/tools/bus_client/; (3) transitions.parse_workflow, is_terminal, MalformedWorkflow, IllegalTransition, Workflow, TERMINAL_STATES, verify_crossing_fingerprint, _find_ticket, _ticket_shape and _write_ticket are the very objects defined in workflow_grammar / ticket_file; (4) the five repointed edges, inspector.py, skill_block.py, chain.py, crossings.py and ticket_log.py, import nothing from cairn.tools.base.transitions; (5) the base charter's public_interface names both modules; (6) ticket_file._TICKETS is the one patch point: transitions carries no _TICKETS and no Python file in cairn/, bin/ or skills/ reads, assigns or imports _TICKETS from transitions. Also green: cairn/machines/build_inspector/proofs/test_inspector_nexus.py, with _FIRE_PATH unchanged. Hollow: before the build both modules are absent, so 1-5 red and the nexus fire-path tooth reds on inspector -> transitions -> gate_probes -> bus_client.remote.",
   "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> [PROVEME:waiting] -> PROVED",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [FIXME:waiting] -> BUILDME -> PROVEME -> PROVED",
   "watchme": "none, because the outcome is measured by cairn/machines/build_inspector/proofs/test_inspector_nexus.py, which the commit hook reseals on every commit touching build_inspector, so a new edge back onto the inspector's path reds there without a probe",
   "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261027T173437-e89263f00578.json",
   "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261027T173411-5ec323869df0.json",
@@ -80,7 +80,43 @@
       "step": "D5",
       "source": "rehearsal",
       "at": "2026-10-27T23:57:09+00:00"
+    },
+    {
+      "n": 13,
+      "text": "clause (4) and its tooth test_the_base_edges_no_longer_import_transitions now cover all five edges D5 repointed (inspector.py, skill_block.py, chain.py, crossings.py, ticket_log.py), so reverting any one of them reds a tooth that declares PROVES for this ticket; test_inspector_nexus.py stays green beside it but is not leaned on",
+      "by": "cc — measurement settles proof shape (CC's call, per Akien 2026-10-09)",
+      "step": "FIXME 1",
+      "source": "rehearsal",
+      "at": "2026-10-28T20:54:31+00:00"
+    },
+    {
+      "n": 14,
+      "text": "new clause (6), tooth test_ticket_file_holds_the_one_patch_point: transitions carries no _TICKETS of its own and an AST scan of every .py under cairn/, bin/ and skills/ finds no import of _TICKETS from transitions and no read or assignment of <transitions alias>._TICKETS, so reverting cast.py, cross.py, test_phase_write_rate.py or test_the_ticket_log_door.py reds it",
+      "by": "cc — measurement settles proof shape (CC's call, per Akien 2026-10-09)",
+      "step": "FIXME 2",
+      "source": "rehearsal",
+      "at": "2026-10-28T20:54:31+00:00"
+    },
+    {
+      "n": 15,
+      "text": "proven_by is cairn/tools/base/proofs/test_light_modules_keep_the_crossing_off_the_inspector_path.py alone, the one proof declaring PROVES for this ticket; D8's second proof (test_inspector_nexus.py) declares none and is dropped, because a proven_by proof that declares no tooth bounces PROVED",
+      "by": "cc — measurement settles proof shape (CC's call, per Akien 2026-10-09)",
+      "step": "proven_by",
+      "source": "rehearsal",
+      "at": "2026-10-28T20:54:31+00:00"
     }
   ],
-  "cast": "2026-10-27"
+  "cast": "2026-10-27",
+  "fixme": [
+    {
+      "n": 1,
+      "kind": "hollow_file",
+      "missing": "hollow reading (journal anchor ea913b9d): reverting inspector.py, skill_block.py or chain.py reds no tooth that declares PROVES for this ticket — the edges D5 repointed are measured only by test_inspector_nexus.py, which declares none, so clause (4) covers two of the five edges"
+    },
+    {
+      "n": 2,
+      "kind": "hollow_file",
+      "missing": "hollow reading: reverting cast.py, cross.py, proofs/test_phase_write_rate.py or proofs/test_the_ticket_log_door.py reds nothing — D10 made ticket_file._TICKETS the one patch point and no tooth measures it"
+    }
+  ]
 }
