@@ -65,6 +65,20 @@ gate's own greens are measured by it (Law 8: a hollow green is worse than a red)
   is a labeled example from the real world; the tree that asks the recurring questions before the first
   read is a child cast after ten records exist.
 
+## Amended 2026-10-29 — a build simulator, handed the plan and what exists (ticket c9897770efe6)
+
+Akien, verbatim: *"You are a build simulator here to identify what's missing"*; *"it doesn't need to
+'fit in to our build process' it just needs to say 'i got stopped here' or 'xyz is missing'"*; *"we
+should be telling it what exists and what doesn't before hand"*; *"the ticket becomes nothing but the
+build plan. that's what makes this work."*
+
+This replaces "we hand the agent the prebuild" above. The reader is handed THE PLAN (the ticket's
+steps, keyed `D<n>`) and WHAT EXISTS (every path and module the steps cite, measured on disk before
+the read, never imported) — no chart berths, no charters, no voyage craft, no landed commits. Each
+step answers `builds` or `stopped` with what is missing. Measured on 7a31059daa23: the render fell
+from 57,870 chars to 16,223, of which the plan is 12,993. The chart is no longer measured by the
+reader; a `stopped` naming a file the plan never cited is a finding against the plan.
+
 ## Pointers
 
 - Ticket: `CairnCommons/tickets/cf80bdb57205-the-cheapest-reader-rehearses-a-ticket-before-buildme.json`
