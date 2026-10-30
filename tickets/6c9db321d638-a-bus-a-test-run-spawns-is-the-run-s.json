@@ -1,22 +1,12 @@
 {
   "id": "6c9db321d638",
   "title": "A bus a test run spawns is the run's",
-  "date": "2026-10-18",
-  "owner": "cc",
   "owning_intention": "cairn/tools/bus_client/intention+why.json",
   "intention": "A bus that a test run causes to start is the run's: its unit carries the run's CAIRN_TESTER_TEST_ID and collects itself when it fails, so the tester's stop takes it and no failed bus unit lingers.",
   "why": "Law 9 and Law 7 via the tester's charter (a run owns what it started, c64adc092835): a failed bus left by a run sits in the live user manager as a corpse nobody's stop reaches, which is noise at a diagnostic surface. Law 3: measured 2026-10-11 (8 corpses) and again 2026-10-18 by the new proof (a run's bus outlives the run, active).",
   "traces_to": "Law 9 and Law 7 via the tester's charter (a run owns what it started, c64adc092835): a failed bus left by a run sits in the live user manager as a corpse nobody's stop reaches, which is noise at a diagnostic surface. Law 3: measured 2026-10-11 (8 corpses) and again 2026-10-18 by the new proof (a run's bus outlives the run, active).",
   "how": "In cairn/tools/bus_client/remote.py _spawn, after the fixed systemd-run argv and before '--', append --setenv=CAIRN_TESTER_TEST_ID=<id> and -p CollectMode=inactive-or-failed only when CAIRN_TESTER_TEST_ID is set in the caller's environment, which is the exact mark 2120e74dcf44 gave ensure_ground_loop. Outside a run the argv is unchanged. The proof cairn/tools/bus_client/proofs/test_a_bus_a_test_run_spawns_is_the_runs.py calls ensure_bus from a unit beside the user manager. Measured 2026-10-18: 1 of 4 today, 4 of 4 with the change. Builder notes: Questions a Haiku builder would need, answered. (a) Only cairn/tools/bus_client/remote.py changes, in _spawn. (b) In the argv list, end it after the StandardError line, i.e. drop the trailing ', \"--\", *cmd' from the literal. (c) Then add the three-line comment and: test_id = os.environ.get(\"CAIRN_TESTER_TEST_ID\"); if test_id: argv += [f\"--setenv=CAIRN_TESTER_TEST_ID={test_id}\", \"-p\", \"CollectMode=inactive-or-failed\"]; then argv += [\"--\", *cmd]. (d) Copy the comment shape from cairn/tools/base/shim.py lines 157-159. (e) The proof is already written and committed; run it. Expect 1 of 4 before and 4 of 4 after.",
   "falsifier": "Falsifier: cairn/tools/bus_client/proofs/test_a_bus_a_test_run_spawns_is_the_runs.py has four teeth. (1) The bus unit ensure_bus starts from a caller carrying CAIRN_TESTER_TEST_ID carries that id in the manager's Environment record. (2) Its CollectMode is inactive-or-failed. (3) A tester run whose subject starts a bus leaves no unit. (4) With no id the unit carries none and CollectMode stays inactive. Measured 2026-10-18 on today's remote.py: 1 of 4, teeth 1-3 red; with the change applied aside, 4 of 4. Every bus_client proof stays green. Horizon: PROVED, with the reverted remote.py redding teeth 1-3 in the hollow reading.",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because the outcome is a structural property measured by cairn/tools/bus_client/proofs/test_a_bus_a_test_run_spawns_is_the_runs.py, which reruns at every bin/cairn test --seal touching remote.py; a recurrence would show as cairn-bus-* units in 'systemctl --user list-units --all cairn-bus-*' and as the live trouble a-bus-a-test-run-spawns-is-not-the-runs in the lane printed by bin/cmd/slate",
-  "questions": [],
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261018T074849-b0e9b69d73eb.json",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261018T074829-5d892b75be0f.json",
-  "cast": "2026-10-18",
-  "model": "opus",
   "decisions": [
     {
       "n": 1,
@@ -34,6 +24,5 @@
       "source": "rehearsal",
       "at": "2026-10-18T13:54:41+00:00"
     }
-  ],
-  "chart_claim": "validate-20261018T075017-a5be015fa498.json"
+  ]
 }

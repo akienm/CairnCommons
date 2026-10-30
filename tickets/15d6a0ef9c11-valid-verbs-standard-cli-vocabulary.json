@@ -1,8 +1,6 @@
 {
   "id": "15d6a0ef9c11",
   "title": "valid-verbs-standard-cli-vocabulary",
-  "date": "2026-08-29",
-  "owner": "CC owns the mechanism. Akien owns the verb list and their semantics (get=JSON, show=human-readable, etc.).",
   "owning_intention": "cairn/tools/base/intention+why.json",
   "intention": "A declared vocabulary of standard CLI verbs (get, show, list, ...) that every device implements through its shim, with validation of new commands against the vocabulary and standard shortcuts that compose into the full form.",
   "why": "Akien, 2026-08-27: 'we need a list of common verbs new things can't step on. like get should return whatever is asked for, prolly in json format. and show should prolly return the same thing, but formatted for humans, like in chat.' Without a vocabulary, cairn trouble get and cairn tester get could mean different things. Claude is the user — one mental model for all devices.",
@@ -16,27 +14,6 @@
     "proves_red": "DONE when (1) the root shim class declares standard verbs with semantics, (2) devices inherit common handlers, (3) collisions are refused, (4) cairn device get thing works uniformly. WRONG INTENT if the vocabulary is prose, if devices must opt in, or if standard verbs don't compose.",
     "horizon": "Moderate to large — touches the root shim class, device shims, and cairn command dispatch."
   },
-  "children": [
-    "b41b0c0fff0e hot-and-the-root-verbs-resolve-in-the-shim (cast 2026-09-06: the resolver this vocabulary demands)"
-  ],
-  "linked_ideas": [
-    "2026-08-27-valid-verbs-you-re-already-tracking-and"
-  ],
-  "questions": [
-    {
-      "q": "distinctions",
-      "a": "ADDRESSING vs ACTION: the-cli-reaches-any-device is the addressing layer (making every device reachable). This is the action layer (what you can DO once you reach a device). They compose."
-    },
-    {
-      "q": "distinctions",
-      "a": "STANDARD vs DEVICE-SPECIFIC: the standard set is SMALL and reserved (get, show, list). Device-specific verbs are OPEN. The vocabulary governs standard verbs; device verbs are unconstrained beyond not colliding."
-    },
-    {
-      "q": "distinctions",
-      "a": "LONG FORM vs SHORTCUT: 'cairn device get thing' is the standard; 'cairnhelp' is a shortcut. The vocabulary is the source; shortcuts are views."
-    },
-    "open-4bbb23c2c2ec"
-  ],
   "constraints": [],
   "how": {
     "vocabulary": "A data structure in the root shim class mapping verb names to their semantics. RULED 2026-09-06 (Akien, verbatim on the note of that date): the root set is exactly list, show, get, stop, start, settings. get returns JSON, show renders human-readable, list enumerates. `status` is a root view: list/show/get status carry the same content the web STATUS pane carries (shim.active_page: introspect()['intention'] + ['state']). `settings` carries the same content as the web SETTINGS pane (introspect()['settings']) and answers 'No settings' when the device declares none. start/stop act on the device instance's process (a device is its own process in the rack).",
@@ -47,27 +24,6 @@
     "status_and_settings": "CC's reading, not ruled: 'status' and 'settings' resolve through declared_views() so show/get/list already compose over them; `settings` is ALSO a bare verb (`cairn <device> settings`) that renders the settings view and says 'No settings' on an empty dict. The validate berth validate-20260906T111655-4ad94dfa32c8.json predates this ruling and covers only `list`; the build follows the ticket.",
     "modifiers": "Akien, 2026-09-06: `hot` — a modifier on show/get/list: \"don't show cached values, get the real values.\" Verbatim: \"lets say i type 'cairn librarian show status hot' ... 'hot' isn't in there yet. I added that just now. hot would mean don't show cached values, get the real values.\" A hot query requires the device to be running, so the shim's resolver starts the device (lazy init) before answering; without `hot`, the shim answers from what it holds (last_known / the cached view)."
   },
-  "links": [],
-  "priority": "",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because the proof covers the functional claim. Device verb usage is tracked by the device census, an existing measurement.",
-  "deposits": {},
-  "sorted_berth": "none, because berth file sorted-20260829T014709-a62c82c3073c.json was purged from instance-space (measured 2026-09-06: /home/akien/.cairn/devices/skill_block/0/berths/sorted/ holds 1 file(s): sorted-20260904T171337-82d43e9e4c65.json; none from 2026-08-29); the original /sorted firing for tickets/15d6a0ef9c11-valid-verbs-standard-cli-vocabulary.json (ticket 15d6a0ef9c11) is recorded on the ticket, dated 2026-08-29",
-  "intent_berth": "none, because berth file intent-20260829T014626-284cc2a8abeb.json was purged from instance-space (measured 2026-09-06: /home/akien/.cairn/devices/skill_block/0/berths/intent/ holds 1 file(s): intent-20260905T111431-809c0478cfb7.json; none from 2026-08-29); the original /intent firing for tickets/15d6a0ef9c11-valid-verbs-standard-cli-vocabulary.json (ticket 15d6a0ef9c11) is recorded on the ticket, dated 2026-08-29",
-  "chart_claim": "berthed — validate-20260906T111655-4ad94dfa32c8.json claims this ticket (7 stages berthed 2026-09-06 under ~/.cairn/devices/chart/0/packets/)",
-  "schema_version": "ticket-v1",
-  "dependencies": [
-    "The root shim class — where the vocabulary lives.",
-    "The cairn command dispatch (bin/cmd/cairn, COMPOSING_DOOR) — where verb dispatch plugs in.",
-    "the-cli-reaches-any-device (soft dependency) — the vocabulary can be declared and proved on existing devices before every device is CLI-reachable."
-  ],
-  "notes": [
-    "2026-09-06 owning_intention set to cairn/tools/base/intention+why.json — the root device class (Device.declared_verbs) lives in cairn/tools/base; the earlier cairn/devices/intention+why.json address does not exist (measured 2026-09-06) (was: 'cairn/devices/intention+why.json')",
-    "2026-09-06 Akien, asked whether the root verb set is exactly list/show/get: \"list show get stop start settings --- list/show status (same as the web pane for status), settings (same as web settings pane) says 'No settings' if there aren't any.\" Recorded on how.vocabulary; the verb list and semantics are his to own (owner field).",
-    "2026-09-06 Akien added the `hot` modifier (see how.modifiers) while describing the launch chain — record: CairnCommons/intentions-not-beside-code/I-the-command-lazy-inits-the-system.md",
-    "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 → BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 — the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Back-edge from PROVEME. proof_coverage sieve (ticket feeb4c786b14) reds this ticket: clause_declared; proof_declares_the_ticket; seal_fingerprint_current. test_address_rule.py is about hand-spelled instance paths; no tooth touches CLI verbs, inherited handlers or collision refusal. Its seal is also stale — the fingerprint no longer matches the tree. MEASURED 2026-09-07 by cairn/tools/proof_coverage/proofs/test_proof_coverage.py; a green seal on a proof that says nothing about this ticket is the hollow green Law 8 is written against. What is owed at BUILDME: a PROVES block naming a real tooth per falsifier clause."
-  ],
   "decisions": [
     {
       "n": 1,
@@ -329,27 +285,5 @@
       "source": "rehearsal",
       "at": "2026-10-14T10:05:23+00:00"
     }
-  ],
-  "forwarding": {
-    "cairn/devices/cairn/machines/ground_loop/proofs/test_beater_holds_claim.py": {
-      "to": "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py",
-      "why": "bae622881f03 (PROVED 2026-09-30) deleted the old runner's proofs when the ground loop became only a heartbeat; test_heartbeat.py holds the successor teeth: one claim per instance and a second loop exits 3, exec-on-change replacing stale-restart, the pulse sites called once per beat"
-    },
-    "cairn/devices/cairn/machines/ground_loop/proofs/test_pulse_service.py": {
-      "to": "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py",
-      "why": "bae622881f03 (PROVED 2026-09-30) deleted the old runner's proofs when the ground loop became only a heartbeat; test_heartbeat.py holds the successor teeth: one claim per instance and a second loop exits 3, exec-on-change replacing stale-restart, the pulse sites called once per beat"
-    },
-    "cairn/devices/cairn/machines/ground_loop/proofs/test_second_loop_arbitration.py": {
-      "to": "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py",
-      "why": "bae622881f03 (PROVED 2026-09-30) deleted the old runner's proofs when the ground loop became only a heartbeat; test_heartbeat.py holds the successor teeth: one claim per instance and a second loop exits 3, exec-on-change replacing stale-restart, the pulse sites called once per beat"
-    },
-    "cairn/devices/cairn/machines/ground_loop/proofs/test_stale_restart.py": {
-      "to": "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py",
-      "why": "bae622881f03 (PROVED 2026-09-30) deleted the old runner's proofs when the ground loop became only a heartbeat; test_heartbeat.py holds the successor teeth: one claim per instance and a second loop exits 3, exec-on-change replacing stale-restart, the pulse sites called once per beat"
-    },
-    "cairn/devices/cairn/machines/ground_loop/proofs/test_staleness.py": {
-      "to": "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py",
-      "why": "efb670ff1dd8 (build 4313a42d, 2026-10-02) deleted staleness.py and test_staleness.py with the private loop; a loop can no longer outlive its own code because the heartbeat re-execs in place when an own file changes — test_heartbeat.py clause 2 holds that tooth"
-    }
-  }
+  ]
 }

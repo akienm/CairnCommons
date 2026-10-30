@@ -1,8 +1,6 @@
 {
   "id": "0d16e513ff26",
   "title": "the-heartbeat-outlives-its-caller",
-  "date": "2026-08-18",
-  "owner": "CC",
   "owning_intention": "launchers/intention+why.json",
   "intention": "The ground loop outlives the terminal that started it: a heartbeat spawned by an entry point is parented on the user manager, not on the caller's cgroup, so killing the window or the session leaves it beating.",
   "why": "The heartbeat is the one resident process every callback in the system hangs off, and today its lifetime is an accident of which window launched it. MEASURED 2026-08-18: the kernel oom-killed the claude binary at 14:57:31; systemd marked app-org.kde.konsole-b1d62b21cfc74a57b8e15d874590bdc6.scope 'Failed with result oom-kill' at 14:57:43; the loop's own trail at ~/.cairn/logs/ground_loop/0/diagnostics.jsonl carries exactly three loop starts that day - 14:52:55, 14:58:01, 15:33:34 - so the heartbeat died in that scope kill with nothing between. It died the same way on 2026-08-10 ('74,209 beats, then nothing, and nothing was loud about it'). A thing declared ALWAYS UP whose survival depends on a terminal staying open is policy wearing physics' clothes.",
@@ -12,43 +10,6 @@
     "proves_red": "DONE when the loop, started through the launcher, sits in a cgroup that is neither the caller's nor a descendant of it - asked of the kernel, never read off the launcher's flags - AND survives its caller's entire process tree being killed, with the loop's own trail showing an unbroken run of beats across that kill, AND the losing-claimant refusal still lands in ~/.cairn/logs/ground_loop_nohup.log rather than only in the journal. WRONG INTENT if: (1) anything becomes system-level startup - an installed unit file, an `enable`, anything surviving a reboot (Akien's 2026-08-11 ruling); (2) the launcher grows an opinion about whether a loop is already running, re-deriving the singleton guard at the caller (Law 1, and guard.py's own docstring names this caller); (3) the spawn can abort, delay or fail a launch (the prime directive: from parse to exec, nothing may stop a session starting).",
     "horizon": "one launch. Every clause is answerable at the first superclaude boot after the change - no clock, no live host, no wait."
   },
-  "children": "none, because it is a leaf: one seam (the spawn at launchers/superclaude:229), one owner (the launcher), one proof. The sibling that could look like a child is named rather than absorbed - the sudo relay died in the same scope kill with the same parenting defect, but it has a different start path and is Akien's privileged act, and folding it in would put a more specific thing inside a less specific one (his ruling, 2026-08-18). It wants its own node.",
-  "linked_ideas": [
-    "2026-08-18-the-heartbeat-dies-with-the-terminal-window"
-  ],
-  "questions": [],
   "constraints": [],
-  "how": "Replace the `setsid python3 -m cairn.devices.ground_loop` spawn at launchers/superclaude:229 with a transient user unit: `systemd-run --user --unit=cairn-ground-loop --working-directory=<repo> -p StandardOutput=append:$HOME/.cairn/logs/ground_loop_nohup.log -p StandardError=append:<same> -- python3 -m cairn.devices.ground_loop`. It lands at /user.slice/user-1000.slice/user@1000.service/app.slice/cairn-ground-loop.service - a SIBLING of the Konsole scope and of the session scope rather than a child of either. Everything else about the spawn is unchanged: still spawn-blind (the singleton guard decides), still under the prime directive with a guarded fall-through to today's setsid spawn when systemd-run is missing or its probe fails, still `|| true`, and the boot log names which branch it took, exactly as the memory-scope block already does at :291/:302. The StandardOutput redirect is load-bearing, not decoration: a unit does not inherit the shell's append redirect, and without it the losing claimant's refusal - the line that distinguishes 'refused, one is running' from 'broke' - vanishes into the journal.",
-  "links": [
-    "parent: none - it is not a child of an-entry-point-starts-the-loop-only-once. That node owns WHETHER a second loop starts and is PROVED; this one owns how long the first one lives, and neither contains the other."
-  ],
-  "priority": "",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(the_heartbeat_outlives_its_caller) -> PROVED -> [SUPERSEDED]",
-  "watchme": {
-    "object": "the_heartbeat_outlives_its_caller",
-    "trigger": "every beat - the loop reads its own /proc/self/cgroup, which it is already awake to do; no clock of its own, no scan, one file read of ~200 bytes. Deliberately not a launch-time check: a launch-time check answers 'was it started right', and the question is 'is it parented right NOW', which is the one that was false and unnoticed.",
-    "enough": "NOT satisfied by the launch that installs it. Enough when it has seen at least one caller die while the loop kept beating - until then the watch has confirmed only that the parenting is what the launcher said, never that the parenting does what it is for.",
-    "carrier": "a verdict artifact against this ticket's falsifier: the cgroup path the kernel reports, whether it is a descendant of a terminal or session scope, and the beat number - so a reader can join a survival to the kill that preceded it.",
-    "nexus": "the ground_loop device's own tree - the same nexus its liveness and staleness watches teach, this being another fact about the loop's residency rather than about any caller.",
-    "consumer": "the trouble lane on a red (a heartbeat that has quietly become a child of a terminal again is exactly the class of thing that stays true and unnoticed for days), and the ground_loop pane for the standing green.",
-    "probe": "cairn/devices/cairn/machines/ground_loop/probes/does_the_heartbeat_outlive_its_caller.py"
-  },
-  "deposits": {},
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260818T154253-5b136a0160b6.json",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260818T154154-e726610d506b.json",
-  "chart_claim": "validate-20260818T160010-a6527557b941 — chart chain complete with real content; verdict berthed at verdict-20260818T170101-73e0c8c5fa51",
-  "schema_version": "v0",
-  "dependencies": [],
-  "superseded_by": "bae622881f03",
-  "forwarding": {
-    "cairn/devices/ground_loop/probes/loop_not_stale.py": {
-      "to": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
-      "why": "deleted, not moved: cairn 8d418170 ('ground_loop: strip all bench/trouble/judging machinery (CC-- x3)') removed loop_not_stale.py with the staleness machinery, and the ground loop moved under the cairn device as heartbeat + device list only. No successor probe exists by ruling; the ground_loop charter is where that ruling stands. This ticket is SUPERSEDED, so the holding is history of a survey made 2026-08-18."
-    },
-    "/home/akien/dev/src/CairnCommons/tickets/the-heartbeat-outlives-its-caller.json": {
-      "to": "tickets/0d16e513ff26-the-heartbeat-outlives-its-caller.json",
-      "why": "hex-slug migration (ticket schema v1, commit 8a5ede1 in CairnCommons)"
-    }
-  }
+  "how": "Replace the `setsid python3 -m cairn.devices.ground_loop` spawn at launchers/superclaude:229 with a transient user unit: `systemd-run --user --unit=cairn-ground-loop --working-directory=<repo> -p StandardOutput=append:$HOME/.cairn/logs/ground_loop_nohup.log -p StandardError=append:<same> -- python3 -m cairn.devices.ground_loop`. It lands at /user.slice/user-1000.slice/user@1000.service/app.slice/cairn-ground-loop.service - a SIBLING of the Konsole scope and of the session scope rather than a child of either. Everything else about the spawn is unchanged: still spawn-blind (the singleton guard decides), still under the prime directive with a guarded fall-through to today's setsid spawn when systemd-run is missing or its probe fails, still `|| true`, and the boot log names which branch it took, exactly as the memory-scope block already does at :291/:302. The StandardOutput redirect is load-bearing, not decoration: a unit does not inherit the shell's append redirect, and without it the losing claimant's refusal - the line that distinguishes 'refused, one is running' from 'broke' - vanishes into the journal."
 }

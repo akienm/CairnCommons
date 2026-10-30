@@ -1,8 +1,6 @@
 {
   "id": "48519f4789b1",
   "title": "one-bus-per-instance-hosts-every-shim",
-  "date": "2026-09-06",
-  "owner": "codemother owns the care of this seam (ruling 2026-09-06 codemother-owns-the-care-of-the-code); CC/Opus builds. Akien owns the design choice already made: one bus per cairn instance, spanning hosts later.",
   "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
   "intention": "One bus per cairn instance: a single bus process on the box that every device's shim registers into and every device reaches over IPC, so that the nine private in-process buses collapse onto one pipe.",
   "why": "Akien's launch chain, told for the second time 2026-09-06 and recorded verbatim at CairnCommons/intentions-not-beside-code/I-the-command-lazy-inits-the-system.md. Cast the same day so the intention carries a ticket (CLAUDE.md: an IOU without a real ticket is itself the defect).",
@@ -13,60 +11,11 @@
     "proves_green": "proof gate — cairn/devices/cairn/machines/bus/proofs/test_one_bus_process.py (new): spawns two couriers, asserts one pid, one ring hit across processes, zero db reads; plus test_ring.py staying green. Feeds back on failure: a red names which of the four falsifier teeth broke. Durability: committed in cairn; seal via the tester with source_fingerprint over the bus package.",
     "proves_red": "DONE when: (1) `pgrep -f cairn.devices.cairn.machines.bus` shows exactly one process per instance after any two device commands are run from separate terminals; (2) a message posted by device A's shim from process P1 is read by device B's shim from process P2 without touching the db (ring hit, measured by the bus's own receipts); (3) grep for `BusDevice(` outside the bus package and its proofs returns zero callers; (4) `cairn librarian show status` round-trips through the socket in under 1s with no private beat (today's private beat costs 89.3s, measured 2026-09-06). WRONG INTENT if a second host cannot join the same instance's bus without a code change to the addressing — the design already intends the six-box swarm."
   },
-  "children": [],
-  "linked_ideas": [],
-  "questions": [
-    {
-      "q": "assumption_check",
-      "a": "Three named, all standing. (1) One process can host every shim without one device's probes stalling the courier path — load-bearing; the builder keeps the socket service off the beat thread, and the falsifier's sub-1s round trip measures it. (2) A unix socket is enough — true for one box; the socket path carries the instance name so multi-host is an addressing change (I-the-command-lazy-inits-the-system.md, resolved paragraph). (3) The flock guard from guard.claim_singleton transfers unchanged to a second resident — it is home-parameterized, so yes."
-    },
-    {
-      "q": "missing_check",
-      "a": "Two points were asserted wrapped and are not: what the bus process does with a shim whose device module fails to import (today: bench under the loop's staleness rule) — resolved by keeping that rule where it is, the loop's, since the bus hosts the shim but the loop still beats it; and how a courier authenticates as its device — not wrapped, deliberately: one box, one user, the socket's file mode is the gate until multi-host, and the ticket says so rather than inventing an auth scheme."
-    },
-    {
-      "q": "collision_check",
-      "a": "Consulted the lab (recompiled 2026-09-06). The ring cast 7dfa6e1c638d assumed 'single-process, not IPC' — its why (zero-db delivery) survives, its where changes; a distinction, recorded on both. launchers charter's superclaude spawn of the loop: not exclusive, the flock reconciles two callers. bus_client._wire's docstring 'one seam to change': this IS that change. No Law collides; Law 6 is served (one owner of the ring at one address)."
-    },
-    {
-      "q": "builder_check",
-      "a": "A Haiku-level builder needs: (a) the socket path — `~/.cairn/devices/cairn/machines/bus/0/bus.sock`, instance segment never optional; (b) the wire format — one JSON object per line, request {device, verbs:[...], hot:bool} → reply {ok, text, json}; (c) which existing line to copy for the spawn — launchers/superclaude's systemd-run block, unit name cairn-bus; (d) the order of work — first make BusDevice servable over the socket with the ring intact (test_ring.py must stay green), then make connect_bus a client, then delete the in-process construction, measuring the nine callers to zero; (e) what NOT to do — no change to the ground loop package, no new poller, no per-device socket. All five now written into the ticket's how."
-    },
-    "open-b49db843959b",
-    "open-5705c4c067f7"
-  ],
   "constraints": [
     "No change to the ground loop's contents: pulse, control flags, devices-found list — ever (Akien 2026-09-06).",
     "One pipe: device → IPC → own shim → bus → addressee's shim → IPC → addressee; the db alone is exempt (volume)."
   ],
   "how": "The bus becomes a resident process the way the ground loop already is: claimed once per instance by an flock (reuse guard.claim_singleton on the bus's own instance home), listening on a unix socket under ~/.cairn/devices/cairn/machines/bus/0/. Shims live inside that process; a device launcher (devices/<device>/bin/<device>) ensures the bus process is up, registers the device's shim in it if absent, then couriers the verb line in over the socket and prints the reply. bus_client.connect_bus() stops constructing BusDevice + GroundLoopDevice and becomes a client of the socket (its docstring already calls _wire 'one seam to change'). The ring stays in the bus process; flush on pulse stays the bus shim's act. The instance name rides the socket path so a later multi-host instance is an address change, not a redesign.",
-  "links": [
-    "a68d658ad1f1 the-first-shim-starts-the-ground-loop (sibling)",
-    "644fe6d70363 hot-and-the-root-verbs-resolve-in-the-shim (sibling)",
-    "7dfa6e1c638d bus ring cast (its 'not IPC' assumption retires here; its zero-db why survives)"
-  ],
-  "priority": "",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because the operational signal (bus process count over time) is a deterministic pgrep the proof exercises, and the seal's source_fingerprint (cairn/devices/cairn/machines/bus/validations/) expires it when bus.py or the proof changes; when the socket exists, the ground_loop's existing liveness probe shape (cairn/devices/cairn/machines/ground_loop/probes/) is the template for a bus liveness probe, cast then, not now",
-  "deposits": [],
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260906T160100-43fda1853d21.json",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260906T155923-5d96af30bead.json",
-  "chart_claim": {
-    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261002T210458-0ba235500389.json",
-    "chain_complete": true,
-    "filled_by": "CC chart chain (orient 921f21146f95 .. validate 0ba235500389, each learned)"
-  },
-  "cast": "2026-09-06",
-  "stage_needs": null,
-  "filed_edges": [],
-  "rulings": [
-    "2026-09-06-codemother-owns-the-care-of-the-code"
-  ],
-  "task_or_ticket": "ticket",
-  "notes": [
-    "2026-09-10 crossing note carried out of the ticket's ``crossings`` field (2026-09-07 → BUILDME, by CC, door harbor_master.clearance.clear; the journal records this crossing; the note did not ride it). Kept under Law 5 — the array was a second copy of the journal, but these words were not: measured 2026-09-10, 66 of 79 stored notes appeared nowhere else in either root, and they carry Akien's verbatim approvals, back-edge reasons and ruling citations. Verbatim: Akien 2026-09-07: 'ALL RULED AND APPROVED ALL THE WAY TO BUILDME' (decision 2026-09-07-the-nine-queued-artifacts-are-approved-to-buildme); chart chain orient..validate berthed 2026-09-07"
-  ],
   "decisions": [
     {
       "n": 1,

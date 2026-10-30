@@ -1,22 +1,12 @@
 {
   "id": "b905340f8162",
   "title": "The inference domain answers who asks for its calls",
-  "date": "2026-10-13",
-  "owner": "CC",
   "owning_intention": "cairn/devices/inference_domain/intention+why.json",
   "intention": "Any device can ask the inference domain over the bus for its stored calls, most recent first, bounded by a limit and a since-time, without importing the domain; the domain stays ignorant of what the asker does with them.",
   "why": "Measured 2026-10-13 by the builder while building 95f8c561e742 (the librarian deposits resolved inference calls as nodes): the reader face domain.read_ticket (cairn/devices/inference_domain/domain.py:721) is not in the device's declared interface (public_interface is only cairn.devices.inference_domain.host) and no bus verb or view reaches it (verbs resolve/embed/infer, views yield/models; device.py:38-53). So a consumer that honours RULE 1 has nothing to call. A view takes no arguments (_yield_view(self)), so the ask is a verb. ",
   "traces_to": "RULE 1 (a consumer reaches a device only through its declared interface; this widens the interface instead of letting the librarian reach in) and Law 1 (the stored calls are already answered questions; a reader face lets them become structure instead of being re-asked).",
   "how": "cairn/devices/inference_domain only. (a) domain.read_ticket gains a keyword since: str | None = None (ISO timestamp); rows with created <= since are dropped before the limit is applied. (b) InferenceDomainDevice.declared_verbs adds 'calls': self._handle_calls, which reads body.get('limit') (default 100, capped at 1000) and body.get('since') and returns {'calls': [...]} from read_ticket, each row made JSON-safe (datetimes to isoformat) so it crosses the bus. (c) the charter's public_interface names the 'calls' verb beside host.",
   "falsifier": "cairn/devices/inference_domain/proofs/test_the_domain_answers_for_its_calls.py under PROVES {'b905340f8162': {'1','2','3','4'}} over a scratch inference_calls table seeded with three rows at known created times: (1) 'calls' is in InferenceDomainDevice().declared_verbs(); (2) the handler with body {'limit': 2} returns the two newest rows, newest first; (3) with body {'since': <the oldest row's created>} it returns only the two later rows; (4) json.dumps of the reply succeeds. Hollow: today's device.py and domain.py red 1-4.",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/cairn/devices/inference_domain/device.py and the proof's teeth are its falsifier",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261013T045251-f38b35c23ed6.json",
-  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/cairn/cairn/devices/inference_domain/device.py",
-  "task_or_ticket": "ticket",
-  "children": [],
-  "dependencies": [],
   "decisions": [
     {
       "n": 1,
@@ -70,7 +60,5 @@
       "source": "rehearsal",
       "at": "2026-10-13T14:23:09+00:00"
     }
-  ],
-  "cast": "2026-10-13",
-  "model": "opus"
+  ]
 }

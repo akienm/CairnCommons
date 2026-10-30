@@ -1,20 +1,12 @@
 {
   "id": "cd27b72ba964",
   "title": "A build inspector finding is one trouble per sieve, its count rising, never one per component",
-  "date": "2026-10-18",
-  "owner": "CC builds it; cairn/machines/build_inspector owns the name of its finding troubles; cairn/devices/trouble owns the fold",
   "owning_intention": "cairn/machines/build_inspector/intention+why.json",
   "intention": "A build inspector finding above baseline is ONE trouble per sieve, whose count rises each run it stands, never one trouble per component the sieve flags.",
   "why": "Akien 2026-10-18: 'A trouble is ONLY EVER ONE... They should be incrementing a counter, not adding another trouble.' The inspector named each trouble by (sieve, component), so one sieve finding stood as 45 troubles in the inbox and the store; the raise contract (diagnostic.py:339) already says the identity names the DEFECT.",
   "traces_to": "Akien 2026-10-18 verbatim: 'A trouble is ONLY EVER ONE... They should be incrementing a counter, not adding another trouble... their originator needs to be pummeled with fixes until they stop doing that.' The raise contract already states it (cairn/tools/base/diagnostic.py:339, 'identity names the DEFECT, not the occurrence'); Law 1 (one settled problem read 45 times is re-derivation at the inbox); Law 7 (a diagnostic surface loud once, not 45 times).",
   "how": "_finding_trouble_id takes the method alone (inspector.py:4106); _file_troubles_for_new_findings groups the above-baseline findings by method and raises once per method per run, the detail carrying every component (at) it flagged and their values; _standing_finding_ids returns the method identities, so the reconcile clears every old per-component identity under the 'inspector-new-finding-' prefix at the next run. The baseline-reconcile proof and test_trouble.py:779 follow the new identity.",
   "falsifier": "Falsifier: the proof cairn/machines/build_inspector/proofs/test_one_trouble_per_sieve.py runs _file_troubles_for_new_findings over three above-baseline findings of one method at three components plus one of a second method, with _raiser stubbed to record calls: RED unless exactly two raises happen, their identities are 'inspector-new-finding-<method>' with no component in them, and the first's detail names all three components; a second identical run through a real ModuleRaiser + TroubleShim over scratch roots leaves ONE live file for the method with count 2; _standing_finding_ids returns method identities only; a reconcile over a scratch store holding an old per-component id plus the new method id clears the old one and keeps the new; a detail over 15 findings carries 10 whole and findings_omitted 5. Horizon: sealed green, and the hollow revert of inspector.py reds it.",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because the outcome is structural and checked by cairn/machines/build_inspector/proofs/test_one_trouble_per_sieve.py; the live effect (the inspector-new-finding-* troubles in ~/.cairn/logs/cairn/0/troubletickets reading one per sieve) is measured once at WATCHME by listing that directory, against the 45 + 3 per-component troubles measured 2026-10-18 and recorded in this cast's bullets",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261018T214838-068d9a731598.json",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261018T214743-f9b00305f46f.json",
-  "questions": "none, because Akien settled the spec in chat 2026-10-18, verbatim in idea /home/akien/dev/src/CairnCommons/ideas/2026-10-18-so-that-s-a-bug-no-a.json; per-sieve rather than one trouble for all findings is CC's call from the raise contract at cairn/tools/base/diagnostic.py:339 (a sieve is a defect; the reconcile clears per defect)",
   "builder_notes": "Q: new identity? A: _finding_trouble_id(method) -> slug of f'inspector-new-finding-{method}' (same _TROUBLE_SLUG). Drop the at parameter; update the two proof callers. Q: grouping? A: in _file_troubles_for_new_findings, group by f.get('method','unknown') preserving first-seen order; per group raise once with why=_group_why(method, group) and detail={'method': m, 'components': [f.get('at','unknown') for f in group], 'findings': group[:10], 'findings_omitted': max(0, len(group)-10)}; return the number of raises. Q: the why? A: 'build inspector finding appeared above baseline: <method> at <n> component(s) (<first three ats>, ...) — <about of the first>. ' + the existing values rendering of the first finding + the existing no-covering-ticket sentence; keep _finding_why for one finding and build the group sentence from it. Q: _standing_finding_ids? A: sorted({_finding_trouble_id(f.get('method','unknown')) for f in check_baseline(...)}). Q: _main's print? A: '!! {n} finding(s) above baseline in {raises} sieve(s) — trouble(s) filed'. Q: proof? A: cairn/machines/build_inspector/proofs/test_one_trouble_per_sieve.py, shape like test_finding_baseline_reconcile.py (TEETH list, _tooth, PASS/FAIL), scratch roots via tempfile, real ModuleRaiser('build_inspector') with roots + TroubleShim(roots=roots).drain() for the count tooth; HOME is not touched because roots are explicit.",
   "decisions": [
     "Per sieve, not one trouble for every finding, and the grouped detail capped at 10 whole findings with every component named — CC's call, per Akien 2026-10-09 and 2026-10-12 'approved thru PROVED, fastest route'",
@@ -26,7 +18,5 @@
       "source": "rehearsal",
       "at": "2026-10-19T07:04:24+00:00"
     }
-  ],
-  "cast": "2026-10-18",
-  "model": "opus"
+  ]
 }

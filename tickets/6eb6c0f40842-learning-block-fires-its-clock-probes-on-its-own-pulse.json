@@ -1,30 +1,12 @@
 {
   "id": "6eb6c0f40842",
   "title": "learning-block-fires-its-clock-probes-on-its-own-pulse",
-  "date": "2026-09-30",
-  "owner": "CC",
   "owning_intention": "cairn/machines/learning_block/intention+why.json",
   "intention": "The learning_block component fires its own clock probes (engine_trace_corpus) from its groundloop/pulse.py on each heartbeat, so they run again now that the heartbeat no longer discovers probes/.",
   "why": "Since bae622881f03 PROVED (2026-09-30) the heartbeat no longer discovers probes/ folders; it calls only groundloop/pulse.py files. So engine_trace_corpus is dark: the only firing left is one pass at web-server start through bus_client's private GroundLoopDevice, which ticket efb670ff1dd8 removes. That is the lived symptom: engine_trace_corpus counts engine trace records that can answer the compile step's five questions and pokes when one block crosses the casting threshold (ticket engine-runs-one-block), and nobody is looking.",
   "traces_to": "Law 6 and Law 1 via ticket bae622881f03 (PROVED 2026-09-30): the heartbeat calls each groundloop/pulse.py and nothing else, and Akien ruled clock probes are 'tickled by the system device or their owning devices (from the ground loop pulse)'. The owner fires its own watch.",
   "how": "Compose the shared tool cairn/tools/base/beat_probes.py built by ticket 32959e65ec5a (do not copy its logic). write cairn/machines/learning_block/groundloop/pulse.py: a module-level BeatProbes('learning_block', <this folder>, ['engine_trace_corpus'], bus) and on_pulse(now, context) returning its pulse record. Only the named probes fire; nothing else in the folder is touched. The probe files stay where they are, unchanged.",
   "falsifier": "Proof cairn/machines/learning_block/proofs/test_groundloop_pulse.py: (1) discovery.pulse_sites() lists cairn/machines/learning_block/groundloop/pulse.py at class level; (2) the module's BeatProbes names exactly ['engine_trace_corpus'] and each resolves to a Probe; (3) other modules in cairn/machines/learning_block/probes/ are not in its roster; (4) on_pulse(now, {}) with a recording stub bus returns a record whose fired+held entries cover exactly those probes. Live horizon: three consecutive beats of ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json list the learning_block trigger ok. Wrong intent if one of these probes turns out to be event-driven rather than clock-driven.",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> PROVED -> [SUPERSEDED]",
-  "watchme": "none, because the probes being moved ARE the watches (cairn/machines/learning_block/probes/engine_trace_corpus.py), each keeping its own ticket's WATCHME, and whether they fire is read on every beat in the heartbeat's own record ~/.cairn/devices/cairn/0/machines/ground_loop/liveness.json (the learning_block trigger's ok flag and pulse record).",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260930T121800-338a356d4466.json",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260930T121759-72116b0084df.json",
-  "questions": [],
-  "task_or_ticket": "ticket",
-  "depends_on": [
-    "32959e65ec5a"
-  ],
-  "cast": "2026-09-30",
-  "chart_claim": {
-    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20260930T123836-91d9c980ff22.json",
-    "chain_complete": true,
-    "filled_by": "CC chart chain (orient ddba2aaf6294 .. validate 91d9c980ff22, each learned)"
-  },
   "decisions": [
     {
       "n": 1,
@@ -74,6 +56,5 @@
       "source": "rehearsal",
       "at": "2026-09-30T21:33:35+00:00"
     }
-  ],
-  "superseded_by": "164da559823d"
+  ]
 }

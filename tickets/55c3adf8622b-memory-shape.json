@@ -1,8 +1,6 @@
 {
   "id": "55c3adf8622b",
   "title": "memory-shape",
-  "date": "2026-07-26",
-  "owner": "akiendelllinux_cc_0 (CC) gates writes. The DESIGN is Akien's and is being RESTORED, not authored.",
   "owning_intention": "",
   "intention": "Restore Akien's memory store design as the shape Cairn builds on, and settle the questions it still leaves open — including calving. TWO ERAS, RULED APART BY AKIEN 2026-07-26 (see eras below): the shape to RESTORE is the CURRENT one — a table per tree, tree links as `tree.leaf` addressing, instant node access with no searching, two sets of trees able to index one node set, a tree that grows past its bound CALVES, and the SHEAR renumbers leaf addresses along the split. TheIgors' one-node-list shape is the OLD era: history, read for ideas only, NOT the restore target. SHARPENED 2026-08-05 — see settled_2026_08_05: every sentence above says `node` where it means `leaf`, because CC collapsed the two layers. A NODE is the thing being remembered and never belongs to a tree; a LEAF is the thing indexing it, and `database.tree.leaf` is the leaf's ADDRESS, not anyone's identity. The shear renumbers LEAF addresses and never touches a node.",
   "why": "AKIEN'S RULING, 2026-07-26: 'i designed my system because just the reading, nothing else, was overwhelming the usual way of doing it. it wasn't theoretical, it was an experiencial adaptation. if you can't guarantee that it's faster than my solution, we have to go back to mine.' CC cannot guarantee it — there is NO measurement anywhere in the tree comparing the two, no benchmark and no threshold. His design came from load he actually hit; the replacement (MAP.md:527, 'baked in 2026-07-14') came from a design conversation and has never been tested against anything. Law 3 puts the burden on the replacement and the replacement has not carried it. SECOND why, and the sharper one: he can no longer EXPLAIN what the system does, which for him is disqualifying on its own — 'i need to be able to understand and explain to others what we're doing and why at that level.' The cause is measurable: his vocabulary was kept and its meanings changed under it. `calving` survives as a word and now means 'insert a tree row' (MAP.md:529) instead of 'split a tree that grew past its bound'. `the embedding IS the path` survives as a sentence and was read as vectors. Nothing scans as missing, because all the words are still there.",
@@ -20,30 +18,6 @@
     "proves_red": "The restored design must be measured AT THE SCALE IT WAS DESIGNED FOR — and as of 2026-08-05 that scale has a MEASURED BASELINE TO BEAT, not just a size: the conventional build reached 70,000 words / 2.5M bigram edges with every edge update taking OVER 30 SECONDS and the cost growing with the corpus (see settled_2026_08_05). So the test is two-sided: access that does not degrade with graph size, AND write cost that does not grow with corpus size. TheIgors' word graph was ~2.5M nodes; Cairn's largest live measurement to date is 66 records across 14 histories. A load test at 2.5M nodes must show node access that does not degrade with graph size — that is the property the whole design exists to deliver, and the property 'the reading alone was overwhelming' was the symptom of losing. If the restored design does not hold at 2.5M, it is not the design that solved his problem and this reopens. A hollow build — proving the shape on a few hundred rows — fails this outright.",
     "horizon": "The design settles when the open questions below are answered by Akien and the load test has run. Not before."
   },
-  "children": [
-    "a — THE READ PASS over TheIgors' memory design for the ideas that carry: the node envelope, calving's thresholds and protected-node list, the split protocol. IDEAS ONLY, per Akien's ruling — no code crosses. RESCOPED 2026-07-26 by the era ruling: this reads the OLD era, so it is prior art and NOT the source of the shape (the addressing in particular comes from the CURRENT era and is Akien's to state, not the quarry's to supply). Its highest-value target is the split protocol, because that is the part TheIgors designed, tested, and never finished. Buildable now; everything else waits on it.",
-    "b — SETTLE THE OPEN QUESTIONS above with Akien. Waits on a (the read pass will inform several of them, notably the shear).",
-    "c — PROVED 2026-08-20 (ticket node-embedding-leaf-separation). The three-table schema: cairn_nodes (tree-free, vector-free), cairn_embeddings (many per node), per-tree leaf tables. 1320 rows migrated across 10 tables. 30 proof teeth sealed. Probe armed at cairn/devices/librarian/proofs/probe_three_table_schema.py watching the schema under real resolution load. Child d (calving and the shear) is UNBLOCKED.",
-    "d — CALVING AND THE SHEAR, including the bound. NOTE: in TheIgors this was designed, TESTED, and NEVER FINISHED — detection was live, the split operation was pending (T-calving-split-op, epic T-graph-calving-execution). So this child FINISHES an unfinished design rather than restoring a working one, and the fact that it was left unfinished is evidence it is harder than it reads. Waits on c."
-  ],
-  "linked_ideas": [],
-  "questions": [],
   "constraints": [],
-  "how": "Read TheIgors' memory design for the ideas that carry. Settle open questions with Akien. Build the three-table schema (proved by node-embedding-leaf-separation). Implement calving and the shear. Children ordered by dependency.",
-  "links": [],
-  "priority": "",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]   (Child (d) calving and the shear PROVED 2026-09-01: _verify_links_after_calve built, test_links_are_bounded_and_weighted replaces test_no_edge_table_exists (Law 4), test_calve_links_survive_split proves links survive. 106/106 green x2, TesterDevice sealed.)",
-  "watchme": null,
-  "deposits": {},
-  "sorted_berth": "none, because cast before the sorted door existed (ticket dated 2026-07-26, door landed 2026-08-03)",
-  "intent_berth": "none, because this node entered at TICKET — a bug or measured defect (decisions/2026-08-02-three-entry-points-and-structural-refiled)",
-  "chart_claim": "none, because no chart chain was run — backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run.",
-  "schema_version": "v0",
-  "dependencies": "Child a needs the quarry on disk (present, frozen, measured). Nothing needs the inference host, the bus, or embeddings — building the store is prior to all of them.",
-  "filed_edges": [
-    "pgvector IS NOT INSTALLED and is not even an available package on this box (measured: PostgreSQL 16.14, plpgsql only). It is a HOST-SEAM when it is wanted — and it may not be wanted for a while, since if the path is the embedding then similarity is a TRAVERSAL query in plain SQL and the extension is only needed once a vector CACHE is pulled by measured need.",
-    "THE TRAINED GRAPH IS GONE — no clan schema or wg_* tables survive in any database on this box. The TRAINER (claudecode/retrain_word_graph.py, Postgres-backed, resumable) and 166 books already extracted to text (training_corpus/, 102MB) both survive. So rebuilding it is a COMPUTE job, not a redesign — but it is downstream of this node, not part of it."
-  ],
-  "migrated_from": "code-seam@v1 — the dissolved fifth summons stripped by sweep 2026-08-03 (Akien's ruling: the words should have been scrubbed when the version was minted). The dead token is deliberately not reprinted here; tickets/watchme-emits-a-probe is its one record."
+  "how": "Read TheIgors' memory design for the ideas that carry. Settle open questions with Akien. Build the three-table schema (proved by node-embedding-leaf-separation). Implement calving and the shear. Children ordered by dependency."
 }

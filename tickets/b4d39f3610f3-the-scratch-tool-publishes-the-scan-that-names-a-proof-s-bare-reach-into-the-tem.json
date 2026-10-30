@@ -1,26 +1,13 @@
 {
   "id": "b4d39f3610f3",
   "title": "The scratch tool publishes the scan that names a proof's bare reach into the temp directory",
-  "date": "2026-10-08",
-  "owner": "CC",
   "owning_intention": "cairn/tools/scratch/intention+why.json",
   "intention": "The scratch tool publishes, in its public interface, the scan that names every proof line reaching the system temp directory directly, so any component can hold its own proofs to the scratch door without the scratch tool knowing who calls.",
   "why": "Peer F30 (2026-10-08): the proposed shared helper failed RULE 1 twice — teeth inside tools/scratch naming the tester's and tools/base's proofs make the provider know its consumers, and one component's build would ride another's ticket. The scan that enforces the scratch door (test_scratch.py:143, inline today, red on 4 bare mkdtemp sites: 3 in tester proofs, 1 in tools/base proofs; 64 exec_cwd_proof_fixture_* leaked in /tmp from them, measured 2026-10-08) is published instead, so each consumer proves its own proofs clean by calling it.",
   "traces_to": "RULE 1 (encapsulation: a component reaches another only through its public interface, and a provider does not know its consumers — the tester and tools/base each prove their own proofs clean by calling this, never by a tooth inside scratch naming them) and Law 4 (the scratch door is physics only while the scan that enforces it is reachable by every component that must stay behind it).",
   "how": "cairn/tools/scratch/scratch.py gains bare_temp_reach(root) -> list[str]: the exact scan test_scratch.py's corpus tooth runs inline today (root.rglob('proofs/test_*.py'), skip __pycache__, a non-comment line containing 'mkdtemp' or 'gettempdir' is named as '<path relative to root>:<line no>: <stripped line>'). The corpus tooth calls it over the repo and drops its own file (the self-exemption stays in the proof, not in the provider), keeping its assertion and message. A new tooth in test_scratch.py: a fixture root with one bare mkdtemp proof is named, and one routed through scratch_dir is not.",
   "falsifier": "Falsifier: cairn/tools/scratch/proofs/test_scratch.py gains test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one, under PROVES for b4d39f3610f3 key '1': a scratch_dir fixture root holds proofs/test_bare.py (a bare tempfile.mkdtemp() line, a gettempdir line, a commented mkdtemp line) and proofs/test_routed.py (calls scratch_dir only), plus notproofs/test_bare.py with a bare mkdtemp line; bare_temp_reach(root) returns exactly the two live lines of proofs/test_bare.py in that format, nothing from test_routed.py, the comment, or notproofs/. The corpus tooth keeps its assertion and message and its offender list is unchanged. Hollow: scratch.py reverted to the pre-build commit has no bare_temp_reach, the tooth binds it at call time and reds. Horizon: 017d8298662a and b2abaa16e590 each prove their own proofs clean by calling it.",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because its live reading is its consumers: 017d8298662a and b2abaa16e590 each call bare_temp_reach on their own proofs dir in a sealed tooth, and the corpus tooth in /home/akien/dev/src/cairn/cairn/tools/scratch/proofs/test_scratch.py reads the whole repo through it on every reseal",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261008T034743-96b434004571.json",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20261008T034712-c16151a24874.json",
-  "task_or_ticket": "ticket",
-  "children": "none, because one function in /home/akien/dev/src/cairn/cairn/tools/scratch/scratch.py and two tooth edits in /home/akien/dev/src/cairn/cairn/tools/scratch/proofs/test_scratch.py; the consumers are separate tickets 017d8298662a and b2abaa16e590",
-  "questions": [
-    "open-637f083600aa"
-  ],
   "builder_notes": "Questions a Haiku-level builder would need, answered: WHERE? cairn/tools/scratch/scratch.py (the function) and cairn/tools/scratch/proofs/test_scratch.py (the tooth move + the new tooth) — nothing else. WHAT EXACTLY? def bare_temp_reach(root: str | Path) -> list[str], placed after git_env: root = Path(root); out = []; for py in sorted(root.rglob('proofs/test_*.py')): skip if '__pycache__' in py.parts; for n, line in enumerate(py.read_text(errors='replace').splitlines(), 1): if not line.lstrip().startswith('#') and ('mkdtemp' in line or 'gettempdir' in line): out.append(f'{py.relative_to(root)}:{n}: {line.strip()}'); return out. Its docstring names the defect (3581 leaked entries, e038544a9b60) and says it names no caller. THE CORPUS TOOTH: me = str(Path(__file__).resolve().relative_to(REPO)); offenders = [o for o in bare_temp_reach(REPO) if not o.startswith(me + ':')]; the assert and message verbatim; import bare_temp_reach at call time inside the tooth so a reverted scratch.py reds teeth instead of breaking the runner. THE NEW TOOTH: as in falsifier_check, PROVES gains 'b4d39f3610f3': {'1': 'test_bare_temp_reach_names_a_bare_proof_and_not_a_routed_one'}. PROOF CLEARANCE: question open-637f083600aa; BUILDME waits on it.",
-  "cast": "2026-10-08",
   "decisions": [
     {
       "n": 1,

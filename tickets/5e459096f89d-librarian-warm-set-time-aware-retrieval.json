@@ -1,8 +1,6 @@
 {
   "id": "5e459096f89d",
   "title": "librarian-warm-set-time-aware-retrieval",
-  "date": "",
-  "owner": "",
   "owning_intention": "cairn/devices/librarian/intention+why.json",
   "intention": "The librarian maintains a time-aware warm set so recently active context stays retrievable without re-deriving.",
   "why": "Three minds, same constraint, same shape (Akien, 2026-08-19): Akien's world is far bigger than his attention — he keeps a small handful of threads (house, CC work, medical) and his attention moves between them by rules he has internalized. CC's attention is smaller than its context — it has rules about how attention moves over surfaces and what happens when relevant things show up (memory, compression, CLAUDE.md). The librarian's world is its graph trees, and it has no attention at all — every walk treats every node equally except by cosine. The lived symptom: the librarian cannot maintain a thread across sessions, cannot prioritize what it was recently working on, and cannot wake a dormant concern when new evidence arrives. Temporal reasoning is the sharpest replicated differentiator in the field: vector-only ~31% on time-bound questions; 85% of systems failed at least half of time-related queries even when the info existed. The warm set and the temporal channel are two faces of the same thing: the librarian's attention has a WHEN, not just a WHAT.",
@@ -14,9 +12,6 @@
     "proves_green": "A warm-set attention architecture with event-driven thread lifecycle (wake/attend/sleep) and time-aware query expansion. Proof teeth: (1) a repeatedly co-occurring cluster of nodes crystallizes into a thread with a summary; (2) a query related to an awake thread boosts that thread's nodes in the walk; (3) a sleeping thread wakes when a new deposit touches its nodes; (4) an important recurring thread (high recurrence) does NOT decay to zero just because it hasn't been touched recently — recurrence and importance are signals alongside recency; (5) a query containing 'yesterday' filters to nodes created in the last 24 hours; (6) a pure-topic query with no temporal language and no thread relevance resolves by plain cosine — the warm set does not override; (7) the warm set updates on events only, never by daemon or timer.",
     "proves_red": "RED on any of: (1) the warm set is a score multiplier only — it must be a structural set of active threads with their own lifecycle, not a dial on the walk; (2) a thread that is important and recurring (the analogue of 'medical appointments') decays to zero because it hasn't been touched recently — importance and recurrence must be signals alongside recency; (3) incoming information relevant to a dormant thread does not wake it — the warm set must route relevance, not just score it; (4) a query containing temporal language ('yesterday', 'last week', 'recently') does not expand to include a time filter; (5) the warm set requires a daemon or periodic refresh instead of updating on events (deposits, walks, resolution, promotion); (6) the warm set overrides cosine for a non-temporal pure-topic query (attention is a CHANNEL, not a replacement — the graph walk still resolves by relevance when no thread claims the question); (7) the timestamp used is ingestion time only, not event time when available (bi-temporal from ticket #2)."
   },
-  "children": [],
-  "linked_ideas": [],
-  "questions": [],
   "constraints": [],
   "how": {
     "warm_set_table": {
@@ -59,25 +54,5 @@
       "nearest": "The warm_boost parameter is optional — callers outside the loop use plain cosine.",
       "emit_events": "The existing emit('deposit') and emit('resolve') events carry all the data thread lifecycle needs — no new events required."
     }
-  },
-  "links": [
-    "parent: e317b0890628"
-  ],
-  "priority": "",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because cast before the watchme spec — warm-set efficacy is answered by the librarian's retrieval proofs",
-  "deposits": {},
-  "sorted_berth": "none, because cast by hand with no /sorted firing — backfilled by ticket inspector 2026-08-26",
-  "intent_berth": "none, because no /intent firing was recorded — backfilled by ticket inspector 2026-08-26",
-  "chart_claim": "none, because no chart chain was run — backfilled by ticket inspector 2026-08-26. BUILDME entry gate (buildme_rides_the_sorted) is where this is answered or the chain is run.",
-  "cast": "2026-08-19",
-  "dependencies": [
-    "librarian-contradiction-invalidation (ticket #2) — lands first; invalidation events wake threads and bi-temporal timestamps enable event-time queries.",
-    "librarian-consolidation (ticket #3) — consolidation may maintain thread summaries; threads consume consolidation events.",
-    "proactive-resolution-callback (ticket #1) — proactive callbacks are thread wake events.",
-    "The tenure loop (the-tenure-loop, PROVED) — promotion and decay events feed the thread lifecycle.",
-    "db_domain (PROVED) — cairn_threads table goes through the sole path.",
-    "link() and traverse_link() in trees.py (BUILT) — co-occurrence measurement rides link traversals."
-  ]
+  }
 }

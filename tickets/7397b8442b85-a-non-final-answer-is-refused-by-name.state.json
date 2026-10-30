@@ -1,0 +1,43 @@
+{
+  "date": "2026-08-18",
+  "owner": "CC",
+  "children": "none, because the change is one predicate at one chokepoint (_post, which all three verbs call) plus its proofs; the two things it could have been split into — the refusal and a retry-until-loaded — are not siblings, because the retry is a policy question nobody has asked for and build-minimal says the refusal comes first and the retry grows against a measured need.",
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "THE 200 IS NOT A LIE AND MUST NOT BE TREATED AS ONE. ollama answers 200 because the request was accepted and the stream was opened; the frame is a legitimate non-final chunk that a STREAMING client would read and keep reading. The defect is entirely on our side: we asked for stream:False and then read a non-final frame as if it were the answer. A future reader tempted to file this as 'hex is broken' should read the raw body — it says done:false, which is exactly what it means."
+    },
+    {
+      "q": "distinctions",
+      "a": "num_ctx IS NOT THE DISCRIMINATOR AND NEITHER IS THE TIMEOUT — both were live hypotheses tonight and both are dead. Six consecutive successes at num_ctx 8192, 32768 and 81920 once the model is up; the empty frame arrives in 0.1s against a 120.0s bound, three orders of magnitude inside it, and the transport never raised. Recorded because both are the obvious next guesses and re-deriving a settled answer is Law 1's defect."
+    },
+    {
+      "q": "distinctions",
+      "a": "THE CHECK GOES AT _post, NOT IN THE CHAT BRANCH, AND THE REASON IS ABOUT EVIDENCE RATHER THAN TIDINESS. The empty frame was measured on /api/chat only, n=6. Whether /api/generate does the same while loading is unmeasured. A per-branch fix would be three copies of a claim measured once; the chokepoint fix keys on a property of the RESPONSE that holds for any verb, so the unmeasured verbs are covered without pretending they were measured."
+    },
+    {
+      "q": "distinctions",
+      "a": "host.py's validated_messages docstring says 'On Hex a cold qwen3-coder:30b load is ~18s (measured 2026-08-16)'. Tonight's cold load-and-answer at num_ctx 81920 measured 131.5s total_duration (load_duration 132ms, prompt_eval 468ms, eval 314ms — the balance is KV allocation). The docstring does not record what num_ctx its 18s was taken at, which is the defect in it: a measurement stored without the parameter it depends on becomes folklore the moment the parameter moves. Not fixed by this ticket; named so the next reader does not trust the 18s."
+    }
+  ],
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(a_non_final_answer_is_refused_by_name) -> [PROVED]",
+  "watchme": {
+    "object": "a_non_final_answer_is_refused_by_name",
+    "trigger": "each ask recorded by inference_domain — the probe reads the domain's own ask log, so it fires on the traffic that already exists rather than on a clock",
+    "enough": "enough when the refusal has fired at least once on live traffic AND no successful ask in the same log was ever refused by it — a guard that has never bitten is unproven, and a guard that bites a good answer is worse than the fault it replaced",
+    "carrier": "a verdict artifact against this ticket's falsifier: the count of non-final refusals, the count of good asks passed, and the count of HostUnmetered raised after the change (which should be raised only by genuinely counterless FINAL answers)",
+    "nexus": "inference_domain's own ask record",
+    "consumer": "whoever next debugs a failed drive — the misdiagnosis this ticket exists to stop cost one voyage a false sentence in an append-only history",
+    "probe": "cairn/devices/inference_domain/probes/a_non_final_answer_is_refused_by_name.py",
+    "receiver": {
+      "what": "harbor_master watch verb",
+      "in": "cairn/devices/cairn/machines/harbor_master"
+    }
+  },
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260818T003901-a5775fa76ebe.json",
+  "intent_berth": "none, because this entered at the TICKET entry point, not at /intent — CLAUDE.md's three entry points, and /intent's own text: 'Do not route a bug through here: if editing lines of code fixes it, it is a ticket.' This is a measured defect fixed by one predicate; the measurement is in this ticket's why and is reproducible with scratchpad loadrace.py's method (unload via keep_alive:0, then four identical asks).",
+  "chart_claim": "validate-20260818T004820-bd528a799205 — chart chain complete with real content; verdict berthed at verdict-20260818T010100-c0d2b60c1cb5",
+  "schema_version": "v0",
+  "dependencies": []
+}

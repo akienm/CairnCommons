@@ -1,0 +1,42 @@
+{
+  "date": "2026-08-29",
+  "owner": "CC owns the mechanism. Akien owns the design choice of what the fingerprint covers (record only, or record plus referenced artifacts).",
+  "children": [],
+  "questions": [
+    {
+      "q": "distinctions",
+      "a": "FINGERPRINT vs GIT INTEGRITY: git's content-addressable storage provides integrity for committed files. The fingerprint adds in-place-edit detection BEFORE commit and portable verification from the record alone."
+    },
+    {
+      "q": "distinctions",
+      "a": "FINGERPRINT vs SOURCE_FINGERPRINT: source_fingerprint covers proof source code (has the proof changed since sealed?). This covers crossing records (was the crossing record tampered with after the crossing?). Different subjects, same mechanism."
+    },
+    {
+      "q": "distinctions",
+      "a": "FINGERPRINT vs STATE-AND-HISTORY-DOOR: that ticket catches in-place edits via git-diff; this catches them via hash mismatch. Different detection mechanisms, complementary."
+    }
+  ],
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(crossing-fingerprints-are-verified) -> [PROVED]",
+  "watchme": {
+    "object": "crossing-fingerprints-are-verified",
+    "trigger": "after the first 50 crossings that carry fingerprints — enough traffic to see whether anyone verifies",
+    "enough": "when at least one verification has run against a live crossing (not a test fixture) and the fingerprint caught at least one real tampered record OR the watch has seen 200 crossings with zero verification failures",
+    "carrier": "a verdict artifact against this ticket's falsifier: the verification count, the tampering count, and the proportion verified",
+    "nexus": "the transitions tool's own tree",
+    "consumer": "the trouble lane on a verification failure",
+    "probe": "cairn/tools/base/probes/are_crossing_fingerprints_verified.py",
+    "receiver": {
+      "what": "harbor_master watch verb",
+      "in": "cairn/devices/cairn/machines/harbor_master"
+    }
+  },
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260829T013220-8f3d04852fd1.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260829T013021-652abee1a02d.json",
+  "chart_claim": "/home/akien/.cairn/devices/chart/0/packets/validate-20260829T031230-2b40eb56c129.json",
+  "schema_version": "ticket-v1",
+  "dependencies": [
+    "cairn.tools.base.transitions.emit — the chokepoint where the fingerprint is computed.",
+    "cairn.devices.tester.validation_store.source_fingerprint — the existing pattern to extend."
+  ]
+}

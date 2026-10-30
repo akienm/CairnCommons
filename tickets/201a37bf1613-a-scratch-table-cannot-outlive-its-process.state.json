@@ -1,0 +1,46 @@
+{
+  "date": "2026-09-06",
+  "owner": "db_domain owns the store and the scratch registry (charter gated_by CC; codemother owns the care of the code, ruling 2026-09-06). CC/Opus builds. The bus and the tester are the two callers.",
+  "children": [],
+  "questions": [
+    {
+      "q": "assumption_check",
+      "a": "Three named. (1) A pid is a lifetime on one box: /proc/<pid> absent means the minter is gone; pid reuse is covered by the nonce's time stamp compared to the live process's start time. (2) No proof leans on a leaked table from a prior run: measured, every leaked pid is dead; a proof that goes red after the sweep is the finding, not a reason to keep the leak. (3) The tester is the event every proof passes through, so hanging the sweep on its seal path means no daemon and no clock (memory reaching-for-daemons-is-drift). If a proof is run outside the tester (`cairn test` dev path) it is not sealed and its scratch waits for the next seal; that is acceptable and stated."
+    },
+    {
+      "q": "missing_check",
+      "a": "Two points were asserted wrapped and are not. (a) Which of the 22 create_owned_table callers are proofs and which are real minters: 17 are under proofs/ and move to scratch(); bus.py, domain.py, trees.py, migrate_to_three_tables.py and store.py itself are real and do not move, except bus.py registering its _delivery companion when its parent is scratch. (b) The old `cairn` database's drop after aa4463bbd067's migration was assigned to 'the scratch ticket' by that ticket; this ticket empties the database of scratch BEFORE the migration and does not drop it, so aa4463bbd067's constraint is amended in the same act to drop the emptied database itself once its counts assert. Recorded here so neither ticket leaves the old database standing by assuming the other drops it."
+    },
+    {
+      "q": "collision_check",
+      "a": "Consulted the lab (recompiled 2026-09-06). aa4463bbd067: a distinction, and one amendment recorded in missing_check (who drops the old database). Law 6: served, scratch has an owner (the minter's owner) and a holder (the pid). Law 4: this IS the physics for a rule that lived in every proof's finally block. Memory reaching-for-daemons-is-drift: honored, the sweep is fired by the tester's seal, never by a clock. Memory self-describing-fixture-names: the scratch name grammar `<prefix>_<pid>_<stamp>` keeps the leaker legible if it ever leaks again. No decision says scratch tables are anyone's to keep."
+    },
+    {
+      "q": "builder_check",
+      "a": "A Haiku-level builder needs: (a) WHERE — cairn/devices/db_domain/store.py (scratch() context manager, register_scratch_companion(), sweep_scratch(), a `cairn_scratch` registry table with columns table_name text PK, pid integer, created timestamptz default now(), companion_of text null); cairn/devices/cairn/machines/bus/bus.py:287 (after create_owned_table of the _delivery table: `if store.is_scratch(table): store.register_scratch_companion(table, self._delivery_table)`); cairn/devices/tester/device.py where the subject is run inside the seal (isolation.py): call `store.sweep_scratch()` before the run and log the count on the seal record's evidence; cairn/devices/db_domain/migrate_scratch_sweep.py (new, run once by hand). (b) THE NAME RULE — scratch() mints `<prefix>_<pid>_<HHMMSSffff>`; prefix is the proof's own word (bus_traffic, chat_pane, trees), no leading underscore needed once the registry is the truth. (c) THE SWEEP PREDICATE — for each cairn_scratch row: pid absent from /proc, OR present with a start time later than the row's created (pid reuse), drop table and its companions and the rows; never touch a table not in cairn_scratch. (d) THE MOVE — the 17 proofs under proofs/ that call create_owned_table or BusDevice(table=...): replace the _NONCE constant + _cleanup/_drop_table pair with `with store.scratch(owner, 'bus_traffic', columns) as table:` and delete the hand-rolled teardown; test_bus.py:_cleanup is the template to delete everywhere. (e) ORDER OF WORK — migrate_scratch_sweep.py first (measure before/after, commit the numbers into the ticket's deposits); then store.scratch() + sweep_scratch() with test_db_domain.py teeth (kill -9 a child process that minted one, sweep, assert gone); then bus.py companion registration with test_delivery.py; then the tester hook; then the 17-proof move, resealing each. (f) DON'TS — no clock, no daemon, no name-pattern drop in the sweep, no dropping the old `cairn` database (aa4463bbd067 does that after its migration), no change to create_owned_table's owner gate."
+    },
+    "open-94bffa097602"
+  ],
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [WATCHME(scratch-stays-swept):waiting] -> PROVED",
+  "watchme": {
+    "object": "scratch-stays-swept",
+    "trigger": "every tester seal after the crossing (sweep_scratch() runs there and returns a count)",
+    "enough": "seven days after PROVED with the live table count equal to the registry's non-scratch rows plus alive-pid scratch at every seal, or the first seal where it is not, which reports the leaker by name",
+    "carrier": "a verdict artifact against this ticket's falsifier tooth (6): tables in pg_tables, rows in cairn_scratch, alive pids, sweep counts per seal",
+    "nexus": "db_domain's tree (the store's own operational record)",
+    "consumer": "codemother, as owner of the care of the code; the operator inbox if a leaker is named",
+    "probe": "cairn/devices/db_domain/probes/scratch_stays_swept.py",
+    "receiver": {
+      "what": "harbor_master watch verb",
+      "in": "cairn/devices/cairn/machines/harbor_master"
+    }
+  },
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/logs/reviewed/sorted/sorted-20260906T180842-f8b0275ee68b.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/logs/reviewed/intent/intent-20260906T180800-484fc5954c29.json",
+  "chart_claim": "validate-20260907T142044-fa1edca6635c.json",
+  "cast": "2026-09-06",
+  "stage_needs": null,
+  "filed_edges": [],
+  "task_or_ticket": "ticket"
+}

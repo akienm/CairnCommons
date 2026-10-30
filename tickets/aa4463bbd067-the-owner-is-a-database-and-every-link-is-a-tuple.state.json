@@ -1,0 +1,44 @@
+{
+  "date": "2026-09-06",
+  "owner": "db_domain owns the schema and the store (charter gated_by CC; codemother owns the care of the code, ruling 2026-09-06). CC/Opus builds. Akien owns the design already made: a database per owner, now.",
+  "children": [],
+  "questions": [
+    {
+      "q": "assumption_check",
+      "a": "Three named. (1) 'database (per owner)' means a Postgres database — load-bearing; chosen because a database is the unit that takes its own credentials and moves hosts whole, which is what the household and lab use case needs; the wrong-intent tooth (a needed cross-owner join) is the measurement that would overturn it. (2) The role Cairn runs as has CREATEDB — true today, ensure_database already creates `cairn` with it; one box, one role stays the bound. (3) A link between two owners written as two half-rows stays consistent without a distributed transaction — held because each half is owned and gated by its own side and the reverse traversal reads locally; a half that fails to write is a loud OwnershipError, never a silent orphan."
+    },
+    {
+      "q": "missing_check",
+      "a": "Two points were asserted wrapped and are not. (a) What happens to the old `cairn` database after migration: it becomes read-only and stays until the scratch-tables ticket drops it; nothing writes there after the crossing, and the proof's grep tooth (no DB_NAME outside store.py) is what makes that true. (b) The clearance (read gate) is NOT wrapped and is deliberately out: the ticket lands the one seam it will sit on (store.read(address) across owners) and says so, rather than inventing a permission model the vision has not specified."
+    },
+    {
+      "q": "collision_check",
+      "a": "Consulted the lab (recompiled 2026-09-06 after the vision intention). Law 6 served, not collided: the owner's gate becomes a database boundary. 'One master db' (six-box swarm, memory one-bus-per-cairn-instance): a distinction, per-owner databases live in one instance's Postgres; recorded in the intent. 'Inter-device queries via bus verbs': the one real edge, recorded on the ticket as a question for Akien, one function's seam, not a build blocker. Idea 2026-09-06 scratch-tables census: sibling, its drop is its own ticket. No decision or intention in the lab says one database."
+    },
+    {
+      "q": "builder_check",
+      "a": "A Haiku-level builder needs: (a) WHERE — cairn/devices/db_domain/address.py (new), store.py (connect(owner), ensure_database(owner), registry per database, read(address), links_to/links_from, void/allocate), migrate_to_per_owner.py (new, copy migrate_to_three_tables.py's shape); (b) THE NAME RULE — owner `x` is database `cairn_x`, identifier-safe lowercase, no other prefix; a table inside it carries no owner prefix (cairn_nodes becomes cairn_librarian.nodes); (c) THE LINK ROW — columns local text, remote text, kind text, weight real, traversals integer default 0, created timestamptz default now(); unique(local, remote); index on remote; write both halves, each through its owner's connection; (d) THE LIST ROW — integer row id as the address leaf, `voided boolean default false`; allocate = lowest voided or next; (e) ORDER OF WORK — address.py with its proof first; then store.connect(owner) with test_db_domain.py green against `cairn_test`; then links and lists with their teeth; then move trees.py (NODES_TABLE, EMBEDDINGS_TABLE, LINKS_TABLE, THREADS_TABLE, OWNER='librarian'), bus.py (_BUS_OWNER), inference_domain/domain.py (CACHE_OWNER) and codemother's root table onto connect(owner); then run the migration and assert the counts; (f) DON'TS — no cross-database join, no second connection path (test_sole_path.py stays the tooth), no dropping the old database (that is the scratch ticket), no read gate invented here, no change to the write-gate semantics (non-owner refused, unregistered refused, where-less refused)."
+    }
+  ],
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> [BUILDME:queued] -> PROVEME -> WATCHME(links-get-written) -> PROVED",
+  "watchme": {
+    "object": "links-get-written",
+    "trigger": "the first row written to any owner's links table after the crossing (cairn_links held 0 rows on 2026-09-06, a built-and-never-used measurement this watch exists to not repeat)",
+    "enough": "100 link rows across at least two owners, with links_to called at least once on each side, or 30 days with fewer, which reports the tuple as built-and-unused",
+    "carrier": "a verdict artifact against this ticket's falsifier tooth (4): link count per owner, cross-owner pairs, links_to calls",
+    "nexus": "db_domain's tree (the store's own operational record)",
+    "consumer": "codemother, as owner of the care of the code; the operator inbox for the built-and-unused finding",
+    "probe": "cairn/devices/db_domain/probes/links_get_written.py"
+  },
+  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/logs/reviewed/sorted/sorted-20260906T173213-c9ae0f0ab7c4.json",
+  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/logs/reviewed/intent/intent-20260906T173213-034cf6b0f912.json",
+  "chart_claim": "validate-20260907T142659-e81e7261f6e7.json",
+  "cast": "2026-09-06",
+  "stage_needs": null,
+  "filed_edges": [
+    "RESOLVED by Akien 2026-09-06 (ruling 2026-09-06-the-employer-delegates-access-and-the-librarian-administers-it): a cross-owner read is a permission on the store, not a bus verb. 'as an igor's employer, i would give him access to my db. and then the librarian would set up the permissions for that as the overall owner.' The seam stays store.read(address); the permission it will check is administered by the librarian and granted by the employer through the vault (idea 2026-09-06-each-user-me-you-igor-etc-has). This ticket still builds no read gate; it lands the seam."
+  ],
+  "task_or_ticket": "ticket",
+  "release": "201a37bf1613"
+}

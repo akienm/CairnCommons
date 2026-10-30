@@ -1,42 +1,10 @@
 {
   "id": "76639374d9f9",
   "title": "openai-wire-is-a-machine-anybody-can-include",
-  "node_class": "code-seam",
-  "task_or_ticket": "ticket",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> WATCHME(openai_wire_is_included_by_a_second_holder) -> [PROVED]",
-  "date": "2026-09-11",
-  "created": "2026-09-11",
-  "author": "CC",
-  "from_idea": "2026-09-11-akien-2026-09-11-across-one-conversation",
-  "intent_berth": "/home/akien/.cairn/devices/skill_block/0/berths/intent/intent-20260911T163956-ebec5521291f.json",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20260911T164121-a36c6336f5d3.json",
-  "owner": "CC builds it; cairn/machines/openai_wire owns the wire format and nothing else",
   "owning_intention": "cairn/machines/openai_wire/intention+why.json",
   "intention": "cairn/machines/openai_wire is a machine any holder can include: it speaks the OpenAI chat-completions wire format on one side and calls an INJECTED resolve callable on the other. A shim that fronts an OpenAI-shaped foreign process includes it, hands it a resolve that asks inference_domain over the bus, and the process gets a door it already knows how to speak — without the wire format ever entering a device, and without the process ever dialling a provider itself.",
   "why": "Akien's ruling, 2026-09-11, verbatim: 'the shims handle all the interfacing with the outside world. it's what allows us to integrate a device. adding a port on the inference proxy, as sensible as that is, and it really is, the architecture wants to force everything to be similar specifically because fewer things to know as you or i switch between pieces. extra work to make it all the same to be sure. but all the same means less cogniting on which path is right.' And then the rung, also his: 'and if you build it as it's own machine, then anybody can include it.' Law 6 is what is being bought — a foreign process that dials a provider directly IS a second door to the inference host, and the only way to close it is to offer a door it already knows how to speak. Law 1 is what is being banked: the next OpenAI-shaped process re-derives none of this.",
   "how": "Two files, and the split IS the design.\n\ntranslate.py is PURE — no sockets, no environment, no import of any device. to_provider(messages) turns OpenAI's JSON-STRING tool-call arguments into objects and fills content=\"\" where it is None; both conversions are MEASURED necessities, not anticipated ones (ollama /api/chat refuses the string with \"Value looks like object, but can't find closing '}' symbol\", measured 2026-09-11 on hex.local against qwen3-coder:30b on the second turn of a tool-using conversation). to_openai(answer) does the return trip: an id ('call_'+uuid4().hex[:20]), type 'function', and arguments re-stringified. completion(answer, model, usage) assembles the chat.completion envelope.\n\nserve.py holds the HTTP handler and takes `resolve` and `models` as CONSTRUCTOR ARGUMENTS. It never reaches for inference_domain and cannot be made to — the only way to get an answer out of it is to hand it one. POST /v1/chat/completions and GET /v1/models are the two routes; everything else is a named 404. stream=true is REFUSED BY NAME with the reason on the wire rather than faked. A resolver that raises becomes a named 5xx carrying the exception type, never a 200 with an empty choice. The handler class and make_server() are separate, so the teeth construct a handler with fakes and never open a port.\n\nAND A SECOND PIECE THE CAST FOUND NECESSARY: a machine_imports_no_device sieve in build_inspector, beside device_isolation_holds (inspector.py:3210), discovering machine dirs the way that one discovers device dirs. Measured at cast: the existing sieve returns [] unless row['dir'] starts with 'devices/', so nothing today stops a file under cairn/machines/ from importing cairn.devices.anything. Without this the machine's one load-bearing property is a prose promise.\n\nSOURCE: CairnCommons/measurements/2026-09-11-hermes-openai-door-spike.py (191 lines), which already served a real hermes-agent 0.21.1 and proved each translation on the wire. The build's work is removing its two device imports and its module-level ENDPOINT/MODEL globals — those belong to the holder.",
   "falsifier": "DONE when (a) openai_wire imports no device — the new machine_imports_no_device sieve says so, not a reading; (b) translate.py's functions are pure and provable with no network and no fixtures beyond dicts, in BOTH directions (string->object on the way in, object->string on the way out, null content->\"\"); (c) serve.py answers /v1/chat/completions and /v1/models from injected callables alone, and a handler constructed with a resolve that raises returns a named 5xx rather than a coherent empty answer; (d) stream=true is refused with the reason on the wire; and (e) a holder includes it with an injected 'ask inference_domain over the bus' resolve and serves a real tool-using turn end to end. WRONG INTENT if the machine ends up knowing about inference_domain, the bus, or hermes — any of the three means it is a device wearing a machine's name, and the next holder cannot include it. The clauses are lettered so proof_coverage.clauses() demands a tooth per clause instead of falling back to [WHOLE].",
-  "traces_to": "Law 6 (the sole path to the inference host); Law 1 (the next OpenAI-shaped process re-derives none of this); Law 4 (clause (a) is held by a sieve, not by this paragraph); Akien's rulings of 2026-09-11 on shims owning the outside world and on the machine rung.",
-  "watchme": {
-    "object": "openai_wire_is_included_by_a_second_holder",
-    "trigger": "every component directory in class-space whose source imports cairn.machines.openai_wire — counted from the import graph the sieve already builds, so the probe costs one walk and no new instrument. It fires on the COUNT of distinct holders.",
-    "enough": "TWO distinct holders have included it. ONE holder forever is the FINDING, not a pass: the generality was paid for and never collected, and the honest disposition would have been to build the translation inside hermes_shim. The watch does NOT clear on a timer.",
-    "carrier": "a verdict artifact against THIS ticket's falsifier, naming the holders found and the import path that made each one count.",
-    "nexus": "the decompose tree — when 'build it as its own machine' pays and when it is speculative generality is a split-shaped judgement.",
-    "consumer": "Akien, and CC at the next machine-vs-holder fork",
-    "probe": "cairn/machines/openai_wire/probes/openai_wire_is_included_by_a_second_holder.py",
-    "receiver": {
-      "what": "harbor_master watch verb",
-      "in": "cairn/devices/cairn/machines/harbor_master"
-    }
-  },
-  "gates_bound": [
-    "proof gate — cairn/machines/openai_wire/proofs/ runs green under the tester at isolation=netns, teeth a hollow build could not pass.",
-    "import gate — machine_imports_no_device in build_inspector reds any file under cairn/machines/ importing cairn.devices.*; openai_wire is its first subject.",
-    "feeds back to origin on failure — a red routes to this ticket's own voyage.",
-    "durability gate — not done until proven AND committed."
-  ],
-  "children": "none, because the two files are one seam over one measured wire format and the sieve is a short sibling of an existing one. The HTTP-listener ownership question that would have been a child was closed by ruling 2026-09-11-the-one-web-server-rule-governs-the-ui-not-service-ports before cast.",
-  "depends_on": "none. 548dd13fb4db (PROVED 2026-09-11) already made the one inference door carry a tool-using conversation over the bus verb, which is what an injected resolve will call. cb97524c0e8e (hermes_shim) is this ticket's DEPENDENT and is what answers clause (e).",
-  "schema_version": "ticket-v1"
+  "traces_to": "Law 6 (the sole path to the inference host); Law 1 (the next OpenAI-shaped process re-derives none of this); Law 4 (clause (a) is held by a sieve, not by this paragraph); Akien's rulings of 2026-09-11 on shims owning the outside world and on the machine rung."
 }

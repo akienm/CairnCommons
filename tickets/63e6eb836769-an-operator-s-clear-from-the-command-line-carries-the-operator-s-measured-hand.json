@@ -1,22 +1,12 @@
 {
   "id": "63e6eb836769",
   "title": "An operator's clear from the command line carries the operator's measured hand",
-  "date": "2026-10-11",
-  "owner": "CC",
   "owning_intention": "cairn/devices/trouble/intention+why.json",
   "intention": "A clear made with cairn trouble clear carries the hand measured in the CLI's own process, and the trouble device passes it to clear(), so an operator's clear from their terminal closes the trouble at once and teaches the counting block.",
   "why": "Measured 2026-10-12: Akien ran ~/.akien/temp/clear-who-writes-what-2.sh from his own terminal (commons e1a7d39). All 9 who-writes-what troubles got a cleared_by entry by 'akien' with NO 'hand' key, so every one stayed OPEN and the counting block learned no row. Cause: cairn trouble clear (cairn/devices/trouble/0/bin/trouble, clear branch) asks over the bus (verb 'clear'), and TroubleDevice._handle_clear (cairn/devices/trouble/trouble.py ~:193) calls self.clear(...) with no hand. c2172127d7a4 measured the hand only on the emission path (DiagnosticBase.clear_trouble), so the operator's own command never carried it and 1c1b18bac2eb's operator close never fired. ",
   "traces_to": "Law 6 (the operator's gate: his clear must be his measured hand, not a typed name), and 1c1b18bac2eb / 0539e85f8b2d, which only work if the hand arrives.",
   "how": "Two sites in cairn/devices/trouble only. (a) 0/bin/trouble clear branch: before bus.request, measure hand = artifact.caller() (from cairn.tools.artifact import artifact), on exception {'class':'unknown','error':...} exactly as DiagnosticBase.clear_trouble does, and send it as body['hand']. (b) trouble.py _handle_clear: pass hand=body.get('hand') if isinstance(body.get('hand'), dict) else None to self.clear.",
   "falsifier": "cairn/devices/trouble/proofs/test_a_cli_clear_carries_the_hand.py under PROVES {'63e6eb836769': {'1','2'}} on a scratch trouble store: (1) _handle_clear on an envelope whose body carries hand {'class':'akien'} closes an open trouble (standing CLEARED) and the entry carries that hand; (2) the CLI clear branch's body carries a 'hand' dict measured by artifact.caller() (asserted by running the branch's request-building against a fake bus and reading the body). Hollow: today's _handle_clear reds 1, today's CLI reds 2. Live, after PROVED: Akien re-runs ~/.akien/temp/clear-who-writes-what-2.sh and the 9 rows read CLEARED with hand class akien.",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> BUILDME -> PROVEME -> [PROVED]",
-  "watchme": "none, because the fault is measured at /home/akien/dev/src/cairn/cairn/devices/trouble/0/bin/trouble and the proof's teeth are its falsifier",
-  "sorted_berth": "/home/akien/.cairn/devices/skill_block/0/berths/sorted/sorted-20261012T111153-851f9d4b507c.json",
-  "intent_berth": "none, because this is a bug entering as a ticket (skills/intent/SKILL.md, the TICKET entry point), born from the measured fault at /home/akien/dev/src/cairn/cairn/devices/trouble/0/bin/trouble",
-  "task_or_ticket": "ticket",
-  "children": [],
-  "dependencies": [],
   "decisions": [
     {
       "n": 1,
@@ -90,7 +80,5 @@
       "source": "rehearsal",
       "at": "2026-10-12T17:48:37+00:00"
     }
-  ],
-  "cast": "2026-10-12",
-  "model": "opus"
+  ]
 }

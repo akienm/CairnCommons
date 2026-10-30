@@ -1,8 +1,6 @@
 {
   "id": "7a1265439f54",
   "title": "the-cairn-device-owns-the-trouble-panel",
-  "date": "2026-08-19",
-  "owner": "CC",
   "owning_intention": "cairn/devices/cairn/intention+why.json",
   "intention": "The cairn device (singleton, instance 0) owns and surfaces the trouble lane on a web pane. Two-sided: list left, detail right, red light at top (bright red if live, dull reddish grey if none). Starts at row 0. Dynamic page.",
   "why": "There is no device that means all-of-Cairn. The trouble lane is a runtime thing with no surface — it is read only at session-open hooks and by hand. A panel that shows live troubles with a red light is the normal-operating-state made visible.",
@@ -16,83 +14,13 @@
     "proves_red": "RED if: (1) the panel owns its own route/port/server — the one-web-server rule holds, and a device gets a declared PANE, never its own endpoint; (2) the panel does not show live troubles — only showing stale/cached data is not a diagnostic surface; (3) the cairn device is confused with system_rackmount — the host is the laptop, cairn is the project, different scopes, different devices; (4) the trouble detail is truncated or summarized — Law 7 says a diagnostic surface may collapse an error into a coherent shape but the detail view is not a collapse, it is the record; (5) the panel is read-only but does not SAY so — a surface that looks editable but is not is a false affordance.",
     "horizon": "After the-web-server-graduates-to-starlette — the stdlib web_server is synchronous and cannot do WebSocket push, which the dynamic page needs. This ticket is the Starlette migration's first consumer."
   },
-  "children": [
-    "1cafb10c2983"
-  ],
-  "linked_ideas": [
-    "Akien 2026-08-19, reviewing open questions: trouble tickets are a runtime thing, they need a panel"
-  ],
-  "questions": [
-    {
-      "q": "distinctions",
-      "a": "The cairn device is NOT system_rackmount — the host is the laptop, cairn is the project. Different scopes, different devices."
-    },
-    {
-      "q": "distinctions",
-      "a": "The trouble panel is the cairn device's FIRST pane. Circuit breakers for all devices are the second (child b of the intention, a later ticket)."
-    },
-    {
-      "q": "distinctions",
-      "a": "Dynamic means client-side interaction (click-to-select, live refresh via WebSocket). The current stdlib web_server cannot do this — depends on the Starlette migration."
-    },
-    {
-      "q": "distinctions",
-      "a": "READ-ONLY surface. No editing or closing troubles from the panel — that is the trouble lane's own door, not a panel's."
-    }
-  ],
   "constraints": [],
   "how": "Build the cairn device (singleton, instance 0) with a trouble-panel web pane. Two-sided: list left, detail right, red light at top. The device means all-of-Cairn and surfaces the trouble lane.",
-  "links": [],
-  "priority": "",
-  "node_class": "code-seam",
-  "workflow_and_state": "code-seam@v2: THINKME -> TICKETME -> FIXME -> BUILDME -> PROVEME -> WATCHME(trouble-panel-surfaces-live-troubles) -> [PROVED]",
-  "watchme": {
-    "object": "trouble-panel-surfaces-live-troubles",
-    "trigger": "a trouble is created or resolved while the panel is serving",
-    "enough": "one trouble surfaced on the panel and one resolved, both visible to the operator",
-    "carrier": "the trouble record and the panel rendering showing it",
-    "nexus": "hypothesize",
-    "consumer": "Akien — the panel must surface troubles he would otherwise have to grep for",
-    "probe": "cairn/devices/cairn/probes/trouble_panel_surfaces_live_troubles.py",
-    "receiver": {
-      "what": "harbor_master watch verb",
-      "in": "cairn/devices/cairn/machines/harbor_master"
-    }
-  },
-  "deposits": {},
-  "sorted_berth": "none, because cast by hand on 2026-09-04, before this ticket rode the sorted door (backfilled by ticket inspector 2026-08-26); its 2026-10-06 FIXME re-entry was charted whole at /home/akien/.cairn/devices/chart/0/packets/validate-20261006T005143-68d466115713.json",
-  "intent_berth": "none, because no /intent firing was recorded — backfilled by ticket inspector 2026-08-26",
-  "chart_claim": {
-    "validate_berth": "/home/akien/.cairn/devices/chart/0/packets/validate-20261006T005143-68d466115713.json",
-    "chain_complete": true,
-    "filled_by": "CC chart chain (orient c724478f1cf4 .. validate 68d466115713, each learned)"
-  },
-  "schema_version": "ticket-v1",
-  "cast": "2026-08-19",
-  "dependencies": [
-    "the-web-server-graduates-to-starlette — hard dependency. The current stdlib web_server cannot serve dynamic pages with WebSocket fan-out.",
-    "CairnCommons/troubles/ — the data source. The trouble store is already read at session-open by the hook; this panel reads the same store.",
-    "CairnCommons/intentions-not-beside-code/I-the-cairn-device.md — the cairn device intention that names this pane as child a."
-  ],
-  "depends_on": [
-    "the-web-server-graduates-to-starlette"
-  ],
   "chart_notes": {
     "orient": "The trouble store is at CairnCommons/troubles/*.json, already read at session-open by the hook (bin/cmd/session_start_hook). The cairn device is a singleton at instance 0. The pane is a declared shape on the web server, rendered by render.py.",
     "constrain": "OUT: editing/closing troubles from the panel (read-only surface); owning a route/port/server (pane on the one web server); showing anything other than the trouble store's own records. IN: the two-sided layout, the red light, the WebSocket push for live updates.",
     "validate": "A live trouble appears on the panel within one WebSocket push cycle. The red light is bright red with live troubles, dull reddish grey with none. Clicking a trouble in the list shows its full finding in the detail pane. An empty trouble store shows the dull reddish grey light and an empty list."
   },
-  "filed_edges": [
-    "Circuit breakers for all devices are the cairn device's second pane (child b of the intention, a later ticket) — not this build.",
-    "The trouble store's shape (JSON files in CairnCommons/troubles/) is already settled and not this ticket's to change."
-  ],
-  "fixme": [
-    {
-      "n": 1,
-      "kind": "watchme",
-      "missing": "the probe reads its ticket's falsifier as failing and its carry names no finding"
-    }
-  ],
   "decisions": [
     {
       "n": 1,
