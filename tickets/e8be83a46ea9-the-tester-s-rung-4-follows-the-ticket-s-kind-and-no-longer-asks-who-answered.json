@@ -1,0 +1,77 @@
+{
+  "id": "e8be83a46ea9",
+  "title": "The tester's rung 4 follows the ticket's kind and no longer asks who answered",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Rung 4 of the reseal door lets a seal land over a proof whose bytes moved under an open ladder when --ruling names a ticket whose kind admits the change: a bug whose fixes lists the proof (y), or a code-seam whose proof's PROVES names it (x); in both the proof names the ticket and every tooth it removed. A resolved question lifts rung 4 whoever answered it.",
+  "why": "Outline 19.14.8.2-3 (Akien 2026-10-31: 'for new/changed code tickets the rule is x, for fixit tickets the rule is y' ... 'yes, fold it in and build it'; 'rung 4 no longer asks who answered'). Measured: rung 4 lifts only for an Akien-answered question or a confirmed legacy ruling, so a fixit cannot change the test case it fixes (1d23d635f7ca's repair of test_hollow.py waits on a question per edit), and a measured answer is refused for who wrote it. The sieves are the bottleneck.",
+  "traces_to": "CairnComponentOutline.txt 19.14.8.2, 19.14.8.3; Law 8 (a seal still lands only on a run); Law 9 (his 10-31 words outrank ruling 2026-09-06). RULE 1: the tester reads tickets through cairn.tools.base.ticket_file and PROVES through proof_coverage.declared; the harbor half is 56280fc01410 (PROVED).",
+  "how": "In cairn/devices/tester/reseal.py: ruling_refusal drops the answered_by check (D1); rung4_refusal routes a 12-hex id to _ticket_refusal (D2, D3), which reads the ladder's recorded bytes from git (D4) and the teeth by ast (D5). cli.py help names the ticket form (D6). One existing tooth changes claim (D7). Proven by cairn/devices/tester/proofs/test_rung_4_follows_the_ticket_kind.py (D8).",
+  "falsifier": "Done when cairn/devices/tester/proofs/test_rung_4_follows_the_ticket_kind.py, under PROVES for e8be83a46ea9 keys 1-6, runs green under bin/cairn test: (1) a bug whose fixes lists the moved proof, named in the proof, every removed tooth named, lifts rung 4; (2) it is refused when fixes omits the proof, the proof does not name the ticket, or a removed tooth is not named; (3) it is refused when the ladder's recorded bytes are not in git; (4) a code-seam lifts rung 4 when its proof's PROVES names it and is refused when not; (5) another kind, or an id resolving to no ticket, is refused; (6) a resolved question answered by measurement lifts rung 4. Wrong intent if rung 4 lifts for a ticket whose kind and fields do not admit the change.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-31",
+      "text": "D1: RUNG 4 NO LONGER ASKS WHO ANSWERED. THE FILE EXISTS: cairn/devices/tester/reseal.py is a standing, git-tracked file of the tester device (it already holds ruling_refusal, rung4_refusal, read_ladder, _rel and REPO_ROOT, and imports hashlib, os, re, subprocess and Path); D1-D5 edit it in place and create no file. In reseal.ruling_refusal, delete the answered_by startswith('Akien') branch; an open- id lifts rung 4 when the question exists and is resolved. Update the docstring: outline 19.14.8.3, Akien 2026-10-31. The legacy-ruling branch is unchanged.",
+      "source": "rehearsal",
+      "at": "2026-10-31T21:27:31+00:00"
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-31",
+      "text": "D2: WHERE THE TICKET FORM SITS. rung4_refusal(proof_path, ruling_id, *, tickets_dir=None): after the ladder test, if re.fullmatch(r'[0-9a-f]{12}', ruling_id or '') then why = _ticket_refusal(proof, ruling_id, ladder, tickets_dir=tickets_dir), else why = ruling_refusal(ruling_id or '') as today. The refusal sentence wrapping why is unchanged except it names outline 19.14.8 beside the 2026-09-06 ruling. cli.py's two call sites pass nothing new (live store)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-10-31",
+      "text": "D3: THE PREDICATE. Module-level _ticket_refusal(proof, tid, ladder, *, tickets_dir=None) -> str|None, imports inside the function: from cairn.tools.base.ticket_file import find_ticket, read_ticket; from cairn.tools.proof_coverage.proof_coverage import declared. plan = find_ticket(tid, tickets_dir); None -> 'no ticket <tid>'. ticket = read_ticket(plan). kind = str(ticket.get('node_class') or '').strip().lower(). code-seam (x): tid in declared(proof), else refuse naming PROVES. bug (y): ticket fixes is a list and some entry resolves (relative to REPO_ROOT when not absolute) to the same path as proof, else refuse naming fixes. Any other kind: refuse naming the kind. Then tid in the proof's text, else refuse (the proof's why names the ticket). Then old = _recorded_bytes(proof, ladder['proof_sha256']); None -> refuse (the removed teeth cannot be measured). Then for each name in sorted(_teeth(old) - _teeth(now_text)) the name must be in now_text, else refuse naming the first unnamed tooth. All pass -> None. Every refusal names tid."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-10-31",
+      "text": "D4: THE RECORDED BYTES. _recorded_bytes(proof, sha) -> bytes|None: every git call runs with the caller's GIT_* env vars dropped (a pre-commit hook sets GIT_DIR/GIT_INDEX_FILE, which would aim git at the wrong repo); top = git -C proof.parent rev-parse --show-toplevel (None on failure); rel = proof relative to top (None if outside); for each h in git -C top log --format=%H -- rel, blob = git -C top show h:rel (bytes, skip on non-zero); return the first blob whose hashlib.sha256 hexdigest == sha; else None. subprocess.run with capture_output, no text for show.",
+      "source": "rehearsal",
+      "at": "2026-10-31T21:04:32+00:00"
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-10-31",
+      "text": "D5: TEETH. _teeth(source: bytes|str) -> set[str]: import ast inside the function (the stdlib module; reseal.py does not import it at top level), then ast.parse; names of top-level FunctionDef/AsyncFunctionDef starting 'test_'; SyntaxError or ValueError -> set().",
+      "source": "rehearsal",
+      "at": "2026-10-31T21:31:47+00:00"
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-10-31",
+      "text": "D6: CLI HELP. THE FILE EXISTS: cairn/devices/tester/cli.py is the tester's standing, git-tracked command line, edited in place. cli.py lines 47-48 read '--ruling <id>' as 'a resolved question, a confirmed ruling, or a ticket whose kind admits the change'; the --ruling argument help (around line 483) says the same: a resolved question id (open-...), a confirmed legacy ruling id, or a 12-hex ticket id (a bug whose fixes lists the proof, or a code-seam whose PROVES names it; the proof must name the ticket and every tooth it removed).",
+      "source": "rehearsal",
+      "at": "2026-10-31T21:27:31+00:00"
+    },
+    {
+      "n": 7,
+      "by": "cc",
+      "step": "D7",
+      "date": "2026-10-31",
+      "text": "D7: THE CHANGED TEST CASE. In cairn/devices/tester/proofs/test_rung_4_lifts_for_an_answered_question.py tooth 2 is renamed test_an_open_or_an_unknown_question_does_not (PROVES 37ddc47686c2 key 2 follows) and no longer asserts the measured answer is refused; its docstring names ticket e8be83a46ea9, says the measured case moved to test_rung_4_follows_the_ticket_kind.py tooth 6 because outline 19.14.8.3 says rung 4 no longer asks who answered, and names the removed tooth test_an_open_a_measured_or_an_unknown_question_does_not."
+    },
+    {
+      "n": 8,
+      "by": "cc",
+      "step": "D8",
+      "date": "2026-10-31",
+      "text": "D8: THE PROOF is cairn/devices/tester/proofs/test_rung_4_follows_the_ticket_kind.py, written red-first, PROVES e8be83a46ea9 keys 1-6: (1) test_a_fixit_lifts_rung_4_for_the_proof_it_fixes; (2) test_a_fixit_whose_why_does_not_hold_is_refused (fixes omits the proof; the proof does not name the ticket; a removed tooth unnamed); (3) test_bytes_git_cannot_find_are_refused; (4) test_a_code_seam_lifts_rung_4_only_when_its_proof_names_it; (5) test_another_kind_or_an_unknown_ticket_is_refused; (6) test_a_measured_answer_lifts_rung_4. Fixture: a scratch component under a git init'd scratch root, proof v1 committed, a red seal with an open ladder bound to v1's sha256 (the plain-seal proof's _open_ladder shape), proof edited to v2; fixture tickets as plain JSON in a scratch tickets dir passed as tickets_dir; questions in a scratch root via question_root. reseal is imported inside each tooth."
+    }
+  ],
+  "builder_notes": "WHERE: cairn/devices/tester/reseal.py, cairn/devices/tester/cli.py, the new proof, and tooth 2 of test_rung_4_lifts_for_an_answered_question.py. RUN: bin/cairn test --exec 'python3 <proof>' twice. HOLLOW: predict in a commons-less worktree, then bin/cairn test --hollow <id> --proof <proof>. ORDER (rule x, since 56280fc01410): commit the red-first proof alone, cross BUILDME naming it, build, commit at BUILDME, cross PROVEME."
+}
