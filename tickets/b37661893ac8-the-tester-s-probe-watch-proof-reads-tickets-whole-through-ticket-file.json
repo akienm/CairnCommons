@@ -1,0 +1,27 @@
+{
+  "id": "b37661893ac8",
+  "title": "The tester's probe-watch proof reads tickets whole through ticket_file",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's probe-watch proof reads the ticket store through cairn/tools/base/ticket_file.py (plans() and read_ticket()), so it reads each ticket whole and never mistakes a .state.json sidecar for a ticket.",
+  "why": "Measured 2026-10-30: bin/cairn test --exec 'python3 cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py' reds all three teeth with KeyError: 'id'. _standing() globs CairnCommons/tickets/*.json, which since 284798998ab0 also matches each split ticket's .state.json; a sidecar carries workflow_and_state and watchme but no id (six do: 299d4f72ae40, 357c402172ca, 4431cf2bc625, 652965bec418, a48f95c51a41, f50706ba15c3), and each split plan carries no cursor, so the raw read both crashes and skips. 71189b2ddffc PROVED this proof green; Law 9: a PROVED proof gone red is red until fixed.",
+  "traces_to": "Law 9 (a PROVED proof gone red is red until fixed); RULE 1 (the tester reads the ticket store through base's public ticket_file module); Law 1 (the plan/state reader already exists, so the proof composes it).",
+  "how": "EXISTS cairn/tools/base/ticket_file.py publishes plans(tickets_dir) and read_ticket(plan). EXISTS cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py: _standing() iterates plans(_tickets()) and reads each with read_ticket(path) (D1); one new tooth proves the reader (D2); its PROVES gains this ticket (D2).",
+  "falsifier": "Falsifier: Done when cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py, under PROVES for b37661893ac8 key 'all', runs green under bin/cairn test --exec, twice: every 71189b2ddffc tooth green with its assertion unchanged, and the new tooth test_the_standing_population_is_read_whole green (no doc in _standing() lacks an id, and at least one standing ticket whose cursor lives only in its .state.json is in the population). The build touches only the proof, which is the instrument, so the hollow reading is a proofs-only build approved by its plan. Wrong intent if, once the population is read whole, a standing tester probe really fails to post watch (that is a probe's red, its own ticket). proven_by = cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-10-30",
+      "text": "D1: THE READER. In cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py add 'from cairn.tools.base.ticket_file import plans, read_ticket  # noqa: E402' directly after the line 'from cairn.tools.base.transitions import parse_workflow  # noqa: E402'. In _standing(), replace 'for path in sorted(_tickets().glob(\"*.json\")):' with 'for path in plans(_tickets()):' and replace 'doc = json.loads(path.read_text(\"utf-8\"))' with 'doc = read_ticket(path)'. Leave the except, the cursor filter, the probe filter, the population assert and every tooth unchanged. If json is then unused, leave the import (the new tooth uses it)."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-10-30",
+      "text": "D2: THE TOOTH AND THE KEY. Add to cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py, after test_every_standing_tester_spec_names_the_receiver, 'def test_the_standing_population_is_read_whole():' which calls _standing() and asserts (a) every doc in it has a non-empty 'id' equal to its tid, and (b) at least one tid in it has a state file (ticket_file.state_path(p).is_file() for some p in plans_of(tid, _tickets())) whose json carries 'workflow_and_state' while that plan's own json (json.loads of the plan's text) does not; import plans_of and state_path from cairn.tools.base.ticket_file beside D1's import. Add it to the composite test_tester_probes_report_to_the_watch() and to the __main__ checks list before the composite. PROVES gains '\"b37661893ac8\": {\"all\": \"test_tester_probes_report_to_the_watch\"}' beside the 71189b2ddffc entry. Run: bin/cairn test --exec 'python3 cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py', twice. Hollow: bin/cairn test --hollow b37661893ac8 --proof cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py (a proofs-only build; the plan names the skipped file)."
+    }
+  ],
+  "builder_notes": "WHERE: one file, cairn/devices/tester/proofs/test_tester_probes_report_to_the_watch.py. RUN: bin/cairn test --exec 'python3 <proof>' twice. HOLLOW: bin/cairn test --hollow b37661893ac8 --proof <proof>. ORDER: none beyond the code-seam path."
+}
