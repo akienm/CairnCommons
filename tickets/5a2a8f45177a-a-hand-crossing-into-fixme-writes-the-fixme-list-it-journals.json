@@ -3,18 +3,30 @@
   "title": "A hand crossing into FIXME writes the fixme list it journals",
   "owning_intention": "cairn/tools/base/intention+why.json",
   "intention": "A ticket sent back to FIXME by the one crossing command carries, on the ticket itself, the list of what it lacks that the crossing journaled, so its FIXME exit gate is answerable without a hand repair.",
-  "why": "Measured 2026-10-13 by the builder on e038544a9b60: cairn/tools/base/cross.py cross() journals --missing on the emit into FIXME (cross.py:62-67) but writes only workflow_and_state back to the ticket; the ticket's fixme list is written only by clearance (cairn/devices/cairn/machines/harbor_master/clearance.py:1126). The FIXME exit gate inspect_fixme (cairn/tools/base/transitions.py:1160) then reads 'stands at FIXME with no fixme list' and the boat cannot leave FIXME without a hand repair through the artifact door. ",
+  "why": "Measured 2026-10-13 by the builder on e038544a9b60: cairn/tools/base/cross.py cross() journals --missing on the emit into FIXME (cross.py:62-67) but writes only workflow_and_state back to the ticket; the ticket's fixme list is written only by clearance (cairn/devices/cairn/machines/harbor_master/clearance.py:1126). The FIXME exit gate inspect_fixme (cairn/tools/base/transitions.py:1160) then reads 'stands at FIXME with no fixme list' and the boat cannot leave FIXME without a hand repair through the artifact door.  Re-measured 2026-11-02, after 44cc43080f93 taught emit to write a hand kick-back's list: cross(id, 'FIXME', missing=['a','b']) over a scratch store still leaves fixme None, because cross() rewrites the ticket it read BEFORE emit, over the list emit's _write_fixme just wrote (scratchpad measure_cross_fixme.py).",
   "traces_to": "Law 4 (the FIXME gate's answerability is physics at the one crossing command, not a hand repair someone remembers) and Law 7 (a record of truth carries what the journal says).",
-  "how": "cairn/tools/base/cross.py only: in cross(), when the canonical target is FIXME, (a) refuse with ValueError when missing is empty ('a crossing into FIXME names what is missing: --missing <what>'), before emit; (b) in the same write-back that sets workflow_and_state, set t['fixme'] = [{'n': i, 'kind': 'cross', 'missing': m} for i, m in enumerate(missing, 1)], the shape clearance.py:1126 writes. Other targets are unchanged.",
-  "falsifier": "cairn/tools/base/proofs/test_a_hand_crossing_into_fixme_writes_its_list.py under PROVES {'5a2a8f45177a': {'1','2','3'}} over a scratch tickets dir, node_classes and owning charter: (1) cross(id, 'FIXME', missing=['a','b']) leaves the ticket with fixme == [{'n':1,'kind':'cross','missing':'a'},{'n':2,'kind':'cross','missing':'b'}] and the cursor at FIXME; (2) cross(id, 'FIXME') with no missing raises ValueError and writes nothing (ticket bytes and the component's journal unchanged); (3) a cross to a non-FIXME summons writes no fixme key. Hollow: today's cross.py reds 1 and 2.",
+  "how": "cairn/tools/base/cross.py only: in cross(), after emit returns, re-read the ticket (t = ticket_file.read_ticket(tp)) and set workflow_and_state on that fresh doc, so the fixme list emit's _write_fixme wrote survives the write-back (D3). cross() writes no list of its own (D1) and adds no missing check, because emit already refuses one (D2).",
+  "falsifier": "cairn/tools/base/proofs/test_a_hand_crossing_into_fixme_writes_its_list.py under PROVES {'5a2a8f45177a': {'1','2','3'}} over a scratch tickets dir (D4), a node_classes copy with repair_summons FIXME->BUILDME, and a scratch owning charter: (1) cross(id, 'FIXME', missing=['a','b']) from PROVEME leaves fixme == [{'n':1,'kind':'hand_kickback','missing':'a'},{'n':2,'kind':'hand_kickback','missing':'b'}] and the cursor at FIXME; (2) cross(id, 'FIXME') with no missing raises IllegalTransition and leaves the ticket bytes and the component's history.json unchanged; (3) cross(id, 'BUILDME') from PROVEME, a back-edge into a non-repair summons, writes no fixme key. Hollow: today's cross.py reds 1.",
   "decisions": [
     {
       "n": 1,
-      "text": "The fixme entries take kind 'cross' so a reader can tell a hand kick-back from clearance's measured lacks. CC's call, per Akien 2026-10-09"
+      "text": "The entries are the ones emit writes (kind 'hand_kickback', 44cc43080f93), which already tell a hand kick-back from clearance's measured lacks; cross() writes no list of its own, so a hand kick-back's list has one writer. Amends the 2026-10-09 kind 'cross', which predates 44cc. CC's call, procedural, 2026-11-02."
     },
     {
       "n": 2,
-      "text": "A FIXME crossing without --missing is refused rather than defaulted: an empty list is the unanswerable gate this ticket removes. CC's call, per Akien 2026-10-09"
+      "text": "A FIXME crossing without --missing is refused by emit (transitions.py:1400-1405, IllegalTransition) before anything is written; cross() relies on that and adds no second check. CC's call, per Akien 2026-10-09."
+    },
+    {
+      "n": 3,
+      "text": "cross() re-reads the ticket with ticket_file.read_ticket(tp) after emit returns, then sets workflow_and_state on the fresh doc and rewrites it only when the cursor changed. Nothing else in cross() changes."
+    },
+    {
+      "n": 4,
+      "text": "The proof points ticket_file._TICKETS at its scratch store for each call and restores it in finally, because emit's _write_fixme resolves the ticket through the module default (find_ticket), not through cross()'s tickets_dir; the test_a_hand_kick_back_writes_the_fixme_list.py precedent."
     }
+  ],
+  "writes_to": [
+    "cairn/tools/base/cross.py",
+    "cairn/tools/base/proofs/test_a_hand_crossing_into_fixme_writes_its_list.py"
   ]
 }
