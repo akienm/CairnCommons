@@ -1,0 +1,62 @@
+{
+  "id": "5f2e99bff577",
+  "title": "The BUILDME rehearsal lane needs a rehearsal recorded over the live design, clean or not",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "The BUILDME rehearsal lane holds a crossing until a rehearsal has RUN over the ticket's live design, clean or not, instead of until one comes back clean; the gaps stay on the newest record as data, and the lane's name, claim, proofs, skill text and intentions say so.",
+  "why": "Akien 2026-11-01: 'we want every answer it needs, but that doesn't mean WE WILL GET EVERY ANSWER. it's what we're aiming for not the minimum requirement'; then 'yes, build it, and change the gate now' (CairnCommons/questions/open-2941a60bfd65.json). Measured: e8be83a46ea9 waited a day at BUILDME over one missing-import gap, and 1d23d635f7ca has three unclean passes (the third claiming an existing file is missing) and cannot cross. A clean-required lane turns an aim into a lock, and looping to satisfy it is how dozens of passes happened.",
+  "traces_to": "Akien 2026-11-01 (answers-are-the-aim-not-the-minimum); CP4 (the laws serve us; when they chafe, review); Law 4 (the rule he states is held by the gate, not by hand); Law 9 (his 11-01 words outrank cf80bdb57205's clean clause).",
+  "how": "rehearsal.standing() reads the newest ran record from records_for and keeps the design-hash staleness check, dropping the clean requirement (D1, D2). The lane in transitions.inspect_entry is renamed the_ticket_was_rehearsed and the inspector's claim text follows (D3). The proofs follow (D4), the sail skill (D5), and the rehearsal charter, the I-the-cheapest-reader intention and outline 17.6 (D6), with a recompile. Order and reseals in D7.",
+  "falsifier": "Done when cairn/machines/rehearsal/proofs/test_rehearsal.py, under PROVES for 5f2e99bff577 keys 1-3, runs green under bin/cairn test: (1) the sieve buildme_rides_the_rehearsal reds a ticket no rehearsal has run over, and one whose only record is ran:false, by name; reads an unclean current record green with standing saying clean False; reads a clean one green; and reds a ticket edited after its rehearsal as stale; (2) the entry gate's fifth lane is the_ticket_was_rehearsed, named once in transitions.py; (3) skills/sail/SKILL.md names the_ticket_was_rehearsed. cairn/tools/base/proofs/test_transitions.py stays green with the new name. Wrong intent if, over the next ten tickets built on unclean rehearsals, kickbacks cite a gap the rehearsal had named more often than for tickets built on clean ones.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-11-01",
+      "text": "D1: STANDING READS THE NEWEST RUN. In cairn/machines/rehearsal/rehearsal.py, standing(ticket, root) no longer reads the 'rehearsal' pointer on the ticket's log. It takes ran = [(p, d) for p, d in records_for(ticket, root) if d.get('ran') is not False]; with none it returns {ok: False, lack: \"no rehearsal has run over the ticket — `cairn rehearse <id>`\", record: None, live_sha256}. Otherwise rec = ran[-1][1], ptr = rec.get('record') or 'rehearsals/' + ran[-1][0].name. The staleness check is unchanged: design_sha256 against design_sha(live bytes) when the record carries one, ticket_sha256 against the live bytes when not; stale returns lack 'the ticket was edited after its rehearsal — rehearse again'. The clean requirement is gone. Every return carries clean (bool) and gaps (the count) beside record, ticket_sha256, live_sha256, design_sha256. The docstring says Akien 2026-11-01: a clean rehearsal is the aim, the lane needs the attempt recorded, the gaps stay on the record as data."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-11-01",
+      "text": "D2: THE POINTER STAYS TRAIL. rehearse() still appends the 'rehearsal' log line on a clean pass and nothing else changes in rehearse(); record_divergence still reads standing()'s record and still refuses an unclean one (a divergence needs a converged tree)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-11-01",
+      "text": "D3: THE LANE'S NAME. In cairn/tools/base/transitions.py inspect_entry, _sieve_lane(\"the_ticket_rehearses_clean\", ...) becomes _sieve_lane(\"the_ticket_was_rehearsed\", ...); its comment keeps the cf80bdb57205 line and adds: since 2026-11-01 (ticket 5f2e99bff577) a rehearsal recorded over the live design is enough, clean or not. In cairn/machines/build_inspector/inspector.py buildme_rides_the_rehearsal keeps its name; its claim string becomes 'a rehearsal record stands over the ticket's live design' and its docstring says the same with the 2026-11-01 words. rehearsal.py's module docstring (line 11) names the new lane, and the pass-cap question's why (near line 903) reads: the cheapest reader cannot build this ticket as written after PASS_CAP passes; the gaps stand on the newest record. Historic state.json and history.json records keep the old name."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-11-01",
+      "text": "D4: THE PROOFS. cairn/machines/rehearsal/proofs/test_rehearsal.py PROVES gains \"5f2e99bff577\": {\"1\": the renamed tooth 4, \"2\": test_the_entry_gate_lists_five_lanes_and_the_fifth_is_the_rehearsal, \"3\": test_the_machine_is_a_package_and_the_sail_skill_sends_the_builder_to_rehearse_before_buildme}. Tooth 4 is renamed test_the_sieve_reds_no_run_and_a_stale_design_by_name_and_reads_an_unclean_current_one_green and replaces the removed tooth test_the_sieve_reds_no_rehearsal_and_a_stale_hash_by_name_and_reads_a_clean_one_green: no record reds with 'no rehearsal has run'; after a gappy pass the sieve is green and standing() says clean False with gaps > 0; after a clean pass it is green and clean True; an edit through the door reds 'edited after its rehearsal'; in a fresh world a ran:false record alone reds 'no rehearsal has run'; an unknown ticket returns []. The lanes tooth asserts names[4] == 'the_ticket_was_rehearsed' and the src count of _sieve_lane(\"the_ticket_was_rehearsed\" is 1. The skill tooth asserts the skill names the_ticket_was_rehearsed. The module docstring names this ticket, the renamed tooth and the removed name. cairn/tools/base/proofs/test_transitions.py's entry-lane list, sieve tuple and note string say the_ticket_was_rehearsed, and its docstring adds: renamed 2026-11-01 (ticket 5f2e99bff577)."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-11-01",
+      "text": "D5: THE SKILL. skills/sail/SKILL.md step 0c: the lane is `the_ticket_was_rehearsed`; it refuses the crossing on no rehearsal run or a newest record whose design no longer matches the live ticket; a clean pass is the aim, not the minimum (Akien 2026-11-01); three passes, plus one after a real ticket change, then one question naming the standing gaps, and the build goes on with the gaps on the record. The 'Five passes is the cap' paragraph keeps the code fact (PASS_CAP=5) and says the hand holds three."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-11-01",
+      "text": "D6: THE INTENTIONS. The rehearsal charter cairn/machines/rehearsal/intention+why.json, written through the artifact door: its what, falsifier, gates and invoke say the lane the_ticket_was_rehearsed needs a rehearsal recorded over the live design, clean or not, citing Akien 2026-11-01 and this ticket; then cairn/tools/intentions_model_compiler/recompile_gate.sh in the same act. CairnCommons/intentions-not-beside-code/I-the-cheapest-reader-proves-a-ticket-before-it-is-built.md lines 42-44 and 56 say the same. CairnCommons/CairnComponentOutline.txt 17.6 gains one line: the aim is a clean rehearsal; BUILDME needs one recorded over the live ticket, and its gaps stay on the record (Akien 2026-11-01)."
+    },
+    {
+      "n": 7,
+      "by": "cc",
+      "step": "D7",
+      "date": "2026-11-01",
+      "text": "D7: ORDER AND RESEAL. Commit the red-first proof edits alone, cross BUILDME naming cairn/machines/rehearsal/proofs/test_rehearsal.py, build, run test_rehearsal.py and test_transitions.py twice each with bin/cairn test --exec, reseal both and the build_inspector proofs whose component fingerprint moved, then PROVEME. Run every proof with bin/cairn test, never bare pytest."
+    }
+  ],
+  "builder_notes": "WHERE: cairn/machines/rehearsal/rehearsal.py, cairn/tools/base/transitions.py, cairn/machines/build_inspector/inspector.py, cairn/machines/rehearsal/proofs/test_rehearsal.py, cairn/tools/base/proofs/test_transitions.py, skills/sail/SKILL.md, the rehearsal charter, the I-the-cheapest-reader intention, the outline. RUN: bin/cairn test --exec 'python3 <proof>' twice. HOLLOW: bin/cairn test --hollow 5f2e99bff577 --proof cairn/machines/rehearsal/proofs/test_rehearsal.py."
+}
