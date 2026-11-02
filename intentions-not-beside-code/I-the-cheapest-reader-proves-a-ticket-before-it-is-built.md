@@ -39,9 +39,14 @@ step with a state in `builds_as_written | builds_under_assumption | cannot_proce
 would settle it, and a confidence. The three trees are diffed **by code**; every divergence and every
 non-`builds_as_written` node is a gap. CC disposes each gap: derivable from an intention, charter or prior
 ticket → a one-line decision on the ticket with its provenance; not derivable → `cairn question open
---ticket`. Then re-read. A clean rehearsal (three reads, zero gaps) is a record in `CairnCommons/rehearsals/`
-the ticket points at, and the BUILDME entry lane `the_ticket_rehearses_clean` refuses the crossing without
-one whose ticket hash still matches.
+--ticket`. Then re-read. Every pass that read is a record in `CairnCommons/rehearsals/`; a clean one has
+three reads and zero gaps. The BUILDME entry lane `the_ticket_was_rehearsed` refuses the crossing only when
+no rehearsal has run over the ticket, or when the newest record's design hash no longer matches. An unclean
+current record opens it, and its gaps stay on the record as data for the build. **A clean pass is the aim,
+not the minimum** (Akien, 2026-11-01, ticket 5f2e99bff577: *"we want every answer it needs, but that
+doesn't mean WE WILL GET EVERY ANSWER. it's what we're aiming for not the minimum requirement"*). The lane
+was `the_ticket_rehearses_clean`, and required a clean record, until then. Three passes, plus one after a
+real change, and then one question: looping past that is a ticket being written by trial.
 
 **The gate reads "no reader has to assume", never "Haiku's build is the build."** Akien's own check
 (2026-09-15): anything Haiku can build, Opus almost certainly can; the exception is Opus building differently
