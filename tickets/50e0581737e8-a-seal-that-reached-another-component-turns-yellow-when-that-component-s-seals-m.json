@@ -6,5 +6,63 @@
   "how": "(a) a new function `a_reached_component_moved(row, comp_dir) -> list[dict]` in inspector.py, beside component_color, registered in the same sieve table (inspector.py ~3759). (b) Per proofs/test_*.py, read its seal the way component_color does. Skip it unless the verdict is green AND the own fingerprint matches (reuse _sealed_fingerprint_now). (c) For each (dir, digest) in evidence.get('reached') or {}, compute validation_store.seal_digest(<repo>/<dir>) (child ticket). On difference, emit _finding('a_reached_component_moved', row['component'], f'{dir} has not moved since {proof} was sealed', expected=digest, actual=now, proof=proof.name, reached=dir, color='yellow'). (d) No gate composes it. (e) The proof builds fixture components in a tempdir and calls the sieve directly. PROVES keyed on this ticket, clauses 1-4. This parent proves AFTER both children.",
   "falsifier": "Done when cairn/machines/build_inspector/proofs/test_a_reached_component_moved.py is green under bin/cairn test --netns. (1) A fixture component A, whose green seal records evidence.reached={B_dir: seal_digest(B_dir)}, reads ZERO a_reached_component_moved findings while B's validations are unchanged. (2) After B's validations/<stem>.json current record changes (a new source_fingerprint), A reads exactly one finding naming B with values.color == 'yellow'. (3) component_color over A still reads no finding in case (2), so yellow is not red. (4) A seal without `reached` reads no finding. Red at HEAD 4b3ac7f5: no such sieve. Horizon: this voyage plus the first live yellow on a re-sealed tester.",
   "owning_intention": "cairn/machines/build_inspector/intention+why.json",
-  "why": "Gap 1, measured 2026-10-07: a repair to the tester (5bc3a4b1ab27) was invisible to the verdict proofs that reach it by subprocess, because their seals' closure stops at their own component (184d211153ff, RULE 1). A dependent cannot tell that what it leaned on moved, so a peer leans on a stale green (Law 8). 1b6516f92db3 asks for yellow (not red) on a dependency change."
+  "why": "Gap 1, measured 2026-10-07: a repair to the tester (5bc3a4b1ab27) was invisible to the verdict proofs that reach it by subprocess, because their seals' closure stops at their own component (184d211153ff, RULE 1). A dependent cannot tell that what it leaned on moved, so a peer leans on a stale green (Law 8). 1b6516f92db3 asks for yellow (not red) on a dependency change.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Add module-level a_reached_component_moved(row, comp_dir, repo_root=_REPO_ROOT) -> list[dict] in cairn/machines/build_inspector/inspector.py directly after component_color. Do NOT add it to SIEVES: measured 2026-11-02, transitions.py _build_gate renders from inspect()'s proof_record, built from every SIEVES finding, so a yellow there refuses PROVEME — against the ticket's why (yellow is not red) and how (d) (no gate composes it). The why outranks how (a).",
+      "by": "cc",
+      "step": "D1 where it lands",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:51+00:00"
+    },
+    {
+      "n": 2,
+      "text": "In inspect(), after the shake beside unbuilt_intentions, for every row: yellow += a_reached_component_moved(row, root / row['dir'], repo_root=Path(root).resolve().parent), each finding stamped at=row['dir']; return it under report key 'yellow'. It is not in 'findings', not in proof_record, not in 'clean'.",
+      "by": "cc",
+      "step": "D2 inspect reports it",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:51+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Same walk as component_color: comp_dir/proofs/test_*.py, seal = last record of comp_dir/validations/<stem>.json; skip a missing or unreadable file (component_color reports those), skip unless verdict == 'green' and evidence.source_fingerprint == _sealed_fingerprint_now(proof, seal); reached = evidence.get('reached'); skip unless it is a non-empty dict.",
+      "by": "cc",
+      "step": "D3 which seals it reads",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:52+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Import seal_digest lazily inside the function: from cairn.tools.validation_store.validation_store import seal_digest (that module is validation_store's declared public_interface). For each (dir, digest) in sorted(reached.items()): now = seal_digest(str(repo_root / dir)); if now != digest emit _finding('a_reached_component_moved', row['component'], f'{dir} has not moved since {proof.name} was sealed', expected=digest, actual=now, proof=proof.name, reached=dir, color='yellow').",
+      "by": "cc",
+      "step": "D4 the comparison",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:52+00:00"
+    },
+    {
+      "n": 5,
+      "text": "The function's docstring carries a 'Provenance:' line (inspector convention, test_inspector tooth 10) naming ticket 50e0581737e8 and its children f43b5705ea03 and 734b22d09f2e.",
+      "by": "cc",
+      "step": "D5 provenance",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:52+00:00"
+    },
+    {
+      "n": 6,
+      "text": "cairn/machines/build_inspector/proofs/test_a_reached_component_moved.py, five teeth (falsifier clauses 1-4 plus tooth 5: inspect() carries the yellow under 'yellow' and none among findings), committed red-first at c17dafa2. Run it with python3 <proof> (the proofgate runs it under the tester's seal); the falsifier's --netns is retired, seal with bin/cairn test --seal <proof>.",
+      "by": "cc",
+      "step": "D6 the proof",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:52+00:00"
+    },
+    {
+      "n": 7,
+      "text": "Measured 2026-11-02 in cairn/machines/build_inspector/inspector.py: _REPO_ROOT line 37; _finding line 102 (extra kwargs land in values); _sealed_fingerprint_now line 3772; component_color line 3795; inspect line 4785, unbuilt_intentions called after the shake about line 4830, report dict about line 4855. seal_digest(component_dir) is at cairn/tools/validation_store/validation_store.py line 186. evidence.reached = {repo-relative dir: seal_digest} is written by cairn/devices/tester/device.py (ticket 734b22d09f2e, PROVED).",
+      "by": "cc",
+      "step": "D7 what already exists",
+      "source": "rehearsal",
+      "at": "2026-11-02T11:15:52+00:00"
+    }
+  ]
 }
