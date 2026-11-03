@@ -29,9 +29,12 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
     1.2.4 Instance: every device has at least one; a singleton is 0.
     1.2.5 First class object (not a device): a thing with a charter that is not a
           rung of its own (Rescue, Graph Trees, Ticket).
-    1.2.6 [Q#1: Test from the charters: "a thing that holds state is a machine, not a
-          tool" (verdict machine, 2026-08). Is that still the line between 1.2.1 and
-          1.2.2, or is it "has glue / has several tools"?]
+    1.2.6 The line between tool and machine is simple vs. complex, and it is
+          measured, not judged. A tool calls no other Cairn component (stdlib and
+          base only) and owns no state of its own. Anything that calls another
+          component, or owns state it must gate, is a machine. A tool that uses
+          other tools is a machine. Tools and machines are peers in the tree; the
+          rung is complexity, not rank. (Q#1, Akien 2026-11-03: "strict")
 
 2 DEVICE (Implemented as BaseDevice, part of the base tool; a first class object)
   2.1 PURPOSE: A device is a top level cairn entity.
@@ -87,9 +90,15 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
            with the same help/list/show/get/set: cairn <device> <machine> <command>
            (eg cairn cairn scheduler list). The bus only ever sees the device, which
            passes the rest down. Machines with no settings (eg base) don't need this.
-    2.4.11 [Q#2: A device's own verbs beyond these (eg tester's run, librarian's ask):
-           are they always reached as `cairn <device> <verb>`, and does `help` list
-           them beside the common ones?]
+    2.4.11 Every verb anywhere is reached from the cairn command, as a path:
+           cairn <device> [<machine> ...] <verb>. Each level answers help for its
+           own verbs; no central list. help at a compound path lists every level
+           from the innermost out to cairn, one group per level headed [<name>],
+           verbs in alpha order within each group:
+               cairn codemother inspector_gadget help  ->
+               [inspector_gadget] its verbs / [codemother] its verbs / [cairn] its verbs
+           A device may ask another device help over the bus the same way; nothing
+           being built needs that yet. (Q#2, Akien 2026-11-03)
 
 3 TICKET (Abstract class - not a device, but a first class object; abstract)
   3.1 PURPOSE: A unit of work or attention, written down so it can be followed.
