@@ -1,0 +1,67 @@
+{
+  "ticket": "5183005fa134",
+  "at": "2026-11-04T22:34:33+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.15202400000000002,
+      "duration_ms": 90911,
+      "is_error": false,
+      "session_id": "267fbc6f-bf5c-40ab-8fba-5c09b42f11fa"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt",
+  "outline_sha256": "81ddbb010598a3a64e8de2e741af872b9007c92e2b8281a94877f84fc93342e6",
+  "ticket_sha256": "de5b7ae49059169298dc37821ac52120d26cfd8551cdbe6b4936cc1e8c90cb67",
+  "touches": [
+    {
+      "number": "5.4",
+      "text": "bus (machine)"
+    },
+    {
+      "number": "5.4.2.8",
+      "text": "One bus per cairn instance (not per host). The bus owns cross system communication: extending the bus services to other host systems so we can run multiple heavy tasks at once."
+    },
+    {
+      "number": "5.4.2.8.1",
+      "text": "Each box runs its own bus, and the buses talk to one another, so a device always talks to the bus on its own box. Together they are the instance's one bus. (Akien 2026-10-28)"
+    },
+    {
+      "number": "5.4.2.8.2",
+      "text": "A device runs on one box; the other boxes reach it over the buses. No box needs a full set of devices. (Akien 2026-11-04)"
+    },
+    {
+      "number": "5.4.2.11",
+      "text": "The bus is as fast as we can make it. Which way it carries messages (a plain Unix socket, NATS, or Postgres NOTIFY) is settled by measuring each on this box, not by choosing. Large things (embeddings, documents) never ride the bus: they go to the database or a file and the message carries the id. Database access stays an import in each process, one connection each. (Akien 2026-11-04)"
+    },
+    {
+      "number": "5.4.2.11.1",
+      "text": "Measured 2026-11-04 on this box, a 536-byte message, request and reply, every side its own Python process, p50 over 5,000 (two runs each): our own small broker on Unix sockets, routing by name, 50 µs; Postgres NOTIFY 110 µs; NATS request/reply 250 µs (its Python client is the slow part); NATS durable publish"
+    },
+    {
+      "number": "5.4.2.11.4",
+      "text": "Unix sockets carry the bus inside a Linux box. Between boxes, and on Windows, it is TCP: Python on Windows has no AF_UNIX (measured 2026-11-04, akiendell: the web server died on `socket.AF_UNIX`), and buses on two boxes (5.4.2.8.1) can only reach each other over the network. (Akien 2026-11-04, \"yes please\")"
+    },
+    {
+      "number": "19.5",
+      "text": "bus_client: gets a process onto the bus (reach a device, or connect)."
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [
+    {
+      "n": 48,
+      "number": "19.5.1",
+      "section": "19.5",
+      "text": "One face, `connect_system`, also beats. Under 5.5 nothing but the ground loop beats. Remove that face?"
+    }
+  ],
+  "unresolved": [],
+  "questions_opened": [
+    "open-9559cb592ed3"
+  ],
+  "questions_already_open": []
+}
