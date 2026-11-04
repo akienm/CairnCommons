@@ -111,7 +111,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
           reduces confusion; a builder reads the plan and nothing else (Akien,
           2026-10-29 and 2026-11-02).
     3.2.3 The abstract Ticket is either a tool or a machine, never a device; harbor_master
-          (5.9) only reports over it. Which of the two is settled by the tool test
+          (10.8) only reports over it. Which of the two is settled by the tool test
           (Law 6): if it must gate writes at its own address, it is a machine.
           (Q#3, Akien 2026-10-28: "it's either a tool or a machine.")
   3.3 KINDS:
@@ -123,7 +123,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               its code as that component's history while under way, and back to the
               commons after (Law 5).
       3.3.1.5 The ticket owns its refusals: a gate refuses a crossing on the ticket's
-              behalf (ruling 2026-08-10). The gates are housed in harbor_master.
+              behalf (ruling 2026-08-10). The gates are CodeMother's (10.3.5).
     3.3.2 Inference Ticket: the record of one call to the inference proxy, everything
           that happened to that request.
       3.3.2.1 The call runs the request against our graph trees first. If they can't
@@ -279,7 +279,8 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                   i7Us, no GPUs, very long timeouts. It worked because a block
                   could take 5 minutes.
     5.2.2 Own foundational components (bus, ground loop, rack, shims, scheduler,
-          launcher, harbor_master).
+          launcher). The scheduler is the base shim's (5.8); harbor_master is
+          CodeMother's (10.8).
     5.2.3 Owns the cairn command line launcher (5.3).
     5.2.4 Owns the transient tree and its 30 day sweep (4.3.2.3).
     5.2.5 `cairn start` (= cairn cairn start) brings the system up: ground loop, bus,
@@ -531,38 +532,20 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               2026-09-11): a device that needs to speak a foreign protocol (eg
               OpenAI's wire format) does it in its shim.
     5.7.4 COMMANDS: The Device commands. The shim answers start and stop itself.
-  5.8 scheduler (machine; was sleep_cycle): uses tools base, rack
-    5.8.1 PURPOSE: Holds Cairn's list of scheduled things.
+  5.8 scheduler (part of the base shim, 5.7; was sleep_cycle): uses tools base, rack
+    5.8.1 PURPOSE: Holds each device's list of scheduled things.
     5.8.2 INTENTION:
-      5.8.2.1 The pulse triggers the check: each pulse, the list is checked against
-              the clock. No match, the pulse is dropped; a match is a probe that
-              kicks off that thing in the Cairn device.
-      5.8.2.2 Sleep is one entry on the list. Its routine runs Cairn's own sleep,
+      5.8.2.1 The pulse triggers the check: each pulse, the shim checks its device's
+              list against the clock. No match, the pulse is dropped; a match is a
+              probe that kicks off that thing in the device.
+      5.8.2.2 Sleep is one entry on Cairn's list. Its routine runs Cairn's own sleep,
               then hands the token to the first device in the rack.
-      5.8.2.3 [Q#20: Can other devices put entries on the list (eg Recovery asks for a
-              weekly SSD check), by `cairn cairn scheduler set`/a send verb? Or only
-              Cairn?]
+      5.8.2.3 The scheduler is part of the base shim, so every device can schedule
+              things with it (eg Recovery's weekly SSD check is on Recovery's own
+              list). (Q#20, Akien 2026-11-04)
     5.8.3 COMMANDS: list, show, get, set (2.4.10).
-  5.9 harbor_master (machine)
-    5.9.1 PURPOSE: Reports where every ticket stands.
-    5.9.2 INTENTION:
-      5.9.2.1 "HARBOR MASTER IS A REPORTING SYSTEM AND NOTHING MORE. IT REPORTS WHERE
-              EVERYTHING IS AND NOTHING ELSE PERIOD. THATS ITS INTENTION."
-      5.9.2.2 "it owns the gates only because we had to have some place to put them,
-              but it does not control anything." The gates refuse on the ticket's
-              behalf (ruling 2026-08-10: "the gate is the refuser but it's doing so
-              on behalf of the ticket. so the ticket owns the refusal.")
-      5.9.2.3 It keeps the register of every ticket: open, at sea, in port.
-    5.9.3 TOOLS: base, artifact, charter, operator_inbox, proof_coverage, question,
-          system_word; machine learning_block
-    5.9.4 VERBS: crossing, watch, clear. clear is the PROVED gate it houses on the
-          ticket's behalf.
-    5.9.5 COMMANDS: cairn harbor_master → "652 boats (570 open, 82 in port)"
-    5.9.6 harbor_master is the machine or device that reports on the state of all
-          the tickets, and only reports. It could be a Cairn thing, a CodeMother
-          thing, or its own reporting-only device. The case for Cairn: task, trouble
-          and fixit tickets show there too (inference tickets do not). (Q#21, Akien
-          2026-10-27)
+  5.9 harbor_master: moved to CodeMother, now 10.8 (Akien 2026-11-04; number kept
+      so the numbers after it don't move).
   5.10 Root commands today (bin/cmd/), and where each would go
     5.10.1 This is an inventory, not an intention. Each becomes a device verb or a
            cairn/bin shortcut; the shortcut stays only if you type it often.
@@ -830,6 +813,27 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               workflow CodeMother's job (she owns the workflows), or the ticket's
               (it owns its refusals, 3.3.1.5)?]
   10.7 COMMANDS: cairn codemother cross | watch | question | seed | show dashboard
+  10.8 harbor_master (machine, CodeMother's; was the Cairn device's 5.9, moved
+       with the gates and inspectors, Akien 2026-11-04)
+    10.8.1 PURPOSE: Reports where every ticket stands.
+    10.8.2 INTENTION:
+      10.8.2.1 "HARBOR MASTER IS A REPORTING SYSTEM AND NOTHING MORE. IT REPORTS
+               WHERE EVERYTHING IS AND NOTHING ELSE PERIOD. THATS ITS INTENTION."
+      10.8.2.2 It owns no gates. They once sat in it "only because we had to have
+               some place to put them, but it does not control anything"; they are
+               CodeMother's now (10.3.5), and each refuses on the ticket's behalf
+               (ruling 2026-08-10: "the gate is the refuser but it's doing so on
+               behalf of the ticket. so the ticket owns the refusal.")
+      10.8.2.3 It keeps the register of every ticket: open, at sea, in port. Task,
+               trouble and fixit tickets show there too; inference tickets do not.
+    10.8.3 TOOLS: base, artifact, charter, operator_inbox, proof_coverage, question,
+           system_word; machine learning_block
+    10.8.4 VERBS: crossing, watch. (clear, the PROVED gate it used to house, is
+           CodeMother's with the other gates: CC's reading of 10.8.2.2.)
+    10.8.5 COMMANDS: cairn codemother harbor_master → "652 boats (570 open, 82 in
+           port)"
+    10.8.6 Code today: cairn/devices/cairn/machines/harbor_master/ still sits in
+           the Cairn device; moving it is a ticket.
 
 11 TESTER MACHINE, CodeMother's (was the tester device, cairn/devices/tester/)
   11.1 PURPOSE: The system's notary: runs proofs and seals their verdicts.
@@ -1181,7 +1185,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                 what it tests and why it changed, and names any tooth it removed.
                 At PROVED it is sealed green and hollow-measured, as x.
       19.14.8.3 A ticket cannot call itself a fixit to get y: y needs a real red on
-                disk, which code checks. The harbor's proven-space rule (5.9) and
+                disk, which code checks. The harbor's proven-space rule (10.8) and
                 the tester's rung 4 (11) each apply x or y by the ticket's kind;
                 rung 4 no longer asks who answered.
   19.15 import_sieve: one parse of every .py into an import graph; what reaches what.
