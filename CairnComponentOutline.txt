@@ -292,13 +292,25 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
     5.3.2 INTENTION:
       5.3.2.1 The launcher is a machine owned by the Cairn device. It is mostly a
               router.
-      5.3.2.2 cairn <command>: first look for <command> in cairn/bin; if it isn't
-              there, resolve it on the bus.
-      5.3.2.3 The scripts in cairn/bin are the shortcuts. The folder IS the list: add
-              a file to add one, delete it to remove one. A script may wrap a bus
-              call (eg `cairn superclaude` → `cairn cc superclaude`; `cairn show
-              temp` → `cairn recovery show temp`, added while we're chasing a heat
-              problem) or do work itself (eg initialization, install).
+      5.3.2.2 The launcher walks the words. `cairn cairn foo bar` (the long form)
+              means "tell the cairn device to run foo with argument bar". At each
+              level: is the next word a machine here? Step into it and take the
+              next word. Is it a script in this level's bin/? Run it, pass back the
+              result, done. Neither? It is a bus verb: send it to this level over
+              the bus. So `cairn foo bar baz`: foo is a device; it has a machine
+              bar; bar's bin/ has baz, so baz runs. No bar machine? bar goes to
+              foo over the bus. Each check is one directory lookup, so it is fast.
+              (Q#12, Akien 2026-11-03)
+      5.3.2.3 Any device or machine may have a bin/ beside its code
+              (cairn/devices/<device>/bin/, .../machines/<machine>/bin/). That
+              folder IS its list of shortcuts: add a file to add one, delete it to
+              remove one. A shortcut is just a script that calls the long form,
+              which also saves the walk from searching farther (eg `cairn
+              superclaude` → `cairn cc superclaude`; `cairn show temp` → `cairn
+              recovery show temp`), or does work itself (eg initialization,
+              install). Shortcuts can go anywhere, beside what they serve (RULE 1).
+      5.3.2.3.1 `cairn foo` whose first word is not a device means `cairn cairn
+              foo`: top-level shortcuts are the cairn device's bin/.
       5.3.2.4 Scripts are Python wherever possible, run by Cairn's own interpreter,
               so one file works on every platform. Platform-specific ones match their
               platform: executable or .sh on Linux; .bat, .cmd or .ps1 on Windows.
@@ -309,8 +321,11 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               recovery device directly, not over the bus (7.3.1).
     5.3.3 HISTORY: today it is bin/cairn dispatching to bin/cmd/<name>, 31 commands,
           most of which do the work themselves. Where each goes: 5.10.
-    5.3.4 [Q#12: cairn/bin (inside the package) or bin/ at the repo root (where it is
-          now)?]
+    5.3.4 Repo-root bin/ holds only the launcher itself (cairn, cairn.cmd), the one
+          thing on PATH, so it runs even when the package won't import (5.3.2.7).
+          Every shortcut lives in the bin/ of the device or machine it belongs
+          to. Its bin/ plus its bus verbs is what help lists at that level
+          (2.4.11). (Q#12: Akien let CC choose, 2026-11-03; CC kept his walk.)
   5.4 bus (machine)
     5.4.1 PURPOSE: To provide an inspectable message passing system.
     5.4.2 INTENTION:
