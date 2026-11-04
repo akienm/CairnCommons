@@ -408,14 +408,15 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
       5.6.2.2 It is the shims connected to the bus: who's in the rack is who's
               connected, which the bus can measure (agreed 2026-10-26, since each
               shim is its own process, 5.7.3.1).
-        5.6.2.2.1 [Q#16: A shim that isn't running isn't connected, so it isn't in the
-                  rack. Then pulse.py (5.7.3.4.1) can't learn its instances from the
-                  rack; it needs the declared list (5.6.2.4). Right?]
+        5.6.2.2.1 A shim that isn't running isn't connected, so it isn't in the
+                  rack. The rack says what is running; it is not where instances
+                  are declared (5.6.2.4). (Q#16, Akien 2026-11-04)
       5.6.2.3 [Q#17: The sleep token goes in "the rack's order" (5.2.1.2). What is that
               order: alphabetical, order added, or declared?]
-      5.6.2.4 [Q#18: Where are instances declared, so the rack knows to build cc 1? Draft:
-              the existence of cairn/devices/<device>/<instance>/ in class-space
-              (CLAUDE.md: one address in two roots).]
+      5.6.2.4 An instance is declared by its folder existing in class-space:
+              cairn/devices/<device>/<instance>/ (one address in two roots). Declared
+              = the folders; running = which of those are in the rack. (Q#18, Akien
+              2026-11-04)
     5.6.3 HISTORY: today there is also a rack TOOL (19.20) that lists device folders.
           The machine holds running instances; the folder list may stay a tool.
   5.7 shims
@@ -443,8 +444,10 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
       5.7.3.4 pulse.py is part of the shim. The ground loop calling it tells the shim
               the pulse has arrived, and starts the shim if it isn't running.
         5.7.3.4.1 The ground loop finds one pulse.py per device. pulse.py reads its
-                  own device's instances from the rack and pulses each one, so the
-                  ground loop never needs to know instances exist.
+                  own device's declared instances (5.6.2.4) and pulses each one, so
+                  the ground loop never needs to know instances exist. Pulsing an
+                  instance that isn't connected is what starts its shim; once
+                  connected, it is in the rack. (Q#16, Akien 2026-11-04)
         5.7.3.4.2 Any device's shim (through its pulse.py) can bring the bus up if
                   it's down: whatever is called brings up what it needs (5.2.5.1).
         5.7.3.4.3 pulse.py asks nobody anything. It starts the shim if it's down,
