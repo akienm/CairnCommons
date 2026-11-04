@@ -388,8 +388,23 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               measuring each on this box, not by choosing. Large things (embeddings,
               documents) never ride the bus: they go to the database or a file and
               the message carries the id. Database access stays an import in each
-              process, one connection each. (Akien 2026-11-04; the measurement is
-              CC's next job)
+              process, one connection each. (Akien 2026-11-04)
+        5.4.2.11.1 Measured 2026-11-04 on this box, a 536-byte message, request
+                  and reply, every side its own Python process, p50 over 5,000
+                  (two runs each): our own small broker on Unix sockets, routing
+                  by name, 50 µs; Postgres NOTIFY 110 µs; NATS request/reply 250
+                  µs (its Python client is the slow part); NATS durable publish
+                  150 µs. A direct socket with no broker is 10 µs. So the bus is
+                  our own broker on Unix sockets: the fastest, and it already
+                  fits 5.4.2.4 (no database, a small buffer), which was the one
+                  thing NATS offered beyond speed. (CC, measurement; the bench is
+                  scratch, not yet a tool)
+        5.4.2.11.2 Waking costs 15 ms for a bare Python part and 65-90 ms for
+                  one that imports like a shim (setsid; systemd-run adds about 20
+                  ms). That is far inside the 60 s of 5.4.2.9. (CC, measurement)
+        5.4.2.11.3 A Unix socket path cannot be longer than 108 bytes, so a
+                  socket address is kept short and never nests deep in a device
+                  tree. (CC, found while measuring)
     5.4.3 HISTORY: the bus once wrote its ring to the database on each pulse
           (2026-09-06). V1's "keeps no database" replaces that.
     5.4.4 TOOLS: base, public_feed
