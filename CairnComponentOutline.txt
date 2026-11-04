@@ -287,6 +287,25 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
       5.2.5.1 Any cairn command brings up whatever it needs, including the whole
               install on the very first run (7.3.2). A well designed tool should
               disappear in use.
+    5.2.6 There is no central supervisor. Each part starts what it needs by trying
+          to use it: sending a message starts the bus if it is down, a message
+          arriving wakes its shim, the shim wakes its device. Many very small
+          supervisors, each one detect-and-start. (Akien 2026-11-04)
+      5.2.6.1 The detect-and-start lives in one tool, the waker (CC's name), and it
+              sits inside connect: every client's connect is a wake attempt, so no
+              caller can forget one. A probe watches and reports; the waker acts.
+      5.2.6.2 Two callers waking the same part at once start only one: the part
+              that binds its socket first is the only one; a second copy finds it
+              taken and exits quietly (as the ground loop does, 5.5.3.3).
+      5.2.6.3 What the waker starts outlives whoever started it (detached, or
+              through systemd-run --user, which gives it its own memory cap and log
+              while still deciding nothing). Restarting a shim never takes down the
+              bus it once woke.
+      5.2.6.4 A wake waits until the part answers, at most 60 s (5.4.2.9). Repeated
+              failures back off, then file a trouble (5.7.3.2.2), so a crash loop
+              cannot spin.
+      5.2.6.5 Nobody sends to the ground loop, so the cairn command (and login) wake
+              it; its pulse then wakes the shims (5.7.3.4).
   5.3 launcher (machine)
     5.3.1 PURPOSE: The operator's ramp onto the bus.
     5.3.2 INTENTION:
@@ -330,15 +349,18 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
     5.4.1 PURPOSE: To provide an inspectable message passing system.
     5.4.2 INTENTION:
       5.4.2.1 It is the only way devices talk to one another.
-      5.4.2.2 The shims all run in the same process with the bus.
+      5.4.2.2 Every part is its own process: the bus, each shim, each device, the
+              ground loop. Any one of them can be stopped and restarted alone while
+              the rest run on, which a self-modifying system needs. (Akien
+              2026-11-04)
       5.4.2.3 The bus handles two kinds of requests:
         5.4.2.3.1 Send - Asynchronous. Like sending an email.
         5.4.2.3.2 Show/Get - Synchronous. Like requesting a web page.
       5.4.2.4 The messages are stored in a SMALL buffer in memory. The bus keeps no
               database. A shim that needs to hold mail puts it in the transient tree
               (see Graph trees).
-      5.4.2.5 The shims, in the same process with the bus, pick up the messages and
-              route them to their device in whatever manner is appropriate.
+      5.4.2.5 The shims, each connected to the bus, pick up the messages and route
+              them to their device in whatever manner is appropriate.
       5.4.2.6 The Operator Device and the 'cairn' command are the operator's route
               onto the bus.
       5.4.2.7 The bus makes this messaging inspectable, the messages show on the
@@ -358,6 +380,16 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               caller waits at most 60 s for the wake, then gets "not now" back; a
               wake that misses 60 s is a trouble. 600 s is the limit for an
               inference call to come back, not for a wake. (Q#13, Akien 2026-11-03)
+      5.4.2.10 A message is addressed to a name (a device instance), never to a
+              connection. A shim that restarts reconnects and answers to the same
+              name, so restarting it never restarts the bus. (Akien 2026-11-04)
+      5.4.2.11 The bus is as fast as we can make it. Which way it carries messages
+              (a plain Unix socket, NATS, or Postgres NOTIFY) is settled by
+              measuring each on this box, not by choosing. Large things (embeddings,
+              documents) never ride the bus: they go to the database or a file and
+              the message carries the id. Database access stays an import in each
+              process, one connection each. (Akien 2026-11-04; the measurement is
+              CC's next job)
     5.4.3 HISTORY: the bus once wrote its ring to the database on each pulse
           (2026-09-06). V1's "keeps no database" replaces that.
     5.4.4 TOOLS: base, public_feed
@@ -441,8 +473,11 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                   failing to come up).
         5.7.3.2.3 It answers what it can itself; when it can't (eg a health question
                   it holds no answer to), it wakes the device and asks.
-        5.7.3.2.4 [Q#19: Does the shim ever stop its device when idle (eg the librarian
-                  after N minutes unused), or only on `stop`?]
+        5.7.3.2.4 A device may declare an idle time; the shim stops it after that
+                  long unused, and the next message wakes it again (5.2.6). With
+                  none declared it runs until `stop`. Idle costs memory, not CPU,
+                  so eg the librarian, slow to load, stays warm for hours, while
+                  something cheap can stop after a minute. (Q#19, Akien 2026-11-04)
       5.7.3.3 Processes all messages from the bus for its device.
       5.7.3.4 pulse.py is part of the shim. The ground loop calling it tells the shim
               the pulse has arrived, and starts the shim if it isn't running.
