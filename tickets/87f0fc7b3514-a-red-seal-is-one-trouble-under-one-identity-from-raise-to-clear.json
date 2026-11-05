@@ -26,33 +26,53 @@
       "by": "live trouble trouble-drain-has-no-host-the-beat-backstop-is-prose; the hand-run drain is asked in chat under c0e47b140309"
     },
     {
-      "n": 5,
-      "text": "STACK AT THE RAISE (Akien, open-f998fae25b35: 'a trouble should have it's diagnostic info too, so the call stack will be in there. if not, we make it so' — measured 0 of 249 raises carry one): DiagnosticBase.raise_trouble in cairn/tools/base/diagnostic.py adds detail[\"stack\"] = traceback.format_stack()[:-1] (a list of strings, innermost last, the raise_trouble frame itself dropped) to EVERY raise before emit(); clear_trouble adds nothing. A caller-supplied detail is copied, not mutated. One tooth in cairn/tools/base/proofs/test_diagnostic.py: a raise through a fixture raiser under a temp log home lands a record whose values.detail.stack is a non-empty list whose last entry names the proof file and the line of the raise call.",
-      "by": "CC",
-      "step": "D5",
-      "source": "rehearsal"
-    },
-    {
       "n": 6,
-      "text": "THE ONE FUNCTION: def seal_trouble_identity(proof_path) -> str in cairn/devices/tester/validation_store.py (the store side — reseal.py already imports from it; base may not import a device; trouble may not be imported by tester). Body under the per-PROOF grain (open-69cd989012c4 standing; if the answer is per COMPONENT only this body changes): returns \"seal-red-\" + the proof's repo-relative path with .py stripped, slugged by reseal._SLUG (e.g. seal-red-cairn-devices-tester-proofs-test-reseal-door). reseal.trouble_identity is deleted and its three call sites (:361/:412/:484 raises, :437 clear) call seal_trouble_identity; announce_verdict_change (:561) and the green round-trip clear (:790) call it too — the string \"validation-verdict-changed-\" no longer appears in cairn/devices/tester. reseal.py's docstring paragraph 'ONE TROUBLE PER COMPONENT…' is replaced by one sentence pointing at this decision. ALTERNATE BODY, used if open-69cd989012c4 is answered per COMPONENT: returns \"seal-red-\" + the repo-relative path of component_root_for(proof_path) slugged by _SLUG (today's reseal body, e.g. seal-red-cairn-devices-tester), and the store's announce and round-trip clear then fold every proof of a component under that one key. Under EITHER answer the function's name, address, signature and all five call sites are the same; the builder picks the body from the recorded answer and nothing else changes.",
-      "by": "CC",
+      "text": "D6: THE STORE SPELLS THE SAME KEY. In validation_store.py, announce_verdict_change (:632) and the round-trip green clear in persist_validation (:867) both use seal_trouble_identity(<proof path for the validations path>) where the proof path is Path(path).parent.parent/'proofs'/(stem+'.py'), via a helper _proof_path_for_validations(path). Behaviour is otherwise unchanged: the announce still raises on every verdict change (both directions) and the green round-trip still clears right after its own raise, so that clear always follows a raise. After the build the string 'validation-verdict-changed-' appears nowhere under cairn/ except proofs asserting its absence.",
+      "by": "cc",
       "step": "D6",
       "source": "rehearsal",
-      "amended": "2026-09-16 by CC after rehearsal pass 1: both bodies recorded so the build is determinate under either answer to open-69cd989012c4"
+      "amended": "2026-09-16 by CC after rehearsal pass 1: both bodies recorded so the build is determinate under either answer to open-69cd989012c4",
+      "at": "2026-11-05T08:41:39+00:00"
     },
     {
       "n": 7,
-      "text": "THE READER AND THE CHECK (D2): def standing_raises(log_home: Path, *, recipient: str) -> set[str] in cairn/devices/tester/reseal.py reads only files named *.raise_trouble.json and *.clear_trouble.json directly under log_home (the raiser's own emission tree, ~/.cairn/logs/tester/0 live; a temp dir in proofs), sorted by filename (the stamp is the filename prefix), and returns the pointers whose LAST event is a raise or whose last clear has values.by != recipient. It imports nothing from cairn/devices/trouble and writes nothing. The ladder's clear at reseal.py:437 becomes: if identity in raised_this_run or identity in standing_raises(raiser.log_home, recipient=CLEARS_FOR): raiser.clear_trouble(...); else no emission. raised_this_run is a module-level set the three raise sites add to. log_home for a ModuleRaiser is the directory emit() writes into (diagnostic.py's home attribute).",
-      "by": "CC",
+      "text": "D7: THE STANDING CHECK. reseal.py gains a module-level set _RAISED_THIS_RUN: set[str]; each of the three raise sites (~:554 settled red, ~:604 timeout, ~:693 rung 3) adds identity after calling raise_trouble, and a clear discards it. def _stands_raised(raiser, identity, ladder) -> bool: True if ladder (an open reseal_ladder on the standing seal is the record that a rung-3 raise stood); else if the raiser has a callable diagnostic_trail() returning an existing directory, True iff the newest file (by filename, newest first) in that directory named *.raise_trouble.json or *.clear_trouble.json whose JSON 'pointer' equals identity is a raise_trouble (False if none); else (fixture raisers without a trail) True iff identity in _RAISED_THIS_RUN. It writes nothing and imports nothing from cairn/devices/trouble. Reading the trail first is what stops a double clear: the store's round-trip clear (D6) lands on disk before the ladder asks.",
+      "by": "cc",
       "step": "D7",
-      "source": "rehearsal"
+      "source": "rehearsal",
+      "at": "2026-11-05T08:41:40+00:00"
     },
     {
       "n": 8,
-      "text": "THE PROOFS: (a) test_reseal_door.py gains three teeth on its existing fake-raiser + temp-root fixture: 'a green reseal with nothing raised emits no clear' (fake raiser records zero clears), 'ladder red then hand green leaves nothing outstanding for cc' (raise then TesterDevice.run_proof green → exactly one clear, same pointer, by cc; standing_raises afterwards is empty), and 'standing_raises reads raise/clear pairs' (a temp tree with raise k1, clear k1 by cc, raise k2, clear k2 by someone-else → {k2}). (b) test_the_seal_announces_itself.py gains 'the store's announce pointer equals seal_trouble_identity(proof) equals the ladder's raise pointer' — three strings compared on one proof path. (c) the census tooth in test_reseal_door.py reads the LIVE ~/.cairn/logs/tester/0 read-only, restricted to files whose stamp is later than git log -1 --format=%cI of this build's commit (skipped with a printed reason when git is absent, i.e. the hollow worktree), and asserts by invariant: every clear_trouble pointer after the bound has an earlier raise_trouble pointer after the bound, and no pointer has two cc clears without a raise between — never a count. All four proofs (test_diagnostic, test_reseal_door, test_the_seal_announces_itself, test_validation_store) are resealed under netns and name their teeth (77f15efd5a96).",
-      "by": "CC",
+      "text": "D8: THE PROOFS (red-first, one new file): cairn/devices/tester/proofs/test_a_red_seal_is_one_trouble_from_raise_to_clear.py, scratch_dir fixtures only, fake raisers, the subject imported inside each tooth. Teeth: (1) the_store_and_the_ladder_spell_one_key — seal_trouble_identity exists in validation_store and equals reseal.trouble_identity for a proof, and announce_verdict_change through a recording device raises that same pointer; (2) siblings_carry_their_own_keys — two proofs in one component get distinct identities; (3) a_green_with_nothing_raised_clears_nothing — a fresh scratch proof sealed green, code moved, reseal green with a trail-less fake raiser: zero clears; (4) a_red_then_green_clears_once — reseal red (rung 3) then green: exactly one clear, same pointer as the raise; (5) a_trail_says_whether_it_stands — a fake raiser whose diagnostic_trail() is a scratch dir holding raise k then clear k: a green over a code move with no ladder emits no clear for k; with only raise k it emits one. The census (falsifier part 3) is a verdict instrument, not a tooth: over ~/.cairn/logs/tester/0, emissions after the build commit's time, every seal-red-* clear has an earlier raise of its pointer and no pointer has two clears without a raise between; no validation-verdict-changed-* emission after the bound.",
+      "by": "cc",
       "step": "D8",
-      "source": "rehearsal"
+      "source": "rehearsal",
+      "at": "2026-11-05T08:41:40+00:00"
+    },
+    {
+      "n": 9,
+      "text": "D9: AMEND 86b6's PROOF. cairn/devices/tester/proofs/test_a_siblings_green_does_not_clear_a_stale_proofs_trouble.py tooth 3's second half (fast2 green with nothing raised expects one clear) contradicts D2: it becomes fast2 sealed red via reseal (rung 3, raised), then green → raiser2.cleared == [trouble_identity(fast2)] while slow2 stays never sealed. Teeth 1 and 2 stand unchanged (per-proof keys + D2 satisfy them). Its docstring's per-component sentence is replaced by a pointer to ticket 87f0fc7b3514.",
+      "by": "cc",
+      "step": "unlisted:D9",
+      "source": "rehearsal",
+      "at": "2026-11-05T08:41:40+00:00"
+    },
+    {
+      "n": 10,
+      "text": "D10: MIGRATE THE OLD KEYS ONCE (a build step, scratch script, not code): for each identity standing raised in ~/.cairn/logs/tester/0 (newest event a raise) that starts with 'validation-verdict-changed-' or is a per-component 'seal-red-<component>' key, emit ModuleRaiser('tester').clear_trouble(old, by='cc', what_changed='identity retired by 87f0fc7b3514: seal troubles are keyed per proof'); any proof still red in that component is caught by the next reseal under its per-proof key. Record the count before and after in the verdict.",
+      "by": "cc",
+      "step": "unlisted:D10",
+      "source": "rehearsal",
+      "at": "2026-11-05T08:41:40+00:00"
+    },
+    {
+      "n": 11,
+      "text": "D11: ONE IDENTITY PER PROOF, at the store's address. D3's question is answered (open-69cd989012c4: per proof). D1's 'inside cairn/devices/tester' predates validation_store's move to cairn/tools/validation_store/, so D1's one function lives there: def seal_trouble_identity(proof_path) -> str in cairn/tools/validation_store/validation_store.py returns 'seal-red-' + the proof path relative to _REPO_ROOT (absolute when outside it), .py stripped, lowercased, every run of [^a-z0-9-] replaced by '-', stripped of '-' (e.g. seal-red-cairn-devices-tester-proofs-test-reseal-door). In cairn/devices/tester/reseal.py trouble_identity becomes 'trouble_identity = seal_trouble_identity' (imported beside the existing store import at :86), so every PROVED proof importing trouble_identity keeps working; its 'ONE TROUBLE PER COMPONENT' docstring goes. D2's predicate is D7.",
+      "by": "cc",
+      "step": "unlisted:D11",
+      "source": "rehearsal",
+      "at": "2026-11-05T08:42:39+00:00"
     }
   ],
   "intention": "A red seal is one trouble under one identity from raise to clear, whoever turns it green.",

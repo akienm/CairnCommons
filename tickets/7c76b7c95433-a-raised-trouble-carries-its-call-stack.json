@@ -1,0 +1,31 @@
+{
+  "id": "7c76b7c95433",
+  "title": "a raised trouble carries its call stack",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Every trouble raised through DiagnosticBase.raise_trouble carries the call stack of its raise in detail.stack, so a resolver sees who raised it without re-deriving the route.",
+  "why": "Akien, 2026-09-24, answering open-f998fae25b35 for ticket 87f0fc7b3514: 'a trouble should have it's diagnostic info too, so the call stack will be in there. if not, we make it so.' Measured at that cast: 0 of 249 raises carried a stack. This was 87f0's D5; it split out on 2026-11-05 because it lands in cairn/tools/base, which ticket 5a2a8f45177a's unsealed red-first proof holds at PROVED.",
+  "traces_to": "Law 7 (errors are loud and complete at diagnostic surfaces) and I-complete-diagnostic-on-first-pass.",
+  "how": "In cairn/tools/base/diagnostic.py, DiagnosticBase.raise_trouble builds detail = {**(detail or {}), 'stack': traceback.format_stack()[:-1]} after its mapping check and before self.emit. The caller's dict is never mutated. clear_trouble and reconcile_troubles are unchanged. A red-first proof is a new file under cairn/tools/base/proofs/.",
+  "falsifier": "Done when (1) a raise through a ModuleRaiser under scratch diagnostic roots lands a record whose values.detail.stack is a non-empty list of strings, whose last entry names the proof file and the line of the raise_trouble call; (2) the caller's detail dict is unchanged after the call; (3) a clear_trouble record's values carry no 'stack'. Horizon: the first raise after the build commit. Wrong intent if Akien wanted the stack elsewhere.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/base/diagnostic.py (exists) gains 'import traceback' at module top. In DiagnosticBase.raise_trouble, after the 'A DETAIL IS A MAPPING' refusal and before 'record = self.emit(\"raise_trouble\", ...)', it builds a new dict: detail = {**(detail or {}), \"stack\": traceback.format_stack()[:-1]}. That is a list of strings, innermost last, with raise_trouble's own frame dropped. The emit call passes this new dict as values['detail']. The caller's dict is never mutated. clear_trouble and reconcile_troubles are not touched. The docstring gains one sentence citing open-f998fae25b35.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2: The red-first proof is a new file, cairn/tools/base/proofs/test_a_raised_trouble_carries_its_call_stack.py, with PROVES = {'7c76b7c95433': {'1': ..., '2': ..., '3': ...}} keyed to falsifier clauses 1-3. Each tooth makes r = ModuleRaiser('testing-stack', roots={'instance': scratch_dir('testing-7c76b7c95433-stack-')}) (cairn.tools.base.diagnostic.ModuleRaiser; cairn.tools.scratch.scratch.scratch_dir) and reads records back as r.diagnostic_records(). Tooth 1: d = {'k': 1}; r.raise_trouble('testing-stack', why='w', detail=d) on a line whose number the tooth records with inspect.currentframe().f_lineno; the raise record's values['detail']['stack'] is a non-empty list of str, and its last entry contains this file's name and 'line <n>'. Tooth 2: after that call, d == {'k': 1}. Tooth 3: r.clear_trouble('testing-stack', by='cc', what_changed='x') lands a record whose values carry no 'stack' key. Bare-runnable with a main that prints PASS/FAIL per tooth and exits 1 on any failure.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3: Steps: commit the red-first proof (before the build, tooth 1 is red because detail carries no stack; teeth 2 and 3 are green guards). Make the D1 edit. Run the new proof and cairn/tools/base/proofs/test_diagnostic.py twice under bin/cairn test. Predict with bin/cairn test --hollow 7c76b7c95433 --proof cairn/tools/base/proofs/test_a_raised_trouble_carries_its_call_stack.py before PROVEME. PROVED waits on 5a2a8f45177a's red-first proof in base being sealed.",
+      "by": "cc",
+      "source": "rehearsal",
+      "at": "2026-11-05T08:38:35+00:00"
+    }
+  ]
+}
