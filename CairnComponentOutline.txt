@@ -223,6 +223,17 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               access everywhere. (Akien 2026-11-05)
         4.3.1.8.1 Nodes: the one list (4.3.1.5). Every tree indexes it; no tree
                   owns a node, so several trees can index the same node.
+          4.3.1.8.1.1 Not every node gets an embedding. Embedding every single thing
+                  would make an impossible mound of data, and that is not how
+                  Akien works, and this is meant to work the way he does. What gets
+                  embedded is the pattern: the answers to a few key questions that
+                  cross domains. "How might that work" is chief among them:
+                  "it's applicable in almost all domains, and captures the
+                  pattern, not the domain specific answer." A node without an
+                  embedding is found by its key (eg an exact request). (Akien
+                  2026-11-05, open-029c5ae100a9) [Q#65: besides "how might that
+                  work", which are the other key questions that cross domains?
+                  open-7e5a39224b1b]
         4.3.1.8.2 Trees as tables, permanent: each asks one question, with the
                   weights in its leaves.
         4.3.1.8.3 Trees as tables, temporary: made for one activity and dropped
@@ -250,7 +261,11 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               not how it is now"): a node's id is a hash of its content
               (node_id_for, trees.py:126), not its row; the shared link list
               cairn_links has 0 rows; there are no per-tree link lists, no blob
-              store, and no lifetime on any tree.
+              store, and no lifetime on any tree. Every node is embedded: the
+              deposit door refuses a node without a vector (trees.py:250), and
+              cairn_embeddings holds 21,880 embeddings for 21,082 nodes (798 point
+              at no node). Walks derive their edges from vector proximity (nearest,
+              neighbors); the stored-link door (trees.link) has written none.
     4.3.2 Transient: the transient tree (what the logging tree becomes).
       4.3.2.1 Everything held for seconds to days lives here: mail, logs, test runs,
               trouble tickets, inference tickets.
@@ -1122,7 +1137,8 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
            holds, and the host is not touched. That untouched call is compilation.
       13.3.4.1 The stored answers are learning, so they live in the memory model
                (4.3.1.8): a tree the proxy holds by the librarian's delegation
-               (4.3.1.6), asking "what did this request answer?". The meter (every
+               (4.3.1.6), asking "what did this request answer?". An answer is found
+               by its exact request and carries no embedding (4.3.1.8.1.1). The meter (every
                call, its verdict and cost) is not learning: it is the inference
                ticket, a file in the logs tree on the 30 day clock (4.3.2). (Akien
                2026-11-05)
