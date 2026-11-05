@@ -1120,6 +1120,18 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
            cheapest route the nest finds.
     13.3.4 A request seen before is answered from the stored answer, if it still
            holds, and the host is not touched. That untouched call is compilation.
+      13.3.4.1 The stored answers are learning, so they live in the memory model
+               (4.3.1.8): a tree the proxy holds by the librarian's delegation
+               (4.3.1.6), asking "what did this request answer?". The meter (every
+               call, its verdict and cost) is not learning: it is the inference
+               ticket, a file in the logs tree on the 30 day clock (4.3.2). (Akien
+               2026-11-05)
+      13.3.4.2 NOT HOW IT IS NOW (measured 2026-11-05): one table, inference_calls,
+               does both jobs: 11,395 miss rows carry the stored answers, 9,416 hit
+               and 58 refused rows are meter only. The logs tree already holds the
+               same calls as tickets (11,942 files). The librarian copies answers
+               into its nodes separately (librarian/ingest.py, 250 so far), so the
+               answers are kept twice.
     13.3.5 Routes from authored stacks beside the code: providers (cost,
            connection), models (names, parameters, scores), combos (which pairs
            route).
