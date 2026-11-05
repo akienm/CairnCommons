@@ -1,0 +1,36 @@
+{
+  "id": "d0c8c4b4283e",
+  "title": "The testing mark's perform kind reaches the device and marks its reply",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "The testing mark gains its second kind, perform: a perform-marked request reaches the device's verb on the live bus, and the shim stamps the same mark onto the verb's reply.",
+  "why": "Measured 2026-11-05: inference_domain's verb proofs (test_resolve_verb.py, test_bus_infer.py) stand up a private BusDevice.scratch (4 of the 90 encapsulation_breaches rows) and cannot move to the live bus marked as testing, because BaseShim._return_if_marked sends a return-marked request back unacted on. Akien 2026-10-05, testing_mark.py: 'device gets the \"perform this test\" kind later'. Later is now: librarian and codemother verb proofs need it too.",
+  "traces_to": "Law 3 and Akien's ruling 2026-09-28/10-05 (test against live, marked as testing); RULE 1 (lets device proofs drop their private scratch buses).",
+  "how": "testing_mark adds PERFORM to KINDS; BaseShim.deliver's verb-reply post copies a perform mark onto the reply body; a red-first proof on the live bus fires a perform-marked and a return-marked request at a testing-named shim.",
+  "falsifier": "(1) testing_mark.mark(t, 'perform') == {'kind': 'perform', 'test': t} and an unbuilt kind still raises; (2) on the live bus a perform-marked request to a testing-named shim reaches its verb and the reply body carries the verb's result and the same mark; (3) a return-marked request to the same shim comes back is_return and the handler is never called. Green twice. Wrong intent if Akien's perform kind means something other than pass-through to the device.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: SETTLED: cairn/tools/base/testing_mark.py gains PERFORM = \"perform\" (comment: the receiving shim passes it through to the device's verb and stamps the mark on the verb's reply) and KINDS = (RETURN, PERFORM). The module docstring's second bullet is rewritten in the present tense: a perform mark passes through the shim to the device, which handles the request as it would any other, and the shim stamps the same mark onto the verb's reply (ticket d0c8c4b4283e). mark() and mark_of() are otherwise unchanged; an unbuilt kind still raises ValueError.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2: SETTLED: in cairn/tools/base/shim.py BaseShim.deliver, at the verb-reply post (the 'if isinstance(result, dict) and self._bus is not None:' block that posts why=f\"{verb} reply\"), the posted body becomes: mark = testing_mark.mark_of(envelope.get('body') or {}); body = {**result, testing_mark.FIELD: mark} if mark is not None and mark['kind'] == testing_mark.PERFORM and testing_mark.FIELD not in result else result. deliver still RETURNS result unchanged. _return_if_marked's docstring sentence 'Any other kind passes through.' becomes 'Any other kind passes through (a perform mark is stamped onto the verb reply in deliver).'",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3: SETTLED: the red-first proof is cairn/tools/base/proofs/test_a_perform_mark_reaches_the_device.py, committed alone before the build, PROVES = {'d0c8c4b4283e': {'1': 'test_the_perform_kind_builds', '2': 'test_a_performed_request_is_answered_marked', '3': 'test_a_returned_request_never_wakes_the_handler'}} with the literal key. It rides the live bus through cairn.tools.bus_client.bus_client.reach() wrapped in a _TestingBus that declines wire_delivery (the class in cairn/tools/base/proofs/test_probe_carry.py). Names: f'testing-d0c8c4b4283e-{label}-{uuid.uuid4().hex[:8]}' for a caller and a device, fresh per tooth. The device is a plain class with declared_verbs() -> {'echo': handler}, the handler appending the envelope to a CALLS list and returning {'echo': envelope['body']['text']}; the shim is a BaseShim subclass whose device_id property returns the device name and whose _start_device returns the device. Tooth 1: mark('t', getattr(testing_mark, 'PERFORM', 'perform')) == {'kind': 'perform', 'test': 't'} and mark('t', 'bogus') raises ValueError. Tooth 2: bus.post(sender=caller, to=device, channel='personal', verb='echo', why='testing d0c8c4b4283e', body={'text': nonce, testing_mark.FIELD: mark('d0c8c4b4283e', 'perform')}); then shim._check_mail(); replies = bus.read(to=caller, channel='personal'); exactly one, its body['echo'] == nonce and testing_mark.mark_of(its body) == {'kind': 'perform', 'test': 'd0c8c4b4283e'}. Tooth 3: same post with mark('d0c8c4b4283e') (return); after _check_mail the one reply's body has is_return True and CALLS did not grow. Every tooth binds PERFORM at call time. main() runs the teeth under the check/FAILURES pattern of cairn/tools/base/proofs/test_base_proofs_ride_the_live_bus.py.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "D4: SETTLED: run cairn/tools/base/proofs/test_a_perform_mark_reaches_the_device.py and cairn/tools/base/proofs/test_transitions.py twice serially with 'PYTHONPATH=. python3 <file>' from the cairn root; seal cairn/tools/base/proofs/test_a_perform_mark_reaches_the_device.py with 'bin/cairn test --seal cairn/tools/base/proofs/test_a_perform_mark_reaches_the_device.py'; commit as 'd0c8c4b4283e: the testing mark's perform kind reaches the device and marks its reply' with the two trailer lines.",
+      "by": "cc",
+      "source": "cast"
+    }
+  ]
+}
