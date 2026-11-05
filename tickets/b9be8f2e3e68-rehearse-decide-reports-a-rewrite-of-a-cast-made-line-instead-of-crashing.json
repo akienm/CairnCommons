@@ -1,0 +1,30 @@
+{
+  "id": "b9be8f2e3e68",
+  "title": "rehearse --decide reports a rewrite of a cast-made line instead of crashing",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "'cairn rehearse --decide D<n>' over a decision the cast wrote reports what it did instead of crashing after the write lands.",
+  "why": "Measured 2026-11-05 on 0d38d0f5a4e3 (idea 4d8b017e3873): 'cairn rehearse --decide D<n>' over a cast-made line raised KeyError 'step' at cairn/machines/rehearsal/__main__.py:107 after the write had landed, so the command reported a failure that did not happen.",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces and permanent in records of truth): a crash printed after a successful write reports a failure that did not happen, and the reader re-runs or hand-edits a line that already landed. Measured 2026-11-05 on 0d38d0f5a4e3.",
+  "how": "cairn/machines/rehearsal/__main__.py:107 prints entry['step']; an in-place rewrite keeps the target's keys, and a cast-made line has no step, so it raises KeyError after decide() has already written. Print the step the caller named when the entry carries none (entry.get('step') or the --decide step). A proof drives main() over a scratch commons holding one cast-shaped ticket.",
+  "falsifier": "Done when (1) 'cairn rehearse <id> --decide D<n> \"<line>\" --by <who>' over a ticket whose line n was written by the cast (a dict with n and text but no step) exits 0 and prints 'decided D<n>'; (2) the ticket's line n carries the new text afterwards; (3) an appended decision (a step label that is not D<n>) still prints its step. Horizon: the next --decide over a cast-made line. Wrong intent if the crash moves elsewhere in the same command.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/machines/rehearsal/__main__.py (exists), the --decide branch's print reads the step as entry.get('step') or args.decide[0] instead of entry['step']; nothing else in the file changes.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2: red-first proof cairn/machines/rehearsal/proofs/test_decide_reports_a_cast_made_line.py with PROVES = {'b9be8f2e3e68': {'1': ..., '2': ..., '3': ...}} keyed to falsifier clauses 1-3. It builds a scratch commons with cairn.tools.scratch.scratch.scratch_dir, writes CairnCommons/tickets/b9bef00dfeed-testing-b9be8f2e3e68-decide-reports-a-cast-made-line.json (fixture id b9bef00dfeed) holding D1 as a cast-made line {n:1,text,by:'cc',source:'cast'} (no step), points cairn.machines.rehearsal.rehearsal.commons at that scratch commons for the call, and calls cairn.machines.rehearsal.__main__.main(argv) bound by importlib at call time. Tooth 1: main(['b9bef00dfeed','--decide','D1','<line>','--by','cc']) returns 0 and its stdout carries 'decided D1'. Tooth 2: --decide D2 over cast-made line 2 returns 0 and the fixture ticket's line 2 text is the new line. Tooth 3: the D1 rewrite prints \"at 'D1'\", and main(['b9bef00dfeed','--decide','a label','<line>','--by','cc']) returns 0 and prints \"at 'a label'\". Every tooth drives a cast-made rewrite, so each is red before D1. The proof is already written and committed red at 31effb9f.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3: steps: commit the red-first proof (red before the build), make the D1 edit, run the new proof and cairn/machines/rehearsal/proofs/test_decide_lands_in_its_line.py and cairn/machines/rehearsal/proofs/test_a_decision_supersedes_in_one_act.py twice under bin/cairn test, then predict with bin/cairn test --hollow b9be8f2e3e68 --proof cairn/machines/rehearsal/proofs/test_decide_reports_a_cast_made_line.py before PROVEME.",
+      "by": "cc",
+      "source": "cast"
+    }
+  ]
+}
