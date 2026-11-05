@@ -5,13 +5,13 @@
   "intention": "The bus carries messages over TCP between boxes and on Windows, while staying on Unix sockets inside a Linux box, so a device on akiendell can reach a bus and the buses on two boxes can reach each other.",
   "why": "Python on Windows has no socket.AF_UNIX (measured 2026-11-04 on akiendell: the web server died at cairn/tools/bus_client/remote.py:95), so no device on a Windows box can reach any bus; and buses on two boxes (outline 5.4.2.8.1) can only reach each other over the network. Akien 2026-11-04: 'yes please' (outline 5.4.2.11.4).",
   "traces_to": "Outline 5.4.2.8 (one bus per cairn instance, extended across hosts), 5.4.2.8.1 (a bus per box, the buses talk) and 5.4.2.11.4 (TCP between boxes and on Windows); Telos: running multiple heavy tasks at once across Akien's boxes; Law 3 (the transport choice is settled by measuring, 5.4.2.11).",
-  "how": "Give the bus an address that is either a Unix socket path or host:port. server.py:523 also listens on TCP beside bus.sock: 127.0.0.1 plain on Windows (no AF_UNIX there), and on the home box the LAN, TLS only; remote.py exchange() picks the transport from the address (AF_UNIX where it exists and the bus is on this box, TCP otherwise). Same wire format (one JSON request, one JSON reply), so callers do not change. Box to box is TLS in the bus itself (open-06cfefbe745e, Akien 2026-11-04: 'TLS sounds like the win to me, more in line with no extra things to set up'; replaces the ssh answer): stdlib ssl over the same TCP socket; each box has its own key + self-signed certificate under ~/.cairn (made by cairn install, beside the cairn-home question); each side pins the other's SHA-256 certificate fingerprint from a list of known boxes and refuses any other; mutual, so both ends are checked. No tunnel, no token, no extra process. Measure TCP loopback latency beside the Unix exchange p50, against the pre-build baseline recorded in the decisions (5.4.2.11.1's 50 us was a bare-broker bench). BUILDER BRIEF: A Haiku builder needs: (1) the files: cairn/devices/cairn/machines/bus/server.py (listener at :523), cairn/devices/cairn/machines/bus/__main__.py:23, cairn/tools/bus_client/remote.py (exchange at :87-104, _spawn :147, _setsid :197); (2) the port: env CAIRN_BUS_TCP_PORT, default 7419 (unassigned by IANA), checked free at build; (3) the selection rule above, verbatim; (4) that the wire format must not change; (5) the Windows spawn flags DETACHED_PROCESS|CREATE_NO_WINDOW as in cairn/devices/cc/superclaude _sc_spawn_detached; (6) the gate is mutual TLS with pinned fingerprints (open-06cfefbe745e); a box reaches another box's bus over TLS only when the caller names host:port as the bus address (no automatic routing to CAIRN_HOME_HOST \u2014 see decisions); the fingerprint exchange is a cairn install step; (7) proofs in cairn/devices/cairn/machines/bus/proofs/ and cairn/tools/bus_client/proofs/, a tooth that forces the TCP path on Linux (AF_UNIX hidden) so it is provable here; (8) the latency bench is scratch today (5.4.2.11.1), so record numbers in the ticket, not a new tool.",
+  "how": "Give the bus an address that is either a Unix socket path or host:port. server.py:523 also listens on TCP beside bus.sock: 127.0.0.1 plain on Windows (no AF_UNIX there), and on the home box the LAN, TLS only; remote.py exchange() picks the transport from the address (AF_UNIX where it exists and the bus is on this box, TCP otherwise). Same wire format (one JSON request, one JSON reply), so callers do not change. Box to box is TLS in the bus itself (open-06cfefbe745e, Akien 2026-11-04: 'TLS sounds like the win to me, more in line with no extra things to set up'; replaces the ssh answer): stdlib ssl over the same TCP socket; each box has its own key + self-signed certificate under ~/.cairn (made by cairn install, beside the cairn-home question); each side pins the other's SHA-256 certificate fingerprint from a list of known boxes and refuses any other; mutual, so both ends are checked. No tunnel, no token, no extra process. Measure TCP loopback latency beside the Unix exchange p50, against the pre-build baseline recorded in the decisions (5.4.2.11.1's 50 us was a bare-broker bench). BUILDER BRIEF: A Haiku builder needs: (1) the files: cairn/devices/cairn/machines/bus/server.py (listener at :523), cairn/devices/cairn/machines/bus/__main__.py:23, cairn/tools/bus_client/remote.py (exchange at :87-104, _spawn :147, _setsid :197); (2) the port: env CAIRN_BUS_TCP_PORT, default 7419 (unassigned by IANA), checked free at build; (3) the selection rule above, verbatim; (4) that the wire format must not change; (5) the Windows spawn flags DETACHED_PROCESS|CREATE_NO_WINDOW as in cairn/devices/cc/superclaude _sc_spawn_detached; (6) the gate is mutual TLS with pinned fingerprints (open-06cfefbe745e); a box reaches another box's bus over TLS only when the caller names host:port as the bus address (no automatic routing to CAIRN_HOME_HOST — see decisions); the fingerprint exchange is a cairn install step; (7) proofs in cairn/devices/cairn/machines/bus/proofs/ and cairn/tools/bus_client/proofs/, a tooth that forces the TCP path on Linux (AF_UNIX hidden) so it is provable here; (8) the latency bench is scratch today (5.4.2.11.1), so record numbers in the ticket, not a new tool.",
   "falsifier": "Done when (a) on akiendell, a fresh python using cairn.tools.bus_client.remote.RemoteBus().list() gets an answer from a bus it lazily started, over TCP 127.0.0.1, no AF_UNIX error; (b) from akiendell a request reaches the bus on akiendelllinux over TLS with both fingerprints pinned, and a caller or a server whose certificate fingerprint is not on the list is refused, and the bus's LAN port refuses plain TCP; (c) on Linux the Unix-socket p50 round trip stays within 10% of the 50 us measured at outline 5.4.2.11.1, and TCP loopback is measured and recorded. Horizon: the first box-to-box message. Wrong intent if pinned TLS adds a setup step a new box cannot do inside cairn install.",
   "decisions": [
     "Unix sockets stay the transport inside a Linux box; TCP is added only where Unix cannot go (Windows, box to box).",
     "The wire format (one JSON request, one JSON reply) does not change; callers do not change.",
     "remote.py picks AF_UNIX when socket has it and the bus is on this box, else TCP.",
-    "The LAN port is env CAIRN_BUS_TCP_PORT, default 7419, held in cairn/tools/bus_client/tls.py (lan_port()) because both ends need it and the client end is the one every box carries. The local TCP listener (no AF_UNIX) binds 127.0.0.1:0 \u2014 an ephemeral port \u2014 and writes <home>/bus.port as JSON {port, key, pid, lan}; key is a per-start secret every loopback request must carry (hmac.compare_digest), so another local user cannot drive the bus.",
+    "The LAN port is env CAIRN_BUS_TCP_PORT, default 7419, held in cairn/tools/bus_client/tls.py (lan_port()) because both ends need it and the client end is the one every box carries. The local TCP listener (no AF_UNIX) binds 127.0.0.1:0 — an ephemeral port — and writes <home>/bus.port as JSON {port, key, pid, lan}; key is a per-start secret every loopback request must carry (hmac.compare_digest), so another local user cannot drive the bus.",
     "Box to box is mutual TLS with pinned certificate fingerprints, in the bus itself; the home's LAN port speaks TLS only; on Windows the local bus listens on 127.0.0.1 (open-06cfefbe745e, Akien 2026-11-04).",
     "remote.py spawns the bus on Windows with sys.executable -m ... --tcp and DETACHED_PROCESS|CREATE_NO_WINDOW|CREATE_NEW_PROCESS_GROUP (getattr fallbacks 0x8, 0x08000000, 0x200), as cairn/devices/cc/superclaude _sc_spawn_detached does.",
     "A proof tooth forces the TCP path on Linux (AF_UNIX hidden) so the Windows path is provable on this box.",
@@ -22,6 +22,62 @@
     "The LAN server opens only on the home (CAIRN_HOME_HOST unset or equal to platform.node()) that has an identity under <home>/tls, and never for a scratch bus unless --lan is passed (the proof's door).",
     "No automatic routing to CAIRN_HOME_HOST: a caller reaches another box only by naming host:port as the bus address (remote_address). Federation is out of scope; one bus per box.",
     "cairn/tools/bus_client/tls.py joins remote.py in the sole-path mesh's 'only' list for socket (inspector.py _SOLE_PATH and inference_domain/proofs/test_host.py), citing open-06cfefbe745e; server.py imports no socket (platform.node(), hasattr(socketserver, 'ThreadingUnixStreamServer')).",
-    "Clause (c) is read against a baseline measured before the build: Unix exchange p50 6893 us (2026-11-04, three scratch buses, 400 exchanges each, median of 6893.0/6953.6/6810.8). The ticket's 50 us was a bare-broker bench; the live exchange carries the code-stamp staleness check. Unix p50 after the build must be within 10% of 6893 us; TCP loopback p50 is measured and reported."
+    "Clause (c) is read against a baseline measured before the build: Unix exchange p50 6893 us (2026-11-04, three scratch buses, 400 exchanges each, median of 6893.0/6953.6/6810.8). The ticket's 50 us was a bare-broker bench; the live exchange carries the code-stamp staleness check. Unix p50 after the build must be within 10% of 6893 us; TCP loopback p50 is measured and reported.",
+    {
+      "n": 1,
+      "text": "Step 1: write cairn/tools/bus_client/tls.py — make_identity/has_identity/identity (openssl CLI), trust/known/hold_ask/asks/accept/decline (pins under <tls>/known, asks under <tls>/asks), server_context (CERT_OPTIONAL) and dial (client context pinning the server), peer_box, first_contact, lan_port, openssl; add it to bus_client's public_interface through the artifact door.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:11:22+00:00"
+    },
+    {
+      "n": 2,
+      "text": "Step 2: in cairn/tools/bus_client/remote.py, route exchange() by address: host:port → tls.dial; AF_UNIX present and the bus on this box → bus.sock; otherwise 127.0.0.1 on the port and key read from <home>/bus.port; the Windows spawn passes --tcp with the detached flags; a host:port bus is never spawned or replaced.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:11:22+00:00"
+    },
+    {
+      "n": 3,
+      "text": "Step 3: in cairn/devices/cairn/machines/bus/server.py, split the handler into admit + reply_to, add a loopback TCP server that checks the bus.port key (hmac.compare_digest) and a LAN TLS server (pinned peers; certless may only ask; LAN_OPS call/stats/verbs); serve(home, bus, *, tcp, lan, scratch) opens them per the decisions; the claim lock falls back to msvcrt where fcntl is absent; __main__.py gains --tcp and --lan.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:11:23+00:00"
+    },
+    {
+      "n": 4,
+      "text": "Step 4: in cairn/machines/installer/installer.py add ask_box_identity (id 'box-identity'): make the identity once, first contact with the home when attaching, print both fingerprints; replace socket.gethostname with platform.node so the installer imports no socket.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:11:23+00:00"
+    },
+    {
+      "n": 5,
+      "text": "Step 5: add the two socket users (cairn/tools/bus_client/tls.py and cairn/devices/cairn/machines/bus/proofs/test_the_bus_speaks_tcp.py) to the sole-path mesh's 'only' list in both existing copies: the _SOLE_PATH table in cairn/machines/build_inspector/inspector.py (prefixes relative to the component's parent) and the 'only' tuple in cairn/devices/inference_domain/proofs/test_host.py (repo-relative), each with a reason comment citing open-06cfefbe745e.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:17:42+00:00"
+    },
+    {
+      "n": 6,
+      "text": "Step 6: proofs — new cairn/tools/bus_client/proofs/test_a_box_pins_its_peers.py (clause b, loopback TLS, no bus) and new cairn/devices/cairn/machines/bus/proofs/test_the_bus_speaks_tcp.py (a: AF_UNIX hidden, TCP lazily started and answered; b: the LAN port refuses plain TCP and unpinned certs; c: Unix p50 within 10% of 6893 us, TCP p50 reported); append test_box_identity_step to the existing cairn/machines/installer/proofs/test_installer.py and add it to that file's main(); run each twice on a quiet box, then seal with bin/cairn test --seal.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:17:43+00:00"
+    },
+    {
+      "n": 7,
+      "text": "Step 7: live fire through akiendell_cc_0 — (a) RemoteBus().list() on Windows over 127.0.0.1, (b) akiendell to akiendelllinux over TLS after both cairn install box-identity steps, with an unpinned cert refused; record the numbers in the verdict.",
+      "by": "cc",
+      "step": "unlisted: define concrete D<n> build steps to implement TCP/TLS transport",
+      "source": "rehearsal",
+      "at": "2026-11-05T05:11:23+00:00"
+    }
   ]
 }
