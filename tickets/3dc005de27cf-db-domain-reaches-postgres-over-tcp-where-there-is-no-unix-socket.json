@@ -8,12 +8,65 @@
   "how": "One pure helper _conn_args() in store.py chooses the host by whether the socket file exists in CAIRN_PG_SOCKET_DIR (default /var/run/postgresql, the name bin/cairn:110 uses); ensure_database() and connect() both use it. No credential code: libpq finds PGUSER/PGPASSWORD/pgpass itself.",
   "falsifier": "Done when (1) a proof tooth, with CAIRN_PG_SOCKET_DIR pointed at an empty temp dir, calls store.connect() and observes psycopg2's error naming 'server at \"127.0.0.1\", port 5432' (or a live connection whose conn.info.host is 127.0.0.1) and never the socket path; the hollow revert of store.py reds it (the old code names the socket file); (2) with the socket present, connect() lands on the Unix socket (conn.info.host starts with '/') and the existing db_domain proofs stay green; (3) the choice helper is pure and its two branches are each asserted. Horizon: 5183005fa134 (a) on akiendell once open-0509a6ba5b63 is answered. Wrong intent if a TCP route must carry a password from code.",
   "decisions": [
-    "D1: The socket dir is os.environ.get('CAIRN_PG_SOCKET_DIR', SOCKET_DIR) with SOCKET_DIR = '/var/run/postgresql' kept as the constant; read at call time, not import time.",
-    "D2: _conn_args() returns {'host': <dir>} when os.path.exists(<dir>/.s.PGSQL.5432), else {'host': '127.0.0.1', 'port': 5432}. Nothing else selects.",
-    "D3: ensure_database() and connect() both call psycopg2.connect(dbname=..., **_conn_args()); no password, user or sslmode is passed; libpq reads its own standard sources.",
-    "D4: The Windows credential is out of scope (host secret; question open-0509a6ba5b63 on 5183005fa134). The proof shows the ROUTE: with no socket, the attempt reaches 127.0.0.1:5432 (a live connection, or psycopg2's error naming server at \"127.0.0.1\", port 5432); the old code's error names the socket file instead.",
-    "D5: Proof file cairn/devices/db_domain/proofs/test_db_reaches_postgres_over_tcp.py, plain python, exit 0 = green, PROVES = {'3dc005de27cf': {'1': 'test_no_socket_dials_tcp_loopback', '2': 'test_a_present_socket_stays_on_the_socket', '3': 'test_the_choice_has_two_branches'}}; tooth 1 runs a subprocess with CAIRN_PG_SOCKET_DIR set to an empty temp dir; store is imported at call time.",
-    "D6: Charter cairn/devices/db_domain/intention+why.json 'what' gains one sentence on the TCP branch, written through the artifact door, recompile_gate poked.",
-    "Step 1: write the red-first proof (D5) and run it red. Step 2: edit store.py (D1-D3). Step 3: run the new proof, test_db_domain.py, test_sole_path.py, tools/client/proofs/test_client.py twice. Step 4: charter (D6)."
+    {
+      "n": 1,
+      "text": "D1: The socket dir is os.environ.get('CAIRN_PG_SOCKET_DIR', SOCKET_DIR) with SOCKET_DIR = '/var/run/postgresql' kept as the constant in cairn/devices/db_domain/tools/client/store.py (exists; SOCKET_DIR at line 60); read at call time, not import time.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2: In cairn/devices/db_domain/tools/client/store.py (exists), _conn_args() returns {'host': <dir>} when os.path.exists(<dir>/.s.PGSQL.5432), else {'host': '127.0.0.1', 'port': 5432}. Nothing else selects.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3: In cairn/devices/db_domain/tools/client/store.py (exists), ensure_database() and connect() both call psycopg2.connect(dbname=..., **_conn_args()); no password, user or sslmode is passed; libpq reads its own standard sources.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "D4: The Windows credential is out of scope (host secret; question open-0509a6ba5b63 on 5183005fa134). The proof shows the ROUTE: with no socket, the attempt reaches 127.0.0.1:5432 (a live connection, or psycopg2's error naming server at \"127.0.0.1\", port 5432); the old code's error names the socket file instead. Where the TCP credential berths is open-d0399bd1d6f1 on THIS ticket; if the answer names a passfile, _conn_args() adds passfile=<that path> on the TCP branch only, and tooth 3's expected TCP dict gains the same key.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "D5: Proof file cairn/devices/db_domain/proofs/test_db_reaches_postgres_over_tcp.py, plain python, exit 0 = green, PROVES = {'3dc005de27cf': {'1': 'test_no_socket_dials_tcp_loopback', '2': 'test_a_present_socket_stays_on_the_socket', '3': 'test_the_choice_has_two_branches'}}; tooth 1 runs a subprocess with CAIRN_PG_SOCKET_DIR set to an empty temp dir; store is imported at call time.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "D6: Charter cairn/devices/db_domain/intention+why.json 'what' gains one sentence on the TCP branch, written through the artifact door, recompile_gate poked. Write it with `bin/cairn artifact write cairn/devices/db_domain/intention+why.json --verb cast --why '<why>' --from <scratch copy>`, then run `cairn/tools/intentions_model_compiler/recompile_gate.sh`.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "D7: Step 1: the red-first proof (D5) is written; run it and see teeth 1 and 3 red, tooth 2 green (measured 2026-11-04 before the build).",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 8,
+      "text": "D8: Step 2: edit cairn/devices/db_domain/tools/client/store.py (D1-D3).",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 9,
+      "text": "D9: Step 3: run, twice each, with bin/cairn test: cairn/devices/db_domain/proofs/test_db_reaches_postgres_over_tcp.py, cairn/devices/db_domain/proofs/test_db_domain.py, cairn/devices/db_domain/proofs/test_sole_path.py, cairn/devices/db_domain/tools/client/proofs/test_client.py.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 10,
+      "text": "D10: Step 4: charter (D6).",
+      "by": "cc",
+      "source": "cast"
+    }
   ]
 }
