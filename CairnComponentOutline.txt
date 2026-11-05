@@ -216,6 +216,41 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               if one is ever that complex. Each stays co-owned by the one above.
               CodeMother's learning goes in its own tables, and she owns the
               learning blocks of her machines and tools. (Akien 2026-11-05)
+      4.3.1.8 The memory model. Everything Cairn keeps as LEARNING in database
+              memory is these five things, and only these. It does not say all
+              information lives in trees: logs, troubles, git records and a
+              device's own state keep their own homes (4.3.2-4.3.4). One kind of
+              access everywhere. (Akien 2026-11-05)
+        4.3.1.8.1 Nodes: the one list (4.3.1.5). Every tree indexes it; no tree
+                  owns a node, so several trees can index the same node.
+        4.3.1.8.2 Trees as tables, permanent: each asks one question, with the
+                  weights in its leaves.
+        4.3.1.8.3 Trees as tables, temporary: made for one activity and dropped
+                  after it. Two kinds named so far: a working tree that sleep
+                  builds while consolidating and does not need afterwards, and
+                  config read from disk and held in the db. For config the file
+                  on disk stays the source: the tree is derived from it, rebuilt
+                  when the file changes, never edited in place.
+        4.3.1.8.4 Bidirectional links, in lists of their own, id = row. A link
+                  that carries a tree's weights lives in that tree's own link
+                  list, because the weights belong to the tree's question. A link
+                  that is a fact about two nodes (derived from, part of,
+                  contradicts) lives in one shared list, readable from either end.
+        4.3.1.8.5 Blobs (books, pages, screenshots): a file named by its content
+                  hash, plus a node that points at it. A remote box that syncs its
+                  db (13.2.6.1) syncs its blobs too.
+      4.3.1.9 Lifetimes. Each tree declares its lifetime when it is made: kept, one
+              activity (eg one sleep run), or until its source file changes.
+              Dropping a tree drops its leaves and its own links. A node goes only
+              when no tree indexes it, so whatever a temporary tree's activity
+              promoted into a permanent tree outlives it. The drop is enforced, not
+              a habit: measured 2026-11-05, 61 test tables sit in the db, left by
+              runs that ended without dropping them.
+      4.3.1.10 NOT HOW IT IS NOW (measured 2026-11-05; Akien: "I believe that it's
+              not how it is now"): a node's id is a hash of its content
+              (node_id_for, trees.py:126), not its row; the shared link list
+              cairn_links has 0 rows; there are no per-tree link lists, no blob
+              store, and no lifetime on any tree.
     4.3.2 Transient: the transient tree (what the logging tree becomes).
       4.3.2.1 Everything held for seconds to days lives here: mail, logs, test runs,
               trouble tickets, inference tickets.
@@ -380,9 +415,17 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
       5.4.2.3 The bus handles two kinds of requests:
         5.4.2.3.1 Send - Asynchronous. Like sending an email.
         5.4.2.3.2 Show/Get - Synchronous. Like requesting a web page.
-      5.4.2.4 The messages are stored in a SMALL buffer in memory. The bus keeps no
-              database. A shim that needs to hold mail puts it in the transient tree
-              (see Graph trees).
+      5.4.2.4 The messages are stored in a SMALL buffer in memory, because in memory
+              is faster.
+        5.4.2.4.1 A message nobody picks up within n milliseconds is pushed out of the
+                  buffer to the database, into a table that is just a table of
+                  messages. That table is the bus's exception to the memory model
+                  (4.3.1.8): it is not learning, and the buffer in front of it is
+                  what keeps the bus fast. (Akien 2026-11-05, from a UU-days
+                  discussion.) Today bus_traffic holds every message (59,883 rows,
+                  measured 2026-11-05).
+        5.4.2.4.2 [Q#64: does 5.4.2.4.1 replace "a shim that needs to hold mail puts
+                  it in the transient tree", or do both stand?]
       5.4.2.5 The shims, each connected to the bus, pick up the messages and route
               them to their device in whatever manner is appropriate.
       5.4.2.6 The Operator Device and the 'cairn' command are the operator's route
@@ -1063,9 +1106,12 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
     13.2.6.1 A remote box keeps its own database and syncs it with the one on
              akiendelllinux: the local copy is fast, and the sync is the backup.
              (Akien 2026-11-04)
-    13.2.7 [Q#36: Which devices besides the librarian hold tables? Today six components
-           use the client. Draft: only the librarian (trees) and the transient tree's
-           owner, if the transient tree is rows.]
+    13.2.7 Who holds tables: every table of learning is a tree in the memory model
+           (4.3.1.8), owned by the librarian and delegated to the devices that learn
+           (4.3.1.6-4.3.1.7). A table that is not learning is an exception and names
+           why; the bus's message table is the first (5.4.2.4.1). (Q#36, Akien
+           2026-11-05: "it's saying anything we're going to store LEARNING in
+           database memory.")
   13.3 INFERENCE PROXY DEVICE (cairn/devices/inferenceproxy/; was inference_domain)
     13.3.1 A proxy device. The only way to the inference host because we said so,
            and anything that goes around it is an error.
