@@ -1,0 +1,30 @@
+{
+  "id": "b13c53dd679c",
+  "title": "Every class with code in aider_shim reaches the diagnostic mixin",
+  "owning_intention": "cairn/devices/aider_shim/intention+why.json",
+  "intention": "Every class with a method body in cairn/devices/aider_shim (outside proofs/) inherits cairn.tools.base.diagnostic.DiagnosticBase, so the every_class_reaches_the_diagnostic_mixin sieve is green over aider_shim.",
+  "why": "Measured 2026-11-05: ea19fc079c0b's PROVED crossing was refused BuildGateRed by every_class_reaches_the_diagnostic_mixin listing 13 aider_shim classes. A deterministic red is fixed, not explained away.",
+  "traces_to": "Law 4 (the mixin rule is physics in build_inspector) and Law 8; unblocks ea19fc079c0b under RULE 1 parent 8e3474a6ae43.",
+  "how": "Make DiagnosticBase the first base of each of the 13 classes, as 668c8d64b4e2 did for tester; red-first proof asks the sieve for [] plus behaviour-unchanged teeth.",
+  "falsifier": "(1) every_class_reaches_the_diagnostic_mixin over aider_shim returns []; (2) Fence still frozen, _Surface still records, _Stub still answers with a recorder, VenvRunFailed still a RuntimeError, DriveResult still asdict()s; (3) aider_shim's existing proofs green. Twice.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Add `from cairn.tools.base.diagnostic import DiagnosticBase` to driver.py, fence.py, holder.py, interceptor.py, translate.py and venv.py (beside their other cairn imports, after `from __future__`), and make DiagnosticBase the FIRST base of: driver.py DriveResult; fence.py Fence (frozen dataclass) and SeenLog; holder.py _Recorder and _Stub (becomes `class _Stub(DiagnosticBase, types.ModuleType)`); interceptor.py _Message, _Choice, _Usage, _Response, _Logging and _Surface (`class _Surface(DiagnosticBase, types.ModuleType)`); translate.py Brief; venv.py VenvRunFailed (`class VenvRunFailed(DiagnosticBase, RuntimeError)`). Decorators and class bodies unchanged."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Red-first proof cairn/devices/aider_shim/proofs/test_every_aider_shim_class_reaches_the_diagnostic_mixin.py, shaped like cairn/tools/base/proofs/test_every_base_class_reaches_the_diagnostic_mixin.py with check()/FAILURES/main(). PROVES = {'b13c53dd679c': {'1': 'test_no_bare_class_in_aider_shim', '2': 'test_behaviour_unchanged'}}. Tooth 1: inspector.every_class_reaches_the_diagnostic_mixin({'component':'aider_shim','dir':'cairn/devices/aider_shim'}, repo/'cairn/devices/aider_shim') == [] (name each finding on failure). Tooth 2, imports inside the tooth: each of the 13 classes is a subclass of DiagnosticBase; Fence() assignment raises dataclasses.FrozenInstanceError and Fence()==Fence(); interceptor.build(resolver=..., resolve=...) is not required — instead a _Surface('x') with _cairn_touched=set() records a non-underscore attribute read; holder._stub('mixpanel', ('MixpanelException',)).anything is a holder._Recorder and MixpanelException is an Exception subclass; issubclass(venv.VenvRunFailed, RuntimeError); dataclasses.asdict works on a DriveResult built from its fields' defaults or minimal values read off dataclasses.fields."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Run the red-first proof, then after the build run it and every other cairn/devices/aider_shim/proofs/test_*.py twice, serially, PYTHONPATH=. python3 <path>. Commit before the hollow reading. Seal with bin/cairn test --seal <path>; any aider_shim proof whose seal goes stale from the source change reseals the same way. Then retry ea19fc079c0b's PROVED crossing."
+    }
+  ]
+}
