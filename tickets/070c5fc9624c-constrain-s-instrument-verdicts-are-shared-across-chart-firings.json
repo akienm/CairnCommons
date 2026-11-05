@@ -1,0 +1,66 @@
+{
+  "id": "070c5fc9624c",
+  "title": "Constrain's instrument verdicts are shared across chart firings",
+  "owning_intention": "cairn/devices/codemother/machines/constrain/intention+why.json",
+  "intention": "The constrain floor's instrument verdicts are shared across processes: a proof whose bytes (source fingerprint) one chart firing has already had the tester read is not run again by another firing, and two firings asking for the same bytes at once run it once.",
+  "why": "Measured 2026-10-30 20:00-20:30 MDT (idea a85d2085d851): seven constrain stages in flight caused 66 tester run_proof records in 30 minutes; test_the_rehearsal_is_a_build_simulator.py ran 15 times and test_hollow.py 4 times, and the oldest stage hit its 30-minute timeout without berthing, because _RUN_CACHE lives in one process.",
+  "traces_to": "Law 1 (the resolver is spent on the novel, not on re-deriving the settled): a verdict already read for the same bytes is settled, and re-running it is the defect. Measured 2026-10-30: seven parallel constrain stages caused 66 tester runs in 30 minutes, one proof run 15 times, and the oldest stage hit its 30-minute timeout without berthing.",
+  "how": "In cairn/devices/codemother/machines/constrain/constrain.py _run_instrument, keep the in-memory _RUN_CACHE and back it with an instance-space store at ~/.cairn/devices/codemother/0/machines/constrain/run_cache/<sha256(rel_path|fingerprint)>.json. On a miss, take an exclusive flock on that key's .lock file, re-read the entry (another firing may have written it while we waited), and only then ask the tester; write the entry atomically (tmp + os.replace) before releasing. Persist only verdicts the tester actually read (green or red from a record, or a standing seal) — never an 'unrunnable' from a bus failure, which is transient. The store directory is a parameter so proofs point it at a scratch dir.",
+  "falsifier": "Done when (1) a second process gets the first process's persisted verdict for the same (path, fingerprint) with zero tester calls; (2) two processes asking concurrently for one key make exactly one tester call; (3) a changed fingerprint runs fresh; (4) an 'unrunnable' (transport failure) is not persisted, so the next asker runs; (5) an entry older than the TTL is not read. Horizon: the next parallel chart session. Wrong intent if parallel charts still time out at constrain with the store in place.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _run_instrument in cairn/devices/codemother/machines/constrain/constrain.py (exists, 49 KB) keeps _RUN_CACHE in memory and backs it with a store dir, default instance_path('codemother', 0)/'machines'/'constrain'/'run_cache', overridable by the keyword store_dir (and module constant _STORE_DIR) so proofs point it at a temp dir.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2: the key file name is sha256(rel_path + '\\0' + fingerprint).hexdigest() + '.json'; the entry is JSON {verdict, how, _seconds, written_at (time.time()), rel_path, fingerprint}.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3: an entry is read only if written_at is within _TTL_S = 3600 seconds and its rel_path and fingerprint equal the asked ones; otherwise it is a miss.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "D4: on a miss, open <key>.lock and take fcntl.flock(LOCK_EX); re-read the entry under the lock; if still a miss, ask the tester, write the entry, then release. Where fcntl does not import (Windows), skip the lock and keep the rest.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "D5: only these are persisted: a standing-seal read (verdict green), and a tester record's verdict (green or red). 'unrunnable' and 'not-run' are returned and kept only in memory, never written.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "D6: the entry is written to a temp file in the same directory and moved into place with os.replace, so a reader never sees a half-written entry; an unreadable or malformed entry is a miss.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "D7: the tester call is injectable: _run_instrument gains keyword asker=None; None means the existing bus reach('tester').request(...) path; a proof passes a counting callable returning a record dict.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 8,
+      "text": "D8: red-first proof cairn/devices/codemother/machines/constrain/proofs/test_the_verdict_cache_is_shared_across_firings.py with PROVES = {'070c5fc9624c': {...}} naming this ticket's (070c5fc9624c) falsifier clauses 1-5 (already committed, red, at 5fb4633d): (1) a second process reads the persisted verdict with zero asker calls; (2) two processes started together on one key make exactly one asker call in total (counted through a file each asker appends to); (3) a changed proof file (new fingerprint) asks again; (4) an asker that raises leaves no entry and the next asker is called; (5) an entry whose written_at is older than _TTL_S is not read. Every path lives under a tempfile dir; constrain binds by importlib at call time.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 9,
+      "text": "D9: steps: commit the red-first proof (red before the build), build D1-D7 in the existing cairn/devices/codemother/machines/constrain/constrain.py, run the new proof and test_chart_constrain.py and test_constrain_probes_report_to_the_watch.py twice under bin/cairn test, then predict with bin/cairn test --hollow 070c5fc9624c --proof cairn/devices/codemother/machines/constrain/proofs/test_the_verdict_cache_is_shared_across_firings.py before PROVEME.",
+      "by": "cc",
+      "source": "cast"
+    }
+  ]
+}
