@@ -5,7 +5,7 @@
   "intention": "`cairn help` prints its sections in the order [all], [operator], [cairn], then every other device with a bin under the instance root in alphabetical order, each listing the device's bin scripts with the first comment line of each; `cairn <device> help` lists that one device's bin; help is answered before the floor is laid, so it is called, returns, and is done.",
   "why": "Measured 2026-11-05: bin/cairn has no help branch (2026-11-05: `grep -n help bin/cairn` finds no case for it); an unknown device word is refused by name and a non-verb word falls to the self-named launcher (bin/cairn:207-213). Akien 2026-11-05 (Q#27, outline 8.4): 'if there's a script for it, run it, else get on the bus' and 'cairn help lists [all] then [operator] then [cairn] then the rest in alpha order'.",
   "traces_to": "Telos: the operator's one interface (outline 8.4). Law 1 (a shortcut is a settled route), Law 4 (script-else-bus is the dispatch, not a convention), RULE 1 (the bus is a device's public interface).",
-  "how": "A `help` case in bin/cairn ahead of the floor (line ~100): enumerate $INSTANCE_ROOT/*/0/bin (CAIRN_INSTANCE_ROOT honoured), order operator, cairn, then sort the rest; per script print its name and its first '# ' comment line stripped of the leading 'cairn <device> <verb> \u2014'. `cairn <device> help` prints that device's section alone. The [all] section's content waits on its question.",
+  "how": "A `help` case in bin/cairn ahead of the floor. `cairn help` prints [all] (cairn.tools.base.shim.cold_list's root verbs with their meanings \u2014 help among them, child 2d6c1c36f3bd), then [operator], [cairn], then every other device under the instance root alphabetically, each section that device's bin shortcuts from cold_list. `cairn <device> help` asks the device's list over the bus (help answers as list) and, when the bus does not answer, prints cold_list for that device in-process with one line saying views need the bus. Child 2d6c1c36f3bd proves first.",
   "falsifier": "(1) over a scratch CAIRN_INSTANCE_ROOT holding devices zeta, operator, alpha and cairn, `cairn help` prints section headers in the order [all], [operator], [cairn], [alpha], [zeta]; (2) each section lists every executable in that device's bin with its first comment line, and a non-executable file is absent; (3) `cairn alpha help` prints only alpha's section; (4) help exits 0 with a scratch root whose postgres socket is absent (no floor is laid). (5) the [all] section lists help and every key of cairn.tools.base.shim.ROOT_VERB_SEMANTICS with its meaning, and a key added to that table in a fixture appears under [all] with no change to bin/cairn.",
   "bounds": {
     "in": [
@@ -38,10 +38,11 @@
         "bin/cairn"
       ],
       "reads": [
+        "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt",
         "bin/cairn",
-        "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
+        "cairn/tools/base/shim.py"
       ],
-      "text": "A `help` case in bin/cairn ahead of the floor (line ~100): enumerate $INSTANCE_ROOT/*/0/bin (CAIRN_INSTANCE_ROOT honoured), order operator, cairn, then sort the rest; per script print its name and its first '# ' comment line stripped of the leading 'cairn <device> <verb> \u2014'. `cairn <device> help` prints that device's section alone. The [all] section's content waits on its question."
+      "text": "A `help` case in bin/cairn ahead of the floor. `cairn help` prints [all] (cairn.tools.base.shim.cold_list's root verbs with their meanings \u2014 help among them, child 2d6c1c36f3bd), then [operator], [cairn], then every other device under the instance root alphabetically, each section that device's bin shortcuts from cold_list. `cairn <device> help` asks the device's list over the bus (help answers as list) and, when the bus does not answer, prints cold_list for that device in-process with one line saying views need the bus. Child 2d6c1c36f3bd proves first."
     },
     {
       "n": 3,
@@ -56,14 +57,14 @@
     {
       "n": 4,
       "by": "cc",
-      "source": "answer open-ae78c6e4700d 2026-11-05",
+      "source": "Akien 2026-11-05: 'help can just call list'; answer open-ae78c6e4700d",
       "writes_to": [
         "bin/cairn"
       ],
       "reads": [
         "cairn/tools/base/shim.py"
       ],
-      "text": "[all] is read, never hand-listed: help (bin/cairn's own), then each verb of ROOT_VERB_SEMANTICS (cairn/tools/base/shim.py:54, the base shim's public interface \u2014 today list, show, get, stop, start, settings) with its meaning string, via python3 -c importing cairn.tools.base.shim. A future all-device verb (Akien's example: pid) appears by joining that table. Outline 8.4.3.1."
+      "text": "[all] and every device section come from cairn.tools.base.shim.cold_list (the base tool's public interface), never hand-listed; bin/cairn holds no copy of the verb table or of the bin-reading rule. A future all-device verb (Akien's example: pid) appears by joining ROOT_VERB_SEMANTICS. Outline 8.4.3.1-8.4.3.2."
     }
   ]
 }
