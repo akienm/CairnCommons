@@ -1,0 +1,30 @@
+{
+  "id": "089ad920fcc5",
+  "title": "memory_link writes nothing into ~/.claude from a transient tree",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "cc's memory_link writes nothing into ~/.claude from a transient tree: no sync hooks pointing into a temp directory, no memory link for a launch folder under one.",
+  "why": "Measured 2026-11-05 (Akien's Stop-hook error): ~/.claude/settings.json's SessionStart and Stop hooks named memory_sync.py inside a deleted hollow worktree under /tmp, and 6 ~/.claude/projects/-tmp-cairn-hollow-scratch-* folders held memory links. A proof launched superclaude with the live HOME; superclaude runs memory_link from its own tree, which wrote its own temp path into the live settings. Live settings repaired and the 6 folders removed by hand the same day.",
+  "traces_to": "Law 6 and Law 7 (a scratch tree may not rewrite the live holder's settings), CP6; Akien 2026-11-05.",
+  "how": "A transient-root predicate in memory_link.py guards install_hooks and the per-folder link; red-first proof runs a copy of the script both ways under a scratch HOME.",
+  "falsifier": "(1) a copy of memory_link.py under the transient root, run with a scratch HOME and scratch clone, leaves settings.json absent and projects/ empty; (2) the same copy with the transient root elsewhere writes SessionStart pull and Stop push naming the copy's memory_sync.py and links the launch folder's memory to the clone. Green twice.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "In cairn/devices/cc/scripts/memory_link.py: import tempfile; add def transient_root() -> Path returning Path(os.environ.get('CAIRN_CC_MEMORY_TRANSIENT_ROOT') or tempfile.gettempdir()).resolve(), and def is_transient(p: Path) -> bool returning True when p.resolve() equals transient_root() or has it among its parents. In main(): a launch folder for which is_transient(folder) is skipped with say(f'skipped  {folder}: under the transient root {transient_root()}, nothing linked'); the hooks are installed only when not a.no_hooks and not is_transient(HERE), else say(f'hooks  skipped: this script sits under the transient root {transient_root()}'). Update the module docstring with one paragraph saying why (2026-11-05: a hollow worktree's path landed in the live hooks)."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Red-first proof cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py, check()/FAILURES/main() shape. PROVES = {'089ad920fcc5': {'1': 'test_memory_link_writes_only_from_a_durable_tree', '2': 'test_memory_link_writes_only_from_a_durable_tree'}}. One tooth, reading the script at call time: in a tempfile.TemporaryDirectory S, copy cairn/devices/cc/scripts/memory_link.py and memory_sync.py to S/tree/cairn/devices/cc/scripts/; make S/clone/.git (a dir, so no clone is attempted) and S/launch; run [sys.executable, copy, '--clone', S/clone, S/launch] twice, each with a fresh HOME (S/home1, S/home2) and env CAIRN_CC_MEMORY_TRANSIENT_ROOT: run 1 = S/tree (the script's tree is transient; S/launch is not under it); run 2 = S/elsewhere (nothing transient). Assert run 1: no S/home1/.claude/settings.json and no S/home1/.claude/projects/<slug>/memory link for S/tree... specifically: settings.json absent. Assert run 2: settings.json has hooks SessionStart and Stop each with a command containing the copy's memory_sync.py path and ' pull ' / ' push '; S/home2/.claude/projects/<slug(S/launch)>/memory is a symlink resolving to S/clone. Also run 3: transient root = S (so S/launch is under it too) with HOME S/home3: no projects/<slug(S/launch)> link created."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Run the red-first proof, then after the build run it twice, serially, plus cairn/devices/cc/proofs/test_superclaude_memory_scope.py once and check afterwards that ~/.claude/settings.json names no /tmp path. Commit before the hollow reading. Seal with bin/cairn test --seal <path>."
+    }
+  ]
+}
