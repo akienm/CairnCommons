@@ -6,7 +6,7 @@
   "why": "Law 7: an error is loud at a diagnostic surface. The live bus (PID 3498615) ended at 2026-10-05 16:36:00 during a chart's proof runs and nothing records why: systemd logged only 'Consumed 12min 12.248s CPU time over 44min 26.515s wall clock time, 1.2G memory peak' (a measurement, not this ticket's subject), no Failed/Stopping/Killed line, none of the bus's own stderr, and the bus home holds no log. Under Akien's ruling 8f the bus's own proofs run on the live bus, so a proof that can stop it must be named by the stop itself. The lived symptom: every device loses its mail path for a moment and nobody can say which test did it.",
   "traces_to": "Law 7 (errors are loud at diagnostic surfaces — a live bus that stops with no recorded cause is the silent failure the law forbids); Akien's ruling 8f (2026-10-05): the bus's own proofs run on the live bus, so a proof that can stop it must be identifiable; RULE 1 (the change stays inside the bus machine)",
   "how": "In cairn/devices/cairn/machines/bus/server.py serve(): install handlers for SIGTERM/SIGINT/SIGHUP that record the signal and sender pid (siginfo where available) before shutting down; wrap serve_forever so an exception records its type, message and traceback; a verb that stops the bus records itself and its caller; on every exit path the finally block appends one JSON line {at, pid, cause, detail, maxrss} (resource.getrusage) to stops.jsonl at the bus home in instance-space (beside bus.lock, wherever server.bus_home resolves; rotated by the 30-day logging retention). Also measure where the bus's stderr goes today (the journal shows none of it) and point it at a readable surface. Proof under cairn/devices/cairn/machines/bus/proofs/, written red.",
-  "falsifier": "GREEN when a proof under cairn/devices/cairn/machines/bus/proofs/ starts a bus at a marked scratch home and stops it each way — SIGTERM, SIGINT, an exception raised inside serve_forever, and a clean return — and after each stop the stop record holds exactly one new line naming that cause (the signal name and sender pid, the exception type, or 'clean') and a positive maxrss. WRONG INTENT if the stop at 16:36 turns out to be a SIGKILL (uncatchable — then the record must come from the restarting caller or systemd, a different component), which the build's first act measures by reproducing the constrain-stage proof run. MEASURED 2026-10-05 by the peer akiendelllinux_cc_0 against this clause: the kernel journal for 16:30-16:40 holds no oom or killed line, and the user journal holds no 'Main process exited, code=killed' line (what systemd writes for a signal death) — so the 16:36 stop was not an OOM kill and most likely not SIGKILL; the process most likely returned or exited by itself. The clause stands; the build's first act still re-measures.",
+  "falsifier": "GREEN when a proof under cairn/devices/cairn/machines/bus/proofs/ starts a bus at a marked scratch home and stops it each way — (1) SIGTERM, (2) SIGINT, (3) an exception raised inside serve_forever, and (4) a clean return — and after each stop the stop record holds exactly one new line naming that cause (the signal name and sender pid, the exception type, or 'clean') and a positive maxrss. WRONG INTENT if the stop at 16:36 turns out to be a SIGKILL (uncatchable — then the record must come from the restarting caller or systemd, a different component), which the build's first act measures by reproducing the constrain-stage proof run. MEASURED 2026-10-05 by the peer akiendelllinux_cc_0 against this clause: the kernel journal for 16:30-16:40 holds no oom or killed line, and the user journal holds no 'Main process exited, code=killed' line (what systemd writes for a signal death) — so the 16:36 stop was not an OOM kill and most likely not SIGKILL; the process most likely returned or exited by itself. The clause stands; the build's first act still re-measures.",
   "decisions": [
     {
       "n": 1,
@@ -67,6 +67,19 @@
       "text": "D10: the proof is cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py (five teeth, red-first); teeth 3 and 4 drive serve() with server._Server.serve_forever replaced, the only way to make it raise or return on cue.",
       "by": "cc",
       "source": "build 2026-11-05"
+    },
+    {
+      "n": 11,
+      "text": "Falsifier clause (5) is added by this line: a shutdown asked over the socket (op shutdown) writes exactly one stop line with cause 'verb', detail.op 'shutdown' and detail.caller_pid the asking process's pid (D5).",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 12,
+      "text": "D12: the anchors in server.py the build edits: serve() (def serve, ~line 668) wraps server.serve_forever() in try/except/finally — the signal waiter is started before the backlog thread, the except records the exception and re-raises, and the finally writes the one stop line after final_flush; _Handler.handle's 'if req.get(\"op\") == \"shutdown\"' branch (~line 463) records the verb cause with the peer pid read from self.request.getsockopt(1, 17, 12) unpacked by struct '3i' before starting server.shutdown; _HomeWatch.service_actions (~line 547) records home-gone before its shutdown thread. The cause is one module-level first-wins slot (a dict and a lock) that each path sets and the finally reads; unset at the finally means clean.",
+      "by": "cc",
+      "source": "rehearsal",
+      "at": "2026-11-05T09:55:58+00:00"
     }
   ]
 }
