@@ -5,7 +5,68 @@
   "intention": "Every stop of the bus process records its cause — the signal, the verb and its caller, the exception, or a clean exit — and its memory peak, at a surface a mind can read, so a bus that stops during a proof names what stopped it.",
   "why": "Law 7: an error is loud at a diagnostic surface. The live bus (PID 3498615) ended at 2026-10-05 16:36:00 during a chart's proof runs and nothing records why: systemd logged only 'Consumed 12min 12.248s CPU time over 44min 26.515s wall clock time, 1.2G memory peak' (a measurement, not this ticket's subject), no Failed/Stopping/Killed line, none of the bus's own stderr, and the bus home holds no log. Under Akien's ruling 8f the bus's own proofs run on the live bus, so a proof that can stop it must be named by the stop itself. The lived symptom: every device loses its mail path for a moment and nobody can say which test did it.",
   "traces_to": "Law 7 (errors are loud at diagnostic surfaces — a live bus that stops with no recorded cause is the silent failure the law forbids); Akien's ruling 8f (2026-10-05): the bus's own proofs run on the live bus, so a proof that can stop it must be identifiable; RULE 1 (the change stays inside the bus machine)",
-  "how": "In cairn/devices/cairn/machines/bus/server.py serve(): install handlers for SIGTERM/SIGINT/SIGHUP that record the signal and sender pid (siginfo where available) before shutting down; wrap serve_forever so an exception records its type, message and traceback; a verb that stops the bus records itself and its caller; on every exit path the finally block appends one JSON line {at, pid, cause, detail, maxrss} (resource.getrusage) to a stop record under the bus home in instance-space (~/.cairn/devices/cairn/machines/bus/<instance>/stops.jsonl, rotated by the 30-day logging retention). Also measure where the bus's stderr goes today (the journal shows none of it) and point it at a readable surface. Proof under cairn/devices/cairn/machines/bus/proofs/, written red.",
+  "how": "In cairn/devices/cairn/machines/bus/server.py serve(): install handlers for SIGTERM/SIGINT/SIGHUP that record the signal and sender pid (siginfo where available) before shutting down; wrap serve_forever so an exception records its type, message and traceback; a verb that stops the bus records itself and its caller; on every exit path the finally block appends one JSON line {at, pid, cause, detail, maxrss} (resource.getrusage) to stops.jsonl at the bus home in instance-space (beside bus.lock, wherever server.bus_home resolves; rotated by the 30-day logging retention). Also measure where the bus's stderr goes today (the journal shows none of it) and point it at a readable surface. Proof under cairn/devices/cairn/machines/bus/proofs/, written red.",
   "falsifier": "GREEN when a proof under cairn/devices/cairn/machines/bus/proofs/ starts a bus at a marked scratch home and stops it each way — SIGTERM, SIGINT, an exception raised inside serve_forever, and a clean return — and after each stop the stop record holds exactly one new line naming that cause (the signal name and sender pid, the exception type, or 'clean') and a positive maxrss. WRONG INTENT if the stop at 16:36 turns out to be a SIGKILL (uncatchable — then the record must come from the restarting caller or systemd, a different component), which the build's first act measures by reproducing the constrain-stage proof run. MEASURED 2026-10-05 by the peer akiendelllinux_cc_0 against this clause: the kernel journal for 16:30-16:40 holds no oom or killed line, and the user journal holds no 'Main process exited, code=killed' line (what systemd writes for a signal death) — so the 16:36 stop was not an OOM kill and most likely not SIGKILL; the process most likely returned or exited by itself. The clause stands; the build's first act still re-measures.",
-  "decisions": []
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the stop record is <bus home>/stops.jsonl beside bus.lock, at whatever server.bus_home() resolves; where the bus home itself sits against outline 5.6.2.4 is not this ticket's (answered open-e7b5194054d3; captured as an idea).",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 2,
+      "text": "D2: one JSON line per stop {at, pid, cause, detail, maxrss}; cause is one of signal | exception | verb | home-gone | clean; maxrss is resource.getrusage(RUSAGE_SELF).ru_maxrss (KiB on Linux), null where resource is absent (Windows).",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 3,
+      "text": "D3: serve() blocks SIGTERM, SIGINT and SIGHUP in its own thread before any thread it starts, and a daemon waiter takes them with signal.sigwaitinfo, which carries si_pid as detail.sender_pid; a Python handler for the same signals stays installed for a thread that predates the mask, and records sender_pid null. Where sigwaitinfo is absent the handler alone runs. subprocess children get a clean mask (measured: subprocess.run resets SigBlk to 0).",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 4,
+      "text": "D4: the first cause recorded wins; the shutdown a signal starts does not overwrite it.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 5,
+      "text": "D5: the shutdown verb records cause verb with detail.op 'shutdown' and its caller: on the unix door the peer credentials (SO_PEERCRED, Linux) give detail.caller_pid and detail.caller_cmd from /proc/<pid>/cmdline; on the loopback TCP door detail.peer is the peer address.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 6,
+      "text": "D6: an exception escaping serve_forever records type, message and traceback, then re-raises, so the process still exits non-zero.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 7,
+      "text": "D7: every stop line is also printed to stderr (bus.log), so a home-gone stop, whose home cannot hold the file, is still recorded; the home-gone path records cause home-gone.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 8,
+      "text": "D8: stderr, measured 2026-11-05: cairn/tools/bus_client/remote.py _spawn sends the bus's stdout and stderr to ~/.cairn/logs/bus.log (StandardOutput/StandardError=append); no change.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 9,
+      "text": "D9: the falsifier's SIGKILL clause, re-measured 2026-11-05: the 2026-10-05 16:36:00 user journal holds only the 'Consumed' line for cairn-bus.service and no 'Main process exited' line, which systemd writes for any non-zero exit or signal death; so the bus exited 0 by itself. The intent stands.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    },
+    {
+      "n": 10,
+      "text": "D10: the proof is cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py (five teeth, red-first); teeth 3 and 4 drive serve() with server._Server.serve_forever replaced, the only way to make it raise or return on cue.",
+      "by": "cc",
+      "source": "build 2026-11-05"
+    }
+  ]
 }
