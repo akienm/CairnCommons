@@ -1,0 +1,60 @@
+{
+  "id": "d81baa1b5cb8",
+  "title": "base reaches no device",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Base's production code and two of its proofs reach no device and no component off its declared interface, so encapsulation_breaches lists no row from cairn/tools/base/external.py, workflow_grammar.py, proofs/test_deviceness.py or proofs/test_device_logs_unwired.py.",
+  "why": "encapsulation_breaches('.') on 2026-11-05 lists ten rows under cairn/tools/base/, among them workflow_grammar.py:18 (undeclared system_word module) and external.py:20 (into_device bus). base's PROVED gate passes them only because it compares against the crossing; no ticket had cast them.",
+  "traces_to": "RULE 1 (every component talks to every other only through its public interface) and Law 4 (encapsulation_holds is the physics). Parent concept piece 8e3474a6ae43; siblings f5c334da752a, 0527c3962d86.",
+  "how": "Two production one-liners (system_word through its package; a local Protocol for the bus) and two proof teeth rewritten to read by path, AST and base's own probes folder, plus one new proof over encapsulation_breaches. D1-D6 carry the shape.",
+  "falsifier": "Done when encapsulation_breaches lists no row whose file is one of the four; test_base_reaches_no_device.py is green twice and reds under the hollow reading; test_deviceness.py, test_device_logs_unwired.py and test_transitions.py stay green. WRONG INTENT if the rewritten teeth stop red-ing what they reded before: an unloadable base probe, or a device class whose derived component disagrees with where its file lives.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D1: WORKFLOW_GRAMMAR. cairn/tools/base/workflow_grammar.py:18 `from cairn.tools.system_word.system_word import canon` becomes `from cairn.tools.system_word import canon` (the package is system_word's declared public_interface; precedent 0527c3962d86). Nothing else in the file changes."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D2: EXTERNAL. In cairn/tools/base/external.py remove `from typing import TYPE_CHECKING` and the `if TYPE_CHECKING:` block importing BusDevice. Add `from typing import Any, Protocol` and, above ExternalParticipant, `class _Bus(Protocol):` with docstring 'The four bus methods an external participant calls — named here so base imports no device (RULE 1, ticket d81baa1b5cb8).' and stub methods `def post(self, *args: Any, **kwargs: Any) -> Any: ...`, `def read(self, *args: Any, **kwargs: Any) -> Any: ...`, `def undelivered(self, *args: Any, **kwargs: Any) -> Any: ...`, `def request(self, *args: Any, **kwargs: Any) -> Any: ...`. Every annotation `\"BusDevice\"` in the file becomes `_Bus`. No runtime behaviour changes."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D3: DEVICE-CLASS TOOTH. In cairn/tools/base/proofs/test_device_logs_unwired.py, test_real_device_classes_name_their_own_component imports nothing from cairn.devices. It iterates `((\"BusDevice\", \"cairn/devices/cairn/machines/bus/bus.py\"), (\"HeartbeatPage\", \"cairn/devices/cairn/machines/ground_loop/shim.py\"))`; for each, path = _REPO_ROOT / rel; module = rel[:-3].replace('/', '.'); derived = component_of_module(module); home = component_of(path); the existing ok(home is not None and derived == home.name, ...) stays. The issubclass tooth becomes: ast-parse path, find the top-level ClassDef with that name, ok(it exists and 'BaseDevice' is among its bases' ast.Name ids, ...), and once outside the loop `from cairn.tools.base.device import BaseDevice` and ok(issubclass(BaseDevice, DiagnosticBase), 'BaseDevice must carry the emit surface structurally'). Add `import ast` at the top. The docstring gains one sentence: the classes are read by path and AST so base imports no device (RULE 1, ticket d81baa1b5cb8)."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D4: DISCOVERY TOOTH. In cairn/tools/base/proofs/test_deviceness.py add module-level `def _load_own_probes(folder):` — the f5c334da752a loader verbatim (cairn/devices/cc/proofs/test_memory_probe.py:20), module-name prefix 'cairn._base_proof_probes.' and its docstring naming base and ticket d81baa1b5cb8. test_discovery_arms_the_probe_with_no_hand_registration calls `probes, failures = _load_own_probes(_REPO_ROOT / 'cairn' / 'tools' / 'base' / 'probes')`, asserts failures == [] and that any probe's why contains 'CLAIM device-hood'; the discover import and the \"base\" in found assert go. Its docstring becomes: the probe is armed by its file in base's probes/ folder, the folder discovery reads, with no subscribe call; that discover() itself reads that folder is the cairn device's to prove at its own address."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D5: THE PROOF. New cairn/tools/base/proofs/test_base_reaches_no_device.py; _ROOT = Path(__file__).resolve().parents[4] on sys.path. PROVES = {'d81baa1b5cb8': {'1': 'test_the_four_files_carry_no_breach', '2': 'test_the_probe_loader_reds_a_broken_probe', '3': 'test_the_class_tooth_reads_bases_by_ast'}}. Tooth 1: inside the tooth `from cairn.machines.build_inspector.inspector import encapsulation_breaches`; rows = encapsulation_breaches(str(_ROOT)); the four files are cairn/tools/base/external.py, workflow_grammar.py, proofs/test_deviceness.py, proofs/test_device_logs_unwired.py; assert no row whose file (normalised relative to _ROOT) is one of them, naming file:line:module. Tooth 2: load proofs/test_deviceness.py by spec_from_file_location inside the tooth; a scratch_dir('testing-d81baa1b5cb8-') folder holding raises.py ('raise RuntimeError(\"x\")\\n') and noprobe.py ('X = 1\\n'); mod._load_own_probes(folder) returns no probes and two failures. Tooth 3: assert test_device_logs_unwired.py's source contains no 'cairn.devices' import (ast walk of Import/ImportFrom) and contains the string 'BaseDevice' in an ast check — i.e. the class tooth reads bases by AST. `if __name__ == '__main__':` runs every test_ function, prints PASS/FAIL, catches Exception, exits 1 on any failure."
+    },
+    {
+      "n": 6,
+      "by": "cc",
+      "step": "D6",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D6: RUN AND HOLLOW. All of test_base_reaches_no_device.py, test_deviceness.py, test_device_logs_unwired.py and test_transitions.py run green twice with plain `PYTHONPATH=. python3 <proof>`. The hollow reading reverts the four files to pre-build bytes: tooth 1 reds (the rows return), tooth 2 reds (no _load_own_probes), tooth 3 reds (the device imports return). The four BusDevice.scratch rows (test_chat_pane, test_console_pane, test_probe_carry) are OUT and stand."
+    }
+  ]
+}
