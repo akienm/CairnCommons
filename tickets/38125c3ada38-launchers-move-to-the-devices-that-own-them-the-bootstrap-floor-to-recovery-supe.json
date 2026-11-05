@@ -1,0 +1,18 @@
+{
+  "id": "38125c3ada38",
+  "title": "Launchers move to the devices that own them: the bootstrap floor to Recovery, superclaude to CC",
+  "owning_intention": "launchers/intention+why.json (moves to cairn/devices/recovery/intention+why.json)",
+  "intention": "The bootstrap floor in launchers/ moves into a Recovery device, and superclaude moves into the CC device, so each launcher lives with the device that owns it.",
+  "why": "launchers/ belongs to no device, yet the outline gives its two halves to two owners: the bootstrap floor is Recovery's (7.5.3.9) and superclaude is CC's launcher (12). Akien 2026-11-04, Q#24: 'yes to both'.",
+  "traces_to": "RULE 1 (encapsulation) and Law 5 (intent, state and proofs share an address); outline 7.5.3.9, 12.",
+  "how": "git mv the bootstrap half into cairn/devices/recovery/ and superclaude into cairn/devices/cc/; split proofs by subject; rewrite every live reference; repoint the per-box symlink; remove launchers/. BUILDER BRIEF: A Haiku builder needs: (1) the file list: launchers/ = bootstrap.sh, bootstrap_first_run.sh, superclaude, intention+why.json, state.json, history.json, probes/reported_but_unfixed_floor.py, proofs/ (PROOF.md + 10 test files), validations/; (2) the split rule: a proof whose subject is superclaude (test_superclaude_*, and any test that runs superclaude) goes to cairn/devices/cc/proofs/, every other to cairn/devices/recovery/proofs/; validations are re-made by sealing, never copied; (3) use git mv so history follows; (4) the reference rewrite: `git grep -n launchers` and fix each live hit by reading it (bin/cairn, bin/cmd/*, hooks under cairn/tools/*/hooks and devices/*/hooks, build_inspector/inspector.py, pyproject.toml, .gitattributes, README.md, MAP.md, scratch.py, intentions_model_compiler); (5) charter writes ride the artifact door and poke recompile_gate.sh; (6) the symlink: ln -sfn <cairn>/cairn/devices/cc/superclaude ~/.local/bin/superclaude on this box, and tell akiendell_cc_0 to do the same where it applies; (7) no behaviour change in either script beyond paths it computes from its own location (superclaude derives CAIRN_ROOT from its own path: check the parent depth).",
+  "falsifier": "Done when launchers/ does not exist; `cairn superclaude` and `superclaude` (the per-box symlink, repointed) launch CC from cairn/devices/cc/superclaude on akiendelllinux and on akiendell; bootstrap.sh runs from cairn/devices/recovery/; every moved proof is green and sealed at its new address; `git grep -n 'launchers/'` outside history.json, validations and .jsonl journals returns nothing. Horizon: the next superclaude launch on each box. Wrong intent if Recovery is found not to be its own device (then the floor berths under the device that holds it).",
+  "decisions": [
+    "The bootstrap floor (bootstrap.sh, bootstrap_first_run.sh, the launchers charter, its probe and its proofs) moves to cairn/devices/recovery/.",
+    "superclaude and its proofs move to cairn/devices/cc/.",
+    "A proof goes with the script it exercises.",
+    "No forwarding stubs: launchers/ is removed.",
+    "Folding sudo_relay into Recovery is out of this ticket.",
+    "No behaviour change; superclaude's self-located paths are re-derived for the new depth."
+  ]
+}
