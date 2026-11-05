@@ -1,0 +1,60 @@
+{
+  "id": "ad7caca4d54c",
+  "title": "base's pane and carry proofs ride the live bus, marked as testing",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Base's three proofs that stood up a private scratch bus ride the live bus through bus_client, every name and body marked as testing, so base's proofs reach no device.",
+  "why": "Measured 2026-11-05 after d81baa1b5cb8 PROVED: encapsulation_breaches lists 22 into_device rows from 12 proofs outside the cairn device reaching cairn.devices.cairn.machines.bus.bus for BusDevice.scratch; base holds three (test_chat_pane.py:19, test_console_pane.py:20, test_probe_carry.py:199). RULE 1: a device's interface is the bus plus its published client tool (cairn.tools.bus_client). Akien's rule (2026-09-28, 10-04, 10-05): proofs ride the live bus, marked as testing; no scratch or test bus ('why cant we run proofs on the real bus, it's just a message sending system?'). Pilot 20a97889646e PROVED the pattern.",
+  "traces_to": "RULE 1 (encapsulation); the ruled 'test against live, marked as testing'; Law 4 (encapsulation_breaches is the physics and these rows are its open debt).",
+  "how": "bus_client.reach() replaces BusDevice.scratch; fresh testing-ad7caca4d54c-<label>-<uuid8> names; bodies carry testing_mark.mark; CHANNELS teeth become a read-only recorder; probe_carry declines wire_delivery with the pilot's wrapper; a new proof reds the reach.",
+  "falsifier": "(1) encapsulation_breaches lists no row whose file is cairn/tools/base/proofs/test_chat_pane.py, test_console_pane.py or test_probe_carry.py; (2) each of the three rides the live bus through bus_client.reach, marks every name testing-ad7caca4d54c-, carries no BusDevice, and is green twice serially; (3) after the probe-carry tooth fires on the live bus, the bus has posted its traffic and stats()['held'] names no testing-ad7caca4d54c id. Wrong intent if a pane proof cannot be made deterministic on the live bus.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: SETTLED: chat pane (cairn/tools/base/proofs/test_chat_pane.py): replace line 19 'from cairn.devices.cairn.machines.bus.bus import BusDevice, CHANNELS' with 'import uuid', 'from cairn.tools.bus_client import bus_client' and 'from cairn.tools.base import testing_mark'; add module-level _TICKET = 'ad7caca4d54c', def _name(label): return f'testing-{_TICKET}-{label}-{uuid.uuid4().hex[:8]}', and def _body(text): return {'text': text, testing_mark.FIELD: testing_mark.mark(_TICKET)}. _Shim.__init__ takes device_id=None and stores device_id or _name('chat'); the device_id property returns it.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 2,
+      "text": "D2: SETTLED: every 'with BusDevice.scratch(<label>) as bus:' in test_chat_pane.py and test_console_pane.py becomes 'bus = bus_client.reach()' with the block dedented one level; every literal sender (alice, bob, system) becomes a _name(<that word>) bound to a local before posting; every body becomes _body(<its text>); assertions on a sender compare to that local, and assertions on a body compare body['text'] (the chat tooth's turns[0]['body'] == {'text': 'hello'} becomes turns[0]['body']['text'] == 'hello'). Fresh names per test mean every channel starts empty on the shared bus, so counts stay exact on the second run.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 3,
+      "text": "D3: SETTLED: the two CHANNELS teeth (test_chat_pane_does_not_alter_channels, test_panes_do_not_alter_channels) become test_chat_pane_only_reads_the_bus and test_panes_only_read_the_bus: wrap the live bus in a module-level class _Recording whose __init__(self, bus) stores bus and self.called = [], and whose __getattr__(self, name) appends name to self.called and returns getattr(self._bus, name); render active_page() on a shim over it; assert self.called is non-empty and set(self.called) <= {'read', 'count'}. Why: CHANNELS is the bus module's dict in another process on a live bus; what the old tooth stood for is that rendering writes nothing to the bus. Proofs are exempt from every_class_reaches_the_diagnostic_mixin (inspector.py:4731).",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 4,
+      "text": "D4: SETTLED: console pane (cairn/tools/base/proofs/test_console_pane.py): the same as the chat pane — line 20's import replaced by the same three imports, the same _TICKET, _name and _body helpers, _Shim takes device_id=None defaulting to _name('console').",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 5,
+      "text": "D5: SETTLED: probe carry (cairn/tools/base/proofs/test_probe_carry.py, test_the_shim_fires_the_carrier_against_the_pulse_context, lines 196-222): drop the BusDevice import at line 199; import uuid and bus_client inside the tooth; recipient = f'testing-ad7caca4d54c-recipient-{uuid.uuid4().hex[:8]}' and the _Shim's device_id = f'testing-ad7caca4d54c-watcher-{uuid.uuid4().hex[:8]}'; bus = _TestingBus(bus_client.reach()) where _TestingBus is a class defined in that tooth whose wire_delivery(self, device_id, _deliver=None) returns None and whose __getattr__ forwards to the live bus — the pilot's wrapper (cairn/devices/system_rackmount/proofs/test_system_rackmount.py:76), because RemoteBus.wire_delivery holds the device in the bus process and on_pulse wires delivery on its first pulse. Replace the scratch-table comment with one line naming the live bus and the fresh names. The assertions stay: one personal message to the recipient, its text unchanged.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 6,
+      "text": "D6: SETTLED: each of the three files declares a module-level PROVES naming one of its live-bus teeth under falsifier clause 2: test_chat_pane.py PROVES = {'ad7caca4d54c': {'2': 'test_chat_pane_shows_personal_messages'}}; test_console_pane.py PROVES = {'ad7caca4d54c': {'2': 'test_info_pane_shows_info_messages'}}; test_probe_carry.py PROVES = {'ad7caca4d54c': {'2': 'test_the_shim_fires_the_carrier_against_the_pulse_context'}}. Their sealed validations change assertions, so each is resealed with: bin/cairn test --seal --ruling ad7caca4d54c <proof>.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 7,
+      "text": "D7: SETTLED: the red-first proof is cairn/tools/base/proofs/test_base_proofs_ride_the_live_bus.py, committed alone before the build, with PROVES = {'ad7caca4d54c': {'1': 'test_no_breach_from_the_three', '2': 'test_the_three_reach_the_live_bus_marked', '3': 'test_the_carry_holds_no_testing_name'}}. Tooth 1: inspector.encapsulation_breaches(repo root) has no row whose 'file' is one of the three paths. Tooth 2: each file's text contains 'bus_client.reach' and 'testing-' plus 'ad7caca4d54c' (as _TICKET or literally) and no 'BusDevice'. Tooth 3: import test_probe_carry by path at call time, read bus_client.reach().stats() before, run test_the_shim_fires_the_carrier_against_the_pulse_context, read stats after; assert after['posted'] > before['posted'] and no name in after['held'] starts with 'testing-ad7caca4d54c'.",
+      "by": "cc",
+      "source": "cast"
+    },
+    {
+      "n": 8,
+      "text": "D8: SETTLED: run each of the four files twice serially with 'PYTHONPATH=. python3 <file>' from the cairn root (never in parallel with other live-bus proofs); then commit the three changed proofs together with the message 'ad7caca4d54c: base's pane and carry proofs ride the live bus, marked as testing' and the two trailer lines.",
+      "by": "cc",
+      "source": "cast"
+    }
+  ]
+}
