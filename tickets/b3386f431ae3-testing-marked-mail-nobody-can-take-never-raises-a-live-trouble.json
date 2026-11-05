@@ -1,0 +1,36 @@
+{
+  "id": "b3386f431ae3",
+  "title": "Testing-marked mail nobody can take never raises a live trouble",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "Testing-marked mail that nobody can take never raises a live trouble: the bus's bounce inherits the testing mark, and a marked bounce that cannot land is disposed of and receipted instead of raised.",
+  "why": "Measured 2026-11-05: ~/.cairn/devices/trouble/0/last_known.json carries 13 mail-testing-*-has-no-receiver identities and ~/.cairn/logs/bus/0 holds 16 raise_trouble logs for testing names, raised by the bus's _raise_undeliverable_bounce when ad7caca4d54c's proofs post testing-marked mail between shimless testing names. Test debris in the trouble lane hides real reds.",
+  "traces_to": "Law 7 (the trouble lane is a record of truth for errors a human must fix); Akien's ruling 2026-09-28/10-05 (test against live, marked as testing) and ticket 71d1bbfa98b0 D2 + contagion.",
+  "how": "The bounce copies the original's testing mark; no_receiver disposes of a marked bounce that cannot land (emit + receipt) instead of raising it; red-first proof on the bus's in-process rig; hand drain of the standing testing troubles with the count kept.",
+  "falsifier": "(1) bouncing a testing-marked envelope yields a bounce whose body carries the same mark; (2) a marked bounce to a shimless sender raises nothing, is receipted, and the bus emits test_bounce_disposed; (3) an unmarked bounce to a shimless sender still raises exactly one mail-<to>-has-no-receiver trouble. Green twice; ad7caca4d54c's live-bus proof then raises zero new testing troubles.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "cairn/devices/cairn/machines/bus/server.py _return_to_sender: when testing_mark.mark_of(envelope.get('body') or {}) is not None, the bounce body carries it under testing_mark.FIELD (contagion, ticket 71d1bbfa98b0). The import is `from cairn.tools.base import testing_mark` at module top (base is the floor every device stands on). Nothing else in the bounce body changes.",
+      "by": "cc",
+      "source": "cast 2026-11-05"
+    },
+    {
+      "n": 2,
+      "text": "cairn/devices/cairn/machines/bus/server.py no_receiver: in the `if body.get('is_bounce'):` branch, when testing_mark.mark_of(body) is not None, call a new method _dispose_test_bounce(envelope, reason) instead of _raise_undeliverable_bounce. _dispose_test_bounce emits through self.bus.emit('test_bounce_disposed', ...) if the bus has emit, else nothing (a log line, never raise_trouble), with values {'bounce_envelope': envelope['id'], 'sender': envelope.get('addressee'), 'receiver': body.get('original_addressee'), 'test': mark['test'], 'reason': reason}, then self.bus.record_delivery(envelope['id'], to=envelope.get('addressee') or '', by='bus-test-bounce-disposed'). An unmarked bounce takes _raise_undeliverable_bounce exactly as before. The no_receiver docstring gains one sentence: a testing-marked bounce that cannot land is test debris and is disposed of, never raised (71d1bbfa98b0 D2).",
+      "by": "cc",
+      "source": "cast 2026-11-05"
+    },
+    {
+      "n": 3,
+      "text": "Red-first proof cairn/devices/cairn/machines/bus/proofs/test_a_test_bounce_is_disposed_not_raised.py, copying the in-process rig of cairn/devices/cairn/machines/bus/proofs/test_mail_without_a_receiver.py (BusDevice.scratch + BusProcess + an _Inbox diagnostic receiver recording every record; the bus's own proofs may use its own scratch). Names 'testing-b3386f431ae3-<label>-<uuid8>'. PROVES = {'b3386f431ae3': {'1': 'test_a_bounce_carries_the_mark', '2': 'test_a_marked_bounce_is_disposed_not_raised', '3': 'test_an_unmarked_bounce_still_raises'}}. Tooth 1: bus.post(sender=ghost, to=nobody, body={'testing': mark('b3386f431ae3')}); the one bounce to ghost has testing_mark.mark_of(body) == the mark. Tooth 2: same post; inbox.raised() names no mail-<nobody>-has-no-receiver, the bounce is not in bus.undelivered(to=ghost), its delivery is by 'bus-test-bounce-disposed' (read through the bus's delivery record, or assert the bounce left _pending and no raise), and the inbox holds one record whose gate or event is test_bounce_disposed. Tooth 3: the same post with no body mark raises exactly one mail-<nobody>-has-no-receiver. testing_mark binds at call time.",
+      "by": "cc",
+      "source": "cast 2026-11-05"
+    },
+    {
+      "n": 4,
+      "text": "Run the new proof and cairn/devices/cairn/machines/bus/proofs/test_mail_without_a_receiver.py twice, serially; seal with bin/cairn test --seal. Then by hand: count mail-testing-* identities in ~/.cairn/devices/trouble/0/last_known.json, clear each through the trouble lane's clear door (BaseShim.clear_trouble / cairn trouble clear) with by='cc' and what_changed naming this ticket, and record the count in the verdict. Then run cairn/tools/base/proofs/test_base_proofs_ride_the_live_bus.py once and measure zero new raise_trouble logs for testing names under ~/.cairn/logs/bus/0.",
+      "by": "cc",
+      "source": "cast 2026-11-05"
+    }
+  ]
+}
