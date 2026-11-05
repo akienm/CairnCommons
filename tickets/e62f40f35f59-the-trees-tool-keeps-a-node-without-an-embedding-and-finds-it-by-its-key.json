@@ -1,0 +1,33 @@
+{
+  "id": "e62f40f35f59",
+  "title": "the trees tool keeps a node without an embedding and finds it by its key",
+  "owning_intention": "cairn/devices/librarian/tools/trees/intention+why.json",
+  "intention": "The librarian's trees tool takes a node without an embedding into a keyed tree and finds it again by its key.",
+  "why": "Measured 2026-11-05: the deposit door refuses a node without a vector (_check_vector, trees.py:250 deposit), and the leaf table's embedding_id is NOT NULL (_LEAF_COLUMNS, trees.py:64); cairn_embeddings holds 21,880 embeddings for 21,082 nodes, so every node is embedded. Akien 2026-11-05 (open-029c5ae100a9): 'um, no. embeddings for every single thing would mean that we'd have an impossible mound of data. i don't work that way. and this is supposed to work how i do. but i have a few key questions that cross domains. 'how might that work' is a chief among them. it's applicable in almost all domains, and captures the pattern, not the domain specific answer.' Outline 4.3.1.8.1.1: a node without an embedding is found by its key. First consumer: the inference proxy's answer tree, found by exact request (ticket 98ab0e9db57f, outline 13.3.4.1).",
+  "traces_to": "Outline 4.3.1.8.1.1 (Akien 2026-11-05: not every node is embedded; the pattern is). Telos: work the way Akien does. Law 1 (a stored answer found by its key is compiled, without an embedding mound). RULE 1 (the librarian's own published tool).",
+  "how": "Add a second leaf shape to the trees tool, declared when the table is made: ensure_trees(table=..., owner=..., keyed=True) creates a keyed leaf table with columns leaf_id text PRIMARY KEY, key text NOT NULL, node_id text NOT NULL, meta jsonb NOT NULL DEFAULT '{}', created timestamptz NOT NULL DEFAULT now(). New deposit_keyed(content, key, provenance, *, table, owner, meta=None, conn=None): same content floor, provenance rule and node write as deposit (content-hash node id, attestation on a duplicate), no embedding row, leaf_id = leaf_id_for(node_id, key). New find(key, *, table, conn=None): the nodes under that key, joined to their leaf meta, newest first. A keyed table is recognised by its columns (key present, embedding_id absent); the walks (nearest, neighbors, and anything reading _leaf_rows) refuse one loudly, and each deposit door refuses the other shape. Existing vectored tables and calls are unchanged.",
+  "falsifier": "(1) deposit_keyed into a scratch keyed leaf table lands one cairn_nodes row, no cairn_embeddings row, and one leaf row carrying the key and the meta; (2) find(key) on that table returns the node's content, provenance, standing and meta, newest first; find of an unknown key returns []; (3) the same content under the same key twice leaves one leaf and appends a provenance attestation; the same content under a second key leaves two leaves over one node; (4) nearest and neighbors over a keyed table raise WalkRefused naming the table as keyed, deposit (with a vector) into a keyed table raises DepositRefused, and deposit_keyed into a vectored table raises DepositRefused, nothing landed in each case; (5) deposit_keyed applies the same content floor and provenance rule as deposit; (6) every existing proof that imports cairn.devices.librarian.tools.trees stays green; (7) the charter beside trees.py names deposit_keyed, find and the keyed leaf shape in its public_interface.",
+  "bounds": {
+    "in": [
+      "cairn/devices/librarian/tools/trees/trees.py",
+      "cairn/devices/librarian/tools/trees/intention+why.json",
+      "cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py"
+    ],
+    "out": [
+      "the inference proxy's use of it (ticket 98ab0e9db57f)",
+      "cairn/devices/librarian/ingest.py, which embeds every answer today (the librarian's own follow-up)",
+      "which key questions get embeddings (open-7e5a39224b1b)",
+      "the 798 embeddings that point at no node"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 (the /sorted builder_check): A Haiku builder needs, and the how carries: the keyed leaf's exact columns, the two new function signatures, that the node write is deposit's own path reused (not copied), how a keyed table is recognised, which calls refuse which shape and with which exception, and the proof path with one tooth per clause.",
+      "by": "cc",
+      "step": "cast",
+      "source": "sorted",
+      "at": "2026-11-05T22:42:48+00:00"
+    }
+  ]
+}
