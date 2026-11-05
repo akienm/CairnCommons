@@ -1,10 +1,48 @@
 {
   "id": "ae4d581be071",
   "title": "a-restart-from-one-session-never-targets-another-sessions-loop",
-  "owning_intention": "launchers/intention+why.json",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
   "intention": "A restart asked from one superclaude session never targets another session's loop, even when two sessions were launched at the same instance address.",
   "why": "Two CC sessions launched at the default instance 0 share one loop.pid and one restart-flag set (measured 2026-10-06 by the peer akiendelllinux_cc_0: loops 441666 and 512525, both --name akiendelllinux_cc_0). loop.pid holds whichever launched last, so `cairn cc restart now` from the other session would kill the wrong session's CC and leave it with no relaunch -- the hang-up the loop_pid guard exists to prevent. The lived symptom: an operator restarting one session ends a different one.",
   "traces_to": "Law 6 (everything has exactly one owner, and the owner alone gates writes): two loops share one loop.pid and one flag set, so neither owns its own restart gate; the lived symptom is `cairn cc restart now` from the peer's session hanging up this session's loop.",
   "how": "launchers/superclaude defaults --instance to 0 (line 225) and derives one flags home per instance (line 299); its inner loop writes its own pid to <home>/loop.pid (line 91), and cairn/devices/cc/0/bin/restart _loop_pid (lines 73-81) reads that file to find the loop to kill, while the restart flags (COMMAND_RESTART*.flag) are consumed by whichever loop exits first. So a second launch at an occupied instance overwrites the first's pid and shares its flags. Fix at launchers per Akien's answer: either a launch refuses (or moves to the next free instance) when the instance's loop.pid names a live loop, or loop.pid and the flags become per-session inside the instance. Proof under launchers/proofs/, written red: two inner loops launched at one instance with a stub CLAUDE_BIN; restart's target from session X is X's loop, never Y's.",
-  "falsifier": "GREEN when a proof launching two inner loops at one instance address shows restart run from session X resolves X's loop pid and never session Y's, and a restart flag written by X is consumed only by X's loop; RED at HEAD, where the second launch overwrites loop.pid. WRONG INTENT if Akien answers that two sessions at one instance address is itself forbidden and the launcher should simply refuse the second launch, in which case the proof's teeth become: the second launch at an occupied instance exits non-zero naming the live loop."
+  "falsifier": "Answer (b) holds, read off superclaude dry runs under a scratch HOME and TMUX_TMPDIR: (1) with instance 0's loop.pid naming a live process, a default launch moves to instance 1 -- session <host>_cc_1, CAIRN_USER=cc1, flags home .../launchers/superclaude/1 -- and names the live loop it moved off; so restart from either session reads only its own loop.pid and flags; (2) a loop.pid naming a dead process does not hold the instance: the launch stays at 0; (3) with 0 and 1 both held, the launch moves to 2; (4) a word instance held (--name builder) moves to builder_1, keeping the role name; (5) a tmux session cairn_cc_0 holds instance 0 the same as a live loop.pid. RED at HEAD, where every one of these launches stays at the instance asked. WRONG INTENT if moving surprises an operator who meant to replace a session -- measured as a launch at a held instance followed within a minute by a kill of the held loop.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "Akien answered open-62a7f29771e6 '(b), next free instance' (2026-10-06), so the falsifier is rewritten to answer (b); the falsifier cast before the answer, kept verbatim: GREEN when a proof launching two inner loops at one instance address shows restart run from session X resolves X's loop pid and never session Y's, and a restart flag written by X is consumed only by X's loop; RED at HEAD, where the second launch overwrites loop.pid. WRONG INTENT if Akien answers that two sessions at one instance address is itself forbidden and the launcher should simply refuse the second launch, in which case the proof's teeth become: the second launch at an occupied instance exits non-zero naming the live loop.",
+      "by": "cc",
+      "source": "open-62a7f29771e6"
+    },
+    {
+      "n": 2,
+      "text": "launchers/ moved to its devices (cairn/devices/recovery/proofs/test_launchers_moved_to_their_devices.py): the launcher is cairn/devices/cc/superclaude, restart is cairn/devices/cc/0/bin/restart, the owning intention is cairn/devices/cc/intention+why.json, and the proof is cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py. The how's line numbers name the old file.",
+      "by": "cc",
+      "source": "open-62a7f29771e6"
+    },
+    {
+      "n": 3,
+      "text": "HELD means restart's own _instance_alive predicate (cairn/devices/cc/0/bin/restart): the instance's loop.pid names a live process (kill -0), or tmux has a session cairn_cc_<instance>. superclaude asks the same two questions; restart is not edited, because distinct instances already give distinct flags homes and restart reads SUPERCLAUDE_FLAGS_HOME.",
+      "by": "cc",
+      "source": "open-62a7f29771e6"
+    },
+    {
+      "n": 4,
+      "text": "NEXT FREE: a numeric instance N tries N+1, N+2, ...; a word instance W tries W_1, W_2, ... so a role name survives the move. The move happens right after the instance is resolved, before session, CAIRN_USER and the flags home are derived, so all three follow it.",
+      "by": "cc",
+      "source": "open-62a7f29771e6"
+    },
+    {
+      "n": 5,
+      "text": "THE MOVE IS LOUD: one stderr line 'superclaude: instance <old> is held by <what>; launching as instance <new>' and the same line in the boot log; the dry run applies the move and prints '# moved: <line>'.",
+      "by": "cc",
+      "source": "open-62a7f29771e6"
+    },
+    {
+      "n": 6,
+      "text": "Inner mode never moves: a relaunch inside the loop is the same session at the same instance.",
+      "by": "cc",
+      "source": "open-62a7f29771e6"
+    }
+  ]
 }
