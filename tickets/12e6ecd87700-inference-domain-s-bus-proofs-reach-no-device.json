@@ -1,0 +1,42 @@
+{
+  "id": "12e6ecd87700",
+  "title": "inference_domain's bus proofs reach no device",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "inference_domain's bus proofs reach the bus only through cairn.tools.bus_client, testing-marked perform, and import nothing from the cairn device's bus machine.",
+  "why": "Measured 2026-11-05: inspector.encapsulation_breaches lists 4 rows with source cairn/devices/inference_domain — test_bus_infer.py:46-47 and test_resolve_verb.py:37-38 import cairn.devices.cairn.machines.bus.bus and .shim to stand up a private scratch bus. RULE 1: a device's interface is the bus, reached through bus_client.",
+  "traces_to": "RULE 1 (CairnCommons/intentions-not-beside-code/I-rule-1-encapsulation.md) and parent 8e3474a6ae43; Law 4 (encapsulation_holds is the physics).",
+  "how": "Rewrite the two proofs' rigs to the d0c8c4b4283e perform pattern over bus_client.reach(); red-first proof modelled on 7bc784d5a7de's reach-no-device proof.",
+  "falsifier": "(1) encapsulation_breaches lists no row whose source is cairn/devices/inference_domain; (2) neither test_resolve_verb.py nor test_bus_infer.py names cairn.devices.cairn, and each runs green. Green twice; every prior tooth kept by name.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Red-first proof cairn/devices/inference_domain/proofs/test_inference_domain_proofs_reach_no_device.py, copying the shape of cairn/devices/db_domain/proofs/test_db_domain_proofs_reach_no_device.py. PROVES = {'12e6ecd87700': {'1': 'test_no_inference_domain_row', '2': 'test_the_bus_proofs_ride_bus_client'}}. Tooth 1: no row of inspector.encapsulation_breaches(repo) has source 'cairn/devices/inference_domain'. Tooth 2: for each of test_resolve_verb.py and test_bus_infer.py, the source text names no 'cairn.devices.cairn' and names 'bus_client'; then load each by path (importlib.util.spec_from_file_location) and run it as a subprocess (python3 <path>, cwd repo, PYTHONPATH repo) and require exit 0."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Rewrite cairn/devices/inference_domain/proofs/test_resolve_verb.py: drop the BusDevice, BusShim, DeviceRoster and CallerShim imports and the _fresh_bus/_rig_with_inference helpers. Add the d0c8c4b4283e rig (cairn/tools/base/proofs/test_a_perform_mark_reaches_the_device.py): a _TestingBus wrapping bus_client.reach() that declines wire_delivery; an InferenceDomainShim(bus=that bus); a caller named 'testing-12e6ecd87700-caller-<uuid8>'. An _ask(verb, body, resolver) helper patches cairn.devices.inference_domain.host.ollama_resolver to return the resolver, calls shim.deliver({'id': 'testing-12e6ecd87700-<uuid hex>', 'sender': caller, 'addressee': 'inference_domain', 'channel': 'personal', 'verb': verb, 'body': {**body, 'testing': testing_mark.mark('12e6ecd87700', 'perform')}}), then reads bus.read(to=caller, channel='personal'), requires exactly one reply, receipts it with bus.record_delivery(reply['id'], to=caller, by=caller), and returns it. Every bus.request call in the teeth becomes _ask with the same verb and body. The teeth keep their names and assertions (reply sender 'inference_domain', addressee the caller, reply_to set); test_resolve_verb_is_declared, test_resolve_verb_includes_base_verbs and test_device_is_bus_unaware stay busless. PROVES unchanged. main keeps set_diagnostic_roots to a scratch_dir; _SCRATCH goes."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Rewrite cairn/devices/inference_domain/proofs/test_bus_infer.py the same way: _subject() returns only InferenceDomainDevice and InferenceDomainShim plus bus_client and testing_mark, all bound at call time (87a7f1c7ae21 FIXME 1-2 stays true); _fresh_bus builds the rig; _ask(rig, verb, body) patches with _stub_resolver and delivers perform-marked as above. Teeth keep names and assertions; PROVES unchanged; _SCRATCH and NOW go."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "The testing field rides the body into the device's handler; the resolve/infer/embed handlers copy named keys into the request, so the resolver never sees it and test_a_toolset_survives_the_bus_verb's control (no 'tools' key) stays meaningful. If a run shows the field reaching the resolver, that is a finding to stop on, not to strip in the proof."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Run the red-first proof, then after the build run all three proofs twice, serially, PYTHONPATH=. python3 <path>. Commit before the hollow reading. Seal each with bin/cairn test --seal <path> (the two rewritten proofs reseal for 548dd13fb4db and 87a7f1c7ae21 under their unchanged PROVES). Live measure: encapsulation_breaches row count before (90) and after (86), recorded in the verdict."
+    }
+  ]
+}
