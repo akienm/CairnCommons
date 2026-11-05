@@ -1,0 +1,52 @@
+{
+  "id": "f5c334da752a",
+  "title": "cc's proofs reach no other device",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "The cc device's own proofs measure their probes and their place on the rack without reaching into the cairn device's ground_loop, so build_inspector's encapsulation_holds reads no cc file crossing into another device.",
+  "why": "build_inspector cc, 2026-11-05: encapsulation_holds reds cc at cairn/devices/cc/proofs/test_cc_device.py:48 (discover), test_memory_probe.py:29 and test_the_shim_delivers_mail.py:90 (ProbeCache), each importing cairn.devices.cairn.machines.ground_loop.discovery, reason into_device — a device's public interface is the bus. The live trouble inspector-new-finding-encapsulation-holds (3x) carries it, unbaselined. Any cc crossing reds on it.",
+  "traces_to": "RULE 1 (every component talks to every other only through its public interface; a device's is the bus) and Law 4 (encapsulation_holds is the physics; a red is fixed, never explained). Parent concept piece 8e3474a6ae43 (rule-1-encapsulation), child ground-loop-discovery-moves-down-a-rung.",
+  "how": "Edit three cc proofs, add one proof; no production code. Each of the three gains a module-private _load_own_probes(folder) carrying ProbeCache.probes_for's judgement (imports, declares PROBE, PROBE is a cairn.tools.base.probe.Probe); the roster tooth reads cairn.tools.rack.rack.rack_ids, the public tool (precedent cairn/devices/recovery/proofs/test_launchers_moved_to_their_devices.py tooth_discover_loads_recovery). Decisions D1-D5 carry the exact shape.",
+  "falsifier": "Done when (1) PYTHONPATH=. python3 -m cairn.machines.build_inspector.inspector cc lists no encapsulation_holds finding whose file is under cairn/devices/cc/; (2) cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py is green twice under bin/cairn test and its hollow reading (the three edited proofs reverted) reds it; (3) each of the three loaders, run over a fixture folder holding a PROBE-less file and a raising file, reports exactly those two as failures and loads the good one. WRONG INTENT if a cc probe imports cleanly by spec_from_file_location yet fails under the ground loop's ProbeCache (the loader would then be hiding a difference the loop sees).",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "step": "D1",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D1: WHERE. Edit cairn/devices/cc/proofs/test_cc_device.py, cairn/devices/cc/proofs/test_memory_probe.py and cairn/devices/cc/proofs/test_the_shim_delivers_mail.py; add cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py. Nothing outside cairn/devices/cc/proofs/ changes. skills/restart/proofs/test_restart_selector.py (it imports a cc probe) is skills/restart's file and is OUT."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "step": "D2",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D2: THE LOADER. In each of the three proofs, a module-level function `def _load_own_probes(folder):` returning `(probes, failures)`, its imports inside it (`import importlib.util`, `from cairn.tools.base.probe import Probe`). For each `path in sorted(Path(folder).glob('*.py'))` whose name does not start with '_': spec = importlib.util.spec_from_file_location('cairn._cc_proof_probes.' + path.stem, path); module_from_spec; spec.loader.exec_module inside try — any Exception appends {'file': str(path), 'lack': f'import raised {type(exc).__name__}: {exc}'} and continues; `probe = getattr(module, 'PROBE', None)`; None appends {'file', 'lack': 'no module-level PROBE'}; not isinstance(probe, Probe) appends {'file', 'lack': f'PROBE is {type(probe).__name__}, not a Probe'}; else probes.append(probe). This is ProbeCache.probes_for's judgement (cairn/devices/cairn/machines/ground_loop/discovery.py) without its mtime cache."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "step": "D3",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D3: THE REPLACEMENTS. test_memory_probe.py test_probe_loads_via_probecache_with_zero_failures is renamed test_the_probes_load_with_zero_failures and calls _load_own_probes(Path(__file__).resolve().parent.parent / 'probes'), asserts unchanged; the module docstring's '(1) the probe loads via ProbeCache' becomes '(1) the probes load with zero failures'. test_the_shim_delivers_mail.py test_the_probes_load_with_zero_failures calls _load_own_probes(_DEVICE / 'probes'), asserts and name unchanged, docstring 'the ground loop's probe cache loads' becomes 'the cc probe folder loads'. test_cc_device.py test_discover_finds_cc_with_zero_failures is renamed test_the_rack_lists_cc_and_its_probes_load: `from cairn.tools.rack.rack import rack_ids` inside the tooth; assert 'cc' in rack_ids(DEVICE_DIR.parents[2]); probes, failures = _load_own_probes(DEVICE_DIR / 'probes'); assert not failures; assert probes. Its docstring line (2) becomes 'the rack lists cc and its probes load with zero failures'."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "step": "D4",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D4: THE PROOF. cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py, shape of the sibling test_the_shim_delivers_mail.py (_REPO_ROOT = Path(__file__).resolve().parents[4] on sys.path; `if __name__ == '__main__':` runs every test_ function and exits 1 on any AssertionError). PROVES = {'f5c334da752a': {'1': 'test_no_cc_file_imports_another_device', '2': 'test_each_loader_still_judges', '3': 'test_each_loader_loads_ccs_probes'}}. LOADERS = the three module names cairn.devices.cc.proofs.test_cc_device, .test_memory_probe, .test_the_shim_delivers_mail, imported by importlib.import_module INSIDE each tooth (call-time binding). Tooth 1: ast-parse every *.py under cairn/devices/cc/ (skip __pycache__); collect level-0 ImportFrom.module and Import names that start with 'cairn.devices.' and whose third dotted segment is not 'cc'; assert the list is empty, naming file:line. Tooth 2: a fixture folder from cairn.tools.scratch.scratch.scratch_dir('testing-f5c334da752a-') holding good.py (a copy of cairn/devices/cc/probes/the_shim_delivers_mail.py), none.py ('X = 1\\n'), boom.py (\"raise RuntimeError('boom')\\n\") and _private.py (\"raise RuntimeError('never read')\\n\"); for each loader module, `probes, failures = mod._load_own_probes(folder)`: len(probes) == 1 and sorted(Path(f['file']).name for f in failures) == ['boom.py', 'none.py']. Tooth 3: for each loader, over cairn/devices/cc/probes, failures == [] and len(probes) == the count of non-'_' *.py files there."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "step": "D5",
+      "date": "2026-11-05",
+      "source": "cast",
+      "text": "D5: RUN AND HOLLOW. All four proofs run under bin/cairn test twice, green. The hollow reading reverts the three edited proofs to their pre-build bytes: tooth 1 reds (the ground_loop imports return) and teeth 2 and 3 red (no _load_own_probes attribute). Then build_inspector cc must list no encapsulation_holds finding under cairn/devices/cc/ — the verdict records that run."
+    }
+  ]
+}
