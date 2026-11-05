@@ -1,0 +1,85 @@
+{
+  "ticket": "acb4ecd84364",
+  "at": "2026-11-05T10:55:25+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1672936,
+      "duration_ms": 126866,
+      "is_error": false,
+      "session_id": "98177e27-8845-4a90-8995-e7923a065e8c"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt",
+  "outline_sha256": "0d5f14e0e790677640fa2b1521eb45296b9e9753236430eeeb4fffd7f0e53906",
+  "ticket_sha256": "1362344a3a030012e65eb3520b80844fa3588c44401f47de4d4e368d6a817270",
+  "touches": [
+    {
+      "number": "5.5",
+      "text": "ground_loop (machine): the heartbeat"
+    },
+    {
+      "number": "5.5.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "5.5.3.1",
+      "text": "It is the only daemon in the system"
+    },
+    {
+      "number": "5.5.3.4",
+      "text": "it launches a script in each device's cairn/devices/<device>/groundloop called pulse.py, each as its own process."
+    },
+    {
+      "number": "5.5.3.5",
+      "text": "It writes one JSON record at the end of a pass with a list of each device: beat time, found device (folder), NOT FOUND or name, file mtime, pid it spawned. It does no checks and no takeover."
+    },
+    {
+      "number": "5.5.3.6",
+      "text": "Beat interval is a setting, 60 s for now. It was held at 60 s while too much hung off the ground loop; that is cleaned up, and we expect to go a lot faster later (Akien: \"faster than once a second\"). (Q#15, Akien 2026-11-03)"
+    },
+    {
+      "number": "5.2.1.1",
+      "text": "Cairn keeps a list of scheduled things (the scheduler, 5.8). Each ground loop pulse, its shim has Cairn check that list against the clock: no match (eg 2245), the pulse is dropped; a match (eg 2300) is a PROBE, and it kicks off that thing in the Cairn device."
+    },
+    {
+      "number": "5.2.1.5",
+      "text": "Sleep's base trigger is the clock (2300). Once we can tell how recently things were interacted with, that overrides the base clock. (Q#10, Akien 2026-11-03)"
+    },
+    {
+      "number": "5.4.2.7",
+      "text": "The bus makes this messaging inspectable, the messages show on the bus' web panel as a \"Murderbot Diaries\" \"Public Feed\" the operator can review for purposes such as diagnostics."
+    },
+    {
+      "number": "5.7.3.4",
+      "text": "pulse.py is part of the shim. The ground loop calling it tells the shim the pulse has arrived, and starts the shim if it isn't running."
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "5.5.3.4",
+      "text": "it launches a script in each device's cairn/devices/<device>/groundloop called pulse.py, each as its own process.",
+      "ticket_says": "ground loop spawns exactly two listener modules (cairn.devices.cairn.machines.bus pulse and cairn.devices.cairn pulse) on each beat",
+      "why": "outline states 'it launches a script in each device's cairn/devices/<device>/groundloop called pulse.py, each as its own process'; ticket falsifier requires 'RED if beat spawns anything but the two named modules'; per-device pulse.py and exactly-two listeners are mutually exclusive"
+    },
+    {
+      "number": "5.7.3.4",
+      "text": "pulse.py is part of the shim. The ground loop calling it tells the shim the pulse has arrived, and starts the shim if it isn't running.",
+      "ticket_says": "listeners are module verbs spawned directly by ground loop as independent processes, implementing specific functions (bus flush, away/sleep check)",
+      "why": "outline states pulse.py is part of shim architecture, called by ground loop to notify shim of pulse arrival; ticket bypasses shim structure entirely with independent listeners; pulse.py's role of starting shims is replaced by specific-function modules"
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [
+    "5.5.3.4.1",
+    "5.5.3.4.3"
+  ],
+  "questions_opened": [
+    "open-610a1c721f27",
+    "open-cfe8ad83c617"
+  ],
+  "questions_already_open": []
+}
