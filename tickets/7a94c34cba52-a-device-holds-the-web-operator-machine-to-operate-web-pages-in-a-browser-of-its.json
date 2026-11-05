@@ -1,0 +1,69 @@
+{
+  "id": "7a94c34cba52",
+  "title": "a device holds the web_operator machine to operate web pages in a browser of its own",
+  "owning_intention": "cairn/machines/web_operator/intention+why.json",
+  "intention": "cairn/machines/web_operator/ is the general machine a device holds to operate web pages, for reading and other purposes (outline 17.14). Class WebOperator(holder, instance, roots=None) over WebDriver with the verbs ccfox proved — start, stop, go, where, text, find, click, type, secret, key, shot, js — each holder with its own geckodriver port, its own Firefox profile and its own session, headless unless the holder asks for a window; a module CLI `python3 -m cairn.machines.web_operator --holder <device>/<n> <verb> ...` as its shell mouth. The librarian is its first holder (9.3.8); ccfox stays CC's until a cc ticket moves it onto this machine (12.4.1).",
+  "why": "Measured 2026-11-05: the only web-operating code on the box is ~/.local/bin/ccfox (190 lines, outside the class): WebDriver over geckodriver on fixed port 4444, one profile at ~/snap/firefox/common/cc0atcairn-profile (a snap Firefox cannot reach hidden folders in home), one STATE at ~/.cairn/devices/cc/0/ccfox; verbs start/stop/plain/go/where/text/find/click/type/secret/key/shot/js. firefox 159.0.1 and geckodriver are snaps. No cairn/machines/web_operator exists. cairn.tools.base.address.machine_path(device, instance, machine) gives a holder's address. Akien 2026-11-05 (Q#28, outline 9.3.8): 'the librarian will get the web interface machine that i don't think exists yet. i believe we built one for you, but we need a general one. i envision a couple of different devices that would use this, the librarian is just the first.' And: 'let's change it to web_operator machine. it operates web pages for reading and other purposes.'",
+  "traces_to": "Telos: the librarian's delegated learning and research (outline 9.3.8, V1 5.1.1). Law 1 (the web route ccfox settled is compiled once), Law 6 (the machine's data is its holder's), RULE 1 (devices reach it only through its public interface).",
+  "how": "New package cairn/machines/web_operator/: web_operator.py ports ccfox's call/driver_up/session_alive/start/stop/matches/nth/type_into/env_value onto a class whose port, profile and state paths derive from the holder; state (port, session id, profile pointer) as JSON at machine_path(holder, n, 'web_operator')/state.json; the profile under $CAIRN_WEB_OPERATOR_PROFILE_ROOT (default ~/snap/firefox/common/) named cairn-<holder>-<n>-profile; the port is the first free one the machine binds-and-releases at start, recorded in state; headless via moz:firefoxOptions args ['-headless']; the secret's value read from the holder's own .env at instance_path(holder, n)/.env. __main__.py parses --holder and dispatches verbs. Charter through `cairn artifact write`. Red-first proof against a scratch http.server fixture.",
+  "falsifier": "(1) a scratch holder alpha/0 starts headless, opens a localhost fixture page and text() returns the fixture's visible text; (2) on a fixture form, type('#q','hello') then click('#go') makes the page write 'got hello' into #out, and text('#out') returns it; (3) holders alpha/0 and beta/0 started at once hold different geckodriver ports, different profile directories and different session ids, and each where() reports its own page; (4) each holder's port, session id and profile pointer are written under machine_path(holder, 0, 'web_operator') of the scratch instance root and nowhere else in it, and ~/.cairn/devices/cc/0/ccfox is byte-identical before and after; (5) secret(css, KEY) types the value of KEY from the holder's scratch .env into the field, and the value appears on no stdout, stderr or state file; (6) stop() on alpha ends its browser and geckodriver (its port refuses connections) while beta's session still answers; (7) `python3 -m cairn.machines.web_operator --holder alpha/0 text` prints what the class's text() returns.",
+  "bounds": {
+    "in": [
+      "cairn/machines/web_operator/__init__.py",
+      "cairn/machines/web_operator/web_operator.py",
+      "cairn/machines/web_operator/__main__.py",
+      "cairn/machines/web_operator/intention+why.json",
+      "cairn/machines/web_operator/proofs/test_a_holder_operates_a_page_in_its_own_browser.py"
+    ],
+    "out": [
+      "~/.local/bin/ccfox",
+      "cairn/devices/cc",
+      "cairn/devices/librarian",
+      "every other component"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [
+        "cairn/machines/web_operator/proofs/test_a_holder_operates_a_page_in_its_own_browser.py"
+      ],
+      "reads": [
+        "/home/akien/.local/bin/ccfox",
+        "cairn/tools/base/address.py",
+        "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
+      ],
+      "text": "Red-first proof cairn/machines/web_operator/proofs/test_a_holder_operates_a_page_in_its_own_browser.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'7a94c34cba52': {'1':..,'7':..}} (tooth names written at build). Fixture: http.server on 127.0.0.1 serving a scratch dir with page.html (visible text, a form #q/#go writing 'got '+value into #out by inline JS). Scratch instance root via roots; CAIRN_WEB_OPERATOR_PROFILE_ROOT set to a fresh dir under ~/snap/firefox/common/ and removed after. No real site, no live holder, ccfox untouched."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [
+        "cairn/machines/web_operator/__init__.py",
+        "cairn/machines/web_operator/web_operator.py",
+        "cairn/machines/web_operator/__main__.py",
+        "cairn/machines/web_operator/intention+why.json"
+      ],
+      "reads": [
+        "/home/akien/.local/bin/ccfox",
+        "cairn/tools/base/address.py",
+        "cairn/machines/openai_wire/intention+why.json",
+        "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
+      ],
+      "text": "New package cairn/machines/web_operator/: web_operator.py ports ccfox's call/driver_up/session_alive/start/stop/matches/nth/type_into/env_value onto a class whose port, profile and state paths derive from the holder; state (port, session id, profile pointer) as JSON at machine_path(holder, n, 'web_operator')/state.json; the profile under $CAIRN_WEB_OPERATOR_PROFILE_ROOT (default ~/snap/firefox/common/) named cairn-<holder>-<n>-profile; the port is the first free one the machine binds-and-releases at start, recorded in state; headless via moz:firefoxOptions args ['-headless']; the secret's value read from the holder's own .env at instance_path(holder, n)/.env. __main__.py parses --holder and dispatches verbs. Charter through `cairn artifact write`. Red-first proof against a scratch http.server fixture. Public interface: cairn.machines.web_operator.WebOperator and the module CLI. Headless is the default; start(window=True) opens a visible one. ccfox's `plain` (sign-in without remote control) ports as start(plain=True)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [],
+      "reads": [
+        "cairn/machines/web_operator/proofs/test_a_holder_operates_a_page_in_its_own_browser.py"
+      ],
+      "text": "Run the proof red, build, run it twice serially green plus the component's existing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
+    }
+  ]
+}
