@@ -1,0 +1,42 @@
+{
+  "id": "6357c2eeff7c",
+  "title": "Testing-marked mail that stands 600s is disposed of, never raised",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "Testing-marked mail that stands undelivered 600s never raises a live trouble: the bus disposes of it and receipts it at the flush instead of raising it.",
+  "why": "Measured 2026-11-05: 4 mail-testing-d0c8c4b4283e-caller-*-stood-600s troubles stand live, raised by the bus's report_stood for replies d0c8c4b4283e's proof read but never took; cleared by cc, they were raised again at 14:39 UTC when the bus restarted and forgot _stood_reported. Test debris in the trouble lane hides real reds.",
+  "traces_to": "Law 7 (the trouble lane is a record of truth for errors a human must fix); Akien's ruling 2026-09-28/10-05 (test against live, marked as testing) and ticket 71d1bbfa98b0 D2 + contagion; sibling of b3386f431ae3.",
+  "how": "report_stood disposes of a marked envelope that has stood 600s (emit test_mail_disposed + receipt 'bus-test-mail-disposed') instead of raising it; red-first proof on the bus's in-process rig of test_mail_that_stands_600s_raises.py; hand drain of the 4 standing stood testing troubles; one live fire.",
+  "falsifier": "(1) a testing-marked personal envelope dated 700s back raises no mail-<to>-stood-600s at op_flush, leaves transit receipted by 'bus-test-mail-disposed', and the bus emits test_mail_disposed exactly once for it; (2) an unmarked envelope dated 700s back still raises exactly one mail-<to>-stood-600s. Green twice; test_mail_that_stands_600s_raises.py stays green.",
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "cairn/devices/cairn/machines/bus/server.py report_stood: inside the loop, after the age check passes (age is None or age >= STOOD_S) and before raise_trouble, when testing_mark.mark_of(envelope.get('body') or {}) is not None: call a new method self._dispose_test_mail(envelope, age), add envelope['id'] to self._stood_reported, and continue (it does not count toward the returned raised). testing_mark is already imported at module top (b3386f431ae3). Unmarked envelopes take the raise exactly as before."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "New method BusProcess._dispose_test_mail(envelope, age): emit through self.bus.emit('test_mail_disposed', pointer=envelope['id'], values={'envelope': envelope['id'], 'sender': envelope.get('sender'), 'addressee': envelope.get('addressee'), 'test': mark['test'], 'age_s': None if age is None else int(age)}) if the bus has emit, then self.bus.record_delivery(envelope['id'], to=envelope.get('addressee') or '', by='bus-test-mail-disposed'). Mirror _dispose_test_bounce's shape exactly. report_stood's docstring gains one sentence: a testing-marked envelope that stands is test debris and is disposed of, never raised (71d1bbfa98b0 D2)."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Disposal is not a delivery on a tick (bus clause 5, b30069239480): no wake is retried and no addressee is handed anything; test debris leaves transit. b30069239480's the_flush_still_flushes tooth uses an unmarked envelope and must stay green unchanged."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Red-first proof cairn/devices/cairn/machines/bus/proofs/test_stood_test_mail_is_disposed_not_raised.py, copying the rig of cairn/devices/cairn/machines/bus/proofs/test_mail_that_stands_600s_raises.py (BusDevice.scratch + BusProcess + an _Inbox recording every diagnostic; a reply posted with reply_to, its env['date'] set 700s back, then proc.answer({'op': 'flush'}, in_process=True)). Names 'testing-6357c2eeff7c-<label>-<uuid8>'. PROVES = {'6357c2eeff7c': {'1': 'test_marked_stood_mail_is_disposed_not_raised', '2': 'test_unmarked_stood_mail_still_raises'}}. Tooth 1: body={'testing': mark('6357c2eeff7c')}; after the flush no raise_trouble with pointer mail-<asker>-stood-600s, the envelope is not in bus.undelivered(to=asker), the inbox's 'delivered' records for its id have values.by == ['bus-test-mail-disposed'], and exactly one 'test_mail_disposed' record has values.envelope == its id. Tooth 2: no body mark; exactly one raise_trouble with pointer mail-<asker>-stood-600s. testing_mark binds at call time."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "text": "Run the new proof and test_mail_that_stands_600s_raises.py twice, serially; seal with bin/cairn test --seal. Commit the build before the hollow reading. Then by hand: clear each live mail-testing-*-stood-600s identity through `cairn trouble clear <id> --by cc --what-changed '<names this ticket>'` and record the count in the verdict. Live fire: proof runs are rewritten under the tester's instance seal and never reach the live bus, so the live measure is a bare `python3 -c` post through bus_client.reach of a marked reply to a shimless testing name, then (after the bus has been replaced onto the new code) read the live ~/.cairn/logs/bus/0 for test_mail_disposed once it stands 600s — or, sooner, the 4 standing d0c8 replies are disposed at the next flush after the bus restarts: read their test_mail_disposed logs."
+    }
+  ]
+}
