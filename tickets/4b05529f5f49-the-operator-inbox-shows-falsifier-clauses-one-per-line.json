@@ -1,0 +1,57 @@
+{
+  "id": "4b05529f5f49",
+  "title": "the operator inbox shows falsifier clauses one per line",
+  "owning_intention": "cairn/tools/operator_inbox/intention+why.json",
+  "intention": "cairn operator show renders a falsifier's clauses as '(n) claim' lines, wrapped, followed by wrong_intent and horizon when present, so Akien reads the clauses rather than a Python list repr.",
+  "why": "Measured 2026-11-05: cairn/tools/operator_inbox/inbox.py:1191-1194 prints each dict falsifier value with f'{k}: {v}', so a clauses list would print as a Python list repr. The parent e4f02a1ceef5 makes the ticket plan JSON at the cast door (Akien 2026-11-05: 'should be json'); this reader must read the new shape before the door admits it.",
+  "traces_to": "Law 4 and Law 1 via parent e4f02a1ceef5; RULE 1 (each reader's change lives in its own component).",
+  "how": "In the FALSIFIER block, a dict carrying a clauses list renders each clause via _wrap(f'({n}) {claim}', '  ', width), then wrong_intent and horizon as labelled lines; other shapes unchanged; red-first proof.",
+  "falsifier": "(1) a doc with falsifier {clauses: [{n:1, claim:'a'}, {n:2, claim:'b'}], horizon:'h'} renders lines '  (1) a', '  (2) b' and a horizon line, and no '[{' anywhere in the FALSIFIER block; (2) a {proves_green, proves_red} doc and a string doc render byte-identical to HEAD.",
+  "bounds": {
+    "in": [
+      "cairn/tools/operator_inbox/inbox.py",
+      "cairn/tools/operator_inbox/proofs/test_falsifier_clauses_render_one_per_line.py"
+    ],
+    "out": [
+      "cairn/tools/base/transitions.py",
+      "CairnCommons/tickets/_charter+why.json",
+      "every other component"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [
+        "cairn/tools/operator_inbox/proofs/test_falsifier_clauses_render_one_per_line.py"
+      ],
+      "reads": [
+        "cairn/tools/operator_inbox/inbox.py"
+      ],
+      "text": "Red-first proof cairn/tools/operator_inbox/proofs/test_falsifier_clauses_render_one_per_line.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'4b05529f5f49': {'1': 'clause_1', '2': 'clause_2', '3': 'clause_3', '4': 'clause_4'}} (tooth names written at build, each named for its clause). Red at HEAD on the new-shape teeth."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [
+        "cairn/tools/operator_inbox/inbox.py"
+      ],
+      "reads": [
+        "cairn/tools/operator_inbox/inbox.py"
+      ],
+      "text": "In the FALSIFIER block, a dict carrying a clauses list renders each clause via _wrap(f'({n}) {claim}', '  ', width), then wrong_intent and horizon as labelled lines; other shapes unchanged; red-first proof."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [],
+      "reads": [
+        "cairn/tools/operator_inbox/proofs/test_falsifier_clauses_render_one_per_line.py"
+      ],
+      "text": "Run the proof red, build, run it twice serially green plus the component's existing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
+    }
+  ]
+}

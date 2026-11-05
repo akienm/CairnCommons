@@ -1,0 +1,57 @@
+{
+  "id": "95c919b5f4aa",
+  "title": "bus_client carries a command mouth a shell can call",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "`python3 -m cairn.tools.bus_client <device> <words...>` resolves the words on the instance's one bus process against that device's shim — the same path cli_main takes — prints the text to stdout on exit 0 and stderr otherwise, and exits with the line's code; a device with no shim the bus can address is refused by name, exit 2.",
+  "why": "Measured 2026-11-05: cairn/tools/bus_client has no __main__.py (2026-11-05); cli_main (cairn/tools/base/shim.py:1206-1240) needs a shim class in hand; bus_client._device_shim_module (bus_client.py:132) resolves a device name to its shim module. Akien 2026-11-05 (Q#27, outline 8.4): 'if there's a script for it, run it, else get on the bus' and 'cairn help lists [all] then [operator] then [cairn] then the rest in alpha order'.",
+  "traces_to": "Telos: the operator's one interface (outline 8.4). Law 1 (a shortcut is a settled route), Law 4 (script-else-bus is the dispatch, not a convention), RULE 1 (the bus is a device's public interface).",
+  "how": "New cairn/tools/bus_client/__main__.py: resolve the device's shim address via _device_shim_module and its class, ensure_bus(), RemoteBus().verbs(address, words); print and exit as cli_main does; refuse an unresolvable device by name. Red-first proof with a fixture shim and a scratch bus.",
+  "falsifier": "(1) with a fixture device whose shim answers 'ping' with text 'pong' exit 0, the mouth prints 'pong' to stdout and exits 0; (2) a line the shim refuses with exit 4 prints to stderr and exits 4; (3) a device name with no shim exits 2 and names the device; (4) an unreachable bus exits 1 with the cause on stderr.",
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/__main__.py",
+      "cairn/tools/bus_client/proofs/test_the_command_mouth_resolves_a_line_on_the_bus.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_the_command_mouth_resolves_a_line_on_the_bus.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/bus_client/bus_client.py"
+      ],
+      "text": "Red-first proof cairn/tools/bus_client/proofs/test_the_command_mouth_resolves_a_line_on_the_bus.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'95c919b5f4aa': {'1': 'clause_1', '2': 'clause_2', '3': 'clause_3', '4': 'clause_4'}} (tooth names written at build). Scratch roots only — no live bus, no live store."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [
+        "cairn/tools/bus_client/__main__.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/bus_client/bus_client.py"
+      ],
+      "text": "New cairn/tools/bus_client/__main__.py: resolve the device's shim address via _device_shim_module and its class, ensure_bus(), RemoteBus().verbs(address, words); print and exit as cli_main does; refuse an unresolvable device by name. Red-first proof with a fixture shim and a scratch bus."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-05",
+      "writes_to": [],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_the_command_mouth_resolves_a_line_on_the_bus.py"
+      ],
+      "text": "Run the proof red, build, run it twice serially green plus the component's existing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
+    }
+  ]
+}
