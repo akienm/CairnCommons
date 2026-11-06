@@ -1,0 +1,97 @@
+{
+  "id": "819cbe3a9927",
+  "title": "every class with code in bus_client reaches the diagnostic mixin",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "Every class with code in cairn/tools/bus_client reaches DiagnosticBase, so RemoteBus and DeviceRoster can produce a diagnostic report when we are stuck and the sieve reads bus_client green.",
+  "why": {
+    "lived": "Closing 95c919b5f4aa (the bus_client command mouth), the PROVED gate refused on every_class_reaches_the_diagnostic_mixin for roster.py's DeviceRoster — a class the ticket never touched. Akien 2026-10-27: 'any class with code it in should be able to run a diagnostic report when we need it'.",
+    "measured": [
+      {
+        "when": "2026-11-06",
+        "saw": "remote.py:360 class RemoteBus and roster.py:23 class DeviceRoster have code and do not reach DiagnosticBase ('no route'); no other bus_client finding",
+        "how": "PYTHONPATH=. python3 -c \"from cairn.machines.build_inspector import inspector as i; from pathlib import Path; print(i.every_class_reaches_the_diagnostic_mixin({'dir':'tools/bus_client','component':'cairn/tools/bus_client'}, Path('cairn/tools/bus_client').resolve()))\""
+      }
+    ]
+  },
+  "traces_to": "Law 3 (nothing is known until measured); Law 10 (nothing in the system is immeasurable); RULE 1 (the fix lives in bus_client's own files); ticket 339a45cee6a1.",
+  "how": "Add `from cairn.tools.base.diagnostic import DiagnosticBase` after the stdlib imports in remote.py and roster.py; make it the first (only) base: `class RemoteBus(DiagnosticBase)`, `class DeviceRoster(DiagnosticBase)`; class bodies unchanged (neither __init__ calls super — DiagnosticBase's lazy __dict__ path covers that, as for frozen Workflow under e8b58520aeb9). Red-first proof shaped like aider_shim's.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "every_class_reaches_the_diagnostic_mixin over cairn/tools/bus_client returns []"
+      },
+      {
+        "n": 2,
+        "claim": "RemoteBus and DeviceRoster are DiagnosticBase subclasses and behave as before: RemoteBus keeps _home/_far, verbs keys 'shim' for module:Class else 'device', a far unanswering home raises without starting anything; DeviceRoster.hold is idempotent by device_id and held keeps order; remote.py's top-level imports are stdlib plus cairn.tools.base.diagnostic"
+      },
+      {
+        "n": 3,
+        "claim": "every other cairn/tools/bus_client proof stays green"
+      }
+    ]
+  },
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/roster.py",
+      "cairn/tools/bus_client/proofs/test_every_bus_client_class_reaches_the_diagnostic_mixin.py"
+    ],
+    "out": [
+      "cairn/tools/base/diagnostic.py",
+      "cairn/machines/build_inspector",
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "cairn/tools/bus_client/remote.py",
+    "cairn/tools/bus_client/roster.py",
+    "cairn/tools/bus_client/proofs/test_every_bus_client_class_reaches_the_diagnostic_mixin.py"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_every_bus_client_class_reaches_the_diagnostic_mixin.py"
+      ],
+      "reads": [
+        "cairn/tools/base/diagnostic.py",
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/devices/aider_shim/proofs/test_every_aider_shim_class_reaches_the_diagnostic_mixin.py"
+      ],
+      "text": "Red-first proof cairn/tools/bus_client/proofs/test_every_bus_client_class_reaches_the_diagnostic_mixin.py, shaped like the aider_shim one: check()/FAILURES/main(), imports at call time. PROVES = {'819cbe3a9927': {'1': 'test_no_bare_class_in_bus_client', '2': 'test_behaviour_unchanged', '3': 'test_behaviour_unchanged'}}. Tooth 1: the sieve with row {'component':'cairn/tools/bus_client','dir':'cairn/tools/bus_client'} over repo/'cairn/tools/bus_client' is []. Tooth 2: the clause-2 checks (far home 127.0.0.1:1 with CAIRN_BUS_HOME unset in a subprocess), remote.py's top-level imports read by ast, then every other bus_client proof run as its own process exits 0 (siblings needing CairnCommons named, not run, where none sits beside the repo)."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/bus_client/roster.py"
+      ],
+      "reads": [
+        "cairn/tools/base/diagnostic.py"
+      ],
+      "text": "Add `from cairn.tools.base.diagnostic import DiagnosticBase` after the stdlib imports in remote.py and roster.py; make it the first (only) base: `class RemoteBus(DiagnosticBase)`, `class DeviceRoster(DiagnosticBase)`; class bodies unchanged (neither __init__ calls super — DiagnosticBase's lazy __dict__ path covers that, as for frozen Workflow under e8b58520aeb9). Red-first proof shaped like aider_shim's."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "text": "Run the proof red, build, run it twice serially green. Commit before the hollow reading; seal with bin/cairn test --seal; reseal any bus_client proof whose fingerprint the source change staled. Then retry 95c919b5f4aa's PROVED crossing."
+    }
+  ],
+  "measured": [
+    {
+      "when": "2026-11-06",
+      "saw": "remote.py:360 class RemoteBus and roster.py:23 class DeviceRoster have code and do not reach DiagnosticBase ('no route'); no other bus_client finding",
+      "how": "PYTHONPATH=. python3 -c \"from cairn.machines.build_inspector import inspector as i; from pathlib import Path; print(i.every_class_reaches_the_diagnostic_mixin({'dir':'tools/bus_client','component':'cairn/tools/bus_client'}, Path('cairn/tools/bus_client').resolve()))\""
+    }
+  ]
+}
