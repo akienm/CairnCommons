@@ -1,0 +1,77 @@
+{
+  "id": "aa7a1d7fa671",
+  "title": "the seal's reach mapping asks component_of once per distinct file",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's _reached maps each distinct reached file to its component once, so a run whose processes logged tens of thousands of reach entries seals in seconds, not minutes.",
+  "why": {
+    "lived": "2b3d842bc118's hollow reading could not seal: its clause 6 (eleven codemother proofs through a nested bin/cairn test) timed out at 1500 s inside the hollow worktree, twice, while the same command ran green in 98 s in a plain worktree.",
+    "measured": [
+      {
+        "when": "2026-11-06",
+        "saw": "py-spy on the nested tester (pid 446911) sat in _reached -> address.component_of -> component_dirs -> glob for 400+ s; its reach log held 68,388 entries over 278 distinct files from 246 processes",
+        "how": "ps --forest at 7 min into the hollow run, py-spy dump, a count over /tmp/cairn-tester-reach-zj94xqrp.jsonl"
+      },
+      {
+        "when": "2026-11-06",
+        "saw": "_reached over the 278 unique entries: 0.8 s; over the first 3,000 raw entries: 7.2 s",
+        "how": "timed device._reached on the copied log in the scratchpad"
+      }
+    ]
+  },
+  "traces_to": "Law 1 (the tester stops re-deriving the same path's component); Law 8 via parent 2b3d842bc118 (its hollow seal is what PROVED requires); RULE 1 (the fix lives in the tester, where the cost is).",
+  "how": "In cairn/devices/tester/device.py _reached: resolve each entry first, keep a seen set of resolved paths, skip one already seen, then the existing pkg check and component_of call. Red-first proof cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_reached over 1,200 entries naming two distinct cairn files (address.py spelled plain, through a '..' hop and through a symlink; device.py) calls address.component_of exactly 3 times: the proof's own component once, then once per distinct real path"
+      },
+      {
+        "n": 2,
+        "claim": "the map _reached returns over those 1,200 entries equals the map over the two files given once each"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red-first proof cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py, one tooth per clause; component_of counted by wrapping cairn.tools.base.address.component_of (imported inside _reached at call time); red 1/2 at HEAD 2026-11-06 (1,201 calls).",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: in _reached's loop over files: full = Path(os.path.realpath(...)) as now; `if full in seen: continue`; `seen.add(full)`; then the existing `pkg not in full.parents` check and the component_of call. A comment cites this ticket and the 68,388/278 measurement.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py"
+    ],
+    "out": [
+      "cairn/tools/base/address.py",
+      "cairn/devices/tester/reach",
+      "_read_reach's return shape",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-06",
+      "saw": "68,388 reach entries over 278 distinct files; _reached 7.2 s per 3,000 raw entries vs 0.8 s over the unique set",
+      "how": "py-spy, a count over the reach log, a timed call; the red-first proof: tooth 1 FAIL at HEAD (1,201 calls)"
+    }
+  ]
+}
