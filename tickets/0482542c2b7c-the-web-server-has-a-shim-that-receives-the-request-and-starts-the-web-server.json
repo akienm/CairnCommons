@@ -1,0 +1,104 @@
+{
+  "id": "0482542c2b7c",
+  "title": "the web server has a shim that receives the request and starts the web server",
+  "owning_intention": "cairn/devices/web_server/intention+why.json",
+  "intention": "The web_server device gains a shim on the base shim, WebServerShim in cairn/devices/web_server/shim.py: an http request for any page arrives at it, and it starts the web server device (WebServerDevice) when it is not running and hands it the request, as every shim starts its own device (outline 5.7.3.2); how the shim itself comes to hold the port is the answer to open-68fe4af67c6d.",
+  "why": {
+    "lived": "Akien 2026-11-06 (Q#30, outline 9.6.1): 'it should never print urls. a bare call to librarian should 1) launch that device's shim, which 2) parses the request (nothing) and so 3) launches the librarian and 4) launches a browser to point at the librarian's chat page, at which point the http request arrives at the web server's shim, which launches the web server, and then displays the librarian's web page with a focus on the chat window. each part is self initializing.'",
+    "measured": [
+      {
+        "when": "2026-11-06",
+        "saw": "no shim for web_server: ls cairn/devices/*/shim.py lists cairn, cc, codemother, inference_domain, librarian, tester, trouble",
+        "how": "ls cairn/devices/*/shim.py"
+      },
+      {
+        "when": "2026-11-06",
+        "saw": "the port is bound by cairn/devices/web_server/listener.py, which builds WebServerDevice at import of its main, and is started by the librarian's launcher as systemd transient unit cairn-web-server",
+        "how": "read cairn/devices/librarian/0/bin/librarian and listener.py"
+      }
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-06",
+      "saw": "no shim for web_server: ls cairn/devices/*/shim.py lists cairn, cc, codemother, inference_domain, librarian, tester, trouble",
+      "how": "ls cairn/devices/*/shim.py"
+    },
+    {
+      "when": "2026-11-06",
+      "saw": "the port is bound by cairn/devices/web_server/listener.py, which builds WebServerDevice at import of its main, and is started by the librarian's launcher as systemd transient unit cairn-web-server",
+      "how": "read cairn/devices/librarian/0/bin/librarian and listener.py"
+    }
+  ],
+  "traces_to": "Telos 2 (Cairn has a user; the librarian's chat is his face on it, outline 18.2). Law 6 and outline 5.7.3.2 (the shim alone starts its device). I-the-command-lazy-inits-the-system.md (everything lazy-inits from the command).",
+  "how": "WebServerShim(BaseShim) with device_id 'web_server' and _start_device returning WebServerDevice, in the shape of cairn/devices/librarian/shim.py. listener.py hands each request to the shim instead of a module-level device, so the first request starts the device and later ones reuse it. Who starts the shim and binds the port follows open-68fe4af67c6d's answer. The charter names the shim in public_interface.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with the web server device not running, a GET for /device/librarian handed to WebServerShim starts WebServerDevice once and returns status 200 with the librarian's page"
+      },
+      {
+        "n": 2,
+        "claim": "a second GET reuses the running device: WebServerDevice is constructed exactly once across both"
+      },
+      {
+        "n": 3,
+        "claim": "the shim holds the port by the means open-68fe4af67c6d settles, proved over a scratch port, never port 80"
+      },
+      {
+        "n": 4,
+        "claim": "the web server's standing proofs stay green"
+      }
+    ]
+  },
+  "bounds": {
+    "in": [
+      "cairn/devices/web_server/shim.py",
+      "cairn/devices/web_server/listener.py",
+      "cairn/devices/web_server/intention+why.json",
+      "cairn/devices/web_server/proofs/test_the_web_servers_shim_starts_the_web_server.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [
+        "cairn/devices/web_server/proofs/test_the_web_servers_shim_starts_the_web_server.py"
+      ],
+      "reads": [],
+      "text": "Red-first proof cairn/devices/web_server/proofs/test_the_web_servers_shim_starts_the_web_server.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'0482542c2b7c': {'1': 'clause_1', '2': 'clause_2', '3': 'clause_3', '4': 'clause_4'}}. Scratch roots and scratch ports only; no real browser, no port 80."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [
+        "cairn/devices/web_server/shim.py",
+        "cairn/devices/web_server/listener.py",
+        "cairn/devices/web_server/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/web_server/listener.py",
+        "cairn/devices/web_server/server.py",
+        "cairn/tools/base/shim.py",
+        "cairn/devices/librarian/shim.py",
+        "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
+      ],
+      "text": "WebServerShim(BaseShim) with device_id 'web_server' and _start_device returning WebServerDevice, in the shape of cairn/devices/librarian/shim.py. listener.py hands each request to the shim instead of a module-level device, so the first request starts the device and later ones reuse it. Who starts the shim and binds the port follows open-68fe4af67c6d's answer. The charter names the shim in public_interface."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [],
+      "reads": [],
+      "text": "Run the proof red, build, run it twice serially green plus the component's standing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
+    }
+  ]
+}

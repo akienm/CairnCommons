@@ -1,0 +1,106 @@
+{
+  "id": "d832a24e5144",
+  "title": "a bare cairn librarian opens the librarian's chat and prints no URL",
+  "owning_intention": "cairn/devices/librarian/intention+why.json",
+  "intention": "A bare `cairn librarian` starts the librarian's shim, which parses the request (nothing), starts the librarian, and launches a browser at the librarian's chat page /device/librarian; the launcher prints no URL and no longer starts the web server itself, whose own shim (ticket 0482542c2b7c) does that when the browser's request arrives; the chat input's autofocus (cairn/devices/web_server/render.py:166) is the focus.",
+  "why": {
+    "lived": "Akien 2026-11-06 (Q#30, outline 9.6.1): 'it should never print urls. a bare call to librarian should 1) launch that device's shim, which 2) parses the request (nothing) and so 3) launches the librarian and 4) launches a browser to point at the librarian's chat page, at which point the http request arrives at the web server's shim, which launches the web server, and then displays the librarian's web page with a focus on the chat window. each part is self initializing.'",
+    "measured": [
+      {
+        "when": "2026-11-06",
+        "saw": "the bare arm of cairn/devices/librarian/0/bin/librarian starts the web server as systemd unit cairn-web-server, then echoes three URLs and opens a browser with python3 -m webbrowser; --status echoes two more",
+        "how": "read cairn/devices/librarian/0/bin/librarian"
+      },
+      {
+        "when": "2026-11-06",
+        "saw": "the chat input already carries autofocus",
+        "how": "grep -n autofocus cairn/devices/web_server/render.py (line 166)"
+      }
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-06",
+      "saw": "the bare arm of cairn/devices/librarian/0/bin/librarian starts the web server as systemd unit cairn-web-server, then echoes three URLs and opens a browser with python3 -m webbrowser; --status echoes two more",
+      "how": "read cairn/devices/librarian/0/bin/librarian"
+    },
+    {
+      "when": "2026-11-06",
+      "saw": "the chat input already carries autofocus",
+      "how": "grep -n autofocus cairn/devices/web_server/render.py (line 166)"
+    }
+  ],
+  "traces_to": "Telos 2 (Cairn has a user; the librarian's chat is his face on it, outline 18.2). Law 6 and outline 5.7.3.2 (the shim alone starts its device). I-the-command-lazy-inits-the-system.md (everything lazy-inits from the command).",
+  "how": "The launcher's bare arm execs cli_main(LibrarianShim, []) as the root-verb arm does; the shim's empty request starts the device and opens the browser (webbrowser.open, skipped when stdout is not a tty or CAIRN_LIBRARIAN_NO_BROWSER is set). The systemd-run, setsid and URL-echo code leaves the launcher; --status leaves with it (the shim's `show status` answers). Depends on 0482542c2b7c.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a bare `cairn librarian`, run over a scratch instance root with the browser opener stubbed, prints no line containing 'http'"
+      },
+      {
+        "n": 2,
+        "claim": "the stubbed opener is called once, with a URL whose path is /device/librarian"
+      },
+      {
+        "n": 3,
+        "claim": "the librarian device is started by its shim on the bare call"
+      },
+      {
+        "n": 4,
+        "claim": "the launcher contains no systemd-run, setsid or listener.py reference"
+      },
+      {
+        "n": 5,
+        "claim": "the librarian's standing proofs stay green"
+      }
+    ]
+  },
+  "bounds": {
+    "in": [
+      "cairn/devices/librarian/0/bin/librarian",
+      "cairn/devices/librarian/shim.py",
+      "cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [
+        "cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py"
+      ],
+      "reads": [],
+      "text": "Red-first proof cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'d832a24e5144': {'1': 'clause_1', '2': 'clause_2', '3': 'clause_3', '4': 'clause_4', '5': 'clause_5'}}. Scratch roots and scratch ports only; no real browser, no port 80."
+    },
+    {
+      "n": 2,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [
+        "cairn/devices/librarian/0/bin/librarian",
+        "cairn/devices/librarian/shim.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/0/bin/librarian",
+        "cairn/devices/librarian/shim.py",
+        "cairn/tools/base/shim.py",
+        "cairn/devices/web_server/render.py",
+        "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
+      ],
+      "text": "The launcher's bare arm execs cli_main(LibrarianShim, []) as the root-verb arm does; the shim's empty request starts the device and opens the browser (webbrowser.open, skipped when stdout is not a tty or CAIRN_LIBRARIAN_NO_BROWSER is set). The systemd-run, setsid and URL-echo code leaves the launcher; --status leaves with it (the shim's `show status` answers). Depends on 0482542c2b7c."
+    },
+    {
+      "n": 3,
+      "by": "cc",
+      "source": "cast 2026-11-06",
+      "writes_to": [],
+      "reads": [],
+      "text": "Run the proof red, build, run it twice serially green plus the component's standing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
+    }
+  ]
+}
