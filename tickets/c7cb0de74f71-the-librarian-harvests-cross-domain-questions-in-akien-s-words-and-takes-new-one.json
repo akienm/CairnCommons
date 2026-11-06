@@ -1,0 +1,33 @@
+{
+  "id": "c7cb0de74f71",
+  "title": "the librarian harvests cross-domain questions in Akien's words and takes new ones",
+  "owning_intention": "cairn/devices/librarian/intention+why.json",
+  "intention": "The librarian proposes cross-domain questions harvested in Akien's own words, for him to confirm, and takes a new one as he says it: cairn librarian question harvest | proposals | confirm | add.",
+  "why": "Akien 2026-11-05 (open-6f41eecaf09d): 'i expect i have a couple of hundred in my own head.' Measured 2026-11-05: the corpus that exists (UU's 18 plus Novelty's 3) was gathered by hand on 2026-07-12 and 2026-07-14; the restored ~/HowMightThatWork.txt (218 lines) and the overnight grep (~/.akien/temp/how_might_that_work.results.txt, 373 lines) show his questions recur across months of logs and notes, unharvested. Outline 4.3.1.11.5: a deterministic pass proposes, he confirms; a librarian command adds new ones as he says them.",
+  "traces_to": "Outline 4.3.1.11.5. Telos: work the way Akien does. Law 1. Law 9.",
+  "how": "New cairn/devices/librarian/harvest_questions.py and bin script cairn/devices/librarian/0/bin/question (exec python3 -m cairn.devices.librarian.harvest_questions \"$@\", shaped like bin/ask). harvest [--root PATH ...]: deterministic, no inference. Default roots: ~/TheIgorsProject/Akien/DATED/*.txt and the user turns (type 'user', string content) of ~/.claude/projects/*/*.jsonl. Splits text into sentences; a candidate is a sentence ending in '?', 3..15 words, taken only from Akien's words (DATED notes, user turns; never assistant turns). Normalize = lowercase, collapse whitespace, strip quotes and trailing punctuation. Keep a normalized candidate seen on at least 3 distinct days (date from the DATED filename YYYYMMDD or the jsonl line's timestamp), whose normalized form is not already in cross_domain_questions.load(). Writes ~/.cairn/devices/librarian/0/harvest/proposals.json: [{n, text (the most frequent original spelling), days, count, sources: up to 5 'path:line'}], sorted by days desc then count desc, n from 1. Instance space, overwritten each run. proposals: prints them one per line, 'n  days  text'. confirm <n> [--function F]: appends the proposal to the corpus as origin verbatim, said_by Akien, date = its earliest day, source = its first source, id = next free 'Q-xd-NNN'. add \"<question?>\" [--function F]: appends a question Akien just said, origin verbatim, said_by Akien, date today, source 'said to CC <date>'. Both writes go through cairn artifact write on cairn/devices/librarian/cross_domain_questions.json (json indent=2 plus newline), then re-run load() and refuse if it raises; a question whose normalized text is already in the corpus is refused, naming the id that holds it. Depends on 2248911aaf05.",
+  "falsifier": "(1) harvest over a fixture root (a DATED-named .txt and a .jsonl with user and assistant turns) proposes exactly the question-shaped sentences seen on >= 3 distinct days in user turns or notes, and none taken only from assistant turns; (2) a candidate whose normalized text is already in the corpus is not proposed; (3) proposals are sorted by days desc then count desc and each carries days, count and at most 5 sources; (4) running harvest twice over the same roots writes byte-identical proposals.json; (5) confirm n over a scratch copy of the corpus appends one entry, origin verbatim, said_by Akien, date the earliest day, and load() still passes; (6) add \"<q?>\" appends one verbatim entry dated today; add of a question already in the corpus is refused naming the holding id and the corpus is unchanged; (7) the corpus write is journaled by the artifact door (a journal line for the corpus path with verb write); (8) cairn librarian question proposals runs through the bin script and prints one line per proposal.",
+  "bounds": {
+    "in": [
+      "cairn/devices/librarian/harvest_questions.py",
+      "cairn/devices/librarian/0/bin/question",
+      "cairn/devices/librarian/proofs/test_the_librarian_harvests_cross_domain_questions.py"
+    ],
+    "out": [
+      "running harvest over his real logs and confirming (his act)",
+      "embedding answers (outline 4.3.1.11.2)",
+      "followed-by links for new questions",
+      "the corpus file's shape (ticket 2248911aaf05)"
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 (the /sorted builder_check): A Haiku builder needs, and the how carries: the default roots, exactly what counts as Akien's words, the sentence and normalization rules, the 3-day threshold, the proposals file path and shape, sort order, the id scheme for new entries, the write path through the artifact door, the refusal on duplicates, and the proof with one tooth per clause over fixtures.",
+      "by": "cc",
+      "step": "cast",
+      "source": "sorted",
+      "at": "2026-11-06T03:38:55+00:00"
+    }
+  ]
+}
