@@ -5,13 +5,14 @@
   "intention": "At each `cairn <device>` segment, a word naming an executable in the device's bin runs it; no word, or a first word starting with '-', runs the self-named launcher; any other word goes onto the bus to that device through bus_client's command mouth, and its answer is printed with its exit code. bin/cmd/operator retires once the operator device carries its verbs.",
   "why": "Measured 2026-11-05: bin/cairn:212-214 passes every non-verb word to the self-named launcher. Census 2026-11-05: tester, inference_domain, cc and librarian launchers already resolve the line on the bus via cli_main (cairn/tools/base/shim.py:1206); codemother's launcher consumes cross/watch/question/seed/show and trouble's live/clear/drain in case arms; superclaude takes flags; the cairn and harbor_master launchers ignore their arguments. Akien 2026-11-05 (Q#27, outline 8.4): 'if there's a script for it, run it, else get on the bus' and 'cairn help lists [all] then [operator] then [cairn] then the rest in alpha order'.",
   "traces_to": "Telos: the operator's one interface (outline 8.4). Law 1 (a shortcut is a settled route), Law 4 (script-else-bus is the dispatch, not a convention), RULE 1 (the bus is a device's public interface).",
-  "how": "Replace bin/cairn's 'not a verb — pass everything to the self-named launcher' branch: if ${1:0:1} is '-', the launcher; else exec python3 -m cairn.tools.bus_client <device> \"$@\" (child 95c919b5f4aa). Delete bin/cmd/operator after child fd597e74056f is PROVED. Children prove first: 95c919b5f4aa, ed3d02b24675, 285a8f3f7599, fd597e74056f.",
+  "how": "Replace bin/cairn's 'not a verb \u2014 pass everything to the self-named launcher' branch: if ${1:0:1} is '-', the launcher; else exec python3 -m cairn.tools.bus_client <device> \"$@\" (child 95c919b5f4aa). Delete bin/cmd/operator after child fd597e74056f is PROVED. Children prove first: 95c919b5f4aa, ed3d02b24675, 285a8f3f7599, fd597e74056f.",
   "falsifier": "(1) with a scratch device whose bin holds `hello`, `cairn <dev> hello` runs the script; (2) `cairn <dev> --flag` reaches the self-named launcher with --flag; (3) `cairn <dev> zork` invokes the bus mouth with argv ['<dev>', 'zork'] (proved with a stub mouth on PATH via CAIRN_BUS_MOUTH, never a live bus) and returns its exit code; (4) bin/cmd/operator is absent and `cairn operator show inbox` still prints the inbox.",
   "bounds": {
     "in": [
       "bin/cairn",
       "bin/cmd/operator",
-      "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+      "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py",
+      "cairn/tools/system_word/proofs/test_system_word.py"
     ],
     "out": [
       "every other component"
@@ -30,7 +31,7 @@
         "cairn/tools/base/shim.py",
         "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
       ],
-      "text": "Red-first proof bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'41a70e789682': {'1': 'clause_1', '2': 'clause_2', '3': 'clause_3', '4': 'clause_4'}} (tooth names written at build). Scratch roots only — no live bus, no live store."
+      "text": "Red-first proof bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py, check()/FAILURES/main() shape, one tooth per falsifier clause, PROVES = {'41a70e789682': {'1': 'clause_1', '2': 'clause_2', '3': 'clause_3', '4': 'clause_4'}} (tooth names written at build). Scratch roots only \u2014 no live bus, no live store."
     },
     {
       "n": 2,
@@ -45,7 +46,7 @@
         "cairn/tools/base/shim.py",
         "/home/akien/dev/src/CairnCommons/CairnComponentOutline.txt"
       ],
-      "text": "Replace bin/cairn's 'not a verb — pass everything to the self-named launcher' branch: if ${1:0:1} is '-', the launcher; else exec python3 -m cairn.tools.bus_client <device> \"$@\" (child 95c919b5f4aa). Delete bin/cmd/operator after child fd597e74056f is PROVED. Children prove first: 95c919b5f4aa, ed3d02b24675, 285a8f3f7599, fd597e74056f."
+      "text": "Replace bin/cairn's 'not a verb \u2014 pass everything to the self-named launcher' branch: if ${1:0:1} is '-', the launcher; else exec python3 -m cairn.tools.bus_client <device> \"$@\" (child 95c919b5f4aa). Delete bin/cmd/operator after child fd597e74056f is PROVED. Children prove first: 95c919b5f4aa, ed3d02b24675, 285a8f3f7599, fd597e74056f."
     },
     {
       "n": 3,
@@ -56,6 +57,31 @@
         "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
       ],
       "text": "Run the proof red, build, run it twice serially green plus the component's existing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
+    },
+    {
+      "n": 4,
+      "by": "cc",
+      "source": "build 2026-11-06, measured at /sail",
+      "writes_to": [
+        "cairn/tools/system_word/proofs/test_system_word.py"
+      ],
+      "reads": [
+        "cairn/tools/system_word/proofs/test_system_word.py",
+        "/home/akien/dev/src/CairnCommons/questions/open-a487ed399a01.json"
+      ],
+      "text": "D4: test_system_word.py's test_dispatcher_folds_the_device_and_verb_tokens_on_the_device_path asserts (r2) that a non-verb first word reaches the self-named launcher, the very branch Q#27 (outline 8.4.2, Akien 2026-11-05: 'if there's a script for it, run it, else get on the bus') replaces. Its r2 is retargeted at a CAIRN_BUS_MOUTH stub and asserts the mouth received the device and the words verbatim, so the tooth's purpose (the rest rides verbatim) holds under the new dispatch. No other assertion in it changes."
+    },
+    {
+      "n": 5,
+      "by": "cc",
+      "source": "build 2026-11-06",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/__main__.py"
+      ],
+      "text": "D5: the bus mouth addresses a device by name, which is instance 0's shim; a dotted address at instance n>0 with a word that names no script keeps reaching that instance's self-named launcher, because sending it onto the bus would answer from instance 0. CAIRN_BUS_MOUTH, when set, is the command execed in place of python3 -m cairn.tools.bus_client (the proof's stub)."
     }
   ]
 }
