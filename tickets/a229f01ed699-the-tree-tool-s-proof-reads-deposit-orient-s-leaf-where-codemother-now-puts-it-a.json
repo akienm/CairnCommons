@@ -1,0 +1,85 @@
+{
+  "id": "a229f01ed699",
+  "title": "the tree tool's proof reads deposit_orient's leaf where codemother now puts it, and drops it",
+  "owning_intention": "cairn/tools/tree/intention+why.json",
+  "intention": "The tree tool's proof deposits through codemother's deposit_orient into a codemother-owned scratch nexus, reads the leaf there, and drops it at close, so the proof is green again and leaves no table behind.",
+  "why": {
+    "lived": "Charting d23ca0e54d00, its behaviour guard ran the tree tool's proofs: test_chart_tree.py red at HEAD after 2b3d842bc118 moved codemother's orient to her own tables.",
+    "measured": [
+      {
+        "when": "2026-11-06",
+        "saw": "test_deposit_back_lands_and_dedups: AssertionError 'a leaf must land in the nexus's table'; the other ten teeth PASS",
+        "how": "bin/cairn test --exec 'python3 cairn/tools/tree/proofs/test_chart_tree.py'"
+      },
+      {
+        "when": "2026-11-06",
+        "saw": "three codemother_orient_<pid>_..._nodes tables (pids 472333, 472453, 472578) left in Postgres by three runs of the proof",
+        "how": "select tablename from pg_tables where tablename ~ '^(codemother|chart)_.*orient'"
+      }
+    ]
+  },
+  "traces_to": "Law 8 (a red proof leaned on is worse than none); Law 6 (the leaf lands in the owner's table and the proof reads it there); RULE 1 (the fix lives in the tree tool's own proof).",
+  "how": "In cairn/tools/tree/proofs/test_chart_tree.py: an _orient_nexus() helper mints scratch_nexus('orient', owner='codemother') on the same ExitStack and holds (name, owner); the two teeth that call deposit_orient pass nexus=_orient_nexus() and read its table and tree_state with owner 'codemother'; the close forgets each held leaf under its own owner; a new tooth asserts the orient leaf table is owned by 'codemother' and registered as scratch.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/tools/tree/proofs/test_chart_tree.py runs green: every tooth, including test_deposit_back_lands_and_dedups"
+      },
+      {
+        "n": 2,
+        "claim": "the leaf table deposit_orient writes during the run is owned by 'codemother' and is a registered scratch table (store.is_scratch), so it cannot outlive the run"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red-first: add PROVES['a229f01ed699'] = {'1': 'test_deposit_back_lands_and_dedups', '2': 'test_the_orient_leaf_is_codemothers_scratch'} and the new tooth (red at HEAD: deposit_orient's leaf is not a scratch table), committed before BUILDME.",
+      "writes_to": [
+        "cairn/tools/tree/proofs/test_chart_tree.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/orient/orient.py",
+        "cairn/tools/tree/tree.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: _orient_nexus() via scratch_nexus('orient', owner=ORIENT_OWNER) where ORIENT_OWNER = 'codemother'; _HELD holds (name, owner) pairs; test_gate_before_seed's before/after tree_state and control deposit, and test_deposit_back_lands_and_dedups, use the orient nexus and owner; the finally forgets nexus_table(name, owner=owner) for each held pair.",
+      "writes_to": [
+        "cairn/tools/tree/proofs/test_chart_tree.py"
+      ],
+      "reads": [
+        "cairn/tools/tree/proofs/test_chart_tree.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/tree/proofs/test_chart_tree.py"
+    ],
+    "out": [
+      "cairn/tools/tree/tree.py",
+      "cairn/devices/codemother",
+      "cairn/devices/librarian/tools/trees",
+      "the leaked tables of earlier runs",
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "cairn/tools/tree/proofs/test_chart_tree.py"
+  ],
+  "measured": [
+    {
+      "when": "2026-11-06",
+      "saw": "test_deposit_back_lands_and_dedups: AssertionError 'a leaf must land in the nexus's table'; the other ten teeth PASS",
+      "how": "bin/cairn test --exec 'python3 cairn/tools/tree/proofs/test_chart_tree.py'"
+    },
+    {
+      "when": "2026-11-06",
+      "saw": "three codemother_orient_<pid>_..._nodes tables (pids 472333, 472453, 472578) left in Postgres by three runs of the proof",
+      "how": "select tablename from pg_tables where tablename ~ '^(codemother|chart)_.*orient'"
+    }
+  ]
+}
