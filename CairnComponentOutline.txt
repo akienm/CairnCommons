@@ -612,14 +612,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               called pulse.py, each as its own process.
       5.5.3.5 It writes one JSON record at the end of a pass with a list of each
               device: beat time, found device (folder), NOT FOUND or name, file
-              mtime, pid it spawned. It does no checks and no takeover. Reading
-              this record is how anything asks "is the system up?" (19.20).
-        5.5.3.5.1 [Q#66: How does something reading this record decide the
-                  system is down? Today the liveness tool says: if the ground
-                  loop hasn't written in 5 minutes, it's down. With liveness
-                  retired, that "5 minutes" needs a new home. CC suggests "5
-                  missed beats" instead, so it stays right when the beat gets
-                  faster. OK?]
+              mtime, pid it spawned. It does no checks and no takeover.
       5.5.3.6 Beat interval is a setting, 60 s for now. It was held at 60 s while
               too much hung off the ground loop; that is cleaned up, and we expect
               to go a lot faster later (Akien: "faster than once a second"). (Q#15,
@@ -656,6 +649,11 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               cairn/devices/<device>/<instance>/ (one address in two roots). Declared
               = the folders; running = which of those are in the rack. (Q#18, Akien
               2026-11-04)
+      5.6.2.5 "Is it up?" is the rack's to answer: first it was the ground loop's
+              list, then it moved to the rack. (Q#53, Akien 2026-11-06)
+        5.6.2.5.1 A device that doesn't respond within about 30 seconds, while
+                  we're not pegging the CPU and thus slowing it down, MIGHT be a
+                  candidate for killing and restarting. (Akien 2026-11-06)
     5.6.3 HISTORY: today there is also a rack TOOL (19.25) that lists device folders.
           The machine holds running instances; the folder list may stay a tool.
   5.7 shims
@@ -1550,11 +1548,8 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
   19.19 intentions_model_compiler: copies every intention into
         intentions-congruency-lab/, so that folder can regrow the system on a bare
         machine. → Cairn
-  19.20 liveness: RETIRE, code deleted (1.2.7). "Is the system up?" is answered by
-        reading the ground loop's JSON record (5.5.3.5), a file read because the
-        shim's lazy-init asks before any bus exists. The rack (5.6) answers a
-        different question, who is running, and needs the bus up. (Q#53, Akien
-        2026-11-06)
+  19.20 liveness: RETIRE, code deleted (1.2.7). "Is it up?" is the rack's to
+        answer (5.6.2.5). (Q#53, Akien 2026-11-06)
   19.21 orient: the measuring scans before a build (where is X called, what's in
         each component). → CodeMother (the orient machine composes it)
   19.22 post_commit: the one git post-commit, fanned out to each component's own
