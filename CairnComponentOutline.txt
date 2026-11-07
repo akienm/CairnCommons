@@ -1319,6 +1319,17 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
        add a new sieve." → CodeMother (10.3.5)
        17.1.1 The inspector outputs only its findings. It certifies nothing, records
               no crossing, and posts nothing; the gate consumes its findings (19.14.1).
+       17.1.2 It is the "I think it's ready to commit" step, part of the pipeline.
+              Checking what a change touched belongs here, not hanging off the git
+              post-commit hook (19.22). (Akien 2026-11-06)
+       17.1.3 NOT HOW IT IS NOW (measured 2026-11-06): it runs at a ticket's
+              PROVEME exit (cairn/tools/base/transitions.py, the build gate), and
+              the chart machines import its judge functions to check their own
+              stage outputs. Nothing runs it at a commit.
+       17.1.4 [Q#69: commits happen often, mid-build too ("commit often"). Is
+              "ready to commit" the end of the build, when the builder says it's
+              done (the BUILDME exit, a new step before PROVEME), or something
+              else?]
   17.2 plan_inspector: reads charters' own admissions of what they don't yet do, so
        nothing reads as done while it says otherwise. → CodeMother
   17.3 diagnostic_inspector: the smart reader of the dumb breadcrumbs base's logging
@@ -1553,17 +1564,12 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
   19.21 orient: the measuring scans before a build (where is X called, what's in
         each component). → CodeMother (the orient machine composes it)
   19.22 post_commit: the one git post-commit, fanned out to each component's own
-        hook. A commit is an event. [Q#60, Akien 2026-11-06: "why is ANYTHING
-        hanging off the post-commit hook?" Measured: two things do. (1)
-        CodeMother: every commit posts to her `commit` verb, which runs
-        spreading activation over the areas the commit touched, looking for
-        findings (2,089 commits posted so far). Before that she read git HEAD on
-        every beat; it moved here after "nothing fires on the heartbeat but the
-        messaging, and a probe fires on its event" (Akien 2026-09-30). (2)
-        counting_block folds the artifact journals at each commit; it is
-        already RETIRE (17.11). So the question is whether CodeMother should
-        hear about commits at all, and if so whether by this hook or some other
-        way (eg as a bus message).]
+        hook. RETIRE, code deleted (1.2.7), with CodeMother's and counting_block's
+        hooks. Nothing should hang off the post-commit hook: checking what a
+        change touched is the build inspector's job, part of the pipeline
+        (17.1.2). Measured 2026-11-06: CodeMother's commit watcher ran 4,622
+        times, 4,510 of them asking the inference host, and its findings went
+        nowhere (only a count was kept). (Q#60, Akien 2026-11-06)
   19.23 proof_coverage: joins a ticket's falsifier clauses to the proofs that cover
         them and the seals that ran green. → Tester
   19.24 proof_discovery: resolves `cairn test` targets to proof files. → Tester
