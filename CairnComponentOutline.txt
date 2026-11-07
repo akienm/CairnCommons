@@ -504,6 +504,24 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
           platform: on Windows, cairn.cmd calls Cairn's Python with bin/cairn. Not a
           redesign, just moving the boundary (5.3.2.4). (Akien 2026-11-07) Today
           bin/cairn is bash, and cairn.cmd runs it under Git Bash.
+      5.3.5.1 So in front of the Python launcher stays a thin platform shell (a
+              shell script on Linux, cairn.cmd or cairn.ps1 on Windows) with
+              enough brains to launch Rescue (7.5, cairn rescueclaude) when it
+              can't find Cairn's Python, or Python throws an error, or whatever
+              else stops the launcher. It hands Rescue the "read this" file of
+              what happened (7.5.3.5). This is what keeps 5.3.2.7 true once the
+              launcher is Python. Ticketing has to take it into account. (Akien
+              2026-11-07)
+      5.3.5.2 Only a failure of the launcher itself falls over to Rescue. A
+              command that runs and fails (eg a verb that exits 1) is that
+              command's error, reported as usual. The Python launcher marks its
+              own failure in a way the shell can tell apart (eg a reserved exit
+              code). (CC, following from 5.3.5.1)
+      5.3.5.3 Rescue is interactive, so the shell launches it only when someone
+              is at a terminal. Called from a script, a hook or a schedule, it
+              writes the "read this" file, raises a trouble if it can, and exits
+              loudly with an error instead, so nothing hangs waiting on a Claude
+              nobody sees. (CC, following from 5.3.5.1)
   5.4 bus (machine)
     5.4.1 PURPOSE: To provide the message passing system devices talk through.
     5.4.1.1 WHY: The more of our messaging actually goes over the bus, the better
