@@ -477,7 +477,13 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
           to. Its bin/ plus its bus verbs is what help lists at that level
           (2.4.11). (Q#12: Akien let CC choose, 2026-11-03; CC kept his walk.)
   5.4 bus (machine)
-    5.4.1 PURPOSE: To provide an inspectable message passing system.
+    5.4.1 PURPOSE: To provide the message passing system devices talk through.
+    5.4.1.1 WHY: The more of our messaging actually goes over the bus, the better
+            we follow encapsulation (RULE 1). That is known to be good for
+            Claude: it cuts the complexity of the system to one part at a time,
+            and with the global view in this outline, a section can be read and
+            compared to its code without a lot of extra noise. (Akien 2026-11-06,
+            Q#45)
     5.4.2 INTENTION:
       5.4.2.1 It is the only way devices talk to one another.
       5.4.2.2 Every part is its own process: the bus, each shim, each device, the
@@ -505,16 +511,10 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               them to their device in whatever manner is appropriate.
       5.4.2.6 The Operator Device and the 'cairn' command are the operator's route
               onto the bus.
-      5.4.2.7 The bus makes this messaging inspectable, the messages show on the
-              bus' web panel as a "Murderbot Diaries" "Public Feed" the operator can
-              review for purposes such as diagnostics.
-        5.4.2.7.1 The feed is for debugging: "did the thing go by when I typed the
-                  command?"
-        5.4.2.7.2 It holds about the last 5 minutes, in the bus's memory buffer, and
-                  is empty after a bus restart. The Cairn device owns it, since the
-                  bus is its machine.
-        5.4.2.7.3 The panel is drawn by the public_feed tool (19.3).
-        5.4.2.7.4 Each line: from, to, time, sync/async, message.
+      5.4.2.7 Real-time inspection of bus traffic is not needed at this point.
+              Logging the messages to the transient pool that is cleared out
+              periodically (4.3.2) "might not be a completely bad idea".
+              (Akien 2026-11-06, Q#45)
       5.4.2.8 One bus per cairn instance (not per host). The bus owns cross system
               communication: extending the bus services to other host systems so
               we can run multiple heavy tasks at once.
@@ -565,6 +565,12 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                   things to set up'"; replaces ssh tunnelling, open-06cfefbe745e)
     5.4.3 HISTORY: the bus once wrote its ring to the database on each pulse
           (2026-09-06). V1's "keeps no database" replaces that.
+      5.4.3.1 The bus was first its own device, made to make MCP traffic
+              inspectable: a "Murderbot Diaries" public feed of every message
+              going by. It was written when MCP seemed an async message system
+              more than a synchronous reply like a web server's, so the spec
+              held conflicting signals. MCP is no longer a mystery, and the
+              real-time feed went with that. (Akien 2026-11-06, Q#45)
     5.4.4 TOOLS: base, public_feed
     5.4.5 VERBS: None
   5.5 ground_loop (machine): the heartbeat
@@ -1359,8 +1365,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
            buses (18.3.1, 5.4.2.8.2, 7.3.7.4). (Akien 2026-11-04: "does akiendell even need
            a web server?")
   18.4 TOOLS: bus_client, base, public_feed; machine learning_block
-  18.5 [Q#45: The bus feed is "on the bus' web panel" (5.4.2.7). The bus is a Cairn
-       machine, not a device: its pane sits inside the Cairn device's page?]
+  18.5 The bus has no web panel: its real-time feed is gone (5.4.2.7, Q#45).
 
 19 STANDALONE TOOLS (cairn/tools/, which have users, not owners)
   19.1 base
