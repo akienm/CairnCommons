@@ -594,7 +594,8 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               called pulse.py, each as its own process.
       5.5.3.5 It writes one JSON record at the end of a pass with a list of each
               device: beat time, found device (folder), NOT FOUND or name, file
-              mtime, pid it spawned. It does no checks and no takeover.
+              mtime, pid it spawned. It does no checks and no takeover. Reading
+              this record is how anything asks "is the system up?" (19.20).
       5.5.3.6 Beat interval is a setting, 60 s for now. It was held at 60 s while
               too much hung off the ground loop; that is cleaned up, and we expect
               to go a lot faster later (Akien: "faster than once a second"). (Q#15,
@@ -1444,8 +1445,8 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
        CodeMother.
   19.10 data_recorder: a mailbox for feedback records until an inspection reads them.
         Called a mailbox because for many data recorders the data arrives over
-        the bus. The records are JSON files, transient things under ~/.cairn/
-        (4.3.2.3), not a tree: files are what it was meant to be, and the plainest
+        the bus. The records are JSON files under the holder that assembled it
+        (~/.cairn/devices/<holder>/<n>/tools/data_recorder/, 1.2.1), not a tree: files are what it was meant to be, and the plainest
         thing that works. (Q#51: Akien let CC choose, 2026-11-06; a queued mail
         tree was his other offer.)
   19.11 determinism: for each component, where is the LLM? Deterministic, mostly
@@ -1524,12 +1525,25 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
   19.19 intentions_model_compiler: copies every intention into
         intentions-congruency-lab/, so that folder can regrow the system on a bare
         machine. → Cairn
-  19.20 liveness: "is the system up?" as a file read. [Q#53: the ground loop's JSON
-        record (5.5.3.5) already answers that. Retire liveness for it?]
+  19.20 liveness: RETIRE, code deleted (1.2.7). "Is the system up?" is answered by
+        reading the ground loop's JSON record (5.5.3.5), a file read because the
+        shim's lazy-init asks before any bus exists. The rack (5.6) answers a
+        different question, who is running, and needs the bus up. (Q#53, Akien
+        2026-11-06)
   19.21 orient: the measuring scans before a build (where is X called, what's in
         each component). → CodeMother (the orient machine composes it)
   19.22 post_commit: the one git post-commit, fanned out to each component's own
-        hook. A commit is an event. → Recovery? (a host-seam) [Q#60]
+        hook. A commit is an event. [Q#60, reworded 2026-11-06 after Akien: "no
+        idea what this is talking about". Git runs exactly ONE script after
+        every commit (.git/hooks/post-commit). This tool is that script: it
+        finds every component that carries its own hooks/post-commit (today
+        CodeMother's and counting_block's) and runs each, so a component can
+        react to a commit as an event instead of checking git on the heartbeat.
+        The script has to be installed into .git/hooks/, which git does not
+        track, so it is a host-seam like Recovery's other installs. The
+        question: does installing it belong to Recovery (7.3.5), with the tool
+        staying in cairn/tools/; or does something else own it; or is reacting
+        to commits not wanted at all?]
   19.23 proof_coverage: joins a ticket's falsifier clauses to the proofs that cover
         them and the seals that ran green. → Tester
   19.24 proof_discovery: resolves `cairn test` targets to proof files. → Tester
@@ -1547,9 +1561,14 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
         works them through it. A learning block that needs a special adaptation
         gets a subclass. (Q#54, Akien 2026-11-05)
   19.30 validation_store: reads and writes seals. → Tester
-  19.31 [Q#55: The "→" marks above are where a tool's main user is, but a tool has users
-        not owners, so it stays in cairn/tools/. Do you want tools with exactly one
-        user moved inside that device (cairn/devices/<d>/tools/), or left here?]
+  19.31 Where a tool lives: a tool that nothing else could ever use goes with its
+        holder (cairn/devices/<d>/tools/): "if i build a tool for adjusting the
+        farfignator on a vw golf from the 80s, and nothing else in the universe
+        has a farfignator, then it can go with the car." If there is any chance
+        somebody else might want it, it goes in the general collection,
+        cairn/tools/. So the general collection is the default. The "→" marks
+        above name each tool's main user; most stay here by that rule. (Q#55,
+        Akien 2026-11-06)
 
 20 UNPLACED — things that need a home or a ruling
   20.1 Trouble Device (cairn/devices/trouble/): → Recovery (7.3.4). Its store
@@ -1566,8 +1585,16 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
        no LLM until after, which saved about 90% of tokens, measured in real use.
        (Q#56, Akien 2026-11-05)
   20.4 learning/ (the learning store's code: per-gate compiled views of CC's
-       learning records). [Q#57: CC device's, or the librarian's?]
+       learning records). → Librarian (9). Learning happens all over the place,
+       not just inside CC, and all of it belongs ultimately to the librarian
+       (4.3.1.6). It can be delegated, which CAN (does not HAVE TO) result in two
+       sets of trees indexing the same nodes by different questions. CC's
+       learning is a delegated share. (Q#57, Akien 2026-11-06)
   20.5 press_office/: Cairn explaining itself to people outside, authored prose.
-       [Q#58: a concept-piece in the commons, not a component?]
-  20.6 MAP.md: transitional; dissolves into intentions and tickets. [Q#59: does this
-       outline replace it?]
+       It is exactly how we explain to others how to use Cairn. (Akien
+       2026-11-06) [Q#58, reworded: today it is a top-level folder in
+       class-space (cairn/press_office/), on no rung. Is it a component with a
+       charter (a communications device or machine, eg one that answers
+       outsiders' feedback), or plain prose that lives with the docs?]
+  20.6 MAP.md: transitional. This outline replaces it; it goes away. (Q#59, Akien
+       2026-11-06)
