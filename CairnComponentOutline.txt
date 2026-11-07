@@ -73,14 +73,15 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                   the words came later (4.5.2).
         2.2.8.1.3 Trouble: it has to be able to report when nothing else can, so
                   direct lines to trouble make sense for recovery reasons (7.3.4).
-    2.2.9 Every device has the panes defined by base device (19.1.2.5.1): status,
+    2.2.9 Every device has the panes defined by the base shim class (19.1.2.5.2): status,
           controls, chat, feed. The web server draws them (18).
-      2.2.9.1 [Q#68: the bus stays, part of the Cairn device, and its feed is a
-              sub-panel there (5.4.2.7.1). Separately, EVERY device has a "feed"
-              pane of its own (this line), showing its share of the bus
-              messages plus its console and debug lines (public_feed tool,
-              19.3). Does every device keep that pane, or is the Cairn device's
-              bus sub-panel the only feed?]
+      2.2.9.1 EVERY DEVICE HAS A FEED SUB-PANEL, from the base shim class (or it is
+              supposed to be): public feed is the bus messages, console is
+              basically INFO messages, debug is debug messages for that device
+              (public_feed tool, 19.3). (Q#68, Akien 2026-11-06)
+      2.2.9.2 Other machines, such as harbor_master, can also have a panel like
+              that, and it is reached through its host device's public interface
+              (RULE 1). (Akien 2026-11-06)
   2.3 WHY: Because without hard boundaries Claude creates a tangled mess that exceeds
       Claude's own complexity limit far in advance of completion.
   2.4 COMMANDS:
@@ -1430,33 +1431,40 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
       19.1.2.4 A tool, not a machine, even though it spans several files.
       19.1.2.5 The base classes all inherit from base, and so bring its logging,
                diagnostics and core patterns with them:
-        19.1.2.5.1 base device: the base class for every internal device. It defines
-                   the panes every device has:
+        19.1.2.5.1 base device: the base class for every internal device. The
+                   panes every device has (today listed here; they are the base
+                   shim's, 2.2.9.1):
           19.1.2.5.1.1 status: lights, switches, values
           19.1.2.5.1.2 controls: settings, controls, or whatever the device can be
                        told to change
           19.1.2.5.1.3 chat: a chat window, if relevant
-          19.1.2.5.1.4 feed: the device's public feed, drawn by the public_feed tool
+          19.1.2.5.1.4 feed: public feed (bus), console (INFO), debug, drawn by
+                       the public_feed tool
         19.1.2.5.2 base shim: the base class for every shim, customized for the
-                   device it interfaces with, internal or external.
+                   device it interfaces with, internal or external. Carries the
+                   panes every device has, the feed sub-panel among them (2.2.9.1).
         19.1.2.5.3 base proxy: the base class for every proxy device, a device that
                    is the one way to a service (13).
   19.2 nest: moved to the machines, now 17.15 (Q#46, Akien 2026-11-06; number
        kept so references hold).
   19.3 public_feed
     19.3.1 PURPOSE: Draws a feed panel of bus messages, debug messages, or both, for
-           any device. By default it filters for the device it's in. Viewed from the
-           bus's own pane, it lists everybody.
+           any device, or any machine with a panel (2.2.9.2). By default it filters
+           for the device it's in. Viewed from the bus's sub-panel on the Cairn
+           device's page, it lists everybody.
     19.3.2 WHY: Debugging: "did the thing go by when I typed the command?" One tool,
            so every device's feed looks and filters the same way.
     19.3.3 INTENTION:
       19.3.3.1 The panel keeps its own short-lived memory buffer (about the last 5
                minutes): short-time file(s), db, array, however we want to do it.
-      19.3.3.2 Channels: console (operator-directed messages and logging info),
-               public feed (the bus messages), debug (logging debug messages).
+      19.3.3.2 Channels: public feed (the bus messages), console (basically INFO
+               messages), debug (debug messages for that device). (Akien
+               2026-11-06)
       19.3.3.3 Filtering is always available, eg by channel, device, sender,
                addressee or verb.
-    19.3.4 USERS: every device's pane (its own traffic); the bus's pane (everybody's).
+    19.3.4 USERS: every device's feed sub-panel (its own traffic); machines with a
+           panel, eg harbor_master, through their host device; the bus's
+           sub-panel on the Cairn device (everybody's).
   19.4 artifact: the one door a record of truth changes through, and the journal of
        who came through it (hash-chained, caller read from the kernel).
        USERS: everyone who writes a record.
