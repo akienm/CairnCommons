@@ -153,7 +153,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
               inference ticket.
       3.3.2.5 Used for learning, or for debugging when something fails. A logging
               artifact, so disposable after 30 days.
-      3.3.2.6 Inference tickets are transient: they live in the transient tree
+      3.3.2.6 Inference tickets are transient: they live in a transient tree
               (4.3.2). (Q#4, Akien 2026-10-27)
     3.3.3 Trouble Ticket: an error that needs a non-automated fixer (CC or Akien).
       3.3.3.1 The intention for a trouble ticket is that it is a diagnostic report.
@@ -318,16 +318,19 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                    questions (Q-cog-014..018 lost in the move), Akien's 3 from
                    Novelty.txt, and 11 Gemini-worded questions labelled "Akien
                    verbatim".
-    4.3.2 Transient: the transient tree (what the logging tree becomes).
-      4.3.2.1 Everything held for seconds to days lives here: mail, logs, test runs,
-              trouble tickets, inference tickets.
+    4.3.2 Transient: transient trees (what the logging tree becomes).
+      4.3.2.0 A transient tree is like a temp folder: there are many, each made
+              when it is needed and tossed when it is done. (Akien 2026-11-06,
+              Q#64: "your wording indicates there's only one")
+      4.3.2.1 Everything held for seconds to days lives in one: mail, logs, test
+              runs, trouble tickets, inference tickets.
       4.3.2.2 Each kind of thing declares its lifetime, and it ages out on that clock.
       4.3.2.3 Cairn owns all of ~/.cairn/ and delegates each ~/.cairn/devices/
               subtree to its device. Everything outside devices/ (~/.cairn/logging/
               and the rest) is Cairn's, so every log is Cairn's and Cairn cleans
               them up in sleep. Transient things are files there. Trouble tickets
               are logging items.
-      4.3.2.4 The transient tree is for things that may help debugging out to 30
+      4.3.2.4 Transient trees are for things that may help debugging out to 30
               days and won't be needed past that, eg an inference ticket looked at a
               week later because a bug turned up. No trouble should stand unresolved
               at 30 days; sleep's cleanup may be made to spare one that does.
@@ -407,7 +410,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
           launcher). The scheduler is the base shim's (5.8); harbor_master is
           CodeMother's (10.8).
     5.2.3 Owns the cairn command line launcher (5.3).
-    5.2.4 Owns the transient tree and its 30 day sweep (4.3.2.3).
+    5.2.4 Owns the transient trees and their 30 day sweep (4.3.2.3).
     5.2.5 `cairn start` (= cairn cairn start) brings the system up: ground loop, bus,
           shims. `cairn stop` takes it down.
       5.2.5.1 Any cairn command brings up whatever it needs, including the whole
@@ -491,8 +494,11 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
                   what keeps the bus fast. (Akien 2026-11-05, from a UU-days
                   discussion.) Today bus_traffic holds every message (59,883 rows,
                   measured 2026-11-05).
-        5.4.2.4.2 [Q#64: does 5.4.2.4.1 replace "a shim that needs to hold mail puts
-                  it in the transient tree", or do both stand?]
+        5.4.2.4.2 Mail goes to the bus, and from the bus to the shims. If the bus
+                  has to start a shim to deliver mail, it may hold that mail in
+                  a transient tree (4.3.2) until the shim is up. Both stand:
+                  this is mail waiting on a wake; 5.4.2.4.1 is mail nobody
+                  picked up. (Q#64, Akien 2026-11-06)
       5.4.2.5 The shims, each connected to the bus, pick up the messages and route
               them to their device in whatever manner is appropriate.
       5.4.2.6 The Operator Device and the 'cairn' command are the operator's route
@@ -1418,7 +1424,7 @@ Akien's V1 text is kept as written wherever it stood; CC's additions fill the re
   19.9 charter: compiles a component's bounded state from its history. Held by
        CodeMother.
   19.10 data_recorder: a mailbox for feedback records until an inspection reads them.
-        [Q#51: replaced by the transient tree (4.3.2)?]
+        [Q#51: replaced by a transient tree (4.3.2)?]
   19.11 determinism: for each component, where is the LLM? Deterministic, mostly
         deterministic, or not. → CodeMother
   19.12 edges: the frontier view: every charter's admitted gaps plus the open
