@@ -1,0 +1,73 @@
+{
+  "id": "7bd839827172",
+  "title": "the hollow reading measures a deletion",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A writes_to path the build deleted (absent at HEAD, no successor, present at the pre-build anchor) is restored from the anchor inside the hollow worktree, the declared teeth run against it, and it is removed again, so a deletion's proof is measured instead of skipped.",
+  "why": "Measured 2026-11-08: bin/cairn test --hollow 80df7712b8c5 read '0 file(s) measured, 2 skipped' and refused to measure anything, because cairn/machines/quarry_index was skipped as 'not present at HEAD and no recorded successor'. Outline rule 1.3.7 (code no longer needed is deleted) opens a wave of seven deletion tickets; PROVED requires a sealed hollow reading, so each would be refused.",
+  "traces_to": "Law 8 (a proof a hollow build couldn't pass); Law 3.",
+  "how": "In hollow.measure's per-file loop, the no-successor branch checks the anchor (git cat-file -e <anchor>:<path>); if present, the path is restored by git archive <anchor> <path> | tar -x into the worktree, measured, and removed after the run (rmtree or unlink). Hunk retry and own-teeth reading are skipped for a deletion. A path that never existed keeps its skip.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture repo whose build commit deletes a module that the fixture proof checks is gone reads that path in measured with the declared tooth redded, and after the run the worktree no longer holds the restored path"
+      },
+      {
+        "n": 2,
+        "claim": "a writes_to path absent both at the anchor and at HEAD is still skipped with a reason naming 'no recorded successor'"
+      },
+      {
+        "n": 3,
+        "claim": "a deleted DIRECTORY named in writes_to is restored whole and measured, and the live repo's 80df7712b8c5 anchor holds cairn/machines/quarry_index as a tree, so its hollow can measure it"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red-first proof cairn/devices/tester/proofs/test_hollow_measures_a_deletion.py, modelled on cairn/devices/tester/proofs/test_hollow_follows_a_move.py (two-commit fixture repo, berth store, history.json journal, print_teeth_main). Fixture: commit 1 holds gone/__init__.py + gone/mod.py and the proof; commit 2 deletes gone/. The fixture proof's tooth asserts importlib.util.find_spec('gone') is None. Tooth 1 names 'gone/mod.py' (a file) in writes_to; tooth 3 names 'gone' (a directory); tooth 2 names 'never/was.py'. Each tooth also asserts the worktree is cleaned: measure() leaves no gone/ behind (checked via the run's own after-state: the live fixture repo has no gone/). Tooth 3 adds the live invariant: git cat-file -t e88175086e2d:cairn/machines/quarry_index is 'tree' in the live repo (asserted only when that commit exists).",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_hollow_measures_a_deletion.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_hollow_follows_a_move.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: in cairn/devices/tester/hollow.py measure(), the branch `if succ is None:` (where why = 'not present at HEAD and no recorded successor') first asks whether the anchor holds the path; if it does, the file is marked deleted instead of skipped. A deleted path is restored by a helper _resurrect(wtree, at_commit, rel, repo_root) that pipes `git -C repo_root archive <commit> -- <rel>` into `tar -x -C wtree`, returning 'restored (deleted by the build)'. In the finally, a deleted path is removed (shutil.rmtree for a dir, unlink for a file) instead of _restore (checkout cannot restore an absence). own-teeth and the hunk retry are skipped for a deleted path. Every other branch is unchanged.",
+      "writes_to": [
+        "cairn/devices/tester/hollow.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/hollow.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: run red before D2, green twice after, plus the siblings test_hollow_follows_a_move.py and test_hollow.py; commit; seal with bin/cairn test --seal on the new proof; hollow seal; then return to 80df7712b8c5's hollow seal as the live fire.",
+      "writes_to": [],
+      "reads": [
+        "cairn/devices/tester/proofs/test_hollow.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/hollow.py",
+      "cairn/devices/tester/proofs/test_hollow_measures_a_deletion.py"
+    ],
+    "out": [
+      "every other component",
+      "the move branch's behaviour",
+      "the PROVED gate's hollow reading rules"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-08",
+      "saw": "hollow for 80df7712b8c5: 0 measured, 2 skipped; cairn/machines/quarry_index skipped as not present at HEAD and no recorded successor",
+      "how": "bin/cairn test --hollow 80df7712b8c5 --proof bin/proofs/test_retired_components_are_gone.py"
+    }
+  ]
+}
