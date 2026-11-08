@@ -1,0 +1,87 @@
+{
+  "id": "b69e5c658b1c",
+  "title": "the bus's serve returns only after its backlog pass stops touching the bus",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "The bus's serve() returns only after every thread it started has stopped touching the bus, so a scratch bus's exit never races a backlog pass that re-creates the tables it just dropped; the orphans that race left are dropped.",
+  "why": "Measured 2026-11-08 while building 7bc784d5a7de: db_domain's registry invariant (test_scratch_cannot_outlive_its_process.py, _registry_agrees) reds on 50 public tables in pg_tables with no cairn_owned row (48 bus_stop_proof_*, 2 bus_proc_*). One run of test_every_stop_records_its_cause.py leaves two more. The cause: serve() starts the bus-backlog thread as a daemon and never joins it; when serve_forever returns at once, the scratch exit drops the bus's tables while the pass (return_the_backlog -> bus.undelivered -> _ensure -> CREATE TABLE IF NOT EXISTS) re-creates them with no owner row. With a join, the same run leaves none.",
+  "traces_to": "Law 6 (every table has exactly one owner, recorded as it is born); Law 7 (the registry is a record of truth and must agree with pg_tables); outline 11.3.6 via Q#36 (open-5f0e7cdb4e49).",
+  "how": "A red-first proof in the bus proofs; serve() keeps a handle on its backlog thread and joins it (bounded, 30 s) in its finally before final_flush; a one-time cleanup drops the standing ownerless bus_* tables through store.drop_table.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "running the stop proof's 'clean' and 'raise' drivers adds no bus_* table to pg_tables that has no cairn_owned row"
+      },
+      {
+        "n": 2,
+        "claim": "serve()'s source joins its backlog thread before it calls final_flush"
+      },
+      {
+        "n": 3,
+        "claim": "no public bus_* table in pg_tables lacks a cairn_owned row"
+      }
+    ]
+  },
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_serve_returns_after_its_threads.py",
+      "the ownerless bus_* tables in the cairn database"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py (read, never edited)",
+      "db_domain and its store",
+      "the backlog pass's own logic (process.return_the_backlog)",
+      "every other device"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-08",
+      "saw": "50 public tables in pg_tables with no cairn_owned row: 48 bus_stop_proof_*, 2 bus_proc_*; one run of test_every_stop_records_its_cause.py added bus_stop_proof_1135612_1632364107_delivery and bus_stop_proof_1135621_1632365463; with backlog.join before final_flush the same run added none",
+      "how": "a scratchpad script: pg_tables (schemaname public) minus store's registry table names, before and after each run, with and without the server.py edit"
+    }
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the red-first proof is cairn/devices/cairn/machines/bus/proofs/test_serve_returns_after_its_threads.py, committed alone before the build, with PROVES = {'b69e5c658b1c': {'1': 'test_a_driven_stop_leaves_no_orphan', '2': 'test_serve_joins_its_backlog_before_final_flush', '3': 'test_no_bus_table_lacks_an_owner'}} written with the literal key. Helper _ownerless(): open store.connect() (store = cairn.devices.db_domain.tools.client.store, file cairn/devices/db_domain/tools/client/store.py; connect at :118, owner_of at :161, drop_table at :394), SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'bus\\_%', and keep those whose store.owner_of(t) is None. Tooth 1: before = _ownerless(); load the sibling proof cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py by importlib.util.spec_from_file_location at call time and call its _driven('clean') then _driven('raise'); new = _ownerless() - before; drop each new table with store.drop_table(t, 'bus') so a red run leaves the database as it found it; assert new is empty, naming them. Tooth 2: parse cairn/devices/cairn/machines/bus/server.py with ast, take the serve function's source (ast.get_source_segment), and assert '.join(' appears in it and its first index is before the index of 'final_flush(bus, home)'. Tooth 3: assert _ownerless() is empty, naming the count and the first five. main() runs each tooth under the check/FAILURES pattern of cairn/tools/base/proofs/test_base_proofs_ride_the_live_bus.py (per-tooth FAIL, continue, exit 1 if any failed, print flush=True). Run red before the build: all three FAIL.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_serve_returns_after_its_threads.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py",
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/tools/base/proofs/test_base_proofs_ride_the_live_bus.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: in cairn/devices/cairn/machines/bus/server.py: (a) after the line STOPS_FILE = \"stops.jsonl\" add '_BACKLOG_JOIN_S = 30.0  # the pass is one read of undelivered; a minute would be wedged'; (b) in serve(), the line 'threading.Thread(target=_backlog, name=\"bus-backlog\", daemon=True).start()' becomes 'backlog = threading.Thread(target=_backlog, name=\"bus-backlog\", daemon=True)' and 'backlog.start()'; (c) in serve()'s inner finally, between 'server.server_close()' and 'final_flush(bus, home)', add 'backlog.join(timeout=_BACKLOG_JOIN_S)' under a comment naming the measured leak (2026-11-08, two ownerless tables per run of test_every_stop_records_its_cause.py, 50 standing) and that nothing serve() started touches the bus after it returns.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: after D2 is in place, run the one-time cleanup from the cairn root: PYTHONPATH=. python3 -c over store (cairn.devices.db_domain.tools.client.store): list public tables in pg_tables named bus_* (LIKE 'bus\\_%') whose store.owner_of(t) is None, and call store.drop_table(t, 'bus') on each, printing the count dropped. It writes no file; its record is the count in the build commit message. Then D1's tooth 3 reads green.",
+      "writes_to": [
+        "the ownerless bus_* tables in the cairn database"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: run cairn/devices/cairn/machines/bus/proofs/test_serve_returns_after_its_threads.py and cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py twice serially with 'PYTHONPATH=. python3 <file>' from the cairn root, both green; then commit as 'b69e5c658b1c: build — the bus's serve joins its backlog pass; N ownerless tables dropped' with the two trailer lines.",
+      "writes_to": [],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py"
+      ]
+    }
+  ]
+}
