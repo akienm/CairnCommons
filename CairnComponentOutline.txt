@@ -7,7 +7,7 @@ not matter here. The code catches up to this, never the reverse.
       are renumbered after each round of edits, so a number holds within one
       conversation, not across them.
   0.2 A question is [Q#n: ...]. Its #n is its own and never changes; a new question
-      takes the next unused number, which is 70. An answered question disappears:
+      takes the next unused number, which is 74. An answered question disappears:
       what stays is the answer and its why, written into the outline.
   0.3 Entry shape: PURPOSE / WHY / INTENTION / ANTI-INTENTION (where needed) /
       COMMANDS (VERBS on the bus; USERS for a tool).
@@ -16,6 +16,9 @@ not matter here. The code catches up to this, never the reverse.
       code changes.
   0.6 This file lives at CairnCommons/CairnComponentOutline.txt. It is the map of
       the system; there is no other. Git keeps every version.
+  0.7 HYPOTHESIS marks a mechanism written as a first draft so that experiments
+      have something to be wrong about. It is not a decision; what the experiments
+      show replaces it (Law 3).
 
 1 THE RUNGS (the complexity axis)
   1.1 PURPOSE: Name what every component is, so it has one place to live.
@@ -146,6 +149,12 @@ not matter here. The code catches up to this, never the reverse.
               to claim it. When several compete, the least capable one that thinks
               it can do it claims it, "leaving the more capable in case a bigger
               one comes along."
+        3.3.4.2.1 [Q#72: A ticket is a tool or machine, not a process, so something
+                  has to run its "ask the gate" on some event. Where does that code
+                  execute, and on what event (a builder's commit? a verb?)? And for
+                  claiming: how does a builder device declare what it is capable of,
+                  what does "available" mean (the shim knows idle; nothing else
+                  does), and what stops two builders claiming the same step?]
     3.3.5 Commit often. WHY: so we never wind up with stray files or incomplete
           work.
     3.3.6 More than one builder runs at a time, so work is kept apart by branches:
@@ -164,7 +173,7 @@ not matter here. The code catches up to this, never the reverse.
           everything that happened to that request.
       3.4.2.1 The call runs the request against our graph trees first. If they
               can't answer, it asks the cloud "what nodes do I need to understand
-              this?", integrates them, and runs the query against the trees again.
+              this?", integrates them, and runs the query against the trees again (the miss path, 4.3.1.9.5).
       3.4.2.2 When it asks an upstream LLM, the nest and its sieves sort out the
               lowest cost way to resolve it (eg by the request's domain), and the
               call is made the way the current constraint set says is best.
@@ -252,6 +261,11 @@ not matter here. The code catches up to this, never the reverse.
         4.3.1.5.1 Nodes: one long list, id = row. Every tree indexes it; no tree
                   owns a node, so several trees can index the same node in
                   different ways.
+          4.3.1.5.1.1 [Q#70: Two boxes depositing at once collide on "id = row"
+                      (11.3.5.1), and node ids end up in every link and blob
+                      pointer. What is a node's id: handed out by the librarian over
+                      the buses (4.3.1.3; slow for a remote box ingesting in bulk),
+                      box-prefixed, a content hash, or something else?]
         4.3.1.5.2 Trees as tables, permanent: each asks one question, with the
                   weights in its leaves. A tree past 5K leaves is calved at its
                   dominant attractors, a deterministic code shear.
@@ -311,6 +325,74 @@ not matter here. The code catches up to this, never the reverse.
                   proposes question-shaped lines in his words; he confirms each
                   before it is marked verbatim. New ones are added through a
                   librarian command as he says them.
+      4.3.1.9 The walk: a first HYPOTHESIS (0.7). CC's draft, written so the
+              experiments (4.3.1.10) have something to be wrong about; it is
+              replaced by what they show. WHY: Akien sets what the trees are for
+              and judges what they do; the mechanism is the teammate's draft, the
+              way the geogebra model was for the 3d scanner, and it is learned here
+              by running it, not by specifying it first.
+        4.3.1.9.1 What a tree holds. A tree is one question. Its nodes are that
+                  question's answers in pattern words, not domain words: for "how
+                  might that work?" the nodes are mechanisms (buffer, gate, feedback
+                  loop, threshold, queue, lookup, broadcast ...), coarse at the top
+                  and finer beneath (gate -> latch, filter, valve). The vocabulary
+                  is grown by the miss path (4.3.1.9.5), never authored by hand.
+        4.3.1.9.2 What a leaf weight is. Each node, in the tree's own leaf table,
+                  remembers the words that have led to it, with counts: "buffer"
+                  carries tank and cistern from plumbing, capacitor from
+                  electronics, inbox from mail, each with how often. This is where
+                  cross-domain comes from: the words of every field pile up on the
+                  same pattern node, so a new plumbing sentence reaches "buffer" by
+                  plumbing words and finds the electronics and the mail already
+                  there.
+        4.3.1.9.3 The walk. The string is cut into words deterministically (stems,
+                  no LLM). Start at the top; at each node score each child by how
+                  much of the string's words it has seen before, weighted by the
+                  counts; step to the best child; stop at a leaf, or when no child
+                  scores above the floor (a setting, measured). The result is the
+                  path taken, with each step's score.
+        4.3.1.9.4 The embedding. The path written as one string of node ids with the
+                  score bucketed at each step, eg /gate:7/latch:4/. A string so that
+                  LIKE is the search (14.3.2): a shared prefix is "the same family of
+                  mechanism", a shared substring is "shares a sub-pattern". Two
+                  things from two domains that walked the same path have the same
+                  embedding; that is what structural similarity means here.
+        4.3.1.9.5 The miss. A walk that cannot leave the top, or scores under the
+                  floor everywhere, cannot answer. Then, and only then, the LLM is
+                  asked, given the question, the string, and the tree's vocabulary at
+                  the node where it stopped: which of these answer it, or what new
+                  node belongs under this one? It returns names, existing or new, and
+                  nothing else, so the integration is plain code: a new node goes in
+                  the one list and under its parent; the string's words are added to
+                  the named nodes' counts. Then the walk runs again and lands. That
+                  is the learning: the next string like it needs no LLM.
+        4.3.1.9.6 Deposit. A hit reinforces: the string's words are added to the
+                  counts along the path it took. With `for <device>/<question>`
+                  (8.4.4) the same happens in that device's tree, so two holders of
+                  one question drift apart in weights by what each has seen.
+        4.3.1.9.7 Sleep (consolidation). Merge sibling nodes whose word sets mostly
+                  overlap; let counts that have not moved in a long time fade; past
+                  5K leaves, calve at the nodes carrying the most count (the
+                  dominant attractors), each becoming the root of its own tree,
+                  linked to its parent (4.3.1.5.2).
+        4.3.1.9.8 Which trees, when nobody says `for`. The depositor's own question
+                  trees first. The librarian's default is a sequence from 4.3.1.8.4
+                  starting at "how might that work?", going on to the next question
+                  only while the one before it landed. So a thing gets a handful of
+                  embeddings, never one per question (4.3.1.6). This is the
+                  attention problem, and the likeliest of these to be wrong.
+      4.3.1.10 The bench. The trees are learned by watching them run, so the first
+               thing built on them is a way to see them: a graph-trees pane on the
+               librarian's page (15) that draws a tree, takes a string and a
+               question, lights the path with its scores, shows the embedding and
+               the miss when there is one, and walks two strings from two domains
+               side by side to see whether they land together; and the same from
+               the command line, `cairn librarian walk "<string>" for <question>`
+               (8.4.5). Every number in 4.3.1.9 (the floor, the buckets, the merge
+               rule) is a setting, so an experiment is changing one and walking
+               again. WHY: "i can imagine being able to understand it once i can
+               run experiments and see what happens." Nothing in 4.3.1.9 is known
+               until this has measured it (Law 3).
     4.3.2 Transient: things held for seconds to days (mail, logs, test runs,
           trouble tickets, inference tickets). The logging tree.
       4.3.2.1 What Cairn stores in the database is a tree, with few exceptions
@@ -511,6 +593,12 @@ not matter here. The code catches up to this, never the reverse.
               runs on one box; the other boxes reach it over the buses. No box needs
               a full set of devices. WHY: so the instance can run several heavy
               tasks at once across boxes.
+        5.5.3.8.1 [Q#71: A joining box needs a bus, a ground loop, shims and
+                  probably Recovery, and those are Cairn's machines (2.3.2.1); yet
+                  a device runs on one box. Is there a Cairn device per box (then
+                  `cairn 0` is not a singleton), or does the home box's Cairn own
+                  processes on remote boxes? Which box starts the sleep token on a
+                  multi-box instance?]
       5.5.3.9 A shim waking its device never takes more than 60 s. A sync caller
               waits at most 60 s for the wake, then gets "not now" back; a wake that
               misses 60 s is a trouble. 600 s is the limit for an inference call to
@@ -598,6 +686,10 @@ not matter here. The code catches up to this, never the reverse.
                   wake: a request, a pulse, the sleep token.
         5.8.3.2.3 It answers what it can itself; when it can't (eg a health question
                   it holds no answer to), it wakes the device and asks.
+          5.8.3.2.3.1 [Q#73: For our own (internal) devices, what is the one way a
+                      shim talks to its device process (socket, pipe, ...)? And
+                      which verbs does the shim answer alone without waking the
+                      device: help, status, stop, and what else?]
         5.8.3.2.4 A device may declare an idle time; the shim stops it after that
                   long unused, and the next message wakes it again. With none
                   declared it runs until `stop`. WHY: idle costs memory, not CPU,
@@ -867,7 +959,9 @@ not matter here. The code catches up to this, never the reverse.
           with its own question and weights. "each graph tree can be thought of as
           a question space."
     8.4.5 walk, nearest, neighbors: not the verbs a device uses; the librarian
-          encapsulates them under ask (4.5.3).
+          encapsulates them under ask (4.5.3). `walk "<string>" for <question>` is
+          also the bench's verb for the operator (4.3.1.10): diagnostic, showing
+          the path and scores, never how a device asks.
   8.5 TOOLS: trees (its own, published as a client tool); base, question,
       bus_client, system_word, gate; machines learning_block, web_operator; db
       client.
@@ -1149,14 +1243,15 @@ not matter here. The code catches up to this, never the reverse.
   14.3 INTENTION:
     14.3.1 Each tree asks one question (4.3.1.5.2). Send any string with a question;
            that tree, a word graph, returns a histogram: the weighted path it
-           followed. The histogram is the embedding.
-    14.3.2 An embedding is searched with LIKE.
+           followed. The histogram is the embedding. How the walk goes: 4.3.1.9;
+           the bench it is learned on: 4.3.1.10.
+    14.3.2 An embedding is searched with LIKE (4.3.1.9.4).
     14.3.3 A memory node can carry any number of embeddings, one per question asked
            of it. We don't routinely generate every possible one: that becomes a
            sea of useless data (4.3.1.6).
     14.3.4 Which embeddings get made is what the memory intends. Like Akien's mind
            running science fiction past "how might that work", looking for things
-           from other domains it could use later.
+           from other domains it could use later. First hypothesis: 4.3.1.9.8.
 
 15 WEB SERVER DEVICE (cairn/devices/web_server/)
   15.1 PURPOSE: The one web surface: shows the running system.
@@ -1178,7 +1273,10 @@ not matter here. The code catches up to this, never the reverse.
 16 SHARED MACHINES (cairn/machines/: machines several devices hold)
   16.1 learning_block
     16.1.1 PURPOSE: The engine of a learning block: input -> candidates -> evaluate
-           -> decide or escalate.
+           -> decide or escalate. In the walk's terms (4.3.1.9): decide is a walk
+           that landed, and the deposit reinforces its path; escalate is a miss,
+           first to the LLM (4.3.1.9.5), and when the LLM returns nothing usable,
+           a question to the operator (17.19).
     16.1.2 WHY: Many devices learn in the same shape; one engine, held by each,
            holding its trees by the librarian's delegation (4.3.1.4). "a learning
            block is a composite thing with many parts, it's a machine."
