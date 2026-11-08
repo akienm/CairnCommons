@@ -1,0 +1,205 @@
+{
+  "id": "6208d0a27d6e",
+  "title": "the liveness tool retires and the ground loop owns its record",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "The liveness tool is deleted: the ground loop owns its one JSON record (beat.json) and its beat interval, carries no staleness verdict and no takeover, and 'is the loop up' is answered by its held singleton lock.",
+  "why": "Akien's outline answer Q#53 (2026-11-06): 'liveness: RETIRE, code deleted (1.2.7). \"Is it up?\" is the rack's to answer.' The ground loop's anti-intention (outline 5.6.3) names staleness and managers, and 5.6.4.5 says it does no checks and no takeover. Rule 1.3.7: code no longer needed is deleted.",
+  "traces_to": "Outline Q#53, 5.6.3, 5.6.4.3-5.6.4.6, 5.7.3.5, 5.3.5.2, 1.3.7; Law 1; RULE 1.",
+  "how": "Extend the shared retirement proof with four teeth (red first); delete the tool and the cadence proof; a base singleton tool holds the lock claim and probe; the ground loop takes the record and cadence into heartbeat.py and stops taking over; cli, pane, base shim, roster and render follow; proofs follow; the live record moves to beat.json.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/tools/liveness and the ground loop's tool-cadence proof are absent"
+      },
+      {
+        "n": 2,
+        "claim": "no repo file outside records of truth and caches names cairn.tools.liveness, its path, read_liveness, write_liveness, liveness_pane_data or STALENESS_THRESHOLD_S"
+      },
+      {
+        "n": 3,
+        "claim": "importing cairn.tools.liveness.liveness exits nonzero with No module named"
+      },
+      {
+        "n": 4,
+        "claim": "no liveness.json stands in the live ground loop home"
+      },
+      {
+        "n": 5,
+        "claim": "a shim constructed while the loop's lock is held spawns nothing"
+      },
+      {
+        "n": 6,
+        "claim": "a second loop refuses with no takeover of the holder"
+      },
+      {
+        "n": 7,
+        "claim": "the beat interval is the ground loop's own 60 s setting"
+      },
+      {
+        "n": 8,
+        "claim": "the base shim probes the same lock file the guard claims"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: extend the red-first proof bin/proofs/test_retired_components_are_gone.py with PROVES['6208d0a27d6e'] = {'1': 'liveness_paths_are_absent', '2': 'nothing_names_liveness', '3': 'liveness_does_not_import', '4': 'no_liveness_record_in_the_ground_loop_home'}. Tooth 1: cairn/tools/liveness and cairn/devices/cairn/machines/ground_loop/proofs/test_the_ground_loop_reads_the_tools_cadence.py are absent. Tooth 2: _naming over the module cairn.tools.liveness, its path cairn/tools/liveness, and the names read_liveness, write_liveness, liveness_pane_data and STALENESS_THRESHOLD_S (all spelled split) finds nothing. Tooth 3: importing cairn.tools.liveness.liveness exits nonzero with 'No module named'. Tooth 4: <address.ROOTS['instance']>/cairn/0/machines/ground_loop/liveness.json does not exist. The earlier tickets' teeth are unchanged. Run red before the build: all four FAIL.",
+      "writes_to": [
+        "bin/proofs/test_retired_components_are_gone.py"
+      ],
+      "reads": [
+        "bin/proofs/test_retired_components_are_gone.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: delete cairn/tools/liveness/ whole (its intention+why.json, validations/*.json, history/state if present leave first through bin/cairn artifact remove <path> --why; git rm the rest) and cairn/devices/cairn/machines/ground_loop/proofs/test_the_ground_loop_reads_the_tools_cadence.py with its validations json the same way (its claim, that the loop imports the tool's cadence, retires with the tool; the cadence tooth moves to D9).",
+      "writes_to": [
+        "cairn/tools/liveness",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_the_ground_loop_reads_the_tools_cadence.py"
+      ],
+      "reads": [
+        "cairn/tools/liveness/liveness.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: new cairn/tools/base/singleton.py: claim(path) -> Claim (dataclass fd, path, release()) taking an exclusive non-blocking lock (posix fcntl.flock LOCK_EX|LOCK_NB; nt msvcrt.locking LK_NBLCK on 1 byte), creating the file if absent and raising ClaimRefused (RuntimeError) when held; held(path) -> bool, a non-blocking probe that answers True when another holder has it (posix LOCK_SH|LOCK_NB then LOCK_UN; nt LK_NBLCK then LK_UNLCK; an absent file is False and creates nothing). Docstring: the lock is the measured answer to 'is it running' (outline 5.3.5.2, 5.6.4.3); no stored state, no staleness. cairn/devices/cairn/machines/ground_loop/guard.py keeps LOCK_NAME and claim_singleton(home) = singleton.claim(home / LOCK_NAME) (mkdir parents first), re-exports ClaimRefused and SingletonClaim = Claim from singleton, adds held(home) = singleton.held(home / LOCK_NAME); its docstring drops the record-explains paragraph's read_liveness and says a loser names the holder from the ground loop's own record.",
+      "writes_to": [
+        "cairn/tools/base/singleton.py",
+        "cairn/devices/cairn/machines/ground_loop/guard.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/guard.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the ground loop owns its record and cadence (outline 5.6.4.5, 5.6.4.6). In cairn/devices/cairn/machines/ground_loop/heartbeat.py add CADENCE_S = 60.0 (ruled by Akien 2026-08-22; a setting), RECORD_NAME = 'beat.json', write_record(now, state, pid, home) (the atomic temp-then-os.replace body moved from the tool), and read_record(home) -> {'record': dict|None, 'age_s': float|None, 'lack': str (only when absent or unreadable)} taking now as a keyword (now=None means datetime.now(timezone.utc)), never raising. In cairn/devices/cairn/machines/ground_loop/__main__.py import CADENCE_S, write_record, read_record from heartbeat; _claim(home) returns claim_singleton(home) or, on ClaimRefused, prints a refusal naming the holder's pid from read_record and returns None: no staleness, no SIGTERM, no second try (5.6.4.3, 5.6.4.5 'no checks and no takeover'); drop the signal-kill and time import if unused; the docstring says beat.json and that a second loop exits while one holds the claim.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+        "cairn/devices/cairn/machines/ground_loop/__main__.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/__main__.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: cairn/devices/cairn/machines/ground_loop/cli.py: drop the tool import; _status prints 'ground_loop: up' when guard.held(home) else 'ground_loop: down', then pid, beats, last beat age (from read_record), changed count and the lack note as today; _stop and _restart read the pid from read_record, and _restart stops first when guard.held(home) and a pid is known. The module docstring says the record, not the liveness record. USAGE's status line reads 'report up/down, pid, beats, age'. bin/cmd/groundloop's comment says 'its record' for 'the liveness record'.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/cli.py",
+        "bin/cmd/groundloop"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/cli.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: cairn/devices/cairn/machines/ground_loop/shim.py: the pane is kind 'beat', label 'Heartbeat', its handler beat_pane_data() = {'reports': <today's reports string>, 'up': guard.held(home), **read_record(home)} with home = instance_path('cairn', 0) / 'machines' / 'ground_loop'; the verb is 'beat' (handler _answer_beat, emit 'beat_answered'); docstrings say the record (beat.json) and no verdict. cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py tooth 3 asks verb 'beat' and asserts 'up' in the body.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/shim.py",
+        "cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/shim.py"
+      ]
+    },
+    {
+      "n": 7,
+      "text": "D7: cairn/tools/base/shim.py: ensure_ground_loop(*, home=None, log=None) (the unused now parameter goes) first asks singleton.held(loop_lock_path(home)), where loop_lock_path(home=None) = (home or instance_path('cairn', 0) / 'machines' / 'ground_loop') / 'run.lock' (a comment ties it to guard.LOCK_NAME and the tooth in D9); when held it returns {'up': True, 'spawned': 'none', 'note': 'loop up (its lock is held)'} with no file read and no spawn; otherwise the spawn branches stand as today with 'verdict' replaced by 'up': False in every return. The constructor call drops the datetime argument and its fallback reads {'up': False, ...}. The docstring says the check is the loop's held lock, never a record's age.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/devices/cairn/machines/ground_loop/guard.py"
+      ]
+    },
+    {
+      "n": 8,
+      "text": "D8: cairn/tools/bus_client/roster.py: the roster's dict drops 'beats' and _beats goes (a tool must not read the cairn device's record; the outline's rack answers 'is it up', 5.7.3.5); its docstring shape is {'devices': [...]}. cairn/devices/web_server/render.py: the nav drops the beats span and the nav .beats css rule.",
+      "writes_to": [
+        "cairn/tools/bus_client/roster.py",
+        "cairn/devices/web_server/render.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/roster.py",
+        "cairn/devices/web_server/render.py"
+      ]
+    },
+    {
+      "n": 9,
+      "text": "D9: the ground loop's proofs. cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py: the record teeth use write_record/read_record (the stamp advances and pid and state ride; the instance dir is born on first write; absent or torn is record None with the lack named, never a raise; a reader never sees a torn record); the staleness verdict teeth and the pane's LIVE/DEAD loop go with a docstring line that ticket 6208d0a27d6e retired them (Q#53; outline 5.6.3: no staleness); the claim teeth stand; the door-loser tooth asserts the loser exits 3 naming the pid from the record, and an old record does NOT make the newcomer SIGTERM the holder (the holder is alive after); the pane teeth assert beat_pane_data equals read_record plus 'up' and 'reports', and the page's last kind is 'beat'. Add PROVES['6208d0a27d6e'] = {'6': 'a_second_loop_refuses_with_no_takeover', '7': 'the_loop_owns_its_cadence', '8': 'the_shim_probes_the_guards_lock'}: tooth 7 asserts heartbeat.CADENCE_S == 60.0 and __main__.main's default cadence is it; tooth 8 asserts base shim loop_lock_path(h) == h / guard.LOCK_NAME. test_cli.py writes through write_record. test_the_beat_calls_nothing.py reads beat.json, and its live tooth asserts guard.held(the live home) and the live beat.json is younger than 3 * CADENCE_S.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_cli.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_the_beat_calls_nothing.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
+      ]
+    },
+    {
+      "n": 10,
+      "text": "D10: the base proofs. cairn/tools/base/proofs/test_shim_starts_the_loop.py: PROVES['6208d0a27d6e'] = {'5': 'test_a_held_lock_spawns_nothing'} beside d6eb399ab6ad's keys (its 'resting' key points at the renamed tooth); teeth 1 and 2 wait until singleton.held(<scratch>/run.lock) instead of a LIVE record (not held before); the resting tooth holds singleton.claim on the scratch lock and asserts the construct returns up True, spawned none and no unit; docstrings follow. test_a_view_takes_arguments.py, test_root_verbs.py and test_root_verb_vocabulary.py _scratch() hold singleton.claim on the scratch lock in a module-level list instead of writing a record. test_a_loop_a_test_run_starts_is_the_runs.py calls ensure_ground_loop() with no argument. cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py: the record tail is spelled .cairn/devices/cairn/0/machines/ground_loop/beat.json and the cadence 60.0 (outline 5.6.4.6), importing nothing from the retired tool. cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py and cairn/tools/base/sail_record.py spell the retired path split or name the ground loop's heartbeat.py instead.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py",
+        "cairn/tools/base/proofs/test_a_view_takes_arguments.py",
+        "cairn/tools/base/proofs/test_root_verbs.py",
+        "cairn/tools/base/proofs/test_root_verb_vocabulary.py",
+        "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py",
+        "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py",
+        "cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py",
+        "cairn/tools/base/sail_record.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+      ]
+    },
+    {
+      "n": 11,
+      "text": "D11: the ground loop charter cairn/devices/cairn/machines/ground_loop/intention+why.json (write_json, verb append) names beat.json, the cadence setting in heartbeat.py, and no takeover, and traces_to gains 'ticket 6208d0a27d6e (Q#53)'. Instance-space: set COMMAND_DO_NOT_RESTART in the live ground loop home for the build, clear it after the commit so the live loop re-execs on its changed files and writes beat.json, then trash the live liveness.json with bin/cmd/trash. Recompile the lab (cairn/tools/intentions_model_compiler/recompile_gate.sh). Run the proof green twice and every edited proof once; commit; seal; PROVEME; hollow seal; forwarding order after the deletion.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/proofs/test_retired_components_are_gone.py",
+      "cairn/tools/liveness",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_the_ground_loop_reads_the_tools_cadence.py",
+      "cairn/tools/base/singleton.py",
+      "cairn/devices/cairn/machines/ground_loop",
+      "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs",
+      "cairn/tools/bus_client/roster.py",
+      "cairn/devices/web_server/render.py",
+      "cairn/tools/bus_client/proofs/test_the_wiring_needs_no_loop.py",
+      "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py",
+      "cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py",
+      "cairn/tools/base/sail_record.py",
+      "bin/cmd/groundloop"
+    ],
+    "out": [
+      "the rack machine (5.7)",
+      "the ground loop's pulse spawning and restart-on-change",
+      "every other component",
+      "the other retirements"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-08",
+      "saw": "read_liveness callers: base/shim.ensure_ground_loop, ground_loop __main__._claim (SIGTERM takeover), cli.py, roster._beats; liveness_pane_data: ground_loop/shim.py; CADENCE_S: __main__ and the recovery proof; the live loop pid 4730 holds run.lock and beats each 60 s",
+      "how": "grep over class-space; ls and a read of ~/.cairn/devices/cairn/0/machines/ground_loop/"
+    }
+  ]
+}
