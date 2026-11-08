@@ -264,8 +264,10 @@ not matter here. The code catches up to this, never the reverse.
                   owns a node, so several trees can index the same node in
                   different ways.
           4.3.1.5.1.1 A row number is the same on every box. Storing a memory
-                      first reserves its slot, and the slot stays reserved until the
-                      write is complete. If a box's list is shorter than the slot
+                      first reserves its slot from the librarian on the home box
+                      (CAIRN_HOME_HOST, 6.3.7.4), so two boxes are never handed the
+                      same slot, and the slot stays reserved until the write is
+                      complete. If a box's list is shorter than the slot
                       (eg it holds rows up to 100 and is handed 123 while a sync is
                       bringing the rest), it adds the open slots in between as
                       blanks, and the sync fills them in as it proceeds. WHY: node
@@ -450,10 +452,11 @@ not matter here. The code catches up to this, never the reverse.
     5.3.2 Owns the foundational components: bus (5.5), ground loop (5.6), rack
           (5.7), shims (5.8) and the scheduler in them (5.9), launcher (5.4).
     5.3.3 Drives sleep.
-      5.3.3.1 Sleep is an entry on Cairn's scheduled list (5.9). At its time Cairn
-              runs its own sleep routine, then hands the sleep token over the bus to
-              the next device, and so on round the rack in the rack's order
-              (5.7.3.3).
+      5.3.3.1 Sleep is an entry on Cairn's scheduled list (5.9). Since there is one
+              Cairn in the swarm (5.5.3.8.1), Cairn always starts the sleep token,
+              however many boxes there are. At its time Cairn runs its own sleep
+              routine, then hands the sleep token over the bus to the next device,
+              and so on round the rack in the rack's order (5.7.3.3).
       5.3.3.2 What each device does in its sleep depends on the device: the
               librarian consolidates memory; the learning blocks do the same on
               their smaller memory sets; Recovery might run backups or SSD checks;
@@ -598,12 +601,12 @@ not matter here. The code catches up to this, never the reverse.
               runs on one box; the other boxes reach it over the buses. No box needs
               a full set of devices. WHY: so the instance can run several heavy
               tasks at once across boxes.
-        5.5.3.8.1 [Q#71: A joining box needs a bus, a ground loop, shims and
-                  probably Recovery, and those are Cairn's machines (2.3.2.1); yet
-                  a device runs on one box. Is there a Cairn device per box (then
-                  `cairn 0` is not a singleton), or does the home box's Cairn own
-                  processes on remote boxes? Which box starts the sleep token on a
-                  multi-box instance?]
+        5.5.3.8.1 Every box runs all the foundational things: a bus, a ground
+                  loop, the shims. They are the Cairn device's machines, and there is
+                  only one Cairn device: a singleton within the swarm, owning them on
+                  every box. WHY: Cairn is the system in aggregate, which is not the
+                  same thing as the host (6.6); a box is part of the host, and the
+                  swarm of boxes is still one Cairn.
       5.5.3.9 A shim waking its device never takes more than 60 s. A sync caller
               waits at most 60 s for the wake, then gets "not now" back; a wake that
               misses 60 s is a trouble. 600 s is the limit for an inference call to
