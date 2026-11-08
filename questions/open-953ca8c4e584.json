@@ -1,0 +1,16 @@
+{
+  "id": "open-953ca8c4e584",
+  "date": "2026-11-08",
+  "ticket": "6208d0a27d6e",
+  "question": "Ticket 6208d0a27d6e says \"The singleton lock in cairn/tools/base/singleton.py detects liveness of the ground loop by testing whether the lock is held. Base shim ensure_ground_loop probes this lock and returns 'up: True' when held, spawning nothing.\", but outline 5.3.5 reads \"There is no central supervisor. Each part starts what it needs by trying to use it: sending a message starts the bus if it is down, a message arriving wakes its shim, the shim wakes its device. Many very small supervisors, each one detect-and-start. WHY: a supervisor is one more thing to keep up, and the system must come up from any part that is touched.\" (The outline section 5.3.5 describes how the waker works: 'Every client's connect is a wake attempt' (5.3.5.1); 'the part that binds its socket first is the only one' (5.3.5.2). But the ground loop no longer uses the waker to start itself (it starts on its own and claims a lock). The outline prescribes that two callers waking the same part result in one binding its socket and the other exiting quietly—the traditional TCP/UDS binding race. The ticket replaces this with an explicit lock file that the loop holds, changing the startup race from socket-binding to file-lock-claiming. Section 5.3.5 describes the waker's role; the ticket sidesteps it for the loop.). Which stands, the ticket or the outline?",
+  "why_it_blocks": "the ticket and the component outline disagree; building it would build one of them wrong",
+  "raised_by": "cc (superclaude-706977.scope)",
+  "born_of": null,
+  "source": "outline_check",
+  "resolved": true,
+  "answer": "No conflict: the ground loop already refuses a second copy by a held flock on run.lock (guard.py, 5.6.4.3), and 5.3.5.2 cites that very behaviour as its model ('as the ground loop does'). The base shim probing that lock and starting the loop when it is free is 5.3.5's detect-and-start — a small supervisor that starts what it needs — not a central one. The ticket changes only what the probe reads (the lock, not a staleness verdict).",
+  "answered_by": "measurement: /home/akien/dev/src/cairn/cairn/devices/cairn/machines/ground_loop/guard.py, recorded by caller class cc",
+  "answered_at": "2026-11-08T11:43:20-07:00",
+  "spawned": [],
+  "measured": "/home/akien/dev/src/cairn/cairn/devices/cairn/machines/ground_loop/guard.py"
+}
