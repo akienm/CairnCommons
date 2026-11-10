@@ -1,0 +1,97 @@
+{
+  "id": "a0016627c71e",
+  "title": "concurrent collects land each record once",
+  "owning_intention": "cairn/devices/cairn/intention+why.json",
+  "intention": "Concurrent collects land each record once: metrics.collect runs single-flight (a thread lock and an exclusive flock on the cairn instance's metrics.lock), and metrics.dedupe deletes all but one of each set of rows equal in every column, so the copies the race already wrote leave the live table.",
+  "why": "Measured 2026-11-10: the live metrics table held 519 inference rows but 198 unique (name, subject, at), 66 calls; eight threads collecting 200 waiting records landed 1600 rows in three of three trials, and two processes collecting 300 landed 600.",
+  "traces_to": "Outline 17.27.2, 17.27.3, 11.4.4.2; Law 3.",
+  "how": "A thread lock plus a file flock around collect; a window-function delete of exact copies; a red-first proof over temp roots and scratch tables.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "eight threads collecting one holder's 200 waiting records into a fresh table land exactly 200 rows, none raising, and leave the recorder empty"
+      },
+      {
+        "n": 2,
+        "claim": "two processes collecting one holder's 300 waiting records at once land exactly 300 rows"
+      },
+      {
+        "n": 3,
+        "claim": "dedupe deletes all but one of each set of rows equal in every column, leaves rows that differ in any column, and a second run deletes nothing"
+      },
+      {
+        "n": 4,
+        "claim": "the cairn device's charter says collect is single-flight"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/cairn/metrics.py: LOCK = 'instance/devices/cairn/0/metrics.lock' and a module threading.Lock _FLIGHT. A context manager _single_flight(roots) resolves LOCK through address.resolve, makes its parent, holds _FLIGHT, opens the file for append and holds fcntl.flock LOCK_EX until it exits. collect's whole body, ensure_table included, runs inside it. Nothing else in collect changes.",
+      "writes_to": [
+        "cairn/devices/cairn/metrics.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/metrics.py",
+        "cairn/tools/metric/metric.py",
+        "cairn/tools/data_recorder/data_recorder.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/cairn/metrics.py: dedupe(table=TABLE) -> int refuses a name not matching [a-z0-9_]+, then calls store.delete(table, 'cairn', where=\"ctid IN (SELECT ctid FROM (SELECT ctid, row_number() OVER (PARTITION BY <every metric.COLUMNS column, quoted> ORDER BY ctid) AS rn FROM \\\"<table>\\\") d WHERE rn > 1)\") and returns its count. It is run once by hand over the live table after PROVED.",
+      "writes_to": [
+        "cairn/devices/cairn/metrics.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/metrics.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the charter cairn/devices/cairn/intention+why.json, through the artifact door (cairn artifact write --verb cast --from a scratch copy): its 'what' gains, appended after one space, exactly this sentence: \"Its collect is single-flight, one collector at a time across threads and processes, so each waiting record lands in the table once; dedupe removes the copies concurrent collects wrote before.\" Every other field stands.",
+      "writes_to": [
+        "cairn/devices/cairn/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/cairn/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof cairn/devices/cairn/proofs/test_concurrent_collects_land_each_record_once.py, red-first, one tooth per clause, PROVES a0016627c71e 1-4. Worlds are temp roots with one inference_domain holder; tables are store.scratch tables owned by cairn. Tooth 2 starts two python children that wait on a go file, then writes it.",
+      "writes_to": [
+        "cairn/devices/cairn/proofs/test_concurrent_collects_land_each_record_once.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/cairn/metrics.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/metrics.py",
+      "cairn/devices/cairn/intention+why.json",
+      "cairn/devices/cairn/proofs/test_concurrent_collects_land_each_record_once.py"
+    ],
+    "out": [
+      "the metric tool and the data recorder",
+      "db_domain's store",
+      "inference_domain (98ab0e9db57f)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "8 threads: 1600 rows for 200 records (3 of 3); 2 processes: 600 for 300; live: 519 inference rows for 66 calls",
+      "how": "threads and processes calling metrics.collect over a temp-roots holder into a scratch table; a grouped count over the live table"
+    }
+  ]
+}
