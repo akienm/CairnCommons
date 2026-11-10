@@ -1,128 +1,115 @@
 {
   "id": "3264ef726e35",
   "title": "cairn-restart-cycles-the-system",
-  "why": "The safe order to cycle this system is settled knowledge that today lives in exactly one place that cannot be invoked as an order: superclaude's start sequence, plus whoever remembers it. Re-deriving it at each restart is the defect Law 1 names, and while it is prose-and-memory rather than a verb it is an IOU, not a resting state (Law 4). The lived symptom: the operator is routinely 300 miles from this box with no working remote desktop, and the only way to cycle the system is to remember unit names and per-device verbs in the right order -- so a half-remembered order leaves orphans he cannot see or reach.",
-  "how": "Compose what already exists rather than writing a new supervisor. The order is a CONTAINMENT, not a list: the cairn device's own machines (ground_loop, harbor_master, bus -- cairn/devices/cairn/device.py:36) come up before anything that dials them; the shims are discovered rather than listed (cairn/devices/cairn/machines/ground_loop/discovery.py:device_folders, the roster that already exists); the single web server comes up last, after the panes exist to render (one web server, surfaces in the shim -- never a per-device server). Down is the reverse. superclaude already creates and names the two systemd --user units (cairn-ground-loop, cairn-web-server) and already holds the start order; `cairn groundloop stop|start|restart|status` (ticket 5ef45e513849) is the per-device face for the loop. THE START HALF DOES NOT EXIST AND THIS TICKET INHERITS IT: measured 2026-09-22, ~/.cairn/devices/cairn/0/bin/ holds exactly one file, `cairn`, 338 bytes, which prints the device id and class path and starts nothing; class-space has no cairn/devices/cairn/0/bin at all. So the build is start, then stop, then restart as their composition. The verb berths in CLASS-space at cairn/devices/cairn/0/bin/restart and is symlinked into instance-space the way cc's bin already is -- a file authored only in instance-space is in no repo, which is what the existing stub is. Verification at the end asks the ROSTER, not `ps`: a process list cannot tell a device that legitimately has no shim from one that failed to come back. First cut; the survey stage deconstructs.\n\nTHE BUILD SPEC IS THE `decisions` LIST ON THIS TICKET: D1..D8, settled 2026-09-22 by CC inside the bounds already cast here, each composed from code that already stands and naming its source. A ticket is a list of one-line decisions and the rehearsal reads that list; prose in `how` is the first cut, the decisions are the build.",
+  "why": "Outline 5.3.4: \"`cairn start` (= cairn cairn start) brings the system up: ground loop, bus, shims. `cairn stop` takes it down.\" Measured 2026-11-10: `cairn restart` answers \"no such device or command\"; the cycle exists only as the unit names (cairn-ground-loop, cairn-bus) and per-part verbs an operator must remember in order, often 300 miles from this box. Re-deriving that order each time is the defect Law 1 names.",
+  "how": "One module beside the cairn device's code, cairn/devices/cairn/cycle.py, holds stop() and start(); three Python shortcuts in cairn/devices/cairn/bin/ call it (5.4.3.3, 5.4.3.4), and the launcher already runs them as `cairn start` (ticket 30366e99655a). The order is containment: the ground loop's pulse wakes shims and their mail wakes the bus (5.3.5.5), so stop takes the loop down first and then the bus (its shims go with its process); start wakes the loop and then the bus. Everything composed already stands: the loop's lock (guard.held) and record (heartbeat.read_record) name it, SIGTERM stops it promptly (ground_loop proof test_stop_is_prompt), shim.ensure_ground_loop wakes it, bus_client.remote.exchange speaks to the bus without waking it and remote.ensure_bus wakes it. Every home is read from HOME, so a scratch HOME cycles a scratch system.",
   "traces_to": "Law 1 -- the resolver is spent on the novel, not on re-deriving the settled; the safe cycle order is settled knowledge with no address. Also Law 4 -- while the order is prose and memory rather than a verb, it is a tracked debt, not a resting state.",
   "falsifier": {
-    "proves_red": "RED if an operator still needs raw systemd unit names or per-device verbs to cycle the system, or if a restart leaves an orphan -- a bus with no shims attached, a ground loop that lost its singleton claim, a web server holding its port against its own replacement.",
-    "proves_green": "GREEN when one verb takes the system down and back up and the device roster answering on the bus afterward is the same roster as before.",
-    "horizon": "The roster is a real instrument, not a figure of speech: discovery.device_folders enumerates it and the sleep-cycle's roster() already filters it, so 'same roster before and after' is read by code that exists today. Measured at cast: 43 probe folders on 2026-09-18."
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch HOME with nothing running, `cairn start` exits 0, and afterwards that HOME's ground loop lock is held and its bus answers stats"
+      },
+      {
+        "n": 2,
+        "claim": "from up, `cairn stop` exits 0, and afterwards the loop lock is free and the bus does not answer; a second `cairn stop` exits 0 and its output says nothing was up"
+      },
+      {
+        "n": 3,
+        "claim": "from up, `cairn restart` exits 0, and afterwards the bus answers with a pid other than the one before and the loop lock is held by a pid other than the one before"
+      },
+      {
+        "n": 4,
+        "claim": "the live bus pid and the live ground loop pid are the same before and after the proof's every cycle: the verbs act only on the HOME they run under"
+      },
+      {
+        "n": 5,
+        "claim": "the three shortcuts are Python scripts in cairn/devices/cairn/bin/, and cycle.py imports no other device's code (RULE 1)"
+      }
+    ]
   },
   "constraints": [
     {
-      "text": "The verb berths in class-space (cairn/devices/cairn/0/bin/restart) and reaches instance-space by symlink. A file authored only under ~/.cairn is in no repo and cannot be regrown on a bare machine.",
-      "source": "CLAUDE.md, the three roots; and the measured 338-byte stub at ~/.cairn/devices/cairn/0/bin/cairn",
-      "kind": "law"
-    },
-    {
-      "text": "Verification is the roster (discovery.device_folders), never a process list -- a device that legitimately has no shim and one that failed to come back look identical to `ps`.",
-      "source": "cairn/devices/cairn/machines/ground_loop/discovery.py",
+      "text": "5.3.4 `cairn start` (= cairn cairn start) brings the system up: ground loop, bus, shims. `cairn stop` takes it down.",
+      "source": "press_office/CairnComponentOutline.txt",
       "kind": "charter"
     },
     {
-      "text": "The ground loop is heartbeat plus device list, THAT IS ALL. This verb may start and stop it; it may not add monitoring, health-checking or trouble-raising to it.",
-      "source": "Akien, standing (CC-- x4); cairn/devices/cairn/machines/ground_loop/",
-      "kind": "ruling"
+      "text": "5.3.5.3 Restarting a shim never takes down the bus it once woke.",
+      "source": "press_office/CairnComponentOutline.txt",
+      "kind": "charter"
     },
     {
-      "text": "One web server, surfaces in the shim. The restart brings up the single server, never a per-device one.",
-      "source": "design note one-web-server-surfaces-in-the-shim",
-      "kind": "ruling"
-    },
-    {
-      "text": "`cairn restart` and `cairn cc restart` are different acts and keep different addresses. Two different acts may not wear one word.",
-      "source": "Akien, 2026-09-22; cairn/devices/cc/0/bin/restart:3-9, commit da6f8b01",
+      "text": "No, cairn restart does not restart the running cc instance(s).",
+      "source": "CairnCommons/questions/open-b5cabfa28fb6",
       "kind": "ruling"
     }
   ],
-  "intention": "A `cairn cairn restart` (shortcut `cairn restart`) that cycles the SYSTEM -- the cairn device's own machines (bus, ground_loop, harbor_master), the per-device shims, and the one web server -- down in a safe order and back up, as one verb. Distinct from `cairn cc restart`, which relaunches only a Claude Code session.",
+  "intention": "`cairn start`, `cairn stop` and `cairn restart` (long form `cairn cairn start|stop|restart`) bring the system up, take it down, and cycle it: the instance's ground loop and its one bus process, which holds every shim. Distinct from `cairn cc restart`, which relaunches a Claude Code session; no CC session is touched.",
   "owning_intention": "cairn/devices/cairn/intention+why.json",
   "decisions": [
     {
       "n": 1,
-      "text": "D1 THE BERTH IS WRITTEN WHOLE, NOT STUBBED. cairn/devices/cairn/0/bin/restart is created in class-space as the finished bash verb in one act (mode 0755), and in that same act `ln -sfn` links it to ~/.cairn/devices/cairn/0/bin/restart. There is no placeholder stage. The hand-link does NOT wait on ticket f0ffa0db0952: that ticket generalises the wiring so every class verb gets its link automatically; this one makes its own link now, and f0ffa0db0952 subsumes it later without a second edit here. AND THE VERB IS THE COMPOSITION OF D2..D9, WRITTEN WHOLE IN ONE ACT (the gap the first rehearsal named three times): one bash file at that berth, mode 0755, containing the argument parsing (D9), the down-leg (D2), the up-leg (D3), the setsid refusal and the port guard (D4), the roster read (D5), the status face (D6) and the close record (D7). The parts that must be python -- the liveness read (D5) and the cycle record (D7) -- are invoked from that same file as `python3 -c '<script>'` heredocs run from the repo root with PYTHONPATH=\"$REPO\", never as a second module file; the only other file this ticket writes is the proof (D8) and the probe (D7). There is no placeholder stage, no stub, and no follow-up act: the first time this file exists it is finished. AND THE DIRECTORY IS MADE IN THE SAME ACT: `mkdir -p cairn/devices/cairn/0/bin` before the file is written, because that folder does not exist today (measured 2026-09-22 -- the cairn device carries machines/ and device.py at cairn/devices/cairn/, and no 0/bin beneath it). Then `chmod 0755` the file. Two commands and the berth exists; there is no separate scaffolding step and nothing else is created under that path.",
-      "by": "CC",
-      "step": "D1",
-      "source": "cast"
+      "text": "D1: cairn/devices/cairn/cycle.py: stop() SIGTERMs the pid the loop's record names while guard.held says the lock is held, waits up to 90 s for the lock to free (a beat in flight costs about 24 s), then sends the bus {op: shutdown} through remote.exchange when stats answers and waits up to 60 s for it to stop answering. start() clears a COMMAND_EXIT flag left at the loop home (it would end the new loop at its first beat), calls shim.ensure_ground_loop(), waits up to 60 s for the lock, then calls remote.ensure_bus(). Each prints one line per part (up, down, already down, still up) and returns 1 when a part is still in the wrong state after its wait (Law 7), else 0.",
+      "writes_to": [
+        "cairn/devices/cairn/cycle.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/bus_client/remote.py",
+        "cairn/devices/cairn/machines/ground_loop/guard.py",
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+        "cairn/devices/cairn/machines/ground_loop/cli.py"
+      ]
     },
     {
       "n": 2,
-      "text": "D2 THE DOWN-LEG is bash calling `systemctl --user stop <unit>`, web server FIRST (cairn-web-server) then ground loop (cairn-ground-loop) -- the reverse of the up-leg's containment. It deletes nothing and clears no state: systemd owns unit cleanup. Each stop is checked; a NON-ZERO stop refuses loudly and STOPS THE LEG (the second unit is left running rather than cycled behind a failure nobody saw). A unit that is not loaded is NOT an error: `stop` of something already down has reached the goal state, and the verb prints `cairn-web-server: not loaded (already down)`. There is no reset-failed on the stop path -- reset-failed clears a FAILED unit's corpse so a name can be re-taken, which is a start-path concern (superclaude:456 fires it only on the retry, and its own comment says so). The stop does NOT wait on port 80's release; the up-leg's guard (D4) is where the port is measured, so a lingering socket is caught by the leg that actually needs the port. THE UNIT NAMES ARE READ FROM THE ENVIRONMENT, NEVER HARDCODED, and the same two names serve both legs and the status face: `_loop_unit=\"${SUPERCLAUDE_GROUND_LOOP_UNIT:-cairn-ground-loop}\"` and `_web_unit=\"${SUPERCLAUDE_WEB_UNIT:-cairn-web-server}\"` -- superclaude's own defaulting, verbatim (launchers/superclaude:415 and :503). D8 points the proof at fixture names through those same two variables, which is only possible because the defaults live in one place.",
-      "by": "CC",
-      "step": "D2",
-      "source": "cast"
+      "text": "D2: cairn/devices/cairn/bin/start, stop and restart, each a `#!/usr/bin/env python3` script (mode 0755) that puts the repo root on sys.path and calls cycle: start(), stop(), and stop() then start() for restart; the exit code is the call's.",
+      "writes_to": [
+        "cairn/devices/cairn/bin/start",
+        "cairn/devices/cairn/bin/stop",
+        "cairn/devices/cairn/bin/restart"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
     },
     {
       "n": 3,
-      "text": "D3 THE UP-LEG COMPOSES launchers/superclaude's ladder verbatim -- ground loop first (superclaude:427-466), then the web server (superclaude:503-545) -- and the flags are copied, not re-derived: --user --quiet --unit <name> --working-directory <repo> --setenv=HOME --setenv=PATH, -p SuccessExitStatus=3 on the LOOP only (it is a singleton guard and its loser exits 3; the listener has no such code), -p StandardOutput/StandardError =append:<the same two log paths superclaude uses>, then `-- python3 -m cairn.devices.cairn.machines.ground_loop` and `-- python3 <repo>/cairn/devices/web_server/ listener.py`. Each start function is spelled ONCE and the retry re-calls it, for superclaude's own reason: a second copy of eight flags is a place for the retry to drift. The ladder is: try -> on failure whose text matches \"already loaded\"/\"fragment file\"/ \"already exists\"/\"Unit ... already\", fire `systemctl --user reset-failed <unit>.service` and try ONCE more -> on any other failure, or on the retry failing, REFUSE LOUDLY and start nothing. AND THE TWO START COMMANDS ARE SPELLED HERE VERBATIM, copied from launchers/superclaude (measured 2026-09-22), so the builder needs no second file open. GROUND LOOP (superclaude:427-436): `_loop_log=\"${HOME}/.cairn/logs/ground_loop_nohup.log\"`, and the start is `systemd-run --user --quiet --unit \"$_loop_unit\" --working-directory \"$REPO\" --setenv=HOME=\"$HOME\" --setenv=PATH=\"$PATH\" -p SuccessExitStatus=3 -p StandardOutput=append:\"$_loop_log\" -p StandardError=append:\"$_loop_log\" -- python3 -m cairn.devices.cairn.machines.ground_loop 2>&1`. WEB SERVER (superclaude:503-513): `_web_log=\"${HOME}/.cairn/logs/web_server.log\"`, and the start is `systemd-run --user --quiet --unit \"$_web_unit\" --working-directory \"$REPO\" --setenv=HOME=\"$HOME\" --setenv=PATH=\"$PATH\" -p StandardOutput=append:\"$_web_log\" -p StandardError=append:\"$_web_log\" -- python3 \"$REPO/cairn/devices/web_server/listener.py\" 2>&1`. Note the differences and keep them: the loop carries `-p SuccessExitStatus=3` (its singleton guard exits 3 and that is not a failure) and the web server does not; the loop is started as a MODULE (`-m`) and the web server as a FILE PATH. `mkdir -p \"$(dirname \"$_loop_log\")\"` and the same for the web log before either start. Each start is wrapped exactly as superclaude wraps it: run it, and on a failure whose text matches `*\"already loaded\"*|*\"fragment file\"*|*\"already exists\"*|*\"Unit \"*\"already\"*` run `systemctl --user reset-failed \"${unit}.service\" >/dev/null 2>&1 || true` and try ONCE more; a second failure is a refusal that is logged and reported, never a setsid spawn (a setsid spawn there is a second claimant racing the first -- superclaude's own recorded reason, two loops holding one address for 80 minutes on 2026-08-18).",
-      "by": "CC",
-      "step": "D3",
-      "source": "cast"
+      "text": "D3: the proof cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py runs bin/cairn as a subprocess with HOME set to a scratch folder from the scratch door and CAIRN_GROUND_LOOP_UNIT and CAIRN_BUS_UNIT set to proof-named units, reads that HOME's loop lock and bus answer after each verb, reads the live bus and loop pids before and after, and stops whatever it started in its teardown. One tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_one_bus_process.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/cycle.py",
+      "cairn/devices/cairn/bin/start",
+      "cairn/devices/cairn/bin/stop",
+      "cairn/devices/cairn/bin/restart",
+      "cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py"
+    ],
+    "out": [
+      "the web server (5.3.4 names ground loop, bus and shims only)",
+      "Claude Code sessions (open-b5cabfa28fb6)",
+      "the launcher (child 30366e99655a, PROVED)",
+      "help listing a device's class bin (cairn/tools/base bin_shortcuts, its own ticket)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "`cairn restart` answered \"no such device or command\"; cairn/devices/cairn/bin/ did not exist",
+      "how": "bin/cairn restart; ls cairn/devices/cairn/bin"
     },
     {
-      "n": 4,
-      "text": "D4 SETSID IS FORBIDDEN HERE, and this is the one place this verb deliberately DIVERGES from superclaude. superclaude falls through to setsid when systemd-run is missing because its prime directive is that a launch must never be blocked. A RESTART has no such directive: it has just taken the system DOWN, and spawning the replacement into this shell's cgroup would leave a system that dies with the terminal while reporting success. So if systemd-run is unavailable, or the ladder refuses, the verb REFUSES LOUDLY, names what is down, and exits non-zero. The web server's port guard is superclaude's own, verbatim: `ss -tlnH 2>/dev/null | grep -q ':80\\b'` -- if the port is still held after the down-leg, the verb polls it at 1s for a 15s ceiling and then refuses to start the listener, naming the holder's absence of release rather than firing a start that will fail to bind.",
-      "by": "CC",
-      "step": "D4",
-      "source": "cast"
-    },
-    {
-      "n": 5,
-      "text": "D5 THE ROSTER IS READ FROM THE LIVENESS RECORD, and the timing is: BEFORE is `liveness.read_liveness(now)[\"record\"][\"state\"][\"subscribers\"]`, taken before the down-leg, with a TZ-AWARE `now` (datetime.now(timezone.utc) -- a naive now raises inside the reader and is collapsed into a misleading DEAD, measured 2026-09-22). A verdict of DEAD before the cycle makes BEFORE the string UNAVAILABLE, and the comparison then reports \"no before-roster to compare against\" rather than a false match. AFTER is taken by polling read_liveness at 2s until `record[\"last_run\"]` is STRICTLY NEWER than the timestamp captured at the moment the up-leg's loop start returned -- a fresh beat, never a stale file -- with a 150s ceiling (CADENCE_S is 60.0, so two beats plus margin). Ceiling reached => AFTER is UNAVAILABLE and the verb says the loop did not beat inside 150s, which is a red, not a match. The class-space walk discovery.device_folders is NOT the roster instrument for this comparison: it reads the repo and would return the same list whether or not anything came back -- a hollow green. It remains the roster of what COULD subscribe, and the verb prints the two lists' difference so a device in the walk but not in subscribers is visible. THE IMPORT IS EXACT AND MEASURED (2026-09-22): `from cairn.devices.cairn.machines.ground_loop import liveness`, then `liveness.read_liveness(datetime.now(timezone.utc))` -- signature `read_liveness(now: datetime, home: Path | None = None) -> dict`. The returned dict carries `verdict`, `record`, `age_s` (a failed read carries `verdict` and `lack` instead and has no `record`). `record` carries `last_run`, `state`, `pid`; `record[\"state\"]` carries `beats`, `subscribers`, `last_pulsed_count`, `pulse_services`, `pulse_refusals`, `pulse_events`, `stale`; `subscribers` is a list of device-id strings (measured live: verdict LIVE, age 86.5s, 42 subscribers, last_run \"2026-09-22T20:30:41.382689-06:00\"). The reader's instance home defaults to `instance_path(\"cairn\", 0) / \"machines\" / \"ground_loop\"`; the proof hands it a fixture home through the `home` argument rather than mutating the environment. AND THE TIMESTAMP COMPARISON IS SPELLED: the up-leg captures `captured = datetime.now(timezone.utc)` BEFORE it starts anything, then on each poll reads `rec = liveness.read_liveness(datetime.now(timezone.utc))` and parses `datetime.fromisoformat(rec[\"record\"][\"last_run\"])`. `last_run` is written tz-AWARE (measured: \"2026-09-22T20:30:41.382689-06:00\"), so `fromisoformat` returns an aware datetime and comparing it with the aware `captured` is legal without any tzinfo patching; a naive value would raise TypeError and that raise is the right outcome, never a silent False. The test is STRICT: a beat counts only if `parsed > captured` -- a `last_run` equal to or older than the capture is the PREVIOUS loop's beat, and accepting it is exactly how an up-leg reports green over a process that never came back. A read that carries no \"record\" key (the failed-read shape, `verdict` + `lack`) counts as not-yet and the poll continues.",
-      "by": "CC",
-      "step": "D5",
-      "source": "cast"
-    },
-    {
-      "n": 6,
-      "text": "D6 THE STATUS FACE prints, one fact per line, and distinguishes could-not-query from down (the web_server charter's distinction): cairn-ground-loop: active (running) # systemctl --user is-active + show cairn-web-server: inactive (not loaded) port 80: listening | free loop liveness: LIVE (age 42s, beat 3185) | DEAD (<the reader's own lack, verbatim>) roster (subscribers): 42 last cycle: 2026-09-22T20:31:04-06:00 down ok, up ok, roster 42 -> 42, MATCH `could not query` is its own word and is never printed as `inactive`: if `systemctl --user show` itself fails (no manager, denied), the line reads `cairn-web-server: UNQUERYABLE (<stderr verbatim>)`. Law 7 at a diagnostic surface: the three states are three words. AND IT PRINTS AT EXACTLY TWO POINTS, BOTH SPELLED ONCE as a single shell function: on the bare cycle it prints AFTER the up-leg has returned and the AFTER-roster poll has resolved and BEFORE the close record is written, so the last line a reader sees is the cycle verdict; on `cairn restart status` (D9) it prints alone and nothing else runs. Nothing prints it mid-leg. AND THE TWO SYSTEMCTL READS ARE SPELLED, with their measured output (2026-09-22). Per unit the face prints one line built from two reads. (a) `systemctl --user is-active \"<unit>.service\"` prints ONE word on stdout -- measured `active` (exit 0) for both cairn-ground-loop.service and cairn-web-server.service, and `inactive` with EXIT 4 for a unit that does not exist. Take the word, not the exit code, and treat a non-zero exit as information rather than as an error to abort on. (b) `systemctl --user show \"<unit>.service\" -p ActiveState -p SubState -p MainPID` prints `KEY=VALUE` lines, one per requested property, IN AN UNSPECIFIED ORDER -- so parse by key (`awk -F= '$1==\"MainPID\"{print $2}'`), never by line number. Measured for the live loop: `MainPID=2361258`, `ActiveState=active`, `SubState=running`; measured for a unit that does not exist: `MainPID=0`, `ActiveState=inactive`, `SubState=dead`, and EXIT 0 -- so `show` never tells you a unit is absent, which is why (a) is read too. The line the face prints is `<unit>: <ActiveState>/<SubState> pid <MainPID>`, with MainPID 0 rendered as `-`.",
-      "by": "CC",
-      "step": "D6",
-      "source": "cast"
-    },
-    {
-      "n": 7,
-      "text": "D7 THE CLOSE RECORD AND THE PROBE. The verb writes ONE json record per cycle, appended through the data_recorder the device already holds, at instance_path(\"cairn\", 0)/\"machines\"/\"restart\"/\"cycles\"/, carrying: {\"at\": <iso, tz-aware>, \"down\": {\"web\": <ok|refused|not-loaded>, \"loop\": ...}, \"up\": {\"loop\": <started|refused|unavailable>, \"web\": ...}, \"before\": [<subscribers>] | null, \"after\": [<subscribers>] | null, \"missing\": [<in before, not in after>], \"added\": [<in after, not in before>], \"verdict\": \"MATCH\" | \"DIFFERS\" | \"UNAVAILABLE\"}. The probe at cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py is a module-level frozen `Probe` (cairn.tools.base.probe.Probe) whose TRIGGER is a cycle record newer than the last one it carried -- it reads that folder on the beat the ground loop already runs, so NO NEW POLLER is added and the restart verb pokes nothing. Its CARRY is the record's own difference, not a boolean: {\"before\": [...], \"after\": [...], \"missing\": [...], \"added\": [...], \"verdict\": ...}. Its ENOUGH is three consecutive records whose verdict is MATCH (the ticket's watchme, verbatim), and a single DIFFERS or UNAVAILABLE is carried immediately rather than waiting for the third. THE APIS ARE EXACT AND MEASURED (2026-09-22). The record is written through `from cairn.tools.data_recorder.data_recorder import DataRecorder`, `DataRecorder(<the cycles folder>).write(<the record dict>)` -- signature `write(record: dict, *, now: datetime | None = None) -> str`, and construction touches no disk (the folder is made at the first write). The folder is `from cairn.tools.base.address import instance_path`, `instance_path(\"cairn\", 0) / \"machines\" / \"restart\" / \"cycles\"` -- signature `instance_path(device: str, instance: int = 0, roots: dict[str, Path] | None = None) -> Path`. The probe is `from cairn.tools.base.probe import Probe, owning_ticket` and a module-level frozen `PROBE = Probe(...)` built with KEYWORD arguments from the dataclass's ten fields -- `why, trigger, to, verb, channel, body, carry, while_true, enough, horizon` -- where `trigger` is `(now, context) -> bool`, `carry` is `(context) -> dict | None`, `enough` is `(context) -> bool`, and `owning_ticket(\"3264ef726e35\")` is what the carry puts in its \"ticket\" key. cairn/devices/cc/probes/is_the_memory_curve_recorded.py is the module in exactly this shape to copy.",
-      "by": "CC",
-      "step": "D7",
-      "source": "cast"
-    },
-    {
-      "n": 8,
-      "text": "D8 THE PROOF DRIVES FIXTURE UNITS, NEVER THE LIVE ONES. bin/proofs and launchers/proofs/test_ground_loop_survives_its_caller.py are the idiom. The verb takes its two unit names from the environment the way superclaude does (SUPERCLAUDE_GROUND_LOOP_UNIT / SUPERCLAUDE_WEB_UNIT), so the proof points it at `cairn-proof-loop-<pid>` / `cairn-proof-web-<pid>` -- names the live singleton cannot be holding -- and at a fixture instance root via CAIRN_BOOTSTRAP_HOME, with a fixture liveness.json the proof writes and advances by hand. Nothing the proof runs touches cairn-ground-loop or cairn-web-server. The assertions are INVARIANTS, never a snapshot of today's 42: (a) the down-leg stops the web unit BEFORE the loop unit (order read from the record, not from a sleep); (b) a non-zero stop refuses loudly and leaves the second unit alone; (c) the up-leg's first start failing with \"already loaded\" fires reset-failed and retries exactly once; (d) with systemd-run masked out of PATH the verb refuses and starts NOTHING (no setsid) -- this is the tooth a hollow build could not pass; (e) a fixture liveness whose last_run never advances drives AFTER to UNAVAILABLE and the verdict to UNAVAILABLE, not MATCH; (f) before-set minus after-set is reported as `missing` verbatim.",
-      "by": "CC",
-      "step": "D8",
-      "source": "cast"
-    },
-    {
-      "n": 9,
-      "text": "D9 THE ARGUMENT SHAPE, and it settles the one thing three reads could not (the `unlisted: argument and subcommand parsing` gap). This verb takes ONE optional positional word and no flags. Bare `cairn restart` runs the whole cycle: down-leg, up-leg, roster comparison, status face, close record. `cairn restart status` runs the STATUS FACE ONLY (D6) -- it stops nothing, starts nothing, writes no cycle record, and exits 0 whatever it finds, because a status read that refuses is a status read nobody can use. `cairn restart -h|--help|help` prints the header comment the way cairn/devices/cc/0/bin/restart prints its own (sed over the file's leading comment block). ANY OTHER WORD refuses loudly on stderr -- `cairn restart: unknown verb '<word>'` followed by `try: cairn restart | status | help` -- and exits 2, and it refuses BEFORE it stops anything: an unrecognised word must never be the reason the system is half down. The dispatcher does NOT do this parsing: bin/cairn hands `$@` to the verb untouched (bin/cairn's device dispatch), so the word arrives here and is read here. `status` is not a synonym for the bare form and the bare form is not a synonym for `status`; two acts, two words, and the hypothesize chart's `cairn restart status` is this one.",
-      "by": "CC",
-      "step": "D9",
-      "source": "cast"
-    },
-    {
-      "n": 10,
-      "text": "D7 IS COMPLETED HERE, AND ALL TEN Probe FIELDS ARE SPELLED OUT so the builder needs no idiom module open beside them. cairn.tools.base.probe.Probe is a frozen dataclass whose ten fields, in declaration order, are why, trigger, to, verb, channel, body, carry, while_true, enough, horizon (measured at cairn/tools/base/probe.py:303) and EVERY ONE is passed BY KEYWORD. The values for cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py are: why= one sentence saying a restart that does not bring the roster back is the failure this verb exists to prevent, and a probe that never fires gathers nothing while looking like learning; trigger=_trigger; to=\"harbor_master\" (the deposit lane -- the same address cairn/devices/cc/probes/is_the_memory_curve_recorded.py pokes, and NOT a device that would then have to act); verb=\"\" (the field's own default: the poke carries no verb, the body says what it is); channel=\"personal\" (the default -- the inbox where a device is reached); body={\"nexus\": \"hypothesize\", \"kind\": \"efficacy\"} (the STATIC half, known at declaration, matching this ticket's watchme.nexus); carry=_carry; while_true=False (the default, and the right one here: poke once when a new cycle record appears, never on every pulse the condition holds); enough=_enough; horizon=100 (counted in PULSES, not seconds -- how many beats this watch may stand having never fired before its own silence is a finding; 100 is the value the cc device's probe declares and there is no reason for this one to differ). The three callables are module-level: _trigger(now, context) -> bool, _carry(context) -> dict, _enough(context) -> bool. The module closes with an 'if __name__ == \"__main__\":' block printing json.dumps over the cycle-record count, _trigger(None, {}) and _enough({}), so the probe can be run by hand.",
-      "by": "CC",
-      "step": "D7",
-      "source": "rehearsal"
-    },
-    {
-      "n": 11,
-      "text": "D8's PROOF LOCATION IS SETTLED BY MEASUREMENT, and the reader's proposal is the one the corpus does NOT support. The proof berths at cairn/devices/cairn/proofs/test_restart_cycles_the_system.py -- at the DEVICE's address, not the instance's. Measured 2026-09-22: thirteen devices carry a proofs folder (aider_shim, cairn, cc, codemother, db_domain, inference_domain, intention_extractor, librarian, sudo_relay, system_rackmount, tester, trouble, web_server), every one of them at <device>/proofs/; SIX devices carry a 0/bin (inference_domain, codemother, librarian, trouble, cc, tester) and NOT ONE of them carries a 0/proofs. cairn/devices/cairn/proofs/ already exists and already holds test_trouble_panel.py. So a proof for a verb that berths at cairn/devices/cairn/0/bin/restart goes beside the DEVICE's other proofs, exactly as cc/0/bin/restart's device carries its proofs at cairn/devices/cc/proofs/. The validation seal lands beside it under cairn/devices/cairn/validations/, the same way. bin/proofs/ is NOT a counter-example -- it is the same rule at bin's own address (proofs for bin/cmd scripts), and it is named in D8 as an IDIOM for how a bash verb is driven by a python proof, never as an address for this one. The idiom to copy for the fixture-unit discipline stays launchers/proofs/test_ground_loop_survives_its_caller.py.",
-      "by": "CC",
-      "step": "D8",
-      "source": "rehearsal"
-    },
-    {
-      "n": 12,
-      "text": "Two re-pointings (Akien 2026-09-30). (1) THE ROSTER IS THE RACK: the how's 'discovery.py:device_folders, the roster that already exists' is replaced by rack() from a808e21d646f (the-device-roster-is-the-rack), which lists every folder directly under cairn/devices/ with its shim path or None. device_folders counts 42 'devices' including tools, so a before/after comparison over it would compare tools; over rack() a shimless device reads shim None on both sides and is never mistaken for a failure. This ticket depends_on a808e21d646f. (2) THE WATCH FIRES ON ITS EVENT, NOT THE BEAT ('all probes respond to events'; 'NOTHING ... should fire on the heartbeat execpt the messaging'): the restart verb, after writing its close record, fires cairn/devices/cairn/probes/the_restart_brings_the_roster_back.py itself, in-process, once per restart. Nothing reads it on the beat. Its consumer is a live trouble on the cairn device's pane, which is a consumer that uses the data, so this probe stands under open-291189a9766a whatever the answer.",
-      "by": "cc",
-      "step": "unlisted: roster and watch after the 2026-09-30 rulings",
-      "source": "rehearsal",
-      "at": "2026-09-30T22:44:13+00:00"
+      "when": "2026-11-10",
+      "saw": "SIGTERM ends the loop promptly; exchange dials the socket and never spawns; ensure_bus and ensure_ground_loop are the wakers",
+      "how": "read cairn/devices/cairn/machines/ground_loop/__main__.py, cairn/tools/bus_client/remote.py:119 and :301, cairn/tools/base/shim.py:115"
     }
   ]
 }

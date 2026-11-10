@@ -1,0 +1,102 @@
+{
+  "ticket": "3264ef726e35",
+  "at": "2026-11-10T12:14:32+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1323781,
+      "duration_ms": 60955,
+      "is_error": false,
+      "session_id": "81bd3254-a028-4c94-9568-59d697821e93"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "eba702c736830a99feb5b18437b02bb353e3709b32368a1f722be3ef63457b52",
+  "ticket_sha256": "b9bfd65e473302b7e95c5cdc1c0c09835de2aa07332a15df22881332efe90e49",
+  "touches": [
+    {
+      "number": "5.3.4",
+      "text": "`cairn start` (= cairn cairn start) brings the system up: ground loop, bus, shims. `cairn stop` takes it down."
+    },
+    {
+      "number": "5.3.5",
+      "text": "There is no central supervisor. Each part starts what it needs by trying to use it: sending a message starts the bus if it is down, a message arriving wakes its shim, the shim wakes its device. Many very small supervisors, each one detect-and-start. WHY: a supervisor is one more thing to keep up, and the system must come up from any part that is touched."
+    },
+    {
+      "number": "5.3.5.1",
+      "text": "The detect-and-start lives in one tool, the waker, and it sits inside connect: every client's connect is a wake attempt, so no caller can forget one. A probe watches and reports; the waker acts."
+    },
+    {
+      "number": "5.3.5.3",
+      "text": "What the waker starts outlives whoever started it (detached, or through systemd-run --user, which gives it its own memory cap and log while still deciding nothing). Restarting a shim never takes down the bus it once woke."
+    },
+    {
+      "number": "5.3.5.5",
+      "text": "Nobody sends to the ground loop, so the cairn command (and login) wake it; its pulse then wakes the shims (5.8.3.4)."
+    },
+    {
+      "number": "5.4",
+      "text": "launcher (machine)"
+    },
+    {
+      "number": "5.4.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "5.4.3.3",
+      "text": "Any device or machine may have a bin/ beside its code. That folder IS its list of shortcuts: add a file to add one, delete it to remove one. A shortcut is a script that calls the long form (eg `cairn superclaude` -> `cairn cc superclaude`; `cairn show temp` -> `cairn recovery show temp`), which also saves the walk from searching farther, or does work itself (eg install). Shortcuts live beside what they serve (RULE 1). `cairn foo` whose first word is not a device means `cairn cairn foo`: top-level shortcuts are the cairn device's bin/."
+    },
+    {
+      "number": "5.4.3.4",
+      "text": "Scripts are Python wherever possible, run by Cairn's own interpreter, so one file works on every platform. Platform-specific ones match their platform: executable or .sh on Linux; .bat, .cmd or .ps1 on Windows."
+    },
+    {
+      "number": "5.5",
+      "text": "bus (machine)"
+    },
+    {
+      "number": "5.5.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "5.5.3.8",
+      "text": "One bus per cairn instance, not per host. Each box runs its own bus, and the buses talk to one another, so a device always talks to the bus on its own box; together they are the instance's one bus. A device runs on one box; the other boxes reach it over the buses. No box needs a full set of devices. WHY: so the instance can run several heavy tasks at once across boxes."
+    },
+    {
+      "number": "5.5.3.9",
+      "text": "A shim waking its device never takes more than 60 s. A sync caller waits at most 60 s for the wake, then gets \"not now\" back; a wake that misses 60 s is a trouble. 600 s is the limit for an inference call to come back, not for a wake."
+    },
+    {
+      "number": "5.6",
+      "text": "ground_loop (machine): the heartbeat"
+    },
+    {
+      "number": "5.6.4",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "5.6.4.3",
+      "text": "A second copy refuses to start."
+    },
+    {
+      "number": "5.6.4.5",
+      "text": "It writes one JSON record at the end of a pass listing each device: beat time, device folder found or NOT FOUND, file mtime, pid spawned. It does no checks and no takeover."
+    },
+    {
+      "number": "5.8.3",
+      "text": "INTENTION:"
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [
+    "RULE 1",
+    "Law 1",
+    "Law 4"
+  ],
+  "questions_opened": [],
+  "questions_already_open": []
+}
