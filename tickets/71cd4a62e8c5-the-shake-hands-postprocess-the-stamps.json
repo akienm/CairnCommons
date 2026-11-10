@@ -1,8 +1,8 @@
 {
   "id": "71cd4a62e8c5",
   "title": "the-shake-hands-postprocess-the-stamps",
-  "intention": "The nest is the shared machine at cairn/machines/nest/ (outline 16.2): its bands are preprocess, measure, postprocess, and its shake runs band-outer, handing a preprocess sieve the whole subject set and a postprocess sieve the stamps of every subject so far, so a compare over all the inputs can run inside the nest. Its two tenants import it there, and the copy under cairn/tools/base leaves.",
-  "how": "Create cairn/machines/nest/ with nest.py carrying BAND_NAMES {0: preprocess, 1: measure, 2: postprocess}, nest(reaches) unchanged, and shake(assembled, subjects, fire) band-outer: band 0 calls fire(name, subjects) and scores only the returned keys (the rest absent), band 1 calls fire(name, subject) as today, band 2 calls fire(name, subject, stamps) with stamps the gradation so far across every subject. Move test_nest.py there and add a red-first proof of the band-outer order. Repoint the two tenants' import lines (inspector.py:80, route.py:42) and the three places that name the module path; delete cairn/tools/base/nest.py, its proof and its watch probe (its second carrier, route, arrived); strike nest from the base charter.",
+  "intention": "The nest is the shared machine at cairn/machines/nest/ (outline 16.2): its bands are preprocess, measure, postprocess, and its shake runs band-outer. A preprocess sieve gets the whole subject set; a measure sieve cuts one subject; a postprocess sieve gets the stamps of every subject and stamps each survivor with a rank, and the shake hands back the survivors in rank order (outline 11.4.6, Akien 2026-09-29: option c). Its two tenants import it there, and the copy under cairn/tools/base leaves.",
+  "how": "Create cairn/machines/nest/ with nest.py carrying BAND_NAMES {0: preprocess, 1: measure, 2: postprocess}, nest(reaches) unchanged, and shake(assembled, subjects, fire) band-outer: band 0 calls fire(name, subjects) and scores only the returned keys, band 1 calls fire(name, subject) as today, then band 2 calls fire(name, subject, stamps) for each subject rolling up 1.0, stamps being the gradation across every subject, and records the return as ranks[subject][name] outside gradation and roll_up; the result gains ranks and order. Move test_nest.py there and add a red-first proof. Repoint the two tenants' import lines (inspector.py:80, route.py:42) and the places that name the module path; delete cairn/tools/base/nest.py, its proof and its watch probe; strike nest from the base charter.",
   "falsifier": {
     "clauses": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "n": 3,
-        "claim": "a postprocess sieve is called fire(name, subject, stamps) where stamps holds the measure scores of all three subjects"
+        "claim": "a postprocess sieve is called fire(name, subject, stamps) once for each subject rolling up 1.0 after the measure band, stamps holding the measure scores of all three subjects, and its return is recorded as ranks[subject][name] and changes neither gradation nor roll_up"
       },
       {
         "n": 4,
@@ -23,11 +23,15 @@
       },
       {
         "n": 5,
-        "claim": "with only measure sieves the shake's findings, gradation and roll_up equal the old subject-outer shake's over the same fixture"
+        "claim": "with only measure sieves the shake's findings, gradation and roll_up equal the old subject-outer shake's over the same fixture, and order is the subjects rolling up 1.0 in name order"
       },
       {
         "n": 6,
         "claim": "cairn/tools/base/nest.py is absent, and no .py file under cairn/ or bin/ imports cairn.tools.base.nest"
+      },
+      {
+        "n": 7,
+        "claim": "order lists exactly the subjects rolling up 1.0, sorted by the tuple of their ranks in the assembled order of the band-2 sieves, ties by subject name"
       }
     ]
   },
@@ -36,7 +40,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: cairn/machines/nest/__init__.py (empty) and cairn/machines/nest/nest.py: the body of cairn/tools/base/nest.py moved, BAND_NAMES = {0: 'preprocess', 1: 'measure', 2: 'postprocess'}, shake rewritten band-outer as the how says. A band-0 sieve's return is a collection of subject names; subjects outside it get no score from that sieve or any later one. Band 2's stamps argument is the gradation dict as it stands when that sieve fires (every subject's band 0 and 1 scores). Docstrings say measure where they said record.",
+      "text": "D1: cairn/machines/nest/__init__.py (empty) and cairn/machines/nest/nest.py: the body of cairn/tools/base/nest.py moved, BAND_NAMES = {0: 'preprocess', 1: 'measure', 2: 'postprocess'}, shake rewritten band-outer as the how says. A band-0 sieve's return is a collection of subject names; subjects outside it get no score from that sieve or any later one. Band 2 runs after bands 0 and 1 have fired over every subject, only over the subjects rolling up 1.0; its stamps argument is the gradation dict (every subject's band 0 and 1 scores); its return is any comparable value, kept as ranks[subject][name]. shake returns findings, gradation, roll_up, ranks ({subject: {sieve: rank}} for the survivors) and order (the survivors sorted by (tuple(ranks[s][n] for each band-2 sieve n in assembled order), s)). Docstrings say measure where they said record, and that a rank is a postprocess stamp, never a cut score.",
       "writes_to": [
         "cairn/machines/nest/__init__.py",
         "cairn/machines/nest/nest.py"
@@ -59,7 +63,7 @@
     },
     {
       "n": 3,
-      "text": "D3: the red-first proof cairn/machines/nest/proofs/test_the_shake_runs_band_outer.py, PROVES {'71cd4a62e8c5': {'1': 'band_one_is_measure', '2': 'measure_fires_over_every_subject_first', '3': 'postprocess_receives_every_stamp', '4': 'preprocess_picks_the_subjects', '5': 'a_measure_only_shake_is_unchanged', '6': 'the_base_copy_is_gone'}}; tooth 5 holds a frozen copy of the old subject-outer loop inline as the reference; tooth 6 walks cairn/ and bin/ with ast for Import/ImportFrom of cairn.tools.base.nest. The house runner (main() exit 0 green).",
+      "text": "D3: the red-first proof cairn/machines/nest/proofs/test_the_shake_runs_band_outer.py, PROVES {'71cd4a62e8c5': {'1': 'band_one_is_measure', '2': 'measure_fires_over_every_subject_first', '3': 'postprocess_receives_every_stamp', '4': 'preprocess_picks_the_subjects', '5': 'a_measure_only_shake_is_unchanged', '6': 'the_base_copy_is_gone', '7': 'order_follows_the_ranks'}}; tooth 5 holds a frozen copy of the old subject-outer loop inline as the reference; tooth 6 walks cairn/ and bin/ with ast for Import/ImportFrom of cairn.tools.base.nest. The house runner (main() exit 0 green).",
       "writes_to": [
         "cairn/machines/nest/proofs/test_the_shake_runs_band_outer.py"
       ],

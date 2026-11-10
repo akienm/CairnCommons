@@ -1,76 +1,51 @@
 {
   "id": "ae6bdf48b76d",
-  "title": "route picks its rung inside the nest",
+  "title": "route reads its walk order from the nest",
   "owning_intention": "cairn/devices/inference_domain/machines/route/intention+why.json",
-  "intention": "Route's pick happens inside its nest: one postprocess sieve, pick, reads every measure-survivor's stamps and lets out exactly one rung (a preferred model if the domain prefers any survivor, else the cheapest, ties to the earliest combos row), a measure sieve untried cuts the rungs the caller names in exclude, and the two sorts after the shake are deleted.",
-  "why": "Measured 2026-11-10: route() shakes the nest for cuts only and orders the survivors after it (cairn/devices/inference_domain/machines/route/route.py:293 survivors.sort by cash_per_mtoken; :301 the domain prefers reorder). Akien 2026-09-15: 'capabilities checked first then the post process picked the cheapest ... if it's not like that now, that's a bug.'",
-  "traces_to": "Outline 11.4.6 (route built with the nest, cheapest survivor first) and 16.2 (bands preprocess, measure, postprocess); Law 1; Q#82.",
-  "how": "Add untried(view) and pick(view, stamps) to SIEVES in route.py; route() takes exclude=() and puts it and the domain's prefers in every subject view; its fire convention hands a postprocess sieve stamps as {key: (view, scores)}; survivors are the subjects rolling up 1.0, at most one; delete survivors.sort at :293 and :301. Red-first proof pins the pick against a frozen copy of the old order over fixtures.",
+  "intention": "Route's walk order comes out of its nest: one postprocess sieve, walk_rank, stamps each survivor with (0 if the domain prefers its model else 1, its cash_per_mtoken), route builds survivors from the shake's order, and the two sorts after the shake are deleted; the survivor set and its order stay what they are today.",
+  "why": "Measured 2026-11-10: route() shakes the nest for cuts only and orders the survivors after it (route.py:293 survivors.sort by cash_per_mtoken; :301 the domain prefers reorder). Akien 2026-09-15: 'capabilities checked first then the post process picked the cheapest ... if it's not like that now, that's a bug'; and 2026-09-29 (open-8ecde12362d6): 'i really like option c' \u2014 the shake ranks instead of cutting, and route reads the walk order from the stamps (outline 11.4.6).",
+  "traces_to": "Outline 11.4.6 (cheapest survivor first; the shake ranks, route reads the walk order from the stamps) and 16.2.3.1; Law 1.",
+  "how": "Add walk_rank(view, stamps) to SIEVES in route.py (phase_of derives band 2 from stamps); every subject view carries the domain's prefers; route's fire hands band 2 its stamps; survivors are built in shaken['order']; delete survivors.sort at :293 and :301. Red-first proof pins survivors against a frozen copy of the old sort-and-reorder.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "route.py contains no .sort( call and no sorted( over survivors, and import_sieve.phase_of derives band 2 for pick and band 1 for untried"
+        "claim": "route.py contains no .sort( call and no sorted( call, and import_sieve.phase_of derives band 2 for walk_rank"
       },
       {
         "n": 2,
-        "claim": "over a fixture table (cost ties, a preferred model surviving, a preferred model cut, one survivor, the authored stacks) route's survivors is one rung, equal to the first rung of a frozen copy of the old sort-and-reorder over the same shake"
+        "claim": "over a fixture table (cost ties, a preferred model surviving, a preferred model cut, one survivor, the authored stacks; each with no domain, general, and a preferring domain) route's survivors equal, element for element, a frozen copy of the old stable cost sort then stable prefers reorder over the same stacks"
       },
       {
         "n": 3,
-        "claim": "pick catches every other measure-survivor with a finding naming the rung it picked"
+        "claim": "walk_rank changes no survivor set: the survivors are exactly the subjects the measure band rolls up to 1.0"
       },
       {
         "n": 4,
-        "claim": "route(..., exclude=[label]) cuts that rung through untried with a finding naming it, and the pick moves to the rung the frozen old order listed next"
+        "claim": "every tooth in test_route.py passes unchanged, the walk teeth included"
       },
       {
         "n": 5,
-        "claim": "when the measure sieves cut every rung, route raises RouteRefused naming each cut, as today"
-      },
-      {
-        "n": 6,
-        "claim": "a counting fire shows the nest shaken once per route() call"
+        "claim": "when the measure sieves cut every rung, route raises RouteRefused naming each cut, as today, and an unknown domain still refuses before the shake"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: cairn/devices/inference_domain/machines/route/route.py: untried(view) catches when view['label'] (the combo's 'provider/model') is in view['exclude']; pick(view, stamps) with stamps {subject key: (view, scores)} from route's fire: among the keys whose band-1 scores are all 1.0, the preferred ones if any (view['prefers']), then those at the minimum provider.cash_per_mtoken, then the smallest key; it catches the subject unless it is that key. Both join SIEVES. route() gains exclude: tuple = (), every subject view gains label, exclude and prefers (the domain row's, [] when none; an unknown domain still refuses before the shake). The fire lambda is lambda name, view, stamps=None: SIEVES[name](view) if stamps is None else SIEVES[name](view, {k: (subjects[k], s) for k, s in stamps.items()}). Survivors are the keys rolling up 1.0; the two sorts go; the docstring says one pick.",
+      "text": "D1: cairn/devices/inference_domain/machines/route/route.py: walk_rank(view, stamps) returns (0 if view['combo']['model'] in view['prefers'] else 1, view['provider'].get('cash_per_mtoken')) and joins SIEVES; it reads no other subject, so stamps is the band-2 argument the nest hands it. route() looks the domain row up before the shake (the unknown-domain refusal unchanged) and puts prefers ([] with no domain) in every subject view. The fire is lambda name, view, stamps=None: SIEVES[name](view) if stamps is None else SIEVES[name](view, stamps). Survivors are built by walking shaken['order'] (ties fall to the subject key, which is the combos-stack index, so authored order stays the tiebreak). The two sorts go and the docstring says the order is the nest's.",
       "writes_to": [
         "cairn/devices/inference_domain/machines/route/route.py"
       ],
       "reads": [
-        "cairn/devices/inference_domain/machines/route/route.py",
-        "cairn/tools/base/nest.py"
+        "cairn/devices/inference_domain/machines/route/route.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: cairn/devices/inference_domain/machines/route/proofs/test_route.py: test_a_preference_reorders_survivors_without_changing_the_set and test_an_empty_preference_leaves_the_order_untouched become pick teeth (the preferred rung is the pick; general picks the same as bare), and the walk teeth that need two survivors pass exclude instead. Every other tooth stays.",
+      "text": "D2: the proof cairn/devices/inference_domain/machines/route/proofs/test_route_reads_its_walk_order_from_the_nest.py, red-first, PROVES {'ae6bdf48b76d': {'1': 'route_sorts_nothing', '2': 'the_walk_order_is_byte_identical', '3': 'the_rank_cuts_nothing', '4': 'the_standing_teeth_hold', '5': 'refusals_unchanged'}}; tooth 2 holds the old ordering inline as the frozen reference; tooth 4 runs cairn/devices/inference_domain/machines/route/proofs/test_route.py main() in a subprocess; the house runner.",
       "writes_to": [
-        "cairn/devices/inference_domain/machines/route/proofs/test_route.py"
-      ],
-      "reads": [
-        "cairn/devices/inference_domain/machines/route/proofs/test_route.py"
-      ]
-    },
-    {
-      "n": 3,
-      "text": "D3: cairn/devices/inference_domain/machines/route/intention+why.json: the charter's sentence that a preference never changes the survivor set becomes the pick, through bin/cairn artifact write --verb charter.",
-      "writes_to": [
-        "cairn/devices/inference_domain/machines/route/intention+why.json"
-      ],
-      "reads": [
-        "cairn/devices/inference_domain/machines/route/intention+why.json"
-      ]
-    },
-    {
-      "n": 4,
-      "text": "D4: the proof cairn/devices/inference_domain/machines/route/proofs/test_route_picks_inside_the_nest.py, red-first, PROVES 1-6, the house runner; tooth 2 holds the old ordering inline (stable sort by cash_per_mtoken, then the stable prefers reorder) as the frozen reference.",
-      "writes_to": [
-        "cairn/devices/inference_domain/machines/route/proofs/test_route_picks_inside_the_nest.py"
+        "cairn/devices/inference_domain/machines/route/proofs/test_route_reads_its_walk_order_from_the_nest.py"
       ],
       "reads": [
         "cairn/devices/inference_domain/machines/route/route.py",
@@ -80,15 +55,13 @@
   ],
   "bounds": {
     "in": [
-      "cairn/devices/inference_domain/machines/route/intention+why.json",
-      "cairn/devices/inference_domain/machines/route/proofs/test_route.py",
-      "cairn/devices/inference_domain/machines/route/proofs/test_route_picks_inside_the_nest.py",
+      "cairn/devices/inference_domain/machines/route/proofs/test_route_reads_its_walk_order_from_the_nest.py",
       "cairn/devices/inference_domain/machines/route/route.py"
     ],
     "out": [
-      "host.py's walk re-asking route with exclude on HostUnreachable (its own ticket, cast beside this)",
-      "the band-outer shake (ticket 71cd4a62e8c5)",
-      "the stacks and their rows"
+      "cairn/devices/inference_domain/host.py's walk (reads survivors in order, unchanged)",
+      "the band-outer shake and its order (ticket 71cd4a62e8c5)",
+      "whether a domain's prefers stays (outline 11.4.6, Q#83)"
     ]
   },
   "measured": [
