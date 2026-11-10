@@ -22,7 +22,7 @@
       },
       {
         "n": 4,
-        "claim": "yield_report over a metrics reply of known inference.* rows returns exactly their spent and avoided sums and their hit, miss and refused counts, and it reaches the rows only through the cairn device's metrics verb"
+        "claim": "yield_report over a metrics totals reply of known inference.* totals by verdict returns exactly their spent and avoided sums and their hit, miss and refused counts, and it reaches them only through the cairn device's metrics verb, asking totals by verdict for source inference_domain"
       },
       {
         "n": 5,
@@ -34,7 +34,7 @@
       },
       {
         "n": 7,
-        "claim": "live, read-only, after the migration has run: inference_calls does not exist, store.owner_of('inference_domain_answers_nodes') is 'inference_domain', its leaf count is at least 11,366, the pg_dump file exists under ~/.cairn/devices/inference_domain/0/temp/, and the metrics verb's inference.spent and inference.saved rows at or before the dump's newest row (plus one second) sum to the dumped table's miss cost and hit cost"
+        "claim": "live, read-only, after the migration has run: inference_calls does not exist, store.owner_of('inference_domain_answers_nodes') is 'inference_domain', its leaf count is at least 11,366, the pg_dump file exists under ~/.cairn/devices/inference_domain/0/temp/, and the metrics verb's inference.spent and inference.saved totals until the dump's newest row (plus one second) equal the dumped table's spent and avoided"
       },
       {
         "n": 8,
@@ -139,7 +139,7 @@
     },
     {
       "n": 5,
-      "text": "D5: yield_report(*, ask=None) (domain.py:820) sums the metrics verb's reply: ask defaults to bus_client.reach('cairn').request(to='cairn', verb='metrics', body={'source': 'inference_domain'}); spent and avoided are the inference.spent and inference.saved sums; calls/hits/misses/refused count the latency rows by info.verdict. device.py:175 and :196 keep calling it.",
+      "text": "D5: yield_report(*, ask=None) (domain.py:820) reads the metrics verb's totals: ask defaults to bus_client.reach('cairn').request(to='cairn', verb='metrics', body=...), and the body is {'source': 'inference_domain', 'totals': True, 'by': 'verdict'} (the totals shape is ticket f4dbcea5a117, built first, because ~66k migrated rows over the raw-rows verb would be ~23 MB a report); spent and avoided are the inference.spent and inference.saved sums; calls/hits/misses/refused are the inference.latency counts by verdict. device.py:175 and :196 keep calling it.",
       "by": "CC",
       "step": "cast",
       "source": "build",
@@ -149,8 +149,9 @@
         "cairn/devices/inference_domain/device.py"
       ],
       "reads": [
-        "cairn/devices/inference_domain/domain.py",
-        "cairn/devices/cairn/metrics.py"
+        "cairn/devices/cairn/device.py",
+        "cairn/devices/cairn/metrics.py",
+        "cairn/devices/inference_domain/domain.py"
       ]
     },
     {
