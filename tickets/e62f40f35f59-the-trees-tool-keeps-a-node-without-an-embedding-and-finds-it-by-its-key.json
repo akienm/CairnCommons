@@ -6,7 +6,38 @@
   "why": "Measured 2026-11-05: the deposit door refuses a node without a vector (_check_vector, trees.py:250 deposit), and the leaf table's embedding_id is NOT NULL (_LEAF_COLUMNS, trees.py:64); cairn_embeddings holds 21,880 embeddings for 21,082 nodes, so every node is embedded. Akien 2026-11-05 (open-029c5ae100a9): 'um, no. embeddings for every single thing would mean that we'd have an impossible mound of data. i don't work that way. and this is supposed to work how i do. but i have a few key questions that cross domains. 'how might that work' is a chief among them. it's applicable in almost all domains, and captures the pattern, not the domain specific answer.' Outline 4.3.1.8.1.1: a node without an embedding is found by its key. First consumer: the inference proxy's answer tree, found by exact request (ticket 98ab0e9db57f, outline 13.3.4.1).",
   "traces_to": "Outline 4.3.1.8.1.1 (Akien 2026-11-05: not every node is embedded; the pattern is). Telos: work the way Akien does. Law 1 (a stored answer found by its key is compiled, without an embedding mound). RULE 1 (the librarian's own published tool).",
   "how": "Add a second leaf shape to the trees tool, declared when the table is made: ensure_trees(table=..., owner=..., keyed=True) creates a keyed leaf table with columns leaf_id text PRIMARY KEY, key text NOT NULL, node_id text NOT NULL, meta jsonb NOT NULL DEFAULT '{}', created timestamptz NOT NULL DEFAULT now(). New deposit_keyed(content, key, provenance, *, table, owner, meta=None, conn=None): same content floor, provenance rule and node write as deposit (content-hash node id, attestation on a duplicate), no embedding row, leaf_id = leaf_id_for(node_id, key). New find(key, *, table, conn=None): the nodes under that key, joined to their leaf meta, newest first. A keyed table is recognised by its columns (key present, embedding_id absent); the walks (nearest, neighbors, and anything reading _leaf_rows) refuse one loudly, and each deposit door refuses the other shape. Existing vectored tables and calls are unchanged.",
-  "falsifier": "(1) deposit_keyed into a scratch keyed leaf table lands one cairn_nodes row, no cairn_embeddings row, and one leaf row carrying the key and the meta; (2) find(key) on that table returns the node's content, provenance, standing and meta, newest first; find of an unknown key returns []; (3) the same content under the same key twice leaves one leaf and appends a provenance attestation; the same content under a second key leaves two leaves over one node; (4) nearest and neighbors over a keyed table raise WalkRefused naming the table as keyed, deposit (with a vector) into a keyed table raises DepositRefused, and deposit_keyed into a vectored table raises DepositRefused, nothing landed in each case; (5) deposit_keyed applies the same content floor and provenance rule as deposit; (6) every existing proof that imports cairn.devices.librarian.tools.trees stays green; (7) the charter beside trees.py names deposit_keyed, find and the keyed leaf shape in its public_interface.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "deposit_keyed into a scratch keyed leaf table lands one cairn_nodes row, no cairn_embeddings row, and one leaf row carrying the key and the meta"
+      },
+      {
+        "n": 2,
+        "claim": "find(key) on that table returns the node's content, provenance, standing and meta, newest first; find of an unknown key returns []"
+      },
+      {
+        "n": 3,
+        "claim": "the same content under the same key twice leaves one leaf and appends a provenance attestation; the same content under a second key leaves two leaves over one node"
+      },
+      {
+        "n": 4,
+        "claim": "nearest and neighbors over a keyed table raise WalkRefused naming the table as keyed; deposit into a keyed table and deposit_keyed into a vectored table raise DepositRefused; nothing lands in each case"
+      },
+      {
+        "n": 5,
+        "claim": "deposit_keyed applies the same content floor and provenance rule as deposit, and refuses a blank key; nothing lands"
+      },
+      {
+        "n": 6,
+        "claim": "a vectored deposit and walk over a scratch vectored table are unchanged: one embedding row, and nearest finds it at similarity 1"
+      },
+      {
+        "n": 7,
+        "claim": "the charter beside trees.py names deposit_keyed, find and the keyed leaf in its what"
+      }
+    ]
+  },
   "bounds": {
     "in": [
       "cairn/devices/librarian/tools/trees/trees.py",
@@ -27,7 +58,74 @@
       "by": "cc",
       "step": "cast",
       "source": "sorted",
-      "at": "2026-11-05T22:42:48+00:00"
+      "at": "2026-11-05T22:42:48+00:00",
+      "writes_to": [],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: in trees.py add _KEYED_LEAF_COLUMNS after _LEAF_COLUMNS (line 64) with exactly leaf_id text PRIMARY KEY, key text NOT NULL, node_id text NOT NULL, meta jsonb NOT NULL DEFAULT '{}', created timestamptz NOT NULL DEFAULT now(). ensure_trees (line 186) and scratch_leaf (line 194) gain keyword keyed=False choosing the column set. A new _is_keyed(table, conn) reads information_schema.columns through store.query (tables={}) and is True when the table has a key column and no embedding_id column.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the content floor, the provenance rule and the node write (insert, or append an attestation on a duplicate) move out of deposit (line 251) into _judge_node(content, provenance, who) and _write_node(content, provenance, conn) -> (node_id, was_duplicate); deposit calls them unchanged in behaviour and message. New deposit_keyed(content, key, provenance, *, table, owner=OWNER, meta=None, conn=None): judges, refuses a blank key, ensures the keyed table, refuses a vectored table with DepositRefused BEFORE any write, writes the node, then one leaf (leaf_id = leaf_id_for(node_id, key)) unless it exists; returns {node_id, duplicate, provenance_appended}. New find(key, *, table, conn=None): [] when the table is absent, WalkRefused on a vectored table, else leaf joined to cairn_nodes ordered by leaf created DESC, each row carrying node_id, key, content, provenance, standing, meta, created.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the refusals: deposit refuses a keyed table with DepositRefused naming it keyed, checked before its node write; _leaf_rows (line 228) raises WalkRefused naming the table as keyed, which covers nearest (line 1182), tree_state, calve and the deposit dim check; neighbors (line 1223) checks first, before its embedding read, so the message names the keyed table rather than a ghost node.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: the charter's what (cairn/devices/librarian/tools/trees/intention+why.json) gains one sentence naming the keyed leaf, deposit_keyed and find (outline 4.3.1.6), written through bin/cairn artifact write --verb cast.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/intention+why.json"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: the proof is already written and committed red-first at cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py: seven teeth, one per clause, over scratch leaf tables whose nodes are forgotten before they drop.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py"
+      ]
+    }
+  ],
+  "measured": [
+    {
+      "when": "2026-11-05",
+      "saw": "deposit refuses a node without a vector and the leaf's embedding_id is NOT NULL; 21,880 embeddings for 21,082 nodes",
+      "how": "read trees.py _check_vector and _LEAF_COLUMNS; counted cairn_embeddings and cairn_nodes"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "the red-first proof: 6 of 7 teeth red (scratch_leaf takes no keyed; the charter names no deposit_keyed), the vectored tooth green",
+      "how": "bin/cairn test --exec over cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py"
     }
   ]
 }
