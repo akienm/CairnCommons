@@ -1,0 +1,77 @@
+{
+  "id": "3ff3ae16b2b9",
+  "title": "a sole-path admission holds at any depth of the graph",
+  "owning_intention": "cairn/tools/import_sieve/intention+why.json",
+  "intention": "The import sieve's sole_path rule admits a path when it lies inside an `only` entry at ANY segment boundary, not only at the graph's root, so an admitted file stays admitted however wide the graph it is shaken over; and the sieve's own proof admits web_operator as Akien's Q#74 answer does.",
+  "why": "Measured 2026-11-10: ticket 3721d82be75c's PROVED was refused because the sole-path rule, over a graph taken at cairn/devices/, saw cairn/devices/cairn/machines/bus/proofs/test_the_bus_speaks_tcp.py as cairn/machines/bus/proofs/... and its admission bus/proofs/... matched at the root only; and cairn/tools/import_sieve/proofs/test_import_sieve.py is red today on web_operator's two files, admitted by Akien's Q#74 answer.",
+  "traces_to": "Laws 8 and 9.",
+  "how": "One matching function in the sieve; one entry in its proof; a red-first proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an admitted file under extra leading segments is not caught, while a sibling file and a look-alike directory (xbus/) still are"
+      },
+      {
+        "n": 2,
+        "claim": "the inference rule, prefixes as a component's parent sees them, shaken over the real cairn/devices/ graph catches nothing, and that graph does show the bus TCP proof importing socket"
+      },
+      {
+        "n": 3,
+        "claim": "an admission given as one string still admits at the root, and a door outside every admission is still caught at depth"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/import_sieve/sieve.py: a new function _admitted(path, only) placed just before _matches: entries = (only,) if it is a str else tuple(only); parts = path.split('/'); return any('/'.join(parts[i:]).startswith(e) for i in range(len(parts)) for e in entries). In catches, the sole_path branch's `if path.startswith(only):` becomes `if _admitted(path, only):`. The sole_path paragraph of catches' docstring gains: an `only` entry is a path relative to some directory, so it admits at every segment boundary; a graph taken over a wider root sees the same file under more leading segments. Nothing else changes; forbidden keeps startswith.",
+      "writes_to": [
+        "cairn/tools/import_sieve/sieve.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/sieve.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/tools/import_sieve/proofs/test_import_sieve.py: in test_sole_path_is_clean_on_the_real_corpus_for_both_domains, the inference rule's `only` tuple gains \"cairn/machines/web_operator/\" as its last entry, with a comment citing Akien 2026-11-09, Q#74, open-52b86b71a12d (the same admission cairn/devices/inference_domain/proofs/test_host.py already makes). Measured 2026-11-10: this proof is red today on exactly web_operator's two files.",
+      "writes_to": [
+        "cairn/tools/import_sieve/proofs/test_import_sieve.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/proofs/test_import_sieve.py",
+        "cairn/devices/inference_domain/proofs/test_host.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/tools/import_sieve/proofs/test_an_admission_holds_at_any_depth.py, red-first, one tooth per clause, PROVES 3ff3ae16b2b9 1-3, over synthetic graphs (dict path -> set of imports, catches with floor=1) for teeth 1 and 3, and sieve.import_graph over the repo's cairn/devices/ for tooth 2. It declares its own copy of the inference rule; it imports only cairn.tools.import_sieve.sieve.",
+      "writes_to": [
+        "cairn/tools/import_sieve/proofs/test_an_admission_holds_at_any_depth.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/sieve.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/import_sieve/sieve.py",
+      "cairn/tools/import_sieve/proofs/test_import_sieve.py",
+      "cairn/tools/import_sieve/proofs/test_an_admission_holds_at_any_depth.py"
+    ],
+    "out": [
+      "the admissions and the exemption set",
+      "the forbidden and unreachable kinds",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "PROVED of 3721d82be75c refused on cairn/devices/cairn/machines/bus/proofs/test_the_bus_speaks_tcp.py; cairn/tools/import_sieve/proofs/test_import_sieve.py red on cairn/machines/web_operator/",
+      "how": "close.sh 3721d82be75c; bin/cairn test cairn/tools/import_sieve/proofs/test_import_sieve.py"
+    }
+  ]
+}
