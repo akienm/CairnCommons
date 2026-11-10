@@ -1,77 +1,130 @@
 {
   "id": "71cd4a62e8c5",
   "title": "the-shake-hands-postprocess-the-stamps",
-  "intention": "The shake is band-outer and hands every postprocess sieve the stamps of all subjects so far, so the cheapest-path compare the bands were built for runs INSIDE the nest as a postprocess sieve — in route (cheapest, prefers) and in the inspector (the teeth sieve reading component_color's stamp) — with every record finding and every route pick byte-identical to today.",
-  "how": "(1) cairn/tools/base/nest.py shake(): loop band-outer (assembled is already band-sorted), subject-inner; keep gradation[subject][sieve]; for band 0 call fire(name, subjects_all) -> the subset to score (subjects not returned are scored 1.0 untouched and stamped 'skipped_by'); for band 1 call fire(name, subject) exactly as today; for band 2 call fire(name, subject, gradation) where gradation holds every subject's record scores. Detect a sieve's arity by band, not by introspection. (2) inspector: unchanged except green_seal_names_a_tooth reads the component_color stamp from the gradation instead of walking validations itself, so phase_of derives it postprocess. (3) route.py: two new sieves cheapest(view, stamps) and prefers(view, stamps) that score 1.0 only the survivor(s) that win the cross-subject compare; the sort at :264 and reorder at :272 go; the pick is the survivor whose roll_up == 1.0 after the shake, ties broken by authored order as today. (4) import_sieve.phase_of: a sieve whose signature carries the stamps argument derives 2, one that takes the subject set derives 0 — measured from source, never authored. (5) proofs: nest tooth (band order and stamps handed), route pick byte-identity tooth over test_route.py's fixtures, inspector findings byte-identity by re-sealing its proofs unchanged, phase_of tooth; all under netns.",
-  "falsifier": "DONE when (1) nest.shake is band-outer: every record sieve fires over every subject before any postprocess sieve fires, and fire(name, subject, stamps) hands a postprocess sieve the gradation so far across ALL subjects; a preprocess sieve receives the whole subject set and returns the subset to score — one tooth each in cairn/tools/base/proofs/ over a fixture nest with one sieve per band; (2) the inspector's findings over its fixture corpus are byte-identical before and after (the record sieves never see the new argument) — measured by re-running cairn/machines/build_inspector/proofs/ unchanged and sealing green; (3) route's cheapest and prefers are postprocess sieves in route's nest, the sort at route.py:264 and the reorder at :272 are gone, and route picks the SAME host for every fixture in test_route.py as before (byte-identity of the pick, asserted by a tooth that pins the fixture picks); (4) phase_of derives postprocess for a sieve whose source reads a stamp (the gradation argument) — a tooth in cairn/tools/import_sieve/proofs/; (5) the teeth sieve moves record -> postprocess reading component_color's stamp, and the live assembly reads postprocess >= 3 (cheapest, prefers, teeth) where today it reads 0. RED if any record finding changes bytes, if route's pick changes for any fixture, or if a band is ever authored rather than derived. WRONG INTENT if Akien says the cheapest compare belongs outside the nest (his words say it is a postprocess compare over all the inputs).",
-  "traces_to": "Law 1 (the compare the bands were built for is settled structure; re-deriving it as a sort outside the nest is the defect); Law 4 (the pick is enforced by the nest's physics — a postprocess sieve — not by a line after it); memory bands-were-built-for-the-inference-proxy (Akien 2026-09-15). Telos: one shake word for every tenant, and the inference proxy picks cheapest inside it.",
-  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "The nest is the shared machine at cairn/machines/nest/ (outline 16.2): its bands are preprocess, measure, postprocess, and its shake runs band-outer, handing a preprocess sieve the whole subject set and a postprocess sieve the stamps of every subject so far, so a compare over all the inputs can run inside the nest. Its two tenants import it there, and the copy under cairn/tools/base leaves.",
+  "how": "Create cairn/machines/nest/ with nest.py carrying BAND_NAMES {0: preprocess, 1: measure, 2: postprocess}, nest(reaches) unchanged, and shake(assembled, subjects, fire) band-outer: band 0 calls fire(name, subjects) and scores only the returned keys (the rest absent), band 1 calls fire(name, subject) as today, band 2 calls fire(name, subject, stamps) with stamps the gradation so far across every subject. Move test_nest.py there and add a red-first proof of the band-outer order. Repoint the two tenants' import lines (inspector.py:80, route.py:42) and the three places that name the module path; delete cairn/tools/base/nest.py, its proof and its watch probe (its second carrier, route, arrived); strike nest from the base charter.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn.machines.nest.nest.BAND_NAMES is {0: 'preprocess', 1: 'measure', 2: 'postprocess'}"
+      },
+      {
+        "n": 2,
+        "claim": "over a fixture nest with one sieve per band and three subjects, every measure sieve fires over every subject before any postprocess sieve fires (the recorded fire order)"
+      },
+      {
+        "n": 3,
+        "claim": "a postprocess sieve is called fire(name, subject, stamps) where stamps holds the measure scores of all three subjects"
+      },
+      {
+        "n": 4,
+        "claim": "a preprocess sieve is called once with the whole subject set; a subject it does not return carries no score for any later sieve and rolls up 1.0"
+      },
+      {
+        "n": 5,
+        "claim": "with only measure sieves the shake's findings, gradation and roll_up equal the old subject-outer shake's over the same fixture"
+      },
+      {
+        "n": 6,
+        "claim": "cairn/tools/base/nest.py is absent, and no .py file under cairn/ or bin/ imports cairn.tools.base.nest"
+      }
+    ]
+  },
+  "traces_to": "Outline 16.2 (the nest machine) and 11.4.6 (route built with the nest, cheapest survivor first); Law 1 (the compare the bands were built for is settled structure); RULE 1 (one component per ticket).",
+  "owning_intention": "cairn/machines/nest/intention+why.json",
   "decisions": [
     {
       "n": 1,
-      "text": "nest.shake becomes BAND-OUTER / subject-inner. Band 0 (preprocess): fire(name, subjects) receives the whole subject Mapping and returns the subset of keys to score; unreturned subjects score 1.0 and are stamped skipped_by. Band 1 (record): fire(name, subject), byte-for-byte today's call. Band 2 (postprocess): fire(name, subject, stamps) where stamps is the gradation so far across ALL subjects.",
-      "by": "Akien 2026-09-15: 'capabilities checked first then the post process picked the cheapest. a different kind of compare operation performed on all the available inputs. if it's not like that now, that's a bug.'; 'agreed on all counts.'; measured 2026-09-16: cairn/tools/base/nest.py:28 BAND_NAMES = {0: preprocess, 1: record, 2: postprocess}; the band is DERIVED by cairn/tools/import_sieve/sieve.py:102 phase_of(source) from what a sieve reads, never authored; nest.shake (nest.py:48-84) loops subject-OUTER / band-inner and fires fire(name, subject) only, so a sieve sees one subject and no stamp; live assembly: build_inspector the_nest() = record 37 / preprocess 0 / postprocess 0 (inspector.py:3549); inference_domain route the_nest() = record 5 / 0 / 0 (route.py:209); the cheapest pick is survivors.sort(key=cash_per_mtoken) at route.py:264 and the prefers reorder at route.py:272 — both OUTSIDE the nest, after the shake. The teeth sieve green_seal_names_a_tooth (77f15efd5a96) lands as record because it reads a validation file."
+      "text": "D1: cairn/machines/nest/__init__.py (empty) and cairn/machines/nest/nest.py: the body of cairn/tools/base/nest.py moved, BAND_NAMES = {0: 'preprocess', 1: 'measure', 2: 'postprocess'}, shake rewritten band-outer as the how says. A band-0 sieve's return is a collection of subject names; subjects outside it get no score from that sieve or any later one. Band 2's stamps argument is the gradation dict as it stands when that sieve fires (every subject's band 0 and 1 scores). Docstrings say measure where they said record.",
+      "writes_to": [
+        "cairn/machines/nest/__init__.py",
+        "cairn/machines/nest/nest.py"
+      ],
+      "reads": [
+        "cairn/tools/base/nest.py"
+      ]
     },
     {
       "n": 2,
-      "text": "Record sieves are untouched: every finding of build_inspector over its fixture corpus is byte-identical before and after, proved by resealing the inspector's proofs unchanged.",
-      "by": "Akien 2026-09-15 'agreed on all counts' on CC's byte-identity proposal; Law 8"
+      "text": "D2: move cairn/tools/base/proofs/test_nest.py to cairn/machines/nest/proofs/test_nest.py importing cairn.machines.nest.nest, its BAND_NAMES assertion reading measure; its seal cairn/tools/base/validations/test_nest.json leaves through bin/cairn artifact remove <path> --why, and the moved proof is sealed fresh.",
+      "writes_to": [
+        "cairn/machines/nest/proofs/test_nest.py",
+        "cairn/tools/base/proofs/test_nest.py",
+        "cairn/tools/base/validations/test_nest.json"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_nest.py"
+      ]
     },
     {
       "n": 3,
-      "text": "route: cheapest(view, stamps) and prefers(view, stamps) become postprocess sieves in route's nest; the sort at route.py:264 and the reorder at :272 are deleted; the pick is the survivor with roll_up 1.0 after the shake, ties by authored order. Every fixture pick in test_route.py is pinned by a tooth BEFORE the change and must read the same after.",
-      "by": "Akien 2026-09-15: 'we built them for the inference proxy. to pick the least expensive of the paths provided.'; measured route.py:264, :272"
+      "text": "D3: the red-first proof cairn/machines/nest/proofs/test_the_shake_runs_band_outer.py, PROVES {'71cd4a62e8c5': {'1': 'band_one_is_measure', '2': 'measure_fires_over_every_subject_first', '3': 'postprocess_receives_every_stamp', '4': 'preprocess_picks_the_subjects', '5': 'a_measure_only_shake_is_unchanged', '6': 'the_base_copy_is_gone'}}; tooth 5 holds a frozen copy of the old subject-outer loop inline as the reference; tooth 6 walks cairn/ and bin/ with ast for Import/ImportFrom of cairn.tools.base.nest. The house runner (main() exit 0 green).",
+      "writes_to": [
+        "cairn/machines/nest/proofs/test_the_shake_runs_band_outer.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_nest.py"
+      ]
     },
     {
       "n": 4,
-      "text": "The band stays DERIVED: import_sieve.phase_of reads the sieve's source — a third (stamps) parameter derives postprocess, a subject-set parameter derives preprocess, else record. Nothing authors a band.",
-      "by": "measured sieve.py:102 phase_of and route.py:213 the_nest(); memory sieves-measure-not-judge"
+      "text": "D4: the tenants' import lines: cairn/machines/build_inspector/inspector.py:80 and cairn/devices/inference_domain/machines/route/route.py:42 become `from cairn.machines.nest import nest as base_nest` (the alias kept, so no other line changes). The module path string at cairn/machines/build_inspector/probes/does_the_denied_set_stay_put.py:56 and the carrier check at cairn/devices/inference_domain/machines/route/proofs/test_route.py:185-188 name cairn.machines.nest.nest.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/devices/inference_domain/machines/route/route.py",
+        "cairn/machines/build_inspector/probes/does_the_denied_set_stay_put.py",
+        "cairn/devices/inference_domain/machines/route/proofs/test_route.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/devices/inference_domain/machines/route/route.py",
+        "cairn/machines/build_inspector/probes/does_the_denied_set_stay_put.py",
+        "cairn/devices/inference_domain/machines/route/proofs/test_route.py"
+      ]
     },
     {
       "n": 5,
-      "text": "green_seal_names_a_tooth (77f15efd5a96) moves record -> postprocess here, reading component_color's stamp from the gradation; its findings stay byte-identical.",
-      "by": "Akien 2026-09-15: 'this new sieve would be in post i think'; 77f15efd5a96 D5 names this ticket"
-    },
-    {
-      "n": 6,
-      "text": "The preprocess contract is built with a fixture sieve in the nest proof only; the first live preprocess tenant is the probe-nest follow-on ticket.",
-      "by": "CC 2026-09-16, unobjected; build-minimal-grow-against-need"
-    },
-    {
-      "n": 7,
-      "text": "The loop, literally: shake(assembled, subjects, fire) keeps its signature; inside, gradation = {s: {} for s in subjects} and skipped = set() are owned by shake itself (nothing outside initialises or reads them mid-shake). for band, names in assembled: (band 0) for name in names: keep = set(fire(name, subjects)); for s in subjects: if s in keep: gradation[s][name] = 1.0 else: gradation[s][name] = 1.0; gradation[s]['skipped_by'] = name; skipped.add(s) — a preprocess sieve returns the subject KEYS to score and never a finding; (band 1) for name in names: for s, subject in subjects.items(): if s in skipped: continue; caught = fire(name, subject); findings += caught; gradation[s][name] = 0.0 if caught else 1.0; (band 2) for name in names: for s, subject in subjects.items(): if s in skipped: continue; caught = fire(name, subject, gradation); same scoring. 'assembled' stays exactly what nest() returns today: [(band, [names]), ...] sorted by band. roll_up unchanged: min over the numeric stamps (the 'skipped_by' string is not a score — roll_up reads only float values). The tenant's fire is variadic: fire(name, *args) -> SIEVES[name](*args, ...) — shake picks the arity by band, the tenant passes it through.",
-      "by": "CC 2026-09-18, measured; unobjected",
-      "step": "D1",
-      "source": "rehearsal"
-    },
-    {
-      "n": 8,
-      "text": "Sieve return convention (measured route.py:170-195): a sieve returns a list of findings; [] means the subject passes (stamp 1.0), non-empty means caught (stamp 0.0). cheapest(view, stamps) and prefers(view, stamps) follow it. Both compute the SAME compare over stamps: S = {k for k, row in stamps.items() if all(v == 1.0 for v in row.values() if isinstance(v, float))} (the record-band survivors — every stamp so far is 1.0); P = {k in S whose view['prefers'] names its model}; T = P if P else S. prefers(view, stamps) returns [] iff view's key is in T or not in S, else one finding 'not preferred while a preferred rung survives'. cheapest(view, stamps) returns [] iff view's key is not in S, or view's key is in T and its cash_per_mtoken == min cash over T; else one finding 'not the cheapest survivor'. So roll_up 1.0 after the shake is exactly the pick set: min cash within the preferred tier when any preferred rung survives, else min cash overall — the same host today's sort at :264 + reorder at :272 puts first. For the sieves to see their own key and the domain, each subject view gains 'key' (its subjects-dict key) and 'prefers' (the domain row's prefers list, [] when domain is None); route() resolves the domain row BEFORE the shake (the RouteRefused for an unknown domain moves ahead of the shake, same message). 'preferred' means exactly today's route.py:272: the model name is in the domain row's prefers list.",
-      "by": "CC 2026-09-18, measured; unobjected",
-      "step": "D3",
-      "source": "rehearsal"
-    },
-    {
-      "n": 9,
-      "text": "phase_of detection, literally (cairn/tools/import_sieve/sieve.py:85-99): POSTPROCESS_PARAMS stays {'stamps','scores','gradation','prior_stamps'}; a new PREPROCESS_PARAMS = frozenset({'subjects'}) is added; _local_phase: params & POSTPROCESS_PARAMS -> 2; params & PREPROCESS_PARAMS -> 0; params non-empty -> 1; no params -> 0 (today's rule, kept). Names only, never annotations — a parameter NAME is what the source reads. Proof tooth in cairn/tools/import_sieve/proofs/test_import_sieve.py beside test_phase_classifies_by_what_the_sieve_reads: def pre(subjects): -> 0, def rec(row, comp_dir): -> 1, def post(row, comp_dir, stamps): -> 2.",
-      "by": "CC 2026-09-18, measured; unobjected",
-      "step": "D4",
-      "source": "rehearsal"
-    },
-    {
-      "n": 10,
-      "text": "Measured 2026-09-18: green_seal_names_a_tooth is in the code at cairn/machines/build_inspector/inspector.py:3458 (77f15efd5a96 is at BUILDME:waiting, held on open-f754b9b80107; its sieve and proofs are committed — this ticket needs the code, not the crossing). The move is one signature change: def green_seal_names_a_tooth(row, comp_dir, stamps=None). stamps is OPTIONAL because falsifier (2) reseals cairn/machines/build_inspector/proofs/ UNCHANGED and test_green_seal_names_a_tooth.py calls the sieve bare with two arguments. When stamps is handed (inside a shake), the sieve reads stamps[row['dir']]['component_color'] before it walks — a KeyError there is the loud, correct failure: the record band did not stamp this component first, so the band order is broken (Law 7, never caught). The read gates nothing and changes no finding byte: the walk over validations and the _finding shape stay exactly inspector.py:3476-3501. phase_of derives 2 from the parameter name (D4), so the live inspector assembly reads postprocess >= 1 from this sieve alone.",
-      "by": "CC 2026-09-18, measured; unobjected",
-      "step": "D5",
-      "source": "rehearsal"
-    },
-    {
-      "n": 11,
-      "text": "The pin tooth is the FIRST act of the build, before route.py changes: a new proof file cairn/devices/inference_domain/machines/route/proofs/test_the_pick_is_pinned.py with one tooth per fixture in test_route.py that routes today — (load_stacks + _FIXTURE_OVERLAY, generate/qwen2.5:7b) -> 'hex'; (load_stacks + _FIXTURE_OVERLAY, embed/nomic-embed-text) -> 'hex'; (_preference_fixture(['m-dear']), no domain) -> ('p-cheap','m-cheap'); (_preference_fixture(['m-dear']), domain='particular') -> ('p-dear','m-dear'); (_preference_fixture([]), domain='general') -> ('p-cheap','m-cheap') — each asserting route()['survivors'][0] as a literal (provider, model). It is written and run green against HEAD before D3 touches route.py, committed in its own commit, and must read green unchanged after.",
-      "by": "CC 2026-09-18, measured; unobjected",
-      "step": "unlisted: measure current route.py fixture picks",
-      "source": "rehearsal"
+      "text": "D5: delete cairn/tools/base/nest.py and cairn/tools/base/probes/does_the_gradation_find_a_reader.py (its enough-condition, a second carrier, is met: route.py imports the nest, test_route.py:178). Strike item (7) nest.py, the nest import from invoke, test_nest.py from proof, and cairn.tools.base.nest from public_interface in cairn/tools/base/intention+why.json, written through bin/cairn artifact write --verb charter.",
+      "writes_to": [
+        "cairn/tools/base/nest.py",
+        "cairn/tools/base/probes/does_the_gradation_find_a_reader.py",
+        "cairn/tools/base/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/base/intention+why.json"
+      ]
     }
   ],
-  "why": "The bands were built for the inference proxy to pick the cheapest path inside the nest, and today the cheapest pick is a sort after the shake while every sieve in the system is record and postprocess holds nothing — the declaration never got its consumer (Akien: 'if it's not like that now, that's a bug')."
+  "why": "Measured 2026-11-10: the nest lives at cairn/tools/base/nest.py, where outline 16.2 says it is a shared machine under cairn/machines/ (two users, 16.2.4); BAND_NAMES at nest.py:28 names band 1 'record' where outline 16.2.3.1 says 'measure'; and shake (nest.py:73-80) loops subject-outer and calls fire(name, subject) only, so no sieve can see another subject's stamp and route's cheapest pick is a sort after the shake (route.py:293, :301). Akien 2026-09-15: 'a different kind of compare operation performed on all the available inputs. if it's not like that now, that's a bug.'",
+  "bounds": {
+    "in": [
+      "cairn/machines/nest/__init__.py",
+      "cairn/machines/nest/nest.py",
+      "cairn/machines/nest/proofs/test_nest.py",
+      "cairn/machines/nest/proofs/test_the_shake_runs_band_outer.py",
+      "cairn/tools/base/proofs/test_nest.py",
+      "cairn/tools/base/validations/test_nest.json",
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/devices/inference_domain/machines/route/route.py",
+      "cairn/machines/build_inspector/probes/does_the_denied_set_stay_put.py",
+      "cairn/devices/inference_domain/machines/route/proofs/test_route.py",
+      "cairn/tools/base/nest.py",
+      "cairn/tools/base/probes/does_the_gradation_find_a_reader.py",
+      "cairn/tools/base/intention+why.json"
+    ],
+    "out": [
+      "route's cheapest and prefers as postprocess sieves (their own ticket, inference_domain)",
+      "the inspector's teeth sieve as postprocess (its own ticket, build_inspector)",
+      "import_sieve.phase_of (already derives postprocess from a stamps parameter, sieve.py:84)",
+      "the inference_domain -> inferenceproxy rename (ticket ea19fc079c0b)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "nest at cairn/tools/base/nest.py; BAND_NAMES band 1 'record' (nest.py:28); shake subject-outer calling fire(name, subject) (nest.py:73-80); importers inspector.py:80 and route.py:42; route's cheapest sort at route.py:293 and prefers reorder at :301",
+      "how": "grep -rn 'tools.base.nest\\|base_nest\\|BAND_NAMES' --include=*.py cairn bin; sed -n 40,90p cairn/tools/base/nest.py"
+    }
+  ]
 }
