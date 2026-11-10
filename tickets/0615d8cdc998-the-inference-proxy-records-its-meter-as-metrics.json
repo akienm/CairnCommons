@@ -1,0 +1,79 @@
+{
+  "id": "0615d8cdc998",
+  "title": "the inference proxy records its meter as metrics",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "Every inference call records its spent, saved and latency as metrics through cairn.tools.metric into the inference proxy's own recorder, under the call as subject, with the three names declared in its charter for the yield report (outline 11.4.4.2).",
+  "why": "Akien 2026-11-09, answering Q#78: \"inference tickets are only for debugging, so we can't use that as a metric\"; outline 11.4.4.2 says each call records its spent, saved and latency rows under the call as subject. Measured 2026-11-10: cairn/devices/inference_domain/domain.py records no metric (grep -n metric finds none) and cairn/devices/inference_domain/intention+why.json declares no metrics.",
+  "traces_to": "Telos 1; Law 3; outline 11.4.4.2 and 17.27.",
+  "how": "One recording function in domain.py called from resolve's _close; the charter's metrics key; a red-first proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a miss records three rows under the call's task ticket id: inference.spent = the resolver's cost, inference.saved = 0, inference.latency = the ticket's elapsed_ms, source inference_domain, units tokens, tokens, ms"
+      },
+      {
+        "n": 2,
+        "claim": "a hit records inference.saved = the stored cost and inference.spent = 0, a refused call records spent 0 and saved 0 with its latency, and no two calls share a subject"
+      },
+      {
+        "n": 3,
+        "claim": "the three names are declared in the device's charter with a consumer naming the yield report, and the records land under the trail's roots, never the live tree"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/inference_domain/domain.py. (a) After `from cairn.tools.base.diagnostic import DiagnosticBase` add `from cairn.tools.metric import metric as _metric`. (b) Just before `def _write_task_ticket`, a comment block citing ticket 0615d8cdc998 and outline 11.4.4.2 (Akien 2026-11-09, Q#78), then: METRIC_SOURCE = \"inference_domain\"; SPENT, SAVED, LATENCY = \"inference.spent\", \"inference.saved\", \"inference.latency\"; _CHARTER = _HERE.parent / \"intention+why.json\"; def metrics_holder(roots=None) -> Path: table = roots if roots is not None else getattr(_trail, '_diagnostic_roots', None); return address.instance_path('inference_domain', 0, table); and def _record_meter(verdict, cost, *, subject, started, finished, elapsed_ms) -> None: inside one try, meter = _metric.Metric(metrics_holder(), _CHARTER, source=METRIC_SOURCE); paid = float(cost or 0); record three rows, each with subject, start=started, end=finished, info={'verdict': verdict}: SPENT = paid if verdict == 'miss' else 0.0, SAVED = paid if verdict == 'hit' else 0.0, LATENCY = float(elapsed_ms); except Exception prints 'inference_domain: a call went UNMETERED (...); the answer itself follows' to stderr and returns. (c) In resolve's inner _close: after `finished = datetime.now(timezone.utc)` compute elapsed_ms = round((time.perf_counter() - tick) * 1000, 3) and `path = path or _ticket_path(ticket)`; the timings dict uses that elapsed_ms; after ticket.update, call _record_meter(verdict, cost, subject=path.stem, started=started.isoformat(), finished=finished.isoformat(), elapsed_ms=elapsed_ms); then the existing try that writes the ticket at path. Nothing else in domain.py changes: the inference_calls rows, the trail, yield_report and read_ticket stand.",
+      "writes_to": [
+        "cairn/devices/inference_domain/domain.py"
+      ],
+      "reads": [
+        "cairn/devices/inference_domain/domain.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/inference_domain/intention+why.json gains one top-level key, \"metrics\", exactly: {\"inference.spent\": {\"consumer\": \"the yield report (outline 11.4.4.2): tokens spent against tokens saved, the meter for Telos 1\", \"unit\": \"tokens\"}, \"inference.saved\": {\"consumer\": \"the yield report (outline 11.4.4.2): tokens spent against tokens saved, the meter for Telos 1\", \"unit\": \"tokens\"}, \"inference.latency\": {\"consumer\": \"the yield report (outline 11.4.4.2): tokens spent against tokens saved, the meter for Telos 1\", \"unit\": \"ms\"}}. Every other key stands unchanged. Written as the whole charter (json, indent 2, a trailing newline) to a scratch file, then through the door: bin/cairn artifact write cairn/devices/inference_domain/intention+why.json --verb cast --why 'ticket 0615d8cdc998: the proxy's meter is metrics (outline 11.4.4.2, 17.27.4)' --from <that scratch file>. The metric tool refuses an undeclared name (cairn/tools/metric/metric.py, Metric.record), so D1 records nothing until D2 stands.",
+      "writes_to": [
+        "cairn/devices/inference_domain/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/inference_domain/intention+why.json",
+        "cairn/tools/metric/metric.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/inference_domain/proofs/test_the_proxy_records_its_meter_as_metrics.py, red-first, one tooth per clause, PROVES 0615d8cdc998 1-3. It resolves through domain.resolve with a fake resolver over domain.scratch_cache, with domain.set_diagnostic_roots pointing the instance root at a scratch dir, and reads the rows back off disk with metric.recorder(<scratch>/devices/inference_domain/0).read().",
+      "writes_to": [
+        "cairn/devices/inference_domain/proofs/test_the_proxy_records_its_meter_as_metrics.py"
+      ],
+      "reads": [
+        "cairn/devices/inference_domain/domain.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/inference_domain/domain.py",
+      "cairn/devices/inference_domain/intention+why.json",
+      "cairn/devices/inference_domain/proofs/test_the_proxy_records_its_meter_as_metrics.py"
+    ],
+    "out": [
+      "the inference_calls rows and yield_report (ticket 98ab0e9db57f)",
+      "the cairn device's metrics table",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "cairn/devices/inference_domain/domain.py records no metric; cairn/devices/inference_domain/intention+why.json has no metrics key",
+      "how": "grep -n metric cairn/devices/inference_domain/domain.py; python3 -c json.load over cairn/devices/inference_domain/intention+why.json"
+    }
+  ]
+}
