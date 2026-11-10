@@ -1,0 +1,65 @@
+{
+  "id": "d494ff4ae955",
+  "title": "db_domain's store creates an owned index",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "intention": "db_domain's store gains add_owned_index(table, owner, name, columns): the owner of a table it created adds a named btree index over named columns, idempotently, and anyone else is refused before the wire.",
+  "why": "Measured 2026-11-10: cairn/devices/db_domain/tools/client/store.py defines create_owned_table and add_owned_constraint and no index function; outline 17.27.2 says the metrics table is indexed on name and source by time, and every caller reaches the database only through this module.",
+  "traces_to": "Law 6; outline 17.27.2.",
+  "how": "add_owned_index beside add_owned_constraint, same gate, identifiers only, CREATE INDEX IF NOT EXISTS; a red-first proof over a scratch table.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the owner adds an index over named columns; pg_indexes shows it on those columns in order, and a second identical call is a no-op that leaves exactly one such index"
+      },
+      {
+        "n": 2,
+        "claim": "a non-owner, and any caller on a table db_domain never created, is refused with OwnershipError and no index lands"
+      },
+      {
+        "n": 3,
+        "claim": "a column is quoted as an identifier: a column string carrying SQL raises, creates no index, and the table still stands; an empty column list is refused"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/devices/db_domain/tools/client/store.py, after add_owned_constraint, add def add_owned_index(table: str, owner: str, name: str, columns, *, conn=None) -> None. It gates exactly as add_owned_constraint does (owner_of None -> OwnershipError naming no owner; a different owner -> OwnershipError naming Law 6), raises ValueError on a blank name, an empty columns list or a blank column, then executes sql.SQL('CREATE INDEX IF NOT EXISTS {iname} ON {tbl} ({cols})') with iname=sql.Identifier(name), tbl=sql.Identifier(table), cols=sql.SQL(', ').join(sql.Identifier(c) for c in columns). Takes names, never a statement. The connection pattern (own_conn = conn or connect(), close if opened) matches add_owned_constraint.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof cairn/devices/db_domain/proofs/test_an_owned_index_is_owner_gated.py, red-first, one tooth per clause, PROVES d494ff4ae955 1, 2 and 3. Every table it uses rides store.scratch('tester', 'idx', {'name': 'text', 'source': 'text', 'at': 'timestamptz'}). Tooth 1 calls add_owned_index(t, 'tester', t + '_name_at', ['name', 'at']) twice and reads pg_indexes through store.query (schemaname 'public', tablename t): that indexname present, its indexdef naming (name, at), and exactly one index on (name, at). Tooth 2: owner 'impostor' and a never-created table name each raise OwnershipError, and pg_indexes has no row for the impostor's index name. Tooth 3: columns ['name) ; DROP TABLE ' + t + ' ; --'] raises (Postgres: column does not exist), no index with that name lands, store.owner_of(t) is still 'tester' and store.read(t) still answers; columns [] raises ValueError. Before the build every tooth reds on AttributeError.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_an_owned_index_is_owner_gated.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_db_domain.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/proofs/test_an_owned_index_is_owner_gated.py"
+    ],
+    "out": [
+      "the metrics table and the metric tool, each its own ticket",
+      "every other store function (unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "no index function in the store",
+      "how": "grep -n '^def ' cairn/devices/db_domain/tools/client/store.py"
+    }
+  ]
+}
