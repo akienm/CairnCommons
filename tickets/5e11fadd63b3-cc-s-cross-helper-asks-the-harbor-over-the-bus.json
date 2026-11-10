@@ -1,0 +1,83 @@
+{
+  "id": "5e11fadd63b3",
+  "title": "CC's cross helper asks the harbor over the bus",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "cairn/devices/cc/scripts/cross.py asks the harbor to clear a boat with one bus request to its clear verb, sent as CC, instead of importing cairn.devices.cairn.machines.harbor_master.clearance.",
+  "why": "Measured 2026-11-09 by encapsulation_breaches in cairn/machines/build_inspector/inspector.py (ticket 124c0312c2d8, outline 17.13.1): cairn/devices/cc/scripts/cross.py:5 imports the harbor master's clearance module, one of 76 cross-device reaches. RULE 1: a device is reached through the bus.",
+  "traces_to": "RULE 1 (a device's public interface is the bus), outline 17.13.1, Law 6 (the actor is the envelope's sender).",
+  "how": "Make cross.py a function cross(ticket_id, target, why, proven, *, bus, tickets_dir, write) with a __main__ block; it reads the ticket, asks reach('harbor_master').request(sender='CC', to='harbor_master', verb='clear', ...) and writes the new cursor back. A red-first proof drives it with a recording bus and writer.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/devices/cc/scripts/cross.py imports nothing under cairn.devices"
+      },
+      {
+        "n": 2,
+        "claim": "driven with a recording bus, a crossing is exactly one request to harbor_master, verb clear, sender CC, its body carrying the ticket's workflow_and_state, the target, the boat id, the named proofs and the owning component's history.json and state.json paths, and no actor"
+      },
+      {
+        "n": 3,
+        "claim": "a refusal reply makes cross exit 1 with the harbor's reason and write nothing"
+      },
+      {
+        "n": 4,
+        "claim": "an accepted reply whose workflow differs from the ticket's is printed and written back once through the writer; one equal to the ticket's is not written"
+      },
+      {
+        "n": 5,
+        "claim": "encapsulation_breaches over the live tree reads no row whose file is cairn/devices/cc/scripts/cross.py"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/cc/scripts/cross.py becomes def cross(ticket_id, target, why, proven, *, bus=None, tickets_dir=None, write=None) -> int plus an if __name__ == '__main__' block that calls sys.exit(cross(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4:] or None)). Defaults: bus = cairn.tools.bus_client.reach('harbor_master') (bus_client is a tool, cairn/tools/bus_client/bus_client.py), tickets_dir = cairn.tools.base.ticket_file._TICKETS, write = cairn.tools.base.ticket_file.rewrite_ticket. It reads the plan with ticket_file.plans_of(ticket_id, tickets_dir)[0] and ticket_file.read_ticket, resolves dev with cairn.tools.base.cross.charter_dir(t['owning_intention'], transitions._REPO_ROOT, Path(tickets_dir).parent) as today, and calls bus.request(sender='CC', to='harbor_master', verb='clear', why=why, timeout=900.0, body={'workflow': t['workflow_and_state'], 'target': target, 'boat_id': ticket_id, 'proven_by': proven, 'history_path': str(dev/'history.json'), 'state_path': str(dev/'state.json'), 'journal_extra': {'ticket': ticket_id, 'why': why}}). The answer is reply.get('body') or {}; accepted not True: print the reason to stderr, return 1. Accepted: print answer['workflow']; re-read the ticket and, if its workflow_and_state differs, set it and call write(plan, doc, verb='cast', why=why) and print 'ticket written'; return 0. The harbor's bus face is cairn/devices/cairn/machines/harbor_master/device.py _handle_clear.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/cross.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/cross.py",
+        "cairn/devices/cairn/machines/harbor_master/device.py",
+        "cairn/tools/bus_client/bus_client.py",
+        "cairn/tools/base/ticket_file.py",
+        "cairn/tools/base/cross.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py, red-first, one tooth per clause, PROVES 5e11fadd63b3 1 to 5. It loads cairn/devices/cc/scripts/cross.py by path with importlib.util.spec_from_file_location, writes a ticket plan (owning_intention cairn/devices/cc/intention+why.json, a workflow_and_state) into a cairn.tools.scratch.scratch_dir tickets folder, and passes a recording bus whose request returns a canned reply and a recording writer. Tooth 1 parses cross.py with ast and finds no import under cairn.devices; tooth 5 calls cairn.machines.build_inspector.inspector.encapsulation_breaches on the repo root.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/cross.py",
+      "cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py"
+    ],
+    "out": [
+      "cairn/devices/cc/scripts/chart_ticket.py and verdict_ticket.py (their own tickets, after codemother publishes verbs)",
+      "the harbor's clear verb and clearance (unchanged)",
+      "every other cross-device reach"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-09",
+      "saw": "cairn/devices/cc/scripts/cross.py:5 imports cairn.devices.cairn.machines.harbor_master.clearance, an into_device row",
+      "how": "encapsulation_breaches('.') in cairn/machines/build_inspector/inspector.py after ticket 124c0312c2d8"
+    },
+    {
+      "when": "2026-11-09",
+      "saw": "reach('harbor_master') answers in 0.04 s and the roster lists harbor_master; the PROVED crossing of 124c0312c2d8 took about 30 s",
+      "how": "a python3 call of cairn.tools.bus_client.reach and the commit times of the PROVED crossing"
+    }
+  ]
+}
