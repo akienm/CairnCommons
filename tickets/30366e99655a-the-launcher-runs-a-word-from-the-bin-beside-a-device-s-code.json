@@ -1,0 +1,80 @@
+{
+  "id": "30366e99655a",
+  "title": "the launcher runs a word from the bin beside a device's code",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "The cairn launcher runs a word from the bin/ beside a device's code: `cairn <device> <word>` runs cairn/devices/<device>/bin/<word> when the instance bin has no such script, before the word goes onto the bus, and `cairn <word>` runs cairn/devices/cairn/bin/<word>, the cairn device's top-level shortcuts, warning first when that word also names a device.",
+  "why": "Measured 2026-11-10: bin/cairn dispatches only ~/.cairn/devices/<device>/<n>/bin/<word>, then the bus mouth, then bin/cmd; cairn/devices/cairn/bin/ does not exist and no top-level word reaches the cairn device, so `cairn restart` answers 'no such device or command'. Outline 5.4.3.3 and Akien's answer open-8c01545a26d8 put top-level shortcuts at cairn/devices/cairn/bin/, beside the code they serve.",
+  "traces_to": "Outline 5.4.3.3 (any device or machine may have a bin/ beside its code; `cairn foo` whose first word is not a device means `cairn cairn foo`; top-level shortcuts are the cairn device's bin/), 5.4.3.5 (x hides y), Akien's answer open-8c01545a26d8; RULE 1 (shortcuts live beside what they serve).",
+  "how": "In bin/cairn, name the class devices root once (CAIRN_CLASS_ROOT, default $HERE/../cairn/devices). After the instance is split off the token and before device dispatch, an undotted token naming an executable in the cairn device's bin/ runs it (warning 'x hides the x device' on stderr when a device of that name exists). Just before the device-bin branch, a word naming no script in the instance bin but an executable in the device's class bin/ runs that. Red-first proof over a scratch class root and a scratch instance root, the bus mouth stubbed.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a scratch class root whose cairn/bin holds an executable `greet`, `cairn greet a b` runs it with argv a b and its exit code is the command's"
+      },
+      {
+        "n": 2,
+        "claim": "`cairn cairn greet a` runs the same script"
+      },
+      {
+        "n": 3,
+        "claim": "with a scratch device whose class bin/ holds `wave` and whose instance bin lacks it, `cairn <device> wave z` runs the class script, and a word the instance bin holds still runs the instance script"
+      },
+      {
+        "n": 4,
+        "claim": "a word in neither bin still goes to the bus mouth with argv ['<device>', '<word>']"
+      },
+      {
+        "n": 5,
+        "claim": "a cairn/bin script named like a device prints a line containing 'hides' to stderr and runs the script, not the device"
+      },
+      {
+        "n": 6,
+        "claim": "the standing launcher proofs pass unchanged: bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py, bin/proofs/test_cairn_command.py, bin/proofs/test_cairn_instance_address.py"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: bin/cairn: beside INSTANCE_ROOT and LEGACY_CMD_DIR (top of the file), CLASS_ROOT=\"${CAIRN_CLASS_ROOT:-$HERE/../cairn/devices}\". (a) After the non-numeric-instance refusal and before `device_bin=`: when typed == device (undotted), device != cairn, and \"$CLASS_ROOT/cairn/bin/$device\" is a file and executable: if -d \"$INSTANCE_ROOT/$device\" or -d \"$CLASS_ROOT/$device\", echo \"cairn: $device hides the $device device (cairn/devices/cairn/bin/$device runs)\" >&2; then exec that script with \"$@\". (b) When device == cairn and $1 names an executable \"$CLASS_ROOT/cairn/bin/${1,,}\" and the instance bin has no such executable, shift and exec it (this is (c) for the cairn device; (c) covers it if written generally). (c) Just before `if [ -d \"$device_bin\" ]`: when instance == 0, $# >= 1, $1 does not start with '-', \"$device_bin/${1,,}\" is not executable and \"$CLASS_ROOT/$device/bin/${1,,}\" is a file and executable, shift and exec it with the rest. A header comment cites outline 5.4.3.3, 5.4.3.5 and open-8c01545a26d8.",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "bin/cairn",
+        "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py, red-first, one tooth per clause, PROVES {'30366e99655a': {'1': 'a_top_level_word_runs_the_cairn_bin', '2': 'the_long_form_runs_the_same_script', '3': 'a_device_word_runs_its_class_bin', '4': 'a_word_in_no_bin_goes_to_the_bus', '5': 'a_shortcut_hides_a_device_and_says_so', '6': 'the_standing_launcher_proofs_pass'}}}}. Fixtures as bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py builds them: a scratch instance root from cairn.tools.scratch.scratch.scratch_dir, a scratch class root beside it (cairn/bin/greet, fxlw/bin/wave, fxlw/bin/fxlw-hidden; instance fxlw/0/bin/fxlw self launcher and fxlw/0/bin/hello), bin/cairn run as a subprocess with CAIRN_INSTANCE_ROOT, CAIRN_CLASS_ROOT and CAIRN_BUS_MOUTH (a stub that records its argv) set; for clause 5 the scratch class root's cairn/bin holds an executable named fxlw. Tooth 6 runs the three proofs as subprocesses and asserts exit 0.",
+      "writes_to": [
+        "bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py"
+      ],
+      "reads": [
+        "bin/cairn",
+        "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn",
+      "bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py"
+    ],
+    "out": [
+      "help listing a class bin/ (cairn.tools.base.shim.bin_shortcuts reads the instance bin only): a separate ticket on cairn/tools/base",
+      "the machine walk of 5.4.3.2 (`cairn foo bar baz` stepping into machine bar)",
+      "moving existing <device>/0/bin folders",
+      "cairn/devices/cairn/bin/ contents (ticket 3264ef726e35)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "the launcher reads only the instance bin, then the bus mouth, then bin/cmd; no bin/ beside any device's code is read",
+      "how": "bin/cairn restart (exit 127, 'no such device or command: restart'); ls cairn/devices/cairn/bin (absent); sed -n 275,330p bin/cairn"
+    }
+  ]
+}
