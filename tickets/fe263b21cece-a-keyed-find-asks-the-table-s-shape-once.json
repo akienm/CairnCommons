@@ -1,0 +1,83 @@
+{
+  "id": "fe263b21cece",
+  "title": "a keyed find asks the table's shape once",
+  "owning_intention": "cairn/devices/librarian/tools/trees/intention+why.json",
+  "intention": "A keyed find asks the table's shape once: trees._is_keyed remembers, for the process, each table it found keyed (a leaf's shape is fixed when ensure_trees makes it), and scratch_leaf forgets its table as it drops, so find over a keyed leaf costs the owner check and the join, not an information_schema query per call.",
+  "why": "Measured 2026-11-10: trees.find over a keyed leaf took 2.0 ms median against 0.28 ms for a table read; owner_of 0.42 ms, _is_keyed 1.69 ms, the join 0.18 ms. With _is_keyed answered from memory find took 0.256 ms against a 0.101 ms keyed read.",
+  "traces_to": "Outline 4.3.1.6, 11.4.4; Law 1.",
+  "how": "A positive-only memo in _is_keyed, evicted by scratch_leaf; a red-first proof over scratch leaves.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "fifty finds over one keyed leaf ask the catalog for its columns at most once"
+      },
+      {
+        "n": 2,
+        "claim": "find's median over a 300-node keyed leaf is at most 4x a store.read of the same leaf by key"
+      },
+      {
+        "n": 3,
+        "claim": "a name a scratch keyed leaf held, reused by a vectored scratch leaf after the first drops, is refused by find with WalkRefused"
+      },
+      {
+        "n": 4,
+        "claim": "the charter beside trees.py says find remembers a keyed table's shape"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/librarian/tools/trees/trees.py: a module-level set _KEYED: set[str] = set(), beside _is_keyed. _is_keyed(table, *, conn) returns True at once when table is in _KEYED; otherwise it runs its information_schema query as now, adds table to _KEYED when the answer is True, and returns the answer. A False answer is never remembered. scratch_leaf wraps its yield in try/finally and, in the finally, runs _KEYED.discard(table) before the store's scratch drops the table. Nothing else in the module changes.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the charter cairn/devices/librarian/tools/trees/intention+why.json, through the artifact door (cairn artifact write --verb cast --from a scratch copy): its 'what' gains, appended after one space, exactly this sentence: \"find remembers a keyed table's shape for the process, so it asks the catalog once per table rather than on every call; a scratch leaf takes that memory with it when it drops.\" Every other field stands.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/librarian/tools/trees/proofs/test_a_keyed_find_asks_the_tables_shape_once.py, red-first, one tooth per clause, PROVES fe263b21cece 1-4. Every leaf is a scratch_leaf with its nodes forgotten before it drops. Tooth 1 wraps store.query to count SQL naming information_schema or pg_attribute over 50 finds; tooth 2 compares medians of 200 calls on one connection; tooth 3 patches store.scratch_name to one fixed name, opens a keyed leaf, finds in it, lets it drop, opens a vectored leaf under the same name, and expects WalkRefused from find.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/proofs/test_a_keyed_find_asks_the_tables_shape_once.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/librarian/tools/trees/trees.py",
+      "cairn/devices/librarian/tools/trees/intention+why.json",
+      "cairn/devices/librarian/tools/trees/proofs/test_a_keyed_find_asks_the_tables_shape_once.py"
+    ],
+    "out": [
+      "db_domain's store and owner_of",
+      "inference_domain (98ab0e9db57f)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "find 2.002 ms median: owner_of 0.424, _is_keyed 1.693, join 0.178; memoized find 0.256 ms against a 0.101 ms keyed read",
+      "how": "median of 100-200 timed calls over a 300-node scratch keyed leaf on one connection"
+    }
+  ]
+}
