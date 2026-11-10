@@ -1,0 +1,77 @@
+{
+  "id": "ba777080011b",
+  "title": "help lists the shortcuts in the bin beside a device's code",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "The base shim's bin_shortcuts lists a device's shortcuts from both bins the launcher runs: the instance bin and the bin/ beside the device's code (cairn/devices/<device>/bin/), the instance bin's entry winning a shared name, and a Python script's about is its docstring's first line when no comment line comes first.",
+  "why": "Measured 2026-11-10: `bin/cairn help` shows [cairn] as `cairn` alone, though `cairn start`, `cairn stop` and `cairn restart` run from cairn/devices/cairn/bin/ (30366e99655a, 3264ef726e35); bin_shortcuts reads only the instance bin, so help hides every shortcut that lives beside the code, where 5.4.3.3 puts them.",
+  "traces_to": "Outline 5.4.3.3 (any device or machine may have a bin/ beside its code; that folder IS its list of shortcuts) and 2.4.11.1 (help answers as list does, readable cold); Law 1 (a shortcut that help does not list is re-derived by reading folders).",
+  "how": "In cairn/tools/base/shim.py: bin_shortcuts gains class_root (default CAIRN_CLASS_ROOT, else the devices folder beside cairn/tools, i.e. Path(__file__).resolve().parents[2] / 'devices') and returns the instance bin's executables plus the class bin's whose name the instance bin lacks, sorted by name, the row shape unchanged. _first_comment also takes the text after an opening triple quote. cold_list and the shim's live help already call bin_shortcuts, so both list the class bin.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a scratch class root whose fxhb/bin holds an executable Python `wave` whose docstring opens `wave — waves the fixture` and a scratch instance root whose fxhb/0/bin holds an executable `frob` with comment `frob — turns the crank`, bin_shortcuts('fxhb', instance_root, 0, class_root) returns [frob, wave] in that order, each with that about"
+      },
+      {
+        "n": 2,
+        "claim": "a name both bins hold is listed once, with the instance bin's about"
+      },
+      {
+        "n": 3,
+        "claim": "a non-executable file in the class bin is absent, and a device with neither bin returns []"
+      },
+      {
+        "n": 4,
+        "claim": "with class_root omitted and CAIRN_CLASS_ROOT unset, bin_shortcuts('cairn', <a scratch instance root with no cairn bin>) lists restart, start and stop, with abouts beginning `cairn restart —`, `cairn start —` and `cairn stop —`"
+      },
+      {
+        "n": 5,
+        "claim": "cold_list('fxhb', instance_root) under CAIRN_CLASS_ROOT=<the clause-1 class root> carries frob and wave in its data's shortcuts and in its text"
+      },
+      {
+        "n": 6,
+        "claim": "the standing proofs pass unchanged: cairn/tools/base/proofs/test_help_answers_as_list_with_shortcuts.py, cairn/tools/base/proofs/test_root_verbs.py"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/base/shim.py: bin_shortcuts(device_id, instance_root=None, instance=0, class_root=None). class_root resolves as class_root, else os.environ['CAIRN_CLASS_ROOT'] when set, else Path(__file__).resolve().parents[2] / 'devices'. Rows: each executable file of the instance bin, then each executable file of class_root/<device_id>/bin whose name no instance row has; sorted by name; shape {'name', 'about'} unchanged. _first_comment: a stripped line that starts with '\"\"\"' or \"'''\" returns the text after those three characters with any closing triple quote removed and stripped, when non-empty; # comments keep their rule; whichever comes first in the file wins. The docstring of bin_shortcuts cites outline 5.4.3.3 and this ticket.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof cairn/tools/base/proofs/test_help_lists_the_bin_beside_the_code.py, red-first, one tooth per clause, PROVES {'ba777080011b': {'1': 'both_bins_are_listed_in_order', '2': 'the_instance_bin_wins_a_shared_name', '3': 'non_executables_and_empty_devices_list_nothing', '4': 'the_default_class_root_is_the_repos_devices', '5': 'cold_list_carries_the_class_bin', '6': 'the_standing_help_proofs_pass'}}. Worlds from cairn.tools.scratch.scratch.scratch_dir as cairn/tools/base/proofs/test_help_answers_as_list_with_shortcuts.py builds them; tooth 4 pops CAIRN_CLASS_ROOT in a subprocess; tooth 6 runs the two proofs as subprocesses and asserts exit 0.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_help_lists_the_bin_beside_the_code.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_help_answers_as_list_with_shortcuts.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/proofs/test_help_lists_the_bin_beside_the_code.py",
+      "cairn/tools/base/shim.py"
+    ],
+    "out": [
+      "bin/cairn's _help (its instance-bin guard and device roster): its own ticket on bin",
+      "the shortcuts' scripts",
+      "the machine walk of 5.4.3.2"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "help lists [cairn] as `cairn` alone; bin_shortcuts reads only the instance bin",
+      "how": "bin/cairn help | sed -n '/^\\[cairn\\]/,/^$/p'; read cairn/tools/base/shim.py bin_shortcuts"
+    }
+  ]
+}
