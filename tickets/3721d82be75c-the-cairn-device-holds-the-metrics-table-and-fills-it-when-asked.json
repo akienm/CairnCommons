@@ -1,0 +1,99 @@
+{
+  "id": "3721d82be75c",
+  "title": "the cairn device holds the metrics table and fills it when asked",
+  "owning_intention": "cairn/devices/cairn/intention+why.json",
+  "intention": "The cairn device holds the one metrics table (outline 17.27.2, 5.3.6): cairn/devices/cairn/metrics.py creates it through db_domain's store, owned by 'cairn', with metric.COLUMNS and indexes on (name, at) and (source, at); its metrics verb first moves what waits in every holder's recorder into the table (17.27.3), then answers the rows matching name, source and since; rows are never deleted (17.27.5).",
+  "why": "Measured 2026-11-10: no metrics table exists; ticket 75de6bafbd95 records metrics into each holder's recorder and hands rows to whoever asks, and outline 5.3.6 gives the table to the cairn device until Recovery exists.",
+  "traces_to": "Outline 17.27, 5.3.6; Laws 3 and 6.",
+  "how": "A module and a verb on the cairn device; a red-first proof over scratch tables and a temp instance root.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "ensure_table gives the table every metric.COLUMNS column and exactly one index on (name, at) and one on (source, at), owned by 'cairn'; a second call changes nothing"
+      },
+      {
+        "n": 2,
+        "claim": "records waiting under two holders stay out of the table until a report is asked for; the report moves every one in with its name, source and value, and empties the recorders"
+      },
+      {
+        "n": 3,
+        "claim": "a report filters by name and by source"
+      },
+      {
+        "n": 4,
+        "claim": "a second report keeps the first report's rows and collects nothing new"
+      },
+      {
+        "n": 5,
+        "claim": "the cairn device's metrics verb answers a json-serialisable report filtered by the body's name"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/cairn/metrics.py, copied whole from the chart's module: TABLE='metrics'; OWNER='cairn'; INDEXES={'name_at': ['name','at'], 'source_at': ['source','at']}; ensure_table(table=TABLE) calls store.create_owned_table(table, OWNER, metric.COLUMNS) then store.add_owned_index(table, OWNER, f'{table}_{suffix}', cols) for each index; holders(roots=None) returns every resolve('instance/devices', roots)/*/* directory holding tools/data_recorder/metrics/records.jsonl; collect(table=TABLE, roots=None) calls ensure_table, opens one store.connect(), and sums metric.take(holder, sink) over holders, the sink calling store.write(table, OWNER, row, conn=conn) per row, closing the connection in a finally; report(table=TABLE, *, name=None, source=None, since=None, roots=None) collects, then store.read(table, where=..., params=...) with 'name = %s', 'source = %s', 'at >= %s' joined by AND for each given filter and ' ORDER BY at' appended (where='true ORDER BY at' when none), returning {'collected': n, 'rows': [...]} with every datetime value turned to isoformat(). It deletes nothing. Imports: datetime, pathlib, the db_domain client store, cairn.tools.base.address.resolve, cairn.tools.metric.metric.",
+      "writes_to": [
+        "cairn/devices/cairn/metrics.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/tools/metric/metric.py",
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/cairn/device.py: CairnDevice.__init__ gains a keyword metrics_table=None, kept as self._metrics_table; declared_verbs adds 'metrics': self._handle_metrics; _handle_metrics(envelope) imports cairn.devices.cairn.metrics lazily, reads body = envelope.get('body') or {}, and returns metrics.report(self._metrics_table or metrics.TABLE, name=body.get('name'), source=body.get('source'), since=body.get('since'), roots=self._roots). Nothing else in device.py changes.",
+      "writes_to": [
+        "cairn/devices/cairn/device.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/device.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the charter cairn/devices/cairn/intention+why.json, through the artifact door (cairn artifact write --verb cast --from a scratch copy): its 'what' gains, appended after one space, exactly this sentence: \"It holds the one metrics table (outline 17.27, 5.3.6) until Recovery exists: cairn/devices/cairn/metrics.py creates it through db_domain's store, and its metrics verb fills it from every holder's recorder when a consumer asks, then answers the rows.\" Every other field stands as it is.",
+      "writes_to": [
+        "cairn/devices/cairn/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/cairn/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof cairn/devices/cairn/proofs/test_the_metrics_table_fills_when_asked.py, red-first, one tooth per clause, PROVES 3721d82be75c 1-5. Its world is a temp roots dict (repo, commons, instance) with two holders, instance/devices/inference_domain/0 and instance/devices/librarian/0, recording through cairn.tools.metric against a temp charter declaring 'spent' and 'latency'. Tooth 1 uses a store.scratch_name('mtab') table dropped with store.drop_table in a finally; teeth 2-5 use store.scratch('cairn', 'mtab', metric.COLUMNS). The live 'metrics' table is never touched.",
+      "writes_to": [
+        "cairn/devices/cairn/proofs/test_the_metrics_table_fills_when_asked.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/metrics.py",
+      "cairn/devices/cairn/device.py",
+      "cairn/devices/cairn/intention+why.json",
+      "cairn/devices/cairn/proofs/test_the_metrics_table_fills_when_asked.py"
+    ],
+    "out": [
+      "the inference proxy's meter (98ab0e9db57f)",
+      "the yield report (outline 11.4.4.2)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "no metrics table and no metrics verb",
+      "how": "grep -n metrics cairn/devices/cairn/device.py; ls cairn/devices/cairn/"
+    }
+  ]
+}
