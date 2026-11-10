@@ -1,0 +1,89 @@
+{
+  "id": "eb16737ff959",
+  "title": "dataref reads a db: address through db_domain's client",
+  "owning_intention": "cairn/tools/dataref/intention+why.json",
+  "intention": "A dataref reads a db: address: db:///cairn/<table>/<primary-key value>#<column> gives that row's column as text, through db_domain's published client, never a second dial to 5432, and caching nothing.",
+  "why": "Measured 2026-11-10: cairn/tools/dataref/dataref.py line 56 refuses every db: address ('db: is read through db_domain's own client (outline 17.28.3), which is not built yet'), so secret:db:///cairn/t/row#token, the outline's own example in 17.28.1.4, raises. The client it names exists and reads.",
+  "traces_to": "Outline 17.28.1.1 (db:///cairn/table/row is the database), 17.28.1.4 (secret:db:///cairn/t/row#token), 17.28.3 (a db: address is read through db_domain's own client, never a second dial to 5432), 17.28.4 (a db Dataref does not cache until a measured need asks), 17.28.5 (a miss is loud). Ticket 060d2146618c built the file roots and named db: next. RULE 1, Law 7.",
+  "how": "In cairn/tools/dataref/dataref.py, a db: address parses to (database, table, key, item); the read finds the table's one primary-key column in information_schema and selects the row through cairn/devices/db_domain/tools/client/store.py's read(), every time (17.28.4: a db Dataref does not cache). #column gives that column as text; #column/a/b walks into a json column as into a json file; no # gives the whole row as json. Secret wraps it as it wraps a file. Every miss is a DatarefMiss naming the address.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "db:///cairn/<table>/<key>#<column> gives that row's column as text, a text column as written and an integer as its digits; with no # it gives the whole row as a json object"
+      },
+      {
+        "n": 2,
+        "claim": "#<column>/a/b walks into a json column as into a json file, a list index included"
+      },
+      {
+        "n": 3,
+        "claim": "Secret('secret:db:///cairn/<table>/<key>#<column>') shows stars in str, repr and an f-string and its .secret is the value; after the row is updated, the next .secret and the next Dataref .value read the new value"
+      },
+      {
+        "n": 4,
+        "claim": "a missing row, a missing column, a missing table, a database other than cairn, a NULL column, an address with no row, and an address naming a host each raise DatarefMiss naming the address, with no value from the table in the message and no chained exception"
+      },
+      {
+        "n": 5,
+        "claim": "cairn/tools/dataref/dataref.py imports no database driver and no socket: its only way to Postgres is cairn/devices/db_domain/tools/client/store.py"
+      }
+    ],
+    "wrong_intent": "dataref reaches Postgres any way but db_domain's client"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/dataref/dataref.py: NOT_YET loses db. A db: address with no host parses its path as /<database>/<table>/<key> (each segment url-unquoted; fewer than three, or a database other than store.DB_NAME, is a miss naming the address) and its # into names. Every read (a Dataref .value, a Secret .secret) imports the store client lazily, finds the table's primary-key column with store.query over information_schema.table_constraints and key_column_usage (no table, or no single-column key, is a miss), and reads with store.read(table, where='\"<key column>\"::text = %s', params=(key,)). No row is a miss. No # gives json.dumps of the row (default=str). #<column> gives a str column as is, None as a miss, a dict or list as json.dumps, anything else as str(); further names walk the column's json the way the json file walk does. reads counts each read; nothing is cached. A connection failure is a miss naming the address, never chained. Its path attribute is None. The docstring's READ-ONLY paragraph says db: is built.",
+      "writes_to": [
+        "cairn/tools/dataref/dataref.py"
+      ],
+      "reads": [
+        "cairn/tools/dataref/dataref.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: through the artifact door, cairn/tools/dataref/intention+why.json's fields that say db: is not built say it reads through cairn.devices.db_domain.tools.client.store (ticket eb16737ff959); its proof list gains cairn/tools/dataref/proofs/test_dataref_reads_db.py.",
+      "writes_to": [
+        "cairn/tools/dataref/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/dataref/intention+why.json"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/tools/dataref/proofs/test_dataref_reads_db.py, red-first, one tooth per clause, PROVES {'eb16737ff959': {'1': ..., '5': ...}}. It mints a scratch table through store.scratch (owner dataref; columns id text primary key, token text, n integer, j jsonb, gone text), writes one row with a random token through store.write, and drops it on exit. Tooth 5 reads the module's ast.",
+      "writes_to": [
+        "cairn/tools/dataref/proofs/test_dataref_reads_db.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/tools/dataref/proofs/test_dataref.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/dataref/dataref.py",
+      "cairn/tools/dataref/intention+why.json",
+      "cairn/tools/dataref/proofs/test_dataref_reads_db.py"
+    ],
+    "out": [
+      "a db: address naming a host (17.28.1.2, over the bus)",
+      "composite primary keys",
+      "the read-count metric (17.27)",
+      "the plain-value-where-a-secret-belongs sieve (17.28.5)",
+      "any write"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "db: refuses by name; 44 tables carry a primary key, all single-column",
+      "how": "read cairn/tools/dataref/dataref.py; ran store.query over information_schema for primary keys"
+    }
+  ]
+}
