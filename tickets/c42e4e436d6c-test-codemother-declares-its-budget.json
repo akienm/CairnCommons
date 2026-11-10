@@ -1,0 +1,62 @@
+{
+  "id": "c42e4e436d6c",
+  "title": "test_codemother declares its budget",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "cairn/devices/codemother/proofs/test_codemother.py declares PROOF_TIMEOUT_S = 900, so the tester and the commit reseal run it at a budget it fits instead of the 120 s default it exceeds.",
+  "why": "Measured 2026-11-09: bin/cairn test cairn/devices/codemother/proofs/test_codemother.py TIMEOUTs at the 120 s default and is green in 169 s with --timeout 1200. The live trouble seal-red-cairn-devices-codemother-proofs-test-codemother (5x) is the reseal door's impatience, and its text names the fix: declare PROOF_TIMEOUT_S (ticket 8383a32d20c5).",
+  "traces_to": "Law 7 (a standing trouble that measures the door, not the proof), Law 3 (a proof outside its budget is never measured), ticket 8383a32d20c5.",
+  "how": "One module constant after the imports; a red-first proof reads it with ast.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/devices/codemother/proofs/test_codemother.py assigns PROOF_TIMEOUT_S at module level to an integer literal"
+      },
+      {
+        "n": 2,
+        "claim": "that integer is at least 340 (twice the measured 169 s) and at most 3600"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/devices/codemother/proofs/test_codemother.py, after line 15 (from cairn.tools.scratch.scratch import scratch_dir), add a blank line and 'PROOF_TIMEOUT_S = 900  # measured 169 s on 2026-11-09, over the 120 s default (ticket 8383a32d20c5)'. The tester reads it in cairn/devices/tester/reseal.py and cairn/devices/tester/cli.py; cairn/machines/build_inspector/proofs/test_address_sieve.py declares the same.",
+      "writes_to": [
+        "cairn/devices/codemother/proofs/test_codemother.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/proofs/test_codemother.py",
+        "cairn/devices/tester/reseal.py",
+        "cairn/machines/build_inspector/proofs/test_address_sieve.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof cairn/devices/codemother/proofs/test_codemother_declares_its_budget.py, red-first, one tooth per clause, PROVES c42e4e436d6c 1 and 2, with a __main__ runner printing PASS/FAIL per tooth. It parses cairn/devices/codemother/proofs/test_codemother.py with ast and reads the module-level assignment to PROOF_TIMEOUT_S; it imports nothing of the tester.",
+      "writes_to": [
+        "cairn/devices/codemother/proofs/test_codemother_declares_its_budget.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/proofs/test_codemother.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/proofs/test_codemother.py",
+      "cairn/devices/codemother/proofs/test_codemother_declares_its_budget.py"
+    ],
+    "out": [
+      "the RULE 1 import at test_codemother.py:1171 (its own ticket)",
+      "the tester's budget reader (unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-09",
+      "saw": "test_codemother.py TIMEOUT at the 120 s budget; green in 169 s at --timeout 1200",
+      "how": "bin/cairn test cairn/devices/codemother/proofs/test_codemother.py, then with --timeout 1200 under /usr/bin/time"
+    }
+  ]
+}
