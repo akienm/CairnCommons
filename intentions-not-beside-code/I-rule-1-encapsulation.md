@@ -61,6 +61,10 @@ could bork anything so test everything."*
 ## Pointers
 
 - Parent ticket: `CairnCommons/tickets/8e3474a6ae43-rule-1-encapsulation.json` (eight children)
-- The physics: `encapsulation_holds` in `cairn/machines/build_inspector` (ticket `56d1aff4455e`), over
-  `import_sieve.import_sites` (ticket `a907458344ba`)
+- The physics: `encapsulation_holds` in `cairn/machines/build_inspector`, over
+  `import_sieve.import_sites` (ticket `a907458344ba`). Since ticket `124c0312c2d8` (outline 17.13.1,
+  Akien 2026-11-09, Q#77) it is a device-path check: code in device `bar` may not import
+  `cairn.devices.foo` except a tool `foo` publishes (`published_by_device`); nothing is checked
+  inside one device, and `public_interface` describes without gating. It replaced the
+  `public_interface` predicate of ticket `56d1aff4455e`.
 - Supersedes: ticket `7b5c539cb58c`; the sieves `device_isolation_holds` and `machine_imports_no_device`
