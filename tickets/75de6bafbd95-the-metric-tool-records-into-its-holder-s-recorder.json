@@ -1,0 +1,84 @@
+{
+  "id": "75de6bafbd95",
+  "title": "the metric tool records into its holder's recorder",
+  "owning_intention": "cairn/tools/metric/intention+why.json",
+  "intention": "A metric tool at cairn/tools/metric/: Metric(holder_dir, charter_path, source).record(name, value, ...) writes into the holder's data recorder, refusing a name its charter does not declare with a consumer, and take(holder_dir, sink) hands what waits to a sink as rows in the one metrics table's shape.",
+  "why": "Measured 2026-11-10: no cairn/tools/metric exists; outline 17.27 defines the metric primitive, and Akien answering Q#78 made the inference proxy's spent, saved and latency metrics read by the yield report (11.4.4.2).",
+  "traces_to": "Outline 17.27; Laws 3 and 6.",
+  "how": "A tool over the data recorder; a red-first proof over a scratch holder and charter.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a declared name lands in <holder>/tools/data_recorder/metrics/ with its name, source, value, subject, info and the charter's unit, and metric.py imports no bus and no database"
+      },
+      {
+        "n": 2,
+        "claim": "an undeclared name, and one declared with a blank consumer, raise UndeclaredMetric naming the name, and nothing is written"
+      },
+      {
+        "n": 3,
+        "claim": "take hands the sink rows with exactly the COLUMNS keys and clears them only after the sink returns; a sink that raises leaves every record in place"
+      },
+      {
+        "n": 4,
+        "claim": "after a write the recorder's reading.json declares an int read frequency and on_read drain"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/metric/metric.py as built from the chart: RECORDER='metrics'; READ_FREQUENCY_SECONDS=86400 labeled HYPOTHESIS; COLUMNS = at timestamptz NOT NULL, name text NOT NULL, source text NOT NULL, start timestamptz, end timestamptz, value double precision, unit text, subject text, info jsonb; class UndeclaredMetric(ValueError); recorder(holder_dir) -> DataRecorder(holder/tools/data_recorder/metrics, READ_FREQUENCY_SECONDS, on_read='drain'); declared(charter_path) reads the charter's 'metrics' map; class Metric(DiagnosticBase) with record(name, value=None, *, unit, subject, start, end, info, at) writing finding=name, inspector_target='metrics', probe_source=source and the rest, unit defaulting to the declared unit, refusing an undeclared or consumer-blank name before any write; take(holder_dir, sink) reads, calls sink(rows) with exactly COLUMNS keys, then stamp_read(ids) (drain clears). Imports only json, datetime, pathlib, cairn.tools.base.diagnostic and cairn.tools.data_recorder. cairn/tools/metric/__init__.py is empty.",
+      "writes_to": [
+        "cairn/tools/metric/metric.py",
+        "cairn/tools/metric/__init__.py"
+      ],
+      "reads": [
+        "cairn/tools/data_recorder/data_recorder.py",
+        "cairn/tools/base/diagnostic.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the charter cairn/tools/metric/intention+why.json, written through the artifact door (cairn artifact write, verb cast), node_class tool, public_interface cairn.tools.metric.metric, what/why/falsifier from outline 17.27 and Akien's Q#78 answer.",
+      "writes_to": [
+        "cairn/tools/metric/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/dataref/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/tools/metric/proofs/test_metric.py, red-first, one tooth per clause, PROVES 75de6bafbd95 1-4, over a scratch holder directory and a scratch charter declaring 'spent' (consumer the yield report, unit tokens) and 'orphan' (blank consumer). Tooth 1 also parses metric.py's imports with ast and refuses cairn.devices, psycopg2 and any bus module.",
+      "writes_to": [
+        "cairn/tools/metric/proofs/test_metric.py"
+      ],
+      "reads": [
+        "cairn/tools/data_recorder/data_recorder.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/metric/metric.py",
+      "cairn/tools/metric/__init__.py",
+      "cairn/tools/metric/intention+why.json",
+      "cairn/tools/metric/proofs/test_metric.py"
+    ],
+    "out": [
+      "the metrics table and its report verb (the cairn device, next ticket)",
+      "inference_domain's meter (98ab0e9db57f)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "no cairn/tools/metric directory",
+      "how": "ls cairn/tools/"
+    }
+  ]
+}
