@@ -1,0 +1,85 @@
+{
+  "id": "5bcceb08973f",
+  "title": "a sealed run's snapshot carries no waiting metric",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A sealed run's snapshot carries no waiting metric: the instance seal's copy of ~/.cairn keeps each holder's metrics recorder directory and leaves its records behind, so a metrics collect under the seal cannot land the live recorder's records into the shared metrics table a second time.",
+  "why": "Measured 2026-11-10: ticket 98ab0e9db57f's tooth 7, sealed, read metrics totals of 66,405 migrated rows per name against 22,135 in the dump; the live recorder had not drained since the migration, and each sealed run's collect over the snapshot wrote its copied records into the live table. A dedupe removed 199,215 copies.",
+  "traces_to": "Outline 17.27.3, 17.27.5; Laws 7 and 8.",
+  "how": "The snapshot's ignore hook copies each metrics recorder empty; a red-first proof over a temp instance root.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a snapshot of an instance root whose holder's metrics recorder waits with a record keeps that recorder's directory and reads empty through metric.recorder, while the live recorder still holds its record"
+      },
+      {
+        "n": 2,
+        "claim": "the same snapshot copies the holder's other data recorders and its other files byte-equal"
+      },
+      {
+        "n": 3,
+        "claim": "the tester's charter says the snapshot leaves waiting metrics behind"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/tester/isolation.py: import cairn.tools.metric.metric (the metric tool's public interface). A new function _is_metrics_recorder(directory) is True when the directory's name is metric.RECORDER, its parent's name is 'data_recorder' and its grandparent's name is 'tools'. _snapshot_ignore returns set(names) for such a directory, right after the logs-tree branch, so the directory is copied empty. Nothing else in the module changes.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the charter cairn/devices/tester/intention+why.json, through the artifact door (cairn artifact write --verb cast --from a scratch copy): its 'what' gains, appended after one space, exactly this sentence: \"The snapshot leaves waiting metrics behind: each holder's metrics recorder is copied as an empty directory, because its drain lands in the one shared metrics table and a copied record would land twice.\" Every other field stands.",
+      "writes_to": [
+        "cairn/devices/tester/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/tester/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/tester/proofs/test_a_snapshot_carries_no_waiting_metric.py, red-first, one tooth per clause, PROVES 5bcceb08973f 1-3. Its world is a temp instance root swapped in for isolation._INSTANCE_ROOT with the pristine cache reset and restored; it records one metric through metric.Metric, writes a second recorder's file and a plain file, and takes isolation.pristine_snapshot().",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_snapshot_carries_no_waiting_metric.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/isolation.py",
+      "cairn/devices/tester/intention+why.json",
+      "cairn/devices/tester/proofs/test_a_snapshot_carries_no_waiting_metric.py"
+    ],
+    "out": [
+      "the metric tool",
+      "the cairn device's metrics collect",
+      "db_domain",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "metrics totals 66,405 per name for 22,135 migrated rows; 199,215 duplicate rows deleted by dedupe; the live recorder undrained since 08:38 UTC",
+      "how": "the metrics verb's totals against the dump's sums, and metrics.dedupe's return"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "a hollow run at the red-first commit of 98ab0e9db57f recreated the dropped inference_calls table with 32 proof rows; not this ticket's scope",
+      "how": "store.owner_of and a pg_dump of the recreated table"
+    }
+  ]
+}
