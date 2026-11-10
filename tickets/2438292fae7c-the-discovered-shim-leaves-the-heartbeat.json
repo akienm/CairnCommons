@@ -1,0 +1,122 @@
+{
+  "id": "2438292fae7c",
+  "title": "the discovered shim leaves the heartbeat",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "DiscoveredShim and its _FeedbackDevice leave the heartbeat: cairn/devices/cairn/machines/ground_loop/discovered.py moves to cairn/tools/base/discovered.py, and every importer reaches it there.",
+  "why": "Measured 2026-11-09: encapsulation_breaches reds cairn/tools/bus_client/roster.py:67 and cairn/tools/data_recorder/proofs/test_reading_declaration.py:193 for importing cairn.devices.cairn.machines.ground_loop.discovered, and outline 5.6.3 says ground_loop must never grow back a shim. The module imports only cairn.tools.base, and nothing in ground_loop outside its proofs imports it.",
+  "traces_to": "RULE 1 (a tool reaching into a device's code), outline 5.6.3, ticket 8e3474a6ae43 (clear the cross-device reaches).",
+  "how": "git mv the module unchanged, point the five importers at cairn.tools.base.discovered, move the mailbox proof with what it measures, fix both charters' public_interface.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/tools/base/discovered.py defines DiscoveredShim and _FeedbackDevice, and cairn/devices/cairn/machines/ground_loop/discovered.py does not exist"
+      },
+      {
+        "n": 2,
+        "claim": "no .py file in the repo names cairn.devices.cairn.machines.ground_loop.discovered"
+      },
+      {
+        "n": 3,
+        "claim": "encapsulation_breaches has no row whose module is cairn.devices.cairn.machines.ground_loop.discovered"
+      },
+      {
+        "n": 4,
+        "claim": "cairn/tools/base's public_interface lists cairn.tools.base.discovered, and ground_loop's lists neither the discovered nor the loop module"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: git mv cairn/devices/cairn/machines/ground_loop/discovered.py cairn/tools/base/discovered.py, bytes unchanged. In cairn/tools/base/mail_probe.py line 4 the docstring '(ground_loop/discovered.py)' becomes '(tools/base/discovered.py)'.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/discovered.py",
+        "cairn/tools/base/discovered.py",
+        "cairn/tools/base/mail_probe.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/discovered.py",
+        "cairn/tools/base/mail_probe.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: replace 'from cairn.devices.cairn.machines.ground_loop.discovered import' with 'from cairn.tools.base.discovered import' at cairn/tools/bus_client/roster.py:67, cairn/tools/data_recorder/proofs/test_reading_declaration.py:193, cairn/devices/cairn/machines/bus/proofs/test_delivery.py:47 and cairn/devices/cairn/machines/ground_loop/proofs/test_discovery.py:141.",
+      "writes_to": [
+        "cairn/tools/bus_client/roster.py",
+        "cairn/tools/data_recorder/proofs/test_reading_declaration.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_delivery.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_discovery.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/roster.py",
+        "cairn/tools/data_recorder/proofs/test_reading_declaration.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_delivery.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_discovery.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: git mv cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py cairn/tools/base/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py (it measures only _FeedbackDevice); in it, line 18 parents[6] becomes parents[4] and line 34's importlib string becomes 'cairn.tools.base.discovered'. git rm cairn/devices/cairn/machines/ground_loop/validations/test_a_mailbox_nobody_reads_keeps_nothing.json; the proof is sealed fresh at its new address.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py",
+        "cairn/tools/base/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py",
+        "cairn/devices/cairn/machines/ground_loop/validations/test_a_mailbox_nobody_reads_keeps_nothing.json"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: through the artifact door, cairn/tools/base/intention+why.json's public_interface gains 'cairn.tools.base.discovered' (after cairn.tools.base.diagnostic); cairn/devices/cairn/machines/ground_loop/intention+why.json's public_interface drops 'cairn.devices.cairn.machines.ground_loop.discovered' and 'cairn.devices.cairn.machines.ground_loop.loop' (deleted by efb670ff1dd8), keeping discovery.",
+      "writes_to": [
+        "cairn/tools/base/intention+why.json",
+        "cairn/devices/cairn/machines/ground_loop/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/base/intention+why.json",
+        "cairn/devices/cairn/machines/ground_loop/intention+why.json"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: the proof cairn/tools/base/proofs/test_the_discovered_shim_is_a_base_tool.py, red-first, one tooth per clause, PROVES 2438292fae7c 1 to 4, with a __main__ runner printing PASS/FAIL per tooth. Tooth 3 calls encapsulation_breaches from cairn/machines/build_inspector/inspector.py.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_the_discovered_shim_is_a_base_tool.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/ground_loop/discovered.py",
+      "cairn/tools/base/discovered.py",
+      "cairn/tools/base/mail_probe.py",
+      "cairn/tools/bus_client/roster.py",
+      "cairn/tools/data_recorder/proofs/test_reading_declaration.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_delivery.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_discovery.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py",
+      "cairn/tools/base/proofs/test_a_mailbox_nobody_reads_keeps_nothing.py",
+      "cairn/devices/cairn/machines/ground_loop/validations/test_a_mailbox_nobody_reads_keeps_nothing.json",
+      "cairn/tools/base/intention+why.json",
+      "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+      "cairn/tools/base/proofs/test_the_discovered_shim_is_a_base_tool.py"
+    ],
+    "out": [
+      "ground_loop's shim.py and discovery.py (outline 5.6.3 names them too; their own tickets)",
+      "every other reach in the census"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-09",
+      "saw": "encapsulation_breaches rows at cairn/tools/bus_client/roster.py:67 and cairn/tools/data_recorder/proofs/test_reading_declaration.py:193, module cairn.devices.cairn.machines.ground_loop.discovered; discovered.py imports only cairn.tools.base.probe and cairn.tools.base.shim",
+      "how": "encapsulation_breaches('.') from cairn/machines/build_inspector/inspector.py, and grep over the repo"
+    }
+  ]
+}
