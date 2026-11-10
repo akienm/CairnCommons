@@ -9,14 +9,14 @@
   "public_interface": [
     "cairn.devices.librarian.tools.trees.trees"
   ],
-  "what": "The librarian's graph-tree store, published as a tool nested in the device: deposit, nearest, neighbors, scratch_leaf, the walks, consolidation and the thread helpers over the shared node and embedding tables, plus the vocabulary (NODES, NODES_TABLE, OWNER, RESOLUTION_FLOOR) every tenant names. Every caller outside the librarian reaches the trees through this module and nothing else of the librarian's.",
+  "what": "The librarian's graph-tree store, published as a tool nested in the device: deposit, nearest, neighbors, scratch_leaf, the walks, consolidation and the thread helpers over the shared node and embedding tables, plus the vocabulary (NODES, NODES_TABLE, OWNER, RESOLUTION_FLOOR) every tenant names. Every caller outside the librarian reaches the trees through this module and nothing else of the librarian's. Beside the vectored leaf it keeps a keyed leaf (ticket e62f40f35f59, outline 4.3.1.6: not every node gets an embedding, and a node without one is found by its key): ensure_trees(keyed=True) or scratch_leaf(keyed=True) makes one, deposit_keyed(content, key, provenance, table=..., meta=...) lands a node in it with no embedding, and find(key, table=...) returns the nodes under that key, newest first. Each shape's doors refuse the other.",
   "why": "RULE 1 (Akien, 2026-10-01): every component talks to every other only through its public interface, and a device's is the bus plus any client tool it publishes. Measured before the build (encapsulation_breaches, 2026-10-02): 13 rows reached into cairn.devices.librarian.trees and 3 into cairn.devices.librarian.loop for RESOLUTION_FLOOR. The trees ship vectors on every walk, too heavy for a bus round trip per row, so the librarian publishes its store the way db_domain publishes its client (ticket 4cbf6e28126e).",
   "entry": "GRAFTED by git mv from cairn/devices/librarian/trees.py, ticket 883abe55d04c, 2026-10-02. The store's bytes moved unchanged; the device class left for cairn/devices/librarian/device.py and RESOLUTION_FLOOR came in from loop.py; every importer's dotted path was rewritten.",
   "invoke": "`from cairn.devices.librarian.tools.trees import trees` (or `from cairn.devices.librarian.tools.trees.trees import deposit, nearest, NODES, RESOLUTION_FLOOR, ...`). Prove: `python3 cairn/devices/librarian/tools/trees/proofs/test_trees_is_a_published_tool.py` (exit 0 = green).",
   "state_and_history": "A TOOL HOLDS NO STATE OF ITS OWN (Law 6): the shared node and embedding tables are the librarian's, and each tenant's leaf table is the tenant's, gated by the owner CHECK in db_domain's store. Its design history rides the librarian device's history (cairn/devices/librarian/) under ticket 883abe55d04c; nothing beside this charter holds history.",
   "proof": "proofs/test_trees_is_a_published_tool.py — three teeth, one per falsifier clause of 883abe55d04c: nothing reaches into the librarian for its trees (encapsulation_breaches carries no row on librarian.trees or librarian.loop); the old address is gone (no .py names it, the file is gone, the tool holds no device class); the tool is published (this charter's two fields, its one device import is db_domain's client, its surface, the loop reads its floor, the device class stands in the device). Names resolve late, so a hollow revert reds tooth by tooth.",
   "gates": "Import gate — encapsulation_holds in build_inspector (RULE 1, ticket 56d1aff4455e) admits a reach into the librarian only through this tool, because this charter says published_by_device and names its one module. Seal: the tester seals proofs/test_trees_is_a_published_tool.py into validations/ beside it.",
-  "falsifier": "Red if any import outside the librarian lands on librarian code other than cairn.devices.librarian.tools.trees.trees, if anything still imports cairn.devices.librarian.trees, or if this charter stops declaring published_by_device and exactly its one module.",
+  "falsifier": "Red if any import outside the librarian lands on librarian code other than cairn.devices.librarian.tools.trees.trees, if anything still imports cairn.devices.librarian.trees, or if this charter stops declaring published_by_device and exactly its one module. Red too if deposit_keyed into a keyed leaf table lands a cairn_embeddings row, or a node that find(key) does not return with its content, provenance, standing and meta, newest first; if the same content under the same key leaves two leaves or appends no provenance attestation; if nearest, neighbors or deposit accept a keyed leaf table, or deposit_keyed a vectored one, without WalkRefused or DepositRefused; if deposit_keyed skips the content floor, the provenance rule or the blank-key refusal and a refused deposit lands a node; or if a vectored deposit and walk change.",
   "learns": "It does not; it is the store the graph trees learn ON — deposits, walks and the owner gate are fixed physics, and what learns is the librarian and the tenants that use it.",
   "how_it_learns": "It does not; it is the store the graph trees learn ON — deposits, walks and the owner gate are fixed physics, and what learns is the librarian and the tenants that use it.",
   "traces_to": [
@@ -27,5 +27,10 @@
   "owner": "None of its own — a tool has users (Law 6): every component that deposits or walks a graph tree. Its code is held by the librarian, which publishes it; CC gates writes to that code and its proofs.",
   "gated_by": [
     "CC"
-  ]
+  ],
+  "claim_provenance": {
+    "role": "cc-read",
+    "what": "cc-read",
+    "why": "cc-read"
+  }
 }

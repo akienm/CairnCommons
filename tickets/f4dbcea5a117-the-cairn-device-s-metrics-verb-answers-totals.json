@@ -1,0 +1,93 @@
+{
+  "id": "f4dbcea5a117",
+  "title": "the cairn device's metrics verb answers totals",
+  "owning_intention": "cairn/devices/cairn/intention+why.json",
+  "intention": "The cairn device's metrics verb answers totals (outline 17.27.2: 'so any metric can be reported fast'): cairn/devices/cairn/metrics.py gains totals(table, *, name, source, since, until, by, roots), which collects then answers one {name, count, sum} per metric name (and per info[by] when by is given) summed in the table; report gains until; the verb routes a body with totals true to totals.",
+  "why": "Measured 2026-11-10: the metrics verb answers only raw rows; inference_calls holds 22,156 calls, which metered per call are ~66k rows at ~440 bytes, so every yield report over the verb would carry ~23 MB.",
+  "traces_to": "Outline 17.27.2, 11.4.4.2; Law 1.",
+  "how": "A totals function and an until keyword in the module; the verb routes on totals; a red-first proof over scratch tables.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "totals answers one total per metric name: count is every matching row, a row with no value included; sum adds the values, a valueless row adding nothing"
+      },
+      {
+        "n": 2,
+        "claim": "totals with by='verdict' answers one total per name and info.verdict"
+      },
+      {
+        "n": 3,
+        "claim": "since and until bound the totals (both inclusive), and report honors until"
+      },
+      {
+        "n": 4,
+        "claim": "the cairn device's metrics verb, with totals true in its body, answers json-serialisable totals grouped by the body's by, and no rows"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/cairn/metrics.py, copied whole from the chart's module: a helper _where(name, source, since, until) builds the 'name = %s', 'source = %s', 'at >= %s', 'at <= %s' fragments and their params; report gains a keyword until and uses _where; totals(table=TABLE, *, name=None, source=None, since=None, until=None, by=None, roots=None) collects, then store.query('SELECT name[, info ->> %s AS \"by\"], count(*) AS count, coalesce(sum(value), 0) AS sum FROM {t} [WHERE ...] GROUP BY 1[, 2] ORDER BY 1[, 2]', tables={'t': table}, params=([by] +) where params), returning {'collected': n, 'totals': [{name, [by,] count as int, sum as float}]}. It deletes nothing.",
+      "writes_to": [
+        "cairn/devices/cairn/metrics.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/metrics.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/cairn/device.py: _handle_metrics passes name, source, since, until and roots; when body.get('totals') is truthy it returns metrics.totals(table, by=body.get('by'), **kw), otherwise metrics.report(table, **kw). Nothing else changes.",
+      "writes_to": [
+        "cairn/devices/cairn/device.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/device.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the charter cairn/devices/cairn/intention+why.json, through the artifact door (cairn artifact write --verb cast --from a scratch copy): its 'what' gains, appended after one space, exactly this sentence: \"Asked with totals true, the metrics verb answers one count and sum per metric name, optionally split by an info key, so a report over all time stays small.\" Every other field stands as it is.",
+      "writes_to": [
+        "cairn/devices/cairn/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/cairn/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof cairn/devices/cairn/proofs/test_the_metrics_verb_answers_totals.py, red-first, one tooth per clause, PROVES f4dbcea5a117 1-4. Its world is a temp roots dict with one holder, instance/devices/inference_domain/0, recording three calls (a miss spending 10 at 2026-01-01, a hit saving 4 at 2026-02-01, a miss spending 6 at 2026-03-01), each a spent, a saved and a valueless latency row with info.verdict, through cairn.tools.metric against a temp charter. Each tooth uses store.scratch('cairn', 'mtot', metric.COLUMNS). The live 'metrics' table is never touched.",
+      "writes_to": [
+        "cairn/devices/cairn/proofs/test_the_metrics_verb_answers_totals.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/tools/metric/metric.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/metrics.py",
+      "cairn/devices/cairn/device.py",
+      "cairn/devices/cairn/intention+why.json",
+      "cairn/devices/cairn/proofs/test_the_metrics_verb_answers_totals.py"
+    ],
+    "out": [
+      "inference_domain's yield report (98ab0e9db57f)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "22,156 rows in inference_calls; 63 metrics records waiting, ~440 bytes each; the verb answers rows only",
+      "how": "store.query count(*) on inference_calls; wc on the inference_domain metrics recorder; grep -n report cairn/devices/cairn/device.py"
+    }
+  ]
+}
