@@ -1,0 +1,99 @@
+{
+  "id": "26ec04b32637",
+  "title": "CodeMother answers a chart verb on the bus",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "CodeMother answers a chart verb on the bus: one request floors or writes one of her eight chart stages (orient through validate, and verdict) and answers the packet or the berth, so a builder reaches the chart chain through her public interface instead of importing her machines.",
+  "why": "Measured 2026-11-10: CodeMother's verbs (outline 9.6, cairn/devices/codemother/shim.py) write no chart stage, so the /chart skill's instructions and CC's chart and verdict helpers import her machines; cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py reds those imports under RULE 1.",
+  "traces_to": "RULE 1 (a device is reached through its public interface); outline 9.3.2, 9.3.4, 9.6 and Q#81.",
+  "how": "Add 'chart' to CodeMotherShim.declared_verbs, dispatching through a module-level CHART_STAGES table (stage -> (floor function, write function)); the shim takes chart_dir for its writes; refusals ride back named. Outline 9.6 and her charter name the verb. Red-first proof drives the handler directly.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "CHART_STAGES in the shim maps each of the eight stage names to that stage machine's own floor and write functions (verdict has a writer and no floor)"
+      },
+      {
+        "n": 2,
+        "claim": "the chart verb with op floor and stage orient returns orient.floor_packet's packet for the request and writes nothing"
+      },
+      {
+        "n": 3,
+        "claim": "the chart verb with op write and stage orient writes the packet under the shim's chart dir and answers accepted with that berth on disk"
+      },
+      {
+        "n": 4,
+        "claim": "an unknown stage, an unknown op, or a stage with no floor asked to floor is refused, accepted False, naming the valid choices, and nothing is written"
+      },
+      {
+        "n": 5,
+        "claim": "a writer that raises comes back accepted False with the error's type and text, and nothing is written"
+      },
+      {
+        "n": 6,
+        "claim": "outline 9.6 and CodeMother's charter name the chart verb"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/codemother/shim.py: a module-level CHART_STAGES dict, stage -> (floor or None, writer), importing each stage module lazily inside a function chart_stages(); CodeMotherShim.__init__ takes chart_dir=None; declared_verbs gains 'chart': self._handle_chart. chart: body {stage, op, input}; stage is one of orient, constrain, survey, decompose, triage, hypothesize, validate, verdict; op floor calls the stage's floor (orient.floor_packet(request), constrain_floor(intent_ref), survey_floor, decompose_floor, triage_floor, hypothesize_floor, validate_floor) and returns its packet without writing; op write calls the stage's writer (write_packet, write_constrain, ..., write_verdict) with the shim's chart instance dir and returns the berth. Every refusal is {accepted: False, verb: chart, device: codemother, reason}} naming the choices; an exception from a stage function is caught and returned the same way with its type and text (Law 7).",
+      "writes_to": [
+        "cairn/devices/codemother/shim.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/shim.py",
+        "cairn/devices/codemother/machines/orient/orient.py",
+        "cairn/devices/codemother/machines/constrain/constrain.py",
+        "cairn/devices/codemother/machines/survey/survey.py",
+        "cairn/devices/codemother/machines/decompose/decompose.py",
+        "cairn/devices/codemother/machines/triage/triage.py",
+        "cairn/devices/codemother/machines/hypothesize/hypothesize.py",
+        "cairn/devices/codemother/machines/validate/validate.py",
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/codemother/intention+why.json names the chart verb in its public interface through the artifact door; press_office/CairnComponentOutline.txt 9.6's VERBS line gains chart once Q#81 is answered yes (the answer's own wording lands there).",
+      "writes_to": [
+        "cairn/devices/codemother/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ],
+      "reads": [
+        "cairn/devices/codemother/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/codemother/proofs/test_codemother_answers_a_chart_verb.py, red-first, one tooth per clause, PROVES 1-6; it builds CodeMotherShim(chart_dir=<a scratch dir>) and calls declared_verbs()['chart'] with envelopes, never the bus; guarded imports and the house runner.",
+      "writes_to": [
+        "cairn/devices/codemother/proofs/test_codemother_answers_a_chart_verb.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/shim.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/intention+why.json",
+      "cairn/devices/codemother/proofs/test_codemother_answers_a_chart_verb.py",
+      "cairn/devices/codemother/shim.py",
+      "press_office/CairnComponentOutline.txt"
+    ],
+    "out": [
+      "CC's helpers (ticket cast beside this)",
+      "the /chart skill (ticket cast beside this)",
+      "the stage machines' own code"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "nine verbs, none writes a stage; 14 imports in SKILL.md, 7 in chart_ticket.py, 1 in verdict_ticket.py",
+      "how": "read cairn/devices/codemother/shim.py declared_verbs and grep of skills/chart/SKILL.md, cairn/devices/cc/scripts/chart_ticket.py, cairn/devices/cc/scripts/verdict_ticket.py for codemother imports"
+    }
+  ]
+}
