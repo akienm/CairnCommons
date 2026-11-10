@@ -1,0 +1,89 @@
+{
+  "id": "a817fce02520",
+  "title": "the cycle verbs answer --help and refuse what they do not know",
+  "owning_intention": "cairn/devices/cairn/intention+why.json",
+  "intention": "`cairn start`, `cairn stop` and `cairn restart` answer -h or --help with one usage line and change nothing, and refuse any other argument with exit 2, naming it, before they touch the ground loop or the bus.",
+  "why": "Measured 2026-11-10: `cairn stop --help` took the live system down, because the stop shortcut ignores its arguments; the ground loop (pid 4730) and the bus stopped, and `cairn start` was needed to bring them back. A verb that cycles the system must not act on a request for help or a mistyped word.",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces: an unknown argument is refused by name, never silently acted past), CP6 (safety is built: a verb that takes the system down must not fire on a request for help), outline 5.3.4 (the verbs themselves).",
+  "how": "cairn/devices/cairn/cycle.py gains main(verb, argv): -h/--help prints `usage: cairn <verb>` and what it does and returns 0; any other argument prints `cairn <verb>: unknown argument <arg> (it takes none)` to stderr and returns 2; no argument runs the verb. The three shortcuts call main(\"<verb>\", sys.argv[1:]). Red-first proof over a scratch HOME, as the cycle proof does.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch HOME with the system up, `cairn stop --help`, `cairn stop -h` and `cairn restart --help` each exit 0, print a line beginning `usage: cairn <verb>`, and leave the scratch loop pid and bus pid unchanged"
+      },
+      {
+        "n": 2,
+        "claim": "over a scratch HOME with nothing up, `cairn start --help` exits 0, prints the usage line, and nothing comes up (the loop lock is free and the bus does not answer)"
+      },
+      {
+        "n": 3,
+        "claim": "over a scratch HOME with the system up, `cairn stop now` and `cairn restart now` exit 2 with stderr naming `now`, and over nothing up `cairn start now` exits 2 the same way; no pid changes and nothing comes up"
+      },
+      {
+        "n": 4,
+        "claim": "the cycle proof cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py still passes, so a bare verb still acts"
+      },
+      {
+        "n": 5,
+        "claim": "the live bus pid and live ground loop pid are the same before and after"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/cairn/cycle.py: add `def main(verb: str, argv: list[str]) -> int` beside start/stop/restart. VERBS = {'start': (start, 'bring the system up: ground loop, then bus'), 'stop': (stop, 'take the system down: ground loop, then bus (its shims with it)'), 'restart': (restart, 'stop, then start')}}. If argv and argv[0] in ('-h', '--help'): print(f'usage: cairn {verb}') and the description on a second line, return 0. Elif argv: print(f'cairn {verb}: unknown argument {argv[0]} (it takes none; -h for help)', file=sys.stderr), return 2. Else return VERBS[verb][0]().",
+      "writes_to": [
+        "cairn/devices/cairn/cycle.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/cycle.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/cairn/bin/start, cairn/devices/cairn/bin/stop, cairn/devices/cairn/bin/restart: the last two lines become `from cairn.devices.cairn.cycle import main  # noqa: E402` and `sys.exit(main(\"<verb>\", sys.argv[1:]))`; the shebang, docstring and sys.path line stay.",
+      "writes_to": [
+        "cairn/devices/cairn/bin/start",
+        "cairn/devices/cairn/bin/stop",
+        "cairn/devices/cairn/bin/restart"
+      ],
+      "reads": [
+        "cairn/devices/cairn/bin/start",
+        "cairn/devices/cairn/bin/stop",
+        "cairn/devices/cairn/bin/restart"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py, red-first, one tooth per clause, PROVES {'a817fce02520': {'1': 'help_over_an_up_system_changes_nothing', '2': 'help_over_a_down_system_brings_nothing_up', '3': 'an_unknown_argument_is_refused_by_name', '4': 'a_bare_verb_still_cycles', '5': 'the_live_system_is_untouched'}}}}. Its helpers are the cycle proof's: _cairn(home, *args) with HOME a scratch_dir, CAIRN_VENV the account venv, proof-named CAIRN_GROUND_LOOP_UNIT and CAIRN_BUS_UNIT, CAIRN_BUS_HOME and CAIRN_INSTANCE_ROOT popped; _loop(home) and _bus_pid(home) as in cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py; teardown stops both units. Sequence: clause 2 and start's half of clause 3 first over the fresh HOME, then a bare start, then clause 1 and the stop/restart half of clause 3, then a bare stop. Tooth 4 runs the cycle proof as a subprocess and asserts exit 0. Tooth 5 reads the live pids through the pwd account home before and after.",
+      "writes_to": [
+        "cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/bin/restart",
+      "cairn/devices/cairn/bin/start",
+      "cairn/devices/cairn/bin/stop",
+      "cairn/devices/cairn/cycle.py",
+      "cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py"
+    ],
+    "out": [
+      "the launcher (bin/cairn) and every other shortcut's argument handling",
+      "help listing class bins (its own ticket on cairn/tools/base)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "the stop shortcut acted on `--help`: the live ground loop lock freed and the live bus stopped answering",
+      "how": "bin/cairn stop --help (the live system went down); cycle.py read: no argv is consulted"
+    }
+  ]
+}
