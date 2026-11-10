@@ -1,0 +1,70 @@
+{
+  "id": "211facd306d7",
+  "title": "the launcher's help lists what bin_shortcuts lists",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "`cairn help` and `cairn <device> help` list exactly what the base shim's bin_shortcuts lists, the bin beside a device's code included: the launcher's help keeps no instance-bin guard of its own, and a device with shortcuts in either bin gets a section.",
+  "why": "Measured 2026-11-10: bin/cairn _help guards on the instance bin's folder (`if not b.is_dir(): print('  (no bin under ...)')`) and builds the `cairn help` roster from instance bins alone, so a device whose shortcuts live beside its code, as 5.4.3.3 puts them, shows `(no bin under ...)` or no section, though bin_shortcuts (ba777080011b) lists them.",
+  "traces_to": "Outline 5.4.3.3 (a device's bin/ beside its code IS its list of shortcuts), 2.4.11.1 (help is readable cold), 8.4 / Q#27 (the help order); RULE 1 and Law 1: bin/cairn says it holds no copy of the bin-reading rule, and its instance-bin guard is one.",
+  "how": "In bin/cairn _help: pass CAIRN_CLASS_ROOT=\"$CLASS_ROOT\" to the python; shortcuts(dev, n) prints bin_shortcuts(dev, root, n) or `  (none)`, with no folder check; the roster after operator and cairn is every device with an instance bin or a bin beside its code, alpha order. Red-first proof over a scratch instance root and a scratch class root.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch instance root holding fxhc/0 with no bin and a scratch class root (CAIRN_CLASS_ROOT) holding an executable fxhc/bin/wave whose comment is `wave — waves`, `cairn help` exits 0 and has an [fxhc] section whose lines include `wave — waves`, and no line contains `no bin under`"
+      },
+      {
+        "n": 2,
+        "claim": "in the same world `cairn fxhc help` exits 0 and its text includes `wave — waves`"
+      },
+      {
+        "n": 3,
+        "claim": "a device whose instance bin holds nothing executable and that has no bin beside its code still gets its section, which reads `(none)`"
+      },
+      {
+        "n": 4,
+        "claim": "the standing launcher proofs pass unchanged: bin/proofs/test_cairn_help_lists_in_the_operators_order.py, bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: bin/cairn _help: the python's environment gains CAIRN_CLASS_ROOT=\"$CLASS_ROOT\" beside CAIRN_INSTANCE_ROOT. Inside it, cls = Path(os.environ['CAIRN_CLASS_ROOT']); shortcuts(dev, n=0) prints each row of bin_shortcuts(dev, str(root), n, class_root=str(cls)) as before, or `  (none)` when it returns no row, and no longer checks any folder. In mode all, rest = sorted names d of the folders under root where (root/d/'0'/'bin').is_dir(), union the folders under cls where (cls/d/'bin').is_dir(); then operator, cairn, and rest minus those two, as now. The header comment's 'THIS FILE HOLDS NO COPY' sentence stays true and cites ba777080011b.",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "bin/cairn",
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py, red-first, one tooth per clause, PROVES {'211facd306d7': {'1': 'help_lists_a_class_only_device', '2': 'device_help_lists_the_class_bin', '3': 'an_empty_device_reads_none', '4': 'the_standing_launcher_proofs_pass'}}}}. World and env as bin/proofs/test_cairn_help_lists_in_the_operators_order.py builds them (scratch HOME from the scratch door, CAIRN_INSTANCE_ROOT, CAIRN_VENV a missing folder, CAIRN_PG_SOCKET_DIR an empty folder) plus CAIRN_CLASS_ROOT=<scratch>/classes holding fxhc/bin/wave; fxhd/0/bin holds one non-executable file for clause 3. Tooth 4 runs the two proofs as subprocesses and asserts exit 0.",
+      "writes_to": [
+        "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py"
+      ],
+      "reads": [
+        "bin/proofs/test_cairn_help_lists_in_the_operators_order.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn",
+      "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py"
+    ],
+    "out": [
+      "cairn/tools/base/shim.py (ba777080011b, PROVED)",
+      "the help order itself (Q#27)",
+      "the machine walk of 5.4.3.2"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "the launcher's help checks the instance bin's folder before calling bin_shortcuts and builds its roster from instance bins only",
+      "how": "sed -n 184,215p bin/cairn"
+    }
+  ]
+}
