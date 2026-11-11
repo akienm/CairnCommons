@@ -1,0 +1,51 @@
+{
+  "id": "7ef055775027",
+  "title": "every class with code in route reaches the diagnostic mixin",
+  "owning_intention": "cairn/devices/inference_domain/machines/route/intention+why.json",
+  "intention": "Every class with code in route reaches DiagnosticBase: RouteRefused take it as their first base, so each can run a diagnostic report when we need it, and each behaves as before.",
+  "why": "Measured 2026-11-11: the build inspector filed inspector-new-finding-every-class-reaches-the-diagnostic-mixin naming RouteRefused in route. Akien, 2026-10-27 (ticket 339a45cee6a1): \"any class with code it in should be able to run a diagnostic report when we need it\".",
+  "traces_to": "press_office/CairnComponentOutline.txt 17.1.2, 17.1.3.5; ticket 339a45cee6a1; Law 7.",
+  "how": "Import DiagnosticBase from cairn.tools.base.diagnostic in cairn/devices/inference_domain/machines/route/route.py and make it the first base of RouteRefused, keeping every other base. Prove it with cairn/devices/inference_domain/machines/route/proofs/test_every_route_class_reaches_the_diagnostic_mixin.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the build inspector's every_class_reaches_the_diagnostic_mixin sieve returns [] for component route at cairn/devices/inference_domain/machines/route"
+      },
+      {
+        "n": 2,
+        "claim": "RouteRefused each subclass DiagnosticBase, keep their original base, and behave as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: DiagnosticBase goes first among the bases, as 668c8d64b4e2 and b13c53dd679c did; the import sits at module level beside the others; nothing else in the class changes.",
+      "writes_to": [
+        "cairn/devices/inference_domain/machines/route/route.py",
+        "cairn/devices/inference_domain/machines/route/proofs/test_every_route_class_reaches_the_diagnostic_mixin.py"
+      ],
+      "reads": [
+        "cairn/tools/base/diagnostic.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/inference_domain/machines/route/"
+    ],
+    "out": [
+      "cairn/tools/base/diagnostic.py",
+      "cairn/machines/build_inspector/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "every_class_reaches_the_diagnostic_mixin finds RouteRefused in route",
+      "how": "python3 -m cairn.machines.build_inspector.inspector"
+    }
+  ]
+}

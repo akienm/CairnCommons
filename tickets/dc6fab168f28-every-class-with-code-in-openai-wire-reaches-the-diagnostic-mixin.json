@@ -1,0 +1,51 @@
+{
+  "id": "dc6fab168f28",
+  "title": "every class with code in openai_wire reaches the diagnostic mixin",
+  "owning_intention": "cairn/machines/openai_wire/intention+why.json",
+  "intention": "Every class with code in openai_wire reaches DiagnosticBase: OpenAIWireHandler (the class make_handler builds) take it as their first base, so each can run a diagnostic report when we need it, and each behaves as before.",
+  "why": "Measured 2026-11-11: the build inspector filed inspector-new-finding-every-class-reaches-the-diagnostic-mixin naming OpenAIWireHandler (the class make_handler builds) in openai_wire. Akien, 2026-10-27 (ticket 339a45cee6a1): \"any class with code it in should be able to run a diagnostic report when we need it\".",
+  "traces_to": "press_office/CairnComponentOutline.txt 17.1.2, 17.1.3.5; ticket 339a45cee6a1; Law 7.",
+  "how": "Import DiagnosticBase from cairn.tools.base.diagnostic in cairn/machines/openai_wire/serve.py and make it the first base of OpenAIWireHandler (the class make_handler builds), keeping every other base. Prove it with cairn/machines/openai_wire/proofs/test_every_openai_wire_class_reaches_the_diagnostic_mixin.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the build inspector's every_class_reaches_the_diagnostic_mixin sieve returns [] for component openai_wire at cairn/machines/openai_wire"
+      },
+      {
+        "n": 2,
+        "claim": "OpenAIWireHandler (the class make_handler builds) each subclass DiagnosticBase, keep their original base, and behave as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: DiagnosticBase goes first among the bases, as 668c8d64b4e2 and b13c53dd679c did; the import sits at module level beside the others; nothing else in the class changes.",
+      "writes_to": [
+        "cairn/machines/openai_wire/serve.py",
+        "cairn/machines/openai_wire/proofs/test_every_openai_wire_class_reaches_the_diagnostic_mixin.py"
+      ],
+      "reads": [
+        "cairn/tools/base/diagnostic.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/openai_wire/"
+    ],
+    "out": [
+      "cairn/tools/base/diagnostic.py",
+      "cairn/machines/build_inspector/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "every_class_reaches_the_diagnostic_mixin finds OpenAIWireHandler (the class make_handler builds) in openai_wire",
+      "how": "python3 -m cairn.machines.build_inspector.inspector"
+    }
+  ]
+}
