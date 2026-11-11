@@ -62,5 +62,166 @@
       "by": "cc",
       "source": "cast"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "070c5fc9624c: constrain's instrument verdicts are shared across chart firings",
+      "intent": "The constrain floor persists each instrument verdict it read, keyed by proof path and source fingerprint, in codemother's instance-space run_cache, so a later or concurrent firing reads it instead of asking the tester again.",
+      "scope": "_run_instrument in constrain.py and its proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "the resolver is spent on the novel, not on re-deriving the settled",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "no runtime state in class-space; cached state lives in instance-space",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/constrain/constrain.py",
+          "cairn/devices/codemother/machines/constrain/proofs/test_the_verdict_cache_is_shared_across_firings.py"
+        ],
+        "out": [
+          "the tester device",
+          "the chart gates",
+          "every other stage"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how _run_instrument reads a verdict today",
+        "where codemother's instance-space lives"
+      ],
+      "holdings": [
+        {
+          "what": "_run_instrument and _RUN_CACHE",
+          "address": "cairn/devices/codemother/machines/constrain/constrain.py"
+        },
+        {
+          "what": "instance_path for a device instance",
+          "address": "cairn/tools/base/address.py"
+        },
+        {
+          "what": "source_fingerprint and standing",
+          "address": "cairn/tools/base/validation.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a verdict store shared across processes",
+          "measure": "constrain.py:256 _RUN_CACHE is a module dict; 66 tester runs in 30 minutes, 2026-10-30"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the run_cache store behind _RUN_CACHE",
+          "why": "a verdict read for the same bytes is settled",
+          "kind": "build",
+          "fills": "a verdict store shared across processes",
+          "uses": [
+            "cairn/tools/base/validation.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/constrain/constrain.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the run_cache store behind _RUN_CACHE",
+          "why_now": "parallel charts time out at constrain (mail-constrain-stood-600s stands 5x)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the run_cache store behind _RUN_CACHE",
+          "expect": "one tester ask per (path, fingerprint) across processes inside the TTL; unrunnables never persisted",
+          "falsifier": "a second or concurrent process asks again for the same bytes, or an unrunnable is written",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/constrain/proofs/test_the_verdict_cache_is_shared_across_firings.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the five falsifier clauses each hold as a tooth over subprocess firings",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/constrain/proofs/test_the_verdict_cache_is_shared_across_firings.py",
+          "timeout_s": 600,
+          "covers": [
+            "the run_cache store behind _RUN_CACHE"
+          ]
+        },
+        {
+          "claim": "the constrain chart proof stays green",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py",
+          "timeout_s": 900,
+          "covers": [
+            "the run_cache store behind _RUN_CACHE"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
