@@ -1,0 +1,220 @@
+{
+  "id": "054a03f974f6",
+  "title": "a reply to a request a bus stop cut short is receipted as given up",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "A request whose asker was still waiting when the bus process stopped is held as given up by the next bus process at that home, so its late reply is receipted 'bus-asker-gave-up' and does not stand for report_stood to raise; a reply to an id no stop handed over still stands, and an ask older than a day is not carried.",
+  "why": "Measured 2026-11-11: mail-constrain-stood-600s stood at 10x. It was one envelope, c363a743 (tester -> constrain 'run reply'), re-raised once per bus life. Its request 947d23ec was posted at 16:40:44Z, the second a stale client shut bus pid 427135 down (~/.cairn/devices/cairn/machines/bus/0/stops.jsonl). The reply came 127 s later, inside constrain's 180 s timeout, and nothing took it: request() waits inside the bus process, the stop ended the wait, and the next bus had no _abandoned entry. A repro (request to the tester on a 20 s proof, bus shut down 5 s in) left reply 05be8bdd standing the same way.",
+  "traces_to": "Law 7; Law 1; ticket cd2d27fe3261 (bus-asker-gave-up inside one bus life).",
+  "how": "bus.py: _asked becomes a dict id -> asker, and _ask_since records when each ask was posted. hand_over_asks(path) writes {id: {asker, since}} for _asked and _abandoned within ASK_HORIZON_S (86400). take_over_asks(path) loads those into _abandoned and unlinks the file. server.py: ASKS_FILE = 'asks_in_flight.json'; serve() takes over after land_spill and hands over in the stop's finally after final_flush. Each step is loud on stderr and never stops the bus.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a bus life that stops with an ask unanswered leaves <home>/asks_in_flight.json naming that ask and its asker"
+      },
+      {
+        "n": 2,
+        "claim": "the next bus life at that home serves with the file retired, and the late reply to the ask is receipted bus-asker-gave-up and is not undelivered"
+      },
+      {
+        "n": 3,
+        "claim": "in that life a reply to an id no stop handed over stays undelivered"
+      },
+      {
+        "n": 4,
+        "claim": "a handed-over ask older than ASK_HORIZON_S is not taken over, and its reply stays undelivered"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the hand-over file is JSON {id: {asker, since}} at <home>/asks_in_flight.json, written atomically (tmp + os.replace), and unlinked when there is nothing to hand over. The take-over unlinks it after loading. The proof runs serve() over a scratch table through a driver that replaces serve_forever (as test_every_stop_records_its_cause.py does): life 'ask' posts with _asked=True and returns; life 'answer' posts the late reply and a stray one, flushes, and writes measured.json. Tooth 4 is in-process on BusDevice.scratch.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/bus.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_a_reply_across_a_bus_stop_is_receipted.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/bus.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_a_reply_after_its_asker_gave_up_is_receipted.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/bus.py",
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_reply_across_a_bus_stop_is_receipted.py"
+    ],
+    "out": [
+      "cairn/tools/bus_client/",
+      "cairn/devices/codemother/machines/constrain/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "request 947d23ec posted 16:40:44Z, the second bus pid 427135 stopped by verb; reply c363a743 at 16:42:51Z stands undelivered; repro reply 05be8bdd stands after a shutdown 5 s into a request",
+      "how": "~/.cairn/devices/cairn/machines/bus/0/stops.jsonl, ~/.cairn/logs/bus/0 post/delivered gates, reach().undelivered()"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "054a03f974f6: a reply to a request a bus stop cut short is receipted as given up",
+      "intent": "A stop hands its unanswered asks to the next bus at that home, which holds them as given up, so their late replies are receipted; a reply to an id never handed over still stands.",
+      "scope": "two methods in the bus, two calls in serve(), one new proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "errors are loud at diagnostic surfaces and permanent in records of truth",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "a reply to an envelope that was never a request stays undelivered (ticket cd2d27fe3261 tooth 3)",
+          "source": "cairn/devices/cairn/machines/bus/proofs/test_a_reply_after_its_asker_gave_up_is_receipted.py",
+          "kind": "contract"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/bus/bus.py",
+          "cairn/devices/cairn/machines/bus/server.py",
+          "cairn/devices/cairn/machines/bus/proofs/test_a_reply_across_a_bus_stop_is_receipted.py"
+        ],
+        "out": [
+          "cairn/tools/bus_client/",
+          "cairn/devices/codemother/machines/constrain/"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where request() waits",
+        "what runs at every stop",
+        "how the spill crosses a restart"
+      ],
+      "holdings": [
+        {
+          "what": "_abandoned and the bus-asker-gave-up branch in post()",
+          "address": "cairn/devices/cairn/machines/bus/bus.py"
+        },
+        {
+          "what": "serve()'s finally: final_flush then _record_stop; land_spill at start",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "the serve driver that replaces serve_forever",
+          "address": "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a record of unanswered asks that outlives the bus process",
+          "measure": "reply c363a743 and repro reply 05be8bdd stand undelivered after a bus stop mid-request, reach().undelivered(), 2026-11-11"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "hand_over_asks / take_over_asks and their calls in serve()",
+          "why": "the asker's wait lives in the process a stop ends",
+          "kind": "build",
+          "fills": "a record of unanswered asks that outlives the bus process",
+          "uses": [
+            "cairn/devices/cairn/machines/bus/server.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/bus/bus.py",
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/devices/cairn/machines/bus/proofs/test_a_reply_across_a_bus_stop_is_receipted.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "hand_over_asks / take_over_asks and their calls in serve()",
+          "why_now": "mail-constrain-stood-600s stands at 10x"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "hand_over_asks / take_over_asks and their calls in serve()",
+          "expect": "four teeth green; the cd2d27fe3261 proof stays green",
+          "falsifier": "a late reply after a stop stands, or a reply to a never-handed-over id is receipted",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_reply_across_a_bus_stop_is_receipted.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the four falsifier clauses each hold as a tooth",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_reply_across_a_bus_stop_is_receipted.py",
+          "timeout_s": 300,
+          "covers": [
+            "hand_over_asks / take_over_asks and their calls in serve()"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
