@@ -1,11 +1,11 @@
 {
   "id": "0be964512fb0",
-  "title": "the clearance gate berths in CodeMother; the harbor answers no clear",
+  "title": "the clearance gate berths in CodeMother and answers queueme; the harbor answers no clear",
   "owning_intention": "cairn/devices/codemother/machines/clearance/intention+why.json",
-  "intention": "The clearance gate is CodeMother's machine: cairn/devices/cairn/machines/harbor_master/clearance.py moves whole to cairn/devices/codemother/machines/clearance/clearance.py, with its seven proofs, the harbor's probe-report proof, its four probes and its deprecation report; the harbor's bus face answers show, get and crossing and no clear; CodeMother's cross fires clearance.clear in her own process as codemother and returns the same answer shape.",
+  "intention": "The clearance gate is CodeMother's machine: cairn/devices/cairn/machines/harbor_master/clearance.py moves whole to cairn/devices/codemother/machines/clearance/clearance.py, with its seven proofs, the harbor's probe-report proof, its four probes and its deprecation report. It answers machines/clearance/queueme <fileref>: it instantiates the ticket from the fileref, derives the crossing (the next step, the proofs that declare the ticket, the owning component's journal) and asks clearance.clear as codemother; a grant crosses the ticket through Ticket.passed, a refusal comes back as data. The harbor answers show, get and crossing and no clear; CodeMother answers no cross verb; `cairn codemother cross <ticket>` has the ticket queue itself at clearance.",
   "why": "Outline 9.4.1.5 (Akien 2026-11-10, Q#80): the harbor's verbs are status queries (show, get) and crossing; it answers no gate and moves no ticket; clear leaves. Outline 9.6 and 3.3.4.3 (Q#81): the gates are CodeMother's machines. RULE 1: once clearance is CodeMother's the harbor may not import it, so clear leaves the harbor in the same act.",
-  "traces_to": "outline 3.3.4.3, 9.4.1.5, 9.6; ticket 386ea8131006 (the watchme receiver moved the same way).",
-  "how": "git mv module, proofs, probes; old validations leave through bin/cairn artifact remove and the proofs reseal at the new address; delete HarborMasterDevice._handle_clear; CodeMotherDevice._handle_cross calls clearance.clear locally; repoint every importer and every text spelling; forward every moved path on this ticket's state.",
+  "traces_to": "outline 3.3.4.3, 9.4.1.5, 9.6, 9.7; ticket 386ea8131006 (the watchme receiver moved the same way).",
+  "how": "git mv module, proofs, probes; old validations leave through bin/cairn artifact remove and the proofs reseal at the new address; build ClearanceGate beside the module (modelled on the watchme gate) and register it in declared_machines; Ticket.passed takes the gate's door as its cross callable so clearance does the one emit; delete HarborMasterDevice._handle_clear and CodeMotherDevice._handle_cross; _handle_sealed queues each named boat at the gate; the cross mouth calls Ticket.queueme; repoint every importer and every text spelling; forward every moved path on this ticket's state.",
   "falsifier": {
     "clauses": [
       {
@@ -22,7 +22,7 @@
       },
       {
         "n": 4,
-        "claim": "CodeMotherDevice._handle_cross with no bus answers a clearance refusal (refusal names a clearance exception class) over a fixture ticket, never a no-bus or harbor-unwired refusal"
+        "claim": "CodeMotherDevice declares no 'cross' verb and its declared_machines holds 'clearance'; a ClearanceGate over a scratch world, asked machines/clearance/queueme {fileref} for a ticket at TICKETME, derives target BUILDME and proven_by from the scratch proof whose PROVES names the ticket, and answers accepted False with a refusal naming a clearance exception class and door 'clearance', leaving the ticket's cursor where it stood"
       },
       {
         "n": 5,
@@ -35,13 +35,21 @@
       {
         "n": 7,
         "claim": "python3 -m cairn.devices.codemother.machines.clearance <the harbor charter> exits 0 and prints DEPRECATION REPORT"
+      },
+      {
+        "n": 8,
+        "claim": "Ticket.passed given a cross callable crosses through it exactly once and never through transitions.emit, then writes the cursor it returned"
+      },
+      {
+        "n": 9,
+        "claim": "cairn/devices/codemother/0/bin/cross takes one positional (the ticket), sends no verb 'cross', and has the ticket queue itself at clearance through Ticket.queueme"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: git mv cairn/devices/cairn/machines/harbor_master/clearance.py to cairn/devices/codemother/machines/clearance/clearance.py WHOLE, riders block included; add __init__.py and __main__.py (the deprecation report moved from register._retirement_report, run as python3 -m cairn.devices.codemother.machines.clearance <intention>). Write the new charter intention+why.json through bin/cairn artifact write before BUILDME (modelled on machines/watchme's). Amend the harbor charter's what and invoke to say the gate is CodeMother's; add clearance to codemother's held_machines and its why.",
+      "text": "D1: git mv cairn/devices/cairn/machines/harbor_master/clearance.py to cairn/devices/codemother/machines/clearance/clearance.py WHOLE, riders block included; add __init__.py, gate.py (ClearanceGate) and __main__.py (the deprecation report moved from register._retirement_report, run as python3 -m cairn.devices.codemother.machines.clearance <intention>). Write the new charter intention+why.json through bin/cairn artifact write before BUILDME (modelled on machines/watchme's). Amend the harbor charter's what and invoke to say the gate is CodeMother's; add clearance to codemother's held_machines and its why.",
       "writes_to": [
         "cairn/devices/codemother/machines/clearance/",
         "cairn/devices/cairn/machines/harbor_master/clearance.py",
@@ -93,13 +101,21 @@
     },
     {
       "n": 5,
-      "text": "D5: CodeMotherDevice._handle_cross calls clearance.clear(workflow, target, actor=self.device_id, boat_id, proven_by, history_path, state_path, **journal_extra) in process; a ClearanceError-family exception answers {accepted False, refusal: type name, reason}; a grant answers {accepted True, workflow: new}; both carry asked_as and door='clearance'; the no-bus and harbor-unwired branches leave; cross_asked/cross_answered stay. The cross verb itself stays until T3b-2.",
+      "text": "D5: ClearanceGate(participant=, roots=) in cairn/devices/codemother/machines/clearance/gate.py, declared_verbs {'queueme': self.queueme}, registered in CodeMotherDevice.declared_machines as 'clearance'. queueme reads body.fileref only; Ticket.at(fileref) on the gate's side; target = the workflow path's next step after the cursor; proven_by = proven_by_since_buildme when the target is PROVED, else every proofs/*.py under the repo whose PROVES names the ticket (proof_coverage.declared); history/state = the owning_intention's directory. The actor is codemother (the holder), and the envelope's sender rides as asked_by. A grant calls Ticket.passed(target, cross=partial(clearance.clear, boat_id, proven_by)); an Exception answers {accepted False, refusal: type name, reason}; both carry door 'clearance'. Ticket.passed gains cross=None (default transitions.emit). CodeMotherDevice loses the 'cross' verb, _handle_cross and _crossing_coordinates; _handle_sealed asks the gate for each boat at PROVEME its proof was named on. The mouth bin/cross takes <ticket> and calls Ticket.at(ticket).queueme('clearance', participant=Voice(reach(...), sender='cairn-codemother-cli')). Outline 9.6's verb list drops cross, as its own sentence says.",
       "writes_to": [
-        "cairn/devices/codemother/shim.py"
+        "cairn/devices/codemother/machines/clearance/gate.py",
+        "cairn/devices/codemother/shim.py",
+        "cairn/devices/codemother/0/bin/cross",
+        "cairn/machines/ticket/ticket.py",
+        "cairn/machines/ticket/proofs/",
+        "press_office/CairnComponentOutline.txt"
       ],
       "reads": [
-        "cairn/devices/cairn/machines/harbor_master/device.py",
-        "cairn/devices/codemother/shim.py"
+        "cairn/devices/codemother/machines/watchme/gate.py",
+        "cairn/machines/ticket/ticket.py",
+        "cairn/tools/base/workflow_grammar.py",
+        "cairn/tools/proof_coverage/proof_coverage.py",
+        "cairn/tools/base/crossings.py"
       ]
     },
     {
@@ -149,10 +165,11 @@
     },
     {
       "n": 9,
-      "text": "D9: red-first proofs, one tooth per falsifier clause. cairn/devices/codemother/machines/clearance/proofs/test_clearance_berths_in_codemother.py holds clauses 1, 2, 4, 5, 6, 7; clause 3 stands at the harbor's own address, cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_no_clear.py, because a CodeMother proof may not import the harbor (RULE 1; measured: importing it raised encapsulation_breaches to 72). The retired spellings are built split inside the CodeMother proof so it never names them whole; tooth 4 sets CAIRN_LB_TRACE_ROOT to a scratch dir so its refusal never lands in the live clearance queue.",
+      "text": "D9: red-first proofs, one tooth per falsifier clause. cairn/devices/codemother/machines/clearance/proofs/test_clearance_berths_in_codemother.py holds clauses 1, 2, 4, 5, 6, 7; clause 3 stands at the harbor's own address, cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_no_clear.py, because a CodeMother proof may not import the harbor (RULE 1; measured: importing it raised encapsulation_breaches to 72). The retired spellings are built split inside the CodeMother proof so it never names them whole; tooth 4 sets CAIRN_LB_TRACE_ROOT to a scratch dir so its refusal never lands in the live clearance queue. Clauses 3 and 8 live at their own components (RULE 1 and the ticket's proofs measuring their own component): cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_no_clear.py and cairn/machines/ticket/proofs/test_a_passed_ticket_crosses_through_the_gates_door.py.",
       "writes_to": [
         "cairn/devices/codemother/machines/clearance/proofs/test_clearance_berths_in_codemother.py",
-        "cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_no_clear.py"
+        "cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_no_clear.py",
+        "cairn/machines/ticket/proofs/test_a_passed_ticket_crosses_through_the_gates_door.py"
       ],
       "reads": [
         "cairn/machines/build_inspector/inspector.py",
@@ -167,13 +184,16 @@
       "cairn/devices/codemother/shim.py",
       "cairn/devices/codemother/intention+why.json",
       "the importers and text spellings named by D6",
-      "the watchme.probe of tickets 0354c0269ff7, 0cde908b8fbe, 2b16d2d8b056, faa51bcfbdfc"
+      "the watchme.probe of tickets 0354c0269ff7, 0cde908b8fbe, 2b16d2d8b056, faa51bcfbdfc",
+      "cairn/machines/ticket/",
+      "cairn/devices/codemother/0/bin/cross",
+      "outline 9.6's verb list"
     ],
     "out": [
-      "the queueme ClearanceGate and the retirement of the cross verb (T3b-2)",
       "retiring cairn/devices/cc/scripts/cross.py (T5)",
       "the trace store block name harbor_master:clearance (it names a corpus in instance-space)",
-      "any change to what clearance decides"
+      "any change to what clearance decides",
+      "the chart stages and the verdict as queueme gates (T4)"
     ]
   },
   "measured": [
@@ -191,6 +211,11 @@
       "when": "2026-11-11",
       "saw": "transitions.crossing_clearance keys on Path(history_path).parent.name, not on the caller",
       "how": "read cairn/tools/base/transitions.py"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "outline_check reds conflict 9.6: the ticket kept the cross verb past this voyage while 9.6 says cross leaves with clear",
+      "how": "CairnCommons/outline_checks/0be964512fb0-20261111T132817.json"
     }
   ]
 }
