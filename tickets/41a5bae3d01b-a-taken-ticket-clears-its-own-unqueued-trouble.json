@@ -1,0 +1,229 @@
+{
+  "id": "41a5bae3d01b",
+  "title": "a taken ticket clears its own unqueued trouble",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "A ticket that queues at a gate and is taken clears its own standing ticket-unqueued-<id>-at-<gate> trouble; a ticket with no standing raise sends no clear.",
+  "why": "Measured 2026-11-11: ticket-unqueued-91a27edfdd81-at-clearance stood at 3x and -at-design at 2x after 91a27edfdd81 crossed PROVED through clearance; Ticket.queue (cairn/machines/ticket/ticket.py:190) raises on a refusal and nothing clears on the later success. CC cleared four by hand through ModuleRaiser('ticket').",
+  "traces_to": "Law 7; outline 3.3.4.3 (a ticket queues itself at a gate and raises when no handler takes it).",
+  "how": "Ticket.queue: when queued and its own trail's newest record naming ticket-unqueued-<id>-at-<gate> is a raise, clear_trouble it (by the ticket id, what_changed 'queued at <gate>: the gate took it'). A red-first proof over a scratch roots table.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a ticket refused at clearance and then taken at clearance leaves its trail's newest record naming ticket-unqueued-<id>-at-clearance a clear_trouble"
+      },
+      {
+        "n": 2,
+        "claim": "a ticket taken at clearance with no prior raise writes no clear_trouble record"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: Ticket._stands_raised(identity) reads self.diagnostic_trail(): the newest *.raise_trouble.json / *.clear_trouble.json (names sorted descending) whose pointer is identity decides; none is False. Ticket.queue, when queued, clears the gate's unqueued identity if it stands raised.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/devices/tester/reseal.py",
+        "cairn/tools/base/diagnostic.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause, Ticket(plan, roots=scratch) with a scripted participant (refuse then accept); the house runner.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/proofs"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/ticket.py",
+      "cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py"
+    ],
+    "out": [
+      "cairn/tools/base/diagnostic.py",
+      "cairn/devices/tester",
+      "every gate's refusal words"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "ticket-unqueued-91a27edfdd81-at-clearance [3x], -at-design [2x] standing after 91a27edfdd81 PROVED",
+      "how": "bin/cmd/slate | grep unqueued"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "41a5bae3d01b: a taken ticket clears its own unqueued trouble",
+      "intent": "A ticket taken at a gate clears its own standing ticket-unqueued-<id>-at-<gate> raise, and sends no clear when none stands.",
+      "scope": "one branch and one helper in Ticket.queue, and its proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "errors are loud at diagnostic surfaces; a trouble whose cause is gone is noise there",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "a ticket queues itself at a gate and raises when no handler takes it",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/machines/ticket/ticket.py",
+          "cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py"
+        ],
+        "out": [
+          "cairn/tools/base/diagnostic.py",
+          "cairn/devices/tester",
+          "every gate's refusal words"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where Ticket.queue raises",
+        "how a raiser reads whether a raise stands",
+        "a scratch-world ticket proof"
+      ],
+      "holdings": [
+        {
+          "what": "Ticket.queue and its unqueued raise",
+          "address": "cairn/machines/ticket/ticket.py"
+        },
+        {
+          "what": "_stands_raised over a raiser's own trail",
+          "address": "cairn/devices/tester/reseal.py"
+        },
+        {
+          "what": "raise_trouble, clear_trouble, diagnostic_trail",
+          "address": "cairn/tools/base/diagnostic.py"
+        },
+        {
+          "what": "the scratch world a queueing ticket is proved in",
+          "address": "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a clear on a taken ask",
+          "measure": "ticket.py:188-195 raises when not queued and has no else; ticket-unqueued-91a27edfdd81-at-clearance stood 3x after PROVED, 2026-11-11"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "Ticket._stands_raised and the clear in queue",
+          "why": "the ticket's own raise is cleared by the ticket when its cause goes away",
+          "kind": "build",
+          "fills": "a clear on a taken ask",
+          "uses": [
+            "cairn/tools/base/diagnostic.py"
+          ],
+          "writes_to": [
+            "cairn/machines/ticket/ticket.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "Ticket._stands_raised and the clear in queue",
+          "why_now": "four unqueued troubles stood after their tickets crossed"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "Ticket._stands_raised and the clear in queue",
+          "expect": "after refuse-then-take the newest trail record naming the identity is a clear; a take with nothing raised writes no clear",
+          "falsifier": "the raise still newest after a take, or a clear written with no raise standing",
+          "instrument": "bin/cairn test cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the two falsifier clauses each hold as a tooth over a scratch world",
+          "instrument": "bin/cairn test cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py",
+          "timeout_s": 300,
+          "covers": [
+            "Ticket._stands_raised and the clear in queue"
+          ]
+        },
+        {
+          "claim": "the ticket machine's queueing proof stays green",
+          "instrument": "bin/cairn test cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py",
+          "timeout_s": 300,
+          "covers": [
+            "Ticket._stands_raised and the clear in queue"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
