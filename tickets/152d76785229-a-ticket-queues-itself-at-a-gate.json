@@ -1,0 +1,93 @@
+{
+  "id": "152d76785229",
+  "title": "a ticket queues itself at a gate",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "A ticket is a machine class, cairn/machines/ticket/ticket.py Ticket, that queues itself at a gate: Ticket.at(fileref) loads it, queueme(gate) asks codemother over the bus with verb machines/<gate>/queueme and body {fileref} and logs the exchange, a bounce or timeout raises a trouble and waits, and the gate's instance calls passed(target) to cross and tell the harbor and the watchers or failed(lacks) to kick back to FIXME and queue at design.",
+  "why": "Outline 3.3.1-3.3.4.3 and 9.6 (Akien 2026-11-10, Q#80 and Q#81 answers): a ticket is a class and a machine, never a device; it crosses a gate by sending its fileref to devices/codemother/0/machines/<gate>/queueme; on a pass it goes to the next step and alerts the probes watching the gate; on a fail it asks design to queue it, and with no handler it throws a trouble and waits; self-queuing belongs to the abstract ticket class. Measured 2026-11-10: no class anywhere sends a ticket to a gate (grep -rn queueme cairn/ finds only the T1 fixture proof), and harbor_master's crossing verb (cairn/devices/cairn/machines/harbor_master/device.py:65) has no poster outside proofs.",
+  "traces_to": "outline 3.3.4.3 and 9.6; RULE 1 (the ticket reaches a gate only through its holder's bus face); Law 6 (the gate judges, the ticket only asks).",
+  "how": "One new machine directory cairn/machines/ticket/ (charter already written) holding ticket.py with class Ticket composing ticket_file, ticket_log, transitions.emit, diagnostic.ModuleRaiser and a caller-supplied bus participant; the tickets store charter gains the log kind gate_dialog; a red-first proof drives it over a scratch tickets dir with a spy participant.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "queueme('gate_x') on a fixture ticket sends exactly one request to 'codemother' with verb 'machines/gate_x/queueme' and body {'fileref': <the plan path>}, returns queued true when the reply body says accepted, and appends one gate_dialog line to the ticket's log naming gate_x and queued true"
+      },
+      {
+        "n": 2,
+        "claim": "a bounced reply (body.is_bounce) and a TimeoutError each return queued false, raise one trouble with identity 'ticket-unqueued-<id>-at-gate_x' into the given roots, and log a gate_dialog line with queued false"
+      },
+      {
+        "n": 3,
+        "claim": "passed('TICKETME', watchers=['probe_a','probe_b']) from [THINKME] returns the emit chokepoint's new workflow string, writes it to the ticket's state file, journals one entry to the given history, posts verb 'crossing' to 'harbor_master' with ticket, from THINKME, to TICKETME and direction forward, and posts verb 'next_step' to probe_a and probe_b naming the ticket, its fileref and TICKETME"
+      },
+      {
+        "n": 4,
+        "claim": "failed([two lacks]) from [BUILDME] puts the state file's cursor at FIXME with a fixme list of two entries {n, kind, missing}, posts a crossing with direction back, then sends a request with verb 'machines/design/queueme'; when that bounces a trouble 'ticket-unqueued-<id>-at-design' is raised and the result says queued false"
+      },
+      {
+        "n": 5,
+        "claim": "Ticket.at(<id>) and Ticket.at(<plan path>) resolve to the same fileref, and Ticket.at('no-such-ticket') raises FileNotFoundError naming 'no-such-ticket'"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: declare the log kind gate_dialog in /home/akien/dev/src/CairnCommons/tickets/_charter+why.json log_kinds, through the artifact door: {\"gate\": \"the gate the ticket asked\", \"verb\": \"the bus verb sent\", \"sent\": \"the body sent\", \"reply\": \"the reply body, or {error} when none came\", \"queued\": \"true when the gate took the ticket\"}.",
+      "writes_to": [
+        "/home/akien/dev/src/CairnCommons/tickets/_charter+why.json"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_log.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/machines/ticket/__init__.py (docstring only) and cairn/machines/ticket/ticket.py. Constants GATE_HOLDER='codemother', HARBOR='harbor_master', DESIGN='design'. class Ticket(plan: Path, *, roots=None). classmethod at(ref, *, tickets_dir=None, roots=None): a ref naming an existing file is the plan; else ticket_file.find_ticket(ref, tickets_dir); None raises FileNotFoundError(f'no ticket resolves from {ref!r}'). Properties id (the plan's id), fileref (str of the plan path), doc() = ticket_file.read_ticket, workflow = doc()['workflow_and_state']. queueme(gate, *, participant, timeout=30.0) -> dict: participant.request(to=GATE_HOLDER, verb=f'machines/{gate}/queueme', body={'fileref': fileref}, why=..., timeout=timeout); queued = reply body accepted is True and not is_bounce; a TimeoutError becomes reply {'error': str(exc)} and queued False; append_log(plan, 'gate_dialog', {gate, verb, sent, reply, queued}, actor=id, why=...); when not queued, ModuleRaiser('ticket', roots=roots).raise_trouble(f'ticket-unqueued-{id}-at-{gate}', why=..., detail={fileref, gate, reply}); returns {queued, gate, reply, trouble (identity or None)}. passed(target, *, participant, watchers=(), history_path, state_path, actor, why, **journal_extra) -> str: new = transitions.emit(self.workflow, target, history_path=..., state_path=..., ticket=id, actor=actor, why=why, **journal_extra); write {'workflow_and_state': new} to the ticket; post crossing to HARBOR {ticket, component (the owning_intention's directory), from (old cursor step), to target, direction 'forward'}; post next_step to each watcher {ticket, fileref, step: target}; return new. failed(lacks, *, participant, history_path, state_path, actor, why, timeout=30.0) -> dict: lacks are [{kind, why}]; new = emit(self.workflow, 'FIXME', ..., write_fixme=False, ticket=id, actor, missing=[f'[{kind}] {why}'], why=why); write {'workflow_and_state': new, 'fixme': [{n, kind, missing}]}; post crossing with direction 'back'; return {**self.queueme(DESIGN, participant=..., timeout=timeout), 'workflow': new}. The ticket write updates the state file through ticket_file.write_state(verb='phase') when one stands, else rewrite_ticket. Never imports clearance or any device (RULE 1).",
+      "writes_to": [
+        "cairn/machines/ticket/__init__.py",
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_file.py",
+        "cairn/tools/base/ticket_log.py",
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/diagnostic.py",
+        "cairn/devices/cairn/machines/harbor_master/clearance.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py, red-first, PROVES 152d76785229 clauses 1 to 5, one tooth each, binding Ticket at call time. Each tooth builds a scratch tickets dir (tempfile), copies the live store charter into it, writes one fixture plan and state, points cairn.tools.base.ticket_file._TICKETS at it for the tooth and restores it after, and uses diagnostic roots {repo, commons, instance} under the same tempdir. The spy participant records request() and post() calls and answers request() from a scripted reply or by raising TimeoutError.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_raise_trouble.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/",
+      "the log_kinds of /home/akien/dev/src/CairnCommons/tickets/_charter+why.json"
+    ],
+    "out": [
+      "codemother's gate machines and any caller of Ticket (T3)",
+      "cairn/devices/cairn/machines/harbor_master/clearance.py (unchanged; it moves in T3)",
+      "CC's sail helpers (T5)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "nothing sends a ticket to a gate; harbor's crossing verb has no poster outside proofs",
+      "how": "grep -rn queueme cairn/ and grep -rn 'verb=\"crossing\"' cairn --include=*.py"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "emit crosses THINKME->TICKETME for a ticket cast in a scratch tickets dir with ticket_file._TICKETS pointed at it; FIXME is entered from BUILDME or later",
+      "how": "scratch script running the real transitions.emit"
+    }
+  ]
+}
