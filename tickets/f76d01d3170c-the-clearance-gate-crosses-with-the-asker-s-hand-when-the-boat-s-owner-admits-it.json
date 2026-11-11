@@ -1,0 +1,233 @@
+{
+  "id": "f76d01d3170c",
+  "title": "the clearance gate crosses with the asker's hand when the boat's owner admits it",
+  "owning_intention": "cairn/devices/codemother/machines/clearance/intention+why.json",
+  "intention": "A ticket queued at CodeMother's clearance gate crosses with the asking sender's hand whenever the boat's owning intention admits that sender, and with the gate's own hand (codemother) otherwise; clearance.clear still decides.",
+  "why": "Measured 2026-11-11: sail.py cross 91a27edfdd81 was refused at clearance.py:1388, \"'codemother' may not move boat '91a27edfdd81' to 'PROVEME': that boat is owned by cairn/devices/cc/intention+why.json, whose gate admits ['CC']\". The gate always crosses as codemother (gate.py:178, 0be964512fb0 D5), so a boat CC owns cannot cross even when CC asks. Outline 9.6: moving a ticket is the ticket's own act; CodeMother's gates only answer it.",
+  "traces_to": "Outline 9.6 and 3.3.4; Law 6 (the owner alone gates writes, so the owner judges the hand).",
+  "how": "ClearanceGate.hand_of(tid, asked_by) in cairn/devices/codemother/machines/clearance/gate.py reads boat_owner_of over the gate's roots and returns asked_by when the owner's hands hold it, else HOLDER; queueme passes it to Ticket.passed as actor. A red-first proof over a scratch world patches clearance.clear to record the actor it is handed.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a boat whose owning intention's gated_by is only CC, queued at clearance by sender CC, reaches clearance.clear with actor CC, and the gate answers accepted with the workflow clear returned"
+      },
+      {
+        "n": 2,
+        "claim": "the same boat queued by sender cairn-codemother-cli reaches clearance.clear with actor codemother"
+      },
+      {
+        "n": 3,
+        "claim": "a boat whose owner admits codemother and CC reaches clearance.clear with actor CC when CC asks and with actor codemother when the sender is empty"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ClearanceGate.hand_of(tid, asked_by) -> str: boat_owner_of(tid, tickets_dir, cairn_root, commons_root from self._where()); OwnerUnresolvable -> HOLDER (clear then refuses in its own words); asked_by in owner.hands -> asked_by, else HOLDER. queueme passes actor=self.hand_of(tid, asked_by) to ticket.passed. The docstring's 'The actor is codemother' paragraph becomes this rule.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/gate.py",
+        "cairn/devices/codemother/machines/clearance/clearance.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause, over a scratch repo/commons (charter with gated_by, a plan at TICKETME, a proof declaring it) like test_clearance_berths_in_codemother.py tooth 4; clearance.clear is patched on its module for the tooth to record kwargs and return the next workflow; the house runner.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/proofs/test_the_gate_crosses_with_the_askers_hand.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/proofs/test_clearance_berths_in_codemother.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/clearance/gate.py",
+      "cairn/devices/codemother/machines/clearance/proofs/test_the_gate_crosses_with_the_askers_hand.py"
+    ],
+    "out": [
+      "clearance.py's authority rung",
+      "every charter's gated_by",
+      "cairn/devices/cc"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "clearance refused 91a27edfdd81: 'codemother' may not move boat '91a27edfdd81' to 'PROVEME' ... whose gate admits ['CC']",
+      "how": "bash cairn/devices/cc/scripts/prove.sh 91a27edfdd81 ... (sail.py cross 91a27edfdd81)"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "boat_owner_of: 91a27edfdd81 -> ('CC',); fa4462c803d6 and 0be964512fb0 -> ('codemother', 'CC')",
+      "how": "python3 -c boat_owner_of(t).hands"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "f76d01d3170c: the clearance gate crosses with the asker's hand when the boat's owner admits it",
+      "intent": "CodeMother's clearance gate hands clearance.clear the asking sender as the actor whenever the boat's owning intention admits that sender, and its own hand (codemother) otherwise.",
+      "scope": "one method and one argument in the clearance gate, and its proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "moving a ticket across its workflow is the ticket's own act; CodeMother's gates only answer it",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        },
+        {
+          "text": "everything has exactly one owner, and the owner alone gates writes to it",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/clearance/gate.py",
+          "cairn/devices/codemother/machines/clearance/proofs/test_the_gate_crosses_with_the_askers_hand.py"
+        ],
+        "out": [
+          "clearance.py's authority rung",
+          "every charter's gated_by",
+          "cairn/devices/cc"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "who owns a boat and which hands it admits",
+        "the gate's queueme and its actor",
+        "a scratch-world proof of the gate"
+      ],
+      "holdings": [
+        {
+          "what": "boat_owner_of and clear's authority rung",
+          "address": "cairn/devices/codemother/machines/clearance/clearance.py"
+        },
+        {
+          "what": "ClearanceGate.queueme and _where",
+          "address": "cairn/devices/codemother/machines/clearance/gate.py"
+        },
+        {
+          "what": "the scratch world tooth 4 builds",
+          "address": "cairn/devices/codemother/machines/clearance/proofs/test_clearance_berths_in_codemother.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a gate that crosses with the asker's hand",
+          "measure": "gate.py:178 passes actor=HOLDER always; sail.py cross 91a27edfdd81 refused at clearance.py:1388, 2026-11-11"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "ClearanceGate.hand_of and queueme's actor",
+          "why": "the crossing is the ticket's act, asked by a hand its owner admits",
+          "kind": "build",
+          "fills": "a gate that crosses with the asker's hand",
+          "uses": [
+            "cairn/devices/codemother/machines/clearance/clearance.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/clearance/gate.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "ClearanceGate.hand_of and queueme's actor",
+          "why_now": "it unblocks 91a27edfdd81's PROVEME"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "ClearanceGate.hand_of and queueme's actor",
+          "expect": "clearance.clear handed actor CC when CC asks a boat its owner lets CC move, codemother otherwise",
+          "falsifier": "actor codemother when CC asks a CC-only boat, or the asker's name when the owner does not admit it",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/clearance/proofs/test_the_gate_crosses_with_the_askers_hand.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the three falsifier clauses each hold as a tooth over a scratch world",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/clearance/proofs/test_the_gate_crosses_with_the_askers_hand.py",
+          "timeout_s": 300,
+          "covers": [
+            "ClearanceGate.hand_of and queueme's actor"
+          ]
+        },
+        {
+          "claim": "the clearance gate's berth proof stays green",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/clearance/proofs/test_clearance_berths_in_codemother.py",
+          "timeout_s": 600,
+          "covers": [
+            "ClearanceGate.hand_of and queueme's actor"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
