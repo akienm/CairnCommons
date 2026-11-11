@@ -1,73 +1,95 @@
 {
   "id": "91a27edfdd81",
-  "title": "CC's chart and verdict helpers ask CodeMother over the bus",
+  "title": "CC charts, crosses and closes a ticket through the ticket machine and CodeMother's gates",
   "owning_intention": "cairn/devices/cc/intention+why.json",
-  "intention": "CC's chart and verdict helpers ask CodeMother's chart verb over the bus, one request per stage, instead of importing her stage machines.",
-  "why": "Measured 2026-11-10: cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py tooth test_no_cc_file_imports_another_device reds on cairn/devices/cc/scripts/chart_ticket.py (seven codemother imports) and cairn/devices/cc/scripts/verdict_ticket.py (one), beside cairn/devices/cc/scripts/cross.py (ticket 5e11fadd63b3).",
-  "traces_to": "RULE 1; outline 9.3.4, 9.6 and Q#81; the cc proof's tooth test_no_cc_file_imports_another_device.",
-  "how": "Make chart_ticket.py and verdict_ticket.py functions taking bus and learn, with __main__ blocks; each stage is reach('codemother').request(sender='CC', to='codemother', verb='chart', body={stage, op, input}); a refusal exits 1 with her reason. Red-first proof drives them with a recording bus.",
+  "intention": "CC's one sail helper drafts a ticket's chart and then has the ticket queue itself, by its fileref, at CodeMother's chart, clearance and verdict gates over the bus, with CC as the sender; it imports none of her code, and the three helpers that did (cross.py, chart_ticket.py, verdict_ticket.py) are deleted.",
+  "why": "Measured 2026-11-10: cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py tooth test_no_cc_file_imports_another_device reds on cairn/devices/cc/scripts/chart_ticket.py (seven codemother imports) and cairn/devices/cc/scripts/verdict_ticket.py (one), beside cairn/devices/cc/scripts/cross.py (ticket 5e11fadd63b3). Recast 2026-11-11: CodeMother answers no chart verb (26ec04b32637 RETIRED) \u2014 each stage is a gate a ticket queues at (fa4462c803d6 PROVED), so the helpers ask the gates, and cross.py (5e11fadd63b3, aimed at the harbor's retired clear) folds in here.",
+  "traces_to": "RULE 1; outline 9.6 (no chart or verdict verb; cross leaves with the harbor's clear) and 3.3.4.3 (the ticket sends only its fileref), Q#80/Q#81; the cc proof's tooth test_no_cc_file_imports_another_device.",
+  "how": "One script, cairn/devices/cc/scripts/sail.py, with four verbs: draft (CC's chart spec -> one Ticket.draft per stage), chart (Ticket.chart), cross (no target: Ticket.queueme('clearance'); FIXME or a disposition by name: cairn.tools.base.cross; any other target refused), verdict (a draft from the validate berth's criteria claimed pass, then Ticket.queueme('verdict')). Its participant is an Asker over cairn.tools.bus_client.reach('codemother') stamping sender CC. close.sh and prove.sh call it; cross.py, chart_ticket.py, verdict_ticket.py and 5e11fadd63b3's proof are deleted. A red-first proof drives it with a recording bus over a scratch tickets store.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "cairn/devices/cc/scripts/chart_ticket.py and cairn/devices/cc/scripts/verdict_ticket.py import nothing under cairn.devices"
+        "claim": "cairn/devices/cc/scripts/sail.py imports nothing under cairn.devices, and cairn/devices/cc/scripts/ holds no cross.py, chart_ticket.py or verdict_ticket.py"
       },
       {
         "n": 2,
-        "claim": "driven with a recording bus and a spec, chart_ticket sends orient floor, then a write for each of the seven stages in order, each a request to codemother verb chart sender CC, each write's packet carrying the previous stage's berth as its ref"
+        "claim": "draft writes chart.<stage> for orient through validate on the plan, each carrying the spec's fields for that stage's door and neither the ticket claim nor any *_ref key"
       },
       {
         "n": 3,
-        "claim": "driven with a recording bus, verdict_ticket sends one chart request, stage verdict op write, its packet carrying the chain's validate ref and the spec's verdicts"
+        "claim": "chart sends one request per stage, orient through validate in order, each to codemother, verb machines/<stage>/queueme, sender CC, body exactly {fileref}; a reply with passed false stops it there with exit 1 naming the stage and its lacks"
       },
       {
         "n": 4,
-        "claim": "a refusal reply makes either helper exit 1 with CodeMother's reason and send nothing after it"
+        "claim": "cross with no target sends exactly one request, machines/clearance/queueme with body {fileref}, and prints the workflow the gate answered; a refusal exits 1 with the gate's reason"
+      },
+      {
+        "n": 5,
+        "claim": "cross naming a forward target exits 1, sends nothing and changes no ticket file; naming FIXME or a disposition it calls the cross tool with actor CC and the why, proofs and missing given, and sends nothing on the bus"
+      },
+      {
+        "n": 6,
+        "claim": "verdict drafts chart.verdict whose verdicts carry every validate criterion's claim and instrument verbatim, outcome pass and the given observation, then sends exactly one request, machines/verdict/queueme with body {fileref}; with no validate berth it exits 1 and sends nothing"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: cairn/devices/cc/scripts/chart_ticket.py: def chart(spec, *, bus=None, learn=None) -> int and a __main__ block; ask(stage, op, input) sends one chart request and returns the body's packet or berth, raising SystemExit(1) with the reason on accepted False; learn defaults to the skills.chart.live learn subprocess.",
+      "text": "D1: cairn/devices/cc/scripts/sail.py: Asker(bus=None) with request/post stamping sender CC and channel personal over reach('codemother'); drafts_of(spec) -> {stage: draft} using chart_ticket.py's field shapes minus ticket and refs; draft, chart, cross, verdict, verdict_draft functions each returning an exit code and taking participant/tickets_dir/crosser for the proof; argparse main. Forward test: canon_target is FIXME or is_disposition, else refused.",
       "writes_to": [
-        "cairn/devices/cc/scripts/chart_ticket.py"
+        "cairn/devices/cc/scripts/sail.py"
       ],
       "reads": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/tools/base/cross.py",
         "cairn/devices/cc/scripts/chart_ticket.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: cairn/devices/cc/scripts/verdict_ticket.py: def verdict(spec, *, bus=None, learn=None, chain=None) -> int the same way, one chart request stage verdict op write.",
+      "text": "D2: close.sh crosses PROVED with 'sail.py cross $ID' (the note rides the commit message; the gate derives the proofs); prove.sh crosses PROVEME with 'sail.py cross $ID'. cross.py, chart_ticket.py and verdict_ticket.py are deleted, and with them cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py (5e11fadd63b3's red-first proof, aimed at the harbor's clear that outline 9.4.1.5 retired).",
       "writes_to": [
-        "cairn/devices/cc/scripts/verdict_ticket.py"
+        "cairn/devices/cc/scripts/close.sh",
+        "cairn/devices/cc/scripts/prove.sh",
+        "cairn/devices/cc/scripts/cross.py",
+        "cairn/devices/cc/scripts/chart_ticket.py",
+        "cairn/devices/cc/scripts/verdict_ticket.py",
+        "cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py"
       ],
       "reads": [
-        "cairn/devices/cc/scripts/verdict_ticket.py"
+        "cairn/devices/cc/scripts/close.sh",
+        "cairn/devices/cc/scripts/prove.sh"
       ]
     },
     {
       "n": 3,
-      "text": "D3: the proof cairn/devices/cc/proofs/test_the_chart_helpers_ask_codemother_over_the_bus.py, red-first, PROVES 1-4; it loads both helpers by path, drives them with a recording bus that answers each request, and an AST scan for clause 1; the house runner.",
+      "text": "D3: the proof cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py, red-first, PROVES 91a27edfdd81 1-6: a scratch tickets store (the live store charter copied in, ticket_file._TICKETS pointed at it), a recording bus behind a real Asker, an injected crosser for clause 5, an AST scan for clause 1; the house runner.",
       "writes_to": [
-        "cairn/devices/cc/proofs/test_the_chart_helpers_ask_codemother_over_the_bus.py"
+        "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
       ],
       "reads": [
-        "cairn/devices/cc/scripts/chart_ticket.py",
-        "cairn/devices/cc/scripts/verdict_ticket.py"
+        "cairn/devices/cc/scripts/sail.py",
+        "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
       ]
     }
   ],
   "bounds": {
     "in": [
-      "cairn/devices/cc/proofs/test_the_chart_helpers_ask_codemother_over_the_bus.py",
+      "cairn/devices/cc/scripts/sail.py",
+      "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+      "cairn/devices/cc/scripts/close.sh",
+      "cairn/devices/cc/scripts/prove.sh",
+      "cairn/devices/cc/scripts/cross.py",
       "cairn/devices/cc/scripts/chart_ticket.py",
-      "cairn/devices/cc/scripts/verdict_ticket.py"
+      "cairn/devices/cc/scripts/verdict_ticket.py",
+      "cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py"
     ],
     "out": [
-      "cross.py (ticket 5e11fadd63b3)",
-      "CodeMother's chart verb (its own ticket)",
+      "CodeMother's gates (fa4462c803d6, PROVED)",
+      "the ticket machine",
+      "the /chart skill (1800df654068)",
       "every other cc file"
     ]
   },
@@ -76,6 +98,291 @@
       "when": "2026-11-10",
       "saw": "test_no_cc_file_imports_another_device FAIL naming chart_ticket.py:20-58 and verdict_ticket.py:9",
       "how": "bin/cairn test cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "a request from sender CC over reach('codemother') to machines/clearance/queueme and machines/orient/queueme with an empty body is answered by the gate itself (accepted false, 'queueme needs a fileref'), so CC reaches the gates over the bus today",
+      "how": "python3 -c reach('codemother').request(sender='CC', ..., body={})"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "91a27edfdd81: CC charts, crosses and closes a ticket through the ticket machine and CodeMother's gates",
+      "intent": "One cc script, sail.py, drafts a ticket's chart and has the ticket queue itself by fileref at CodeMother's chart, clearance and verdict gates over the bus with CC as sender; back-edges and dispositions ride the cross tool; cross.py, chart_ticket.py and verdict_ticket.py are deleted.",
+      "scope": "one new cc script and its proof, two shell helpers repointed, three helpers and one stale proof deleted",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "every component talks to another only through its public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "the ticket sends only its fileref; the gate instantiates it on its own side",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        },
+        {
+          "text": "there is no chart or verdict verb, and cross leaves with the harbor's clear",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/scripts/sail.py",
+          "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+          "cairn/devices/cc/scripts/close.sh",
+          "cairn/devices/cc/scripts/prove.sh",
+          "cairn/devices/cc/scripts/cross.py",
+          "cairn/devices/cc/scripts/chart_ticket.py",
+          "cairn/devices/cc/scripts/verdict_ticket.py",
+          "cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py"
+        ],
+        "out": [
+          "CodeMother's gates",
+          "the ticket machine",
+          "the /chart skill (1800df654068)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "the ticket's queueme and chart",
+        "the cross tool for back-edges",
+        "a bus that asks codemother",
+        "the gates' answers"
+      ],
+      "holdings": [
+        {
+          "what": "Ticket.at, draft, berth, chart, queueme",
+          "address": "cairn/machines/ticket/ticket.py"
+        },
+        {
+          "what": "cross, the tool for non-rest crossings",
+          "address": "cairn/tools/base/cross.py"
+        },
+        {
+          "what": "reach",
+          "address": "cairn/tools/bus_client/bus_client.py"
+        },
+        {
+          "what": "the stage, clearance and verdict gates' queueme",
+          "address": "cairn/devices/codemother/machines/chart_gate/gate.py"
+        },
+        {
+          "what": "close.sh, the commit-cross-PROVED helper",
+          "address": "cairn/devices/cc/scripts/close.sh"
+        },
+        {
+          "what": "prove.sh, the seal-and-PROVEME helper",
+          "address": "cairn/devices/cc/scripts/prove.sh"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a cc helper that queues a ticket at a gate",
+          "measure": "cross.py, chart_ticket.py and verdict_ticket.py each import codemother machines and call them in-process, cairn/devices/cc/scripts/, 2026-11-11"
+        },
+        {
+          "what": "a cc file free of other devices' imports",
+          "measure": "test_no_cc_file_imports_another_device FAIL naming chart_ticket.py and verdict_ticket.py, 2026-11-10"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "sail.py's draft and chart",
+          "why": "the chart stages are gates the ticket queues at",
+          "kind": "build",
+          "fills": "a cc helper that queues a ticket at a gate",
+          "uses": [
+            "cairn/machines/ticket/ticket.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/sail.py"
+          ]
+        },
+        {
+          "what": "sail.py's cross",
+          "why": "the clearance gate derives the forward crossing; back-edges ride the cross tool",
+          "kind": "build",
+          "fills": "a cc helper that queues a ticket at a gate",
+          "uses": [
+            "cairn/machines/ticket/ticket.py",
+            "cairn/tools/base/cross.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/sail.py"
+          ]
+        },
+        {
+          "what": "sail.py's verdict",
+          "why": "the verdict gate observes the dispositions; CC only claims the criteria",
+          "kind": "build",
+          "fills": "a cc helper that queues a ticket at a gate",
+          "uses": [
+            "cairn/machines/ticket/ticket.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/sail.py"
+          ]
+        },
+        {
+          "what": "the old helpers deleted and the shell helpers repointed",
+          "why": "RULE 1: no cc file imports another device",
+          "kind": "build",
+          "fills": "a cc file free of other devices' imports",
+          "uses": [
+            "cairn/devices/cc/scripts/close.sh",
+            "cairn/devices/cc/scripts/prove.sh"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/close.sh",
+            "cairn/devices/cc/scripts/prove.sh",
+            "cairn/devices/cc/scripts/cross.py",
+            "cairn/devices/cc/scripts/chart_ticket.py",
+            "cairn/devices/cc/scripts/verdict_ticket.py",
+            "cairn/devices/cc/proofs/test_cross_asks_the_harbor_over_the_bus.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "sail.py's draft and chart",
+          "why_now": "first: the other verbs follow its shape"
+        },
+        {
+          "what": "sail.py's cross",
+          "why_now": "close.sh and prove.sh need it"
+        },
+        {
+          "what": "sail.py's verdict",
+          "why_now": "it closes the chart"
+        },
+        {
+          "what": "the old helpers deleted and the shell helpers repointed",
+          "why_now": "last, once sail.py stands"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "sail.py's draft and chart",
+          "expect": "seven per-stage drafts without claim or refs, then seven queueme requests in order from CC",
+          "falsifier": "a draft carrying a ref or claim, a stage out of order, or a sender other than CC",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        },
+        {
+          "piece": "sail.py's cross",
+          "expect": "no target queues at clearance; FIXME or a disposition rides the tool; a forward target is refused",
+          "falsifier": "a forward crossing by name, or a bus request on a back-edge",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        },
+        {
+          "piece": "sail.py's verdict",
+          "expect": "a verdict draft with every criterion verbatim and pass, then one verdict queueme",
+          "falsifier": "a criterion missing or reworded, or a disposition authored",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        },
+        {
+          "piece": "the old helpers deleted and the shell helpers repointed",
+          "expect": "the device's no-import tooth goes green",
+          "falsifier": "any cc file importing cairn.devices.<other>",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the six falsifier clauses each hold as a tooth over a scratch tickets store",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+          "timeout_s": 300,
+          "covers": [
+            "sail.py's draft and chart",
+            "sail.py's cross",
+            "sail.py's verdict",
+            "the old helpers deleted and the shell helpers repointed"
+          ]
+        },
+        {
+          "claim": "no cc file imports another device",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_cc_proofs_reach_no_other_device.py",
+          "timeout_s": 300,
+          "covers": [
+            "sail.py's draft and chart",
+            "sail.py's cross",
+            "sail.py's verdict",
+            "the old helpers deleted and the shell helpers repointed"
+          ]
+        },
+        {
+          "claim": "the cc device proof stays green",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_cc_device.py",
+          "timeout_s": 600,
+          "covers": [
+            "sail.py's draft and chart",
+            "sail.py's cross",
+            "sail.py's verdict",
+            "the old helpers deleted and the shell helpers repointed"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }

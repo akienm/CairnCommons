@@ -1,0 +1,81 @@
+{
+  "ticket": "91a27edfdd81",
+  "at": "2026-11-11T17:09:10+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1739511,
+      "duration_ms": 131311,
+      "is_error": false,
+      "session_id": "0dbe5932-e269-48b5-9d5b-4b1edc73064d"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "8207576f5e361f885500c91750bfbce48c3e2f3e78fceb9ffe28b165838ba95c",
+  "ticket_sha256": "a702e68d6635d036183551197e2e38c9d05edb0eabf411df2fc51afce8155671",
+  "touches": [
+    {
+      "number": "3.3.4",
+      "text": "The ticket IS its own manager. It carries its workflow and status, and asks each gate whether it can transit. If refused, it gets itself back to design for fixing. If no handler is available to ask, it throws a trouble and waits until we decide."
+    },
+    {
+      "number": "3.3.4.1",
+      "text": "The ticket owns its refusals: a gate refuses a crossing on the ticket's behalf. The gates are CodeMother's (9.3.5)."
+    },
+    {
+      "number": "3.3.4.3",
+      "text": "A ticket's code is a tool or machine; its life is data. All of its state is on disk, so anyone can instantiate it to talk to it, and any dialog is written to the relevant part of the ticket as it happens. To cross a gate the ticket asks that gate to queue it, sending only its fileref: devices/codemother/0/machines/<inspector>/queueme <fileref>. The gate instantiates the ticket from that fileref on its own side. A ticket instance then processes the pass or fail: on a pass it goes on to the next step, alerting the probes watching the gate (3.3.4.2); on a fail it asks design to queue it, the same way. Self-queuing is the abstract ticket's (3.3.2), so every kind inherits it and no caller queues a ticket on its behalf (Akien, same day: \"that could be in the class, rather than the instance :) self queuing\"). WHY: Akien, 2026-11-10: \"now it has to send it's fileref over to the thing that will process it, and a new code instance created over there even tho it's the same thing... because that's good encapsulation. :)\""
+    },
+    {
+      "number": "5.4.3.2",
+      "text": "The launcher walks the words. `cairn cairn foo bar` (the long form) means \"tell the cairn device to run foo with argument bar\". At each level: is the next word a machine here? Step into it and take the next word. Is it a script in this level's bin/? Run it, pass back the result, done. Neither? It is a bus verb: send it to this level over the bus. So `cairn foo bar baz`: foo is a device; it has a machine bar; bar's bin/ has baz, so baz runs. No bar machine? bar goes to foo over the bus. Each check is one directory lookup, so it is fast. WHY scripts first: scripts are the simple path; the bus is the route to what a device answers itself."
+    },
+    {
+      "number": "9.3.1",
+      "text": "She is NOT a builder: Claude and aider build. She owns the care of the code: the inspectors, gates, processes and workflows the builders pass through are hers to own and, eventually, to optimize."
+    },
+    {
+      "number": "9.4.1",
+      "text": "harbor_master"
+    },
+    {
+      "number": "9.4.1.5",
+      "text": "VERBS: status queries only (show, get), and crossing, the notice a ticket sends as it moves, which keeps the register. It answers no gate and moves no ticket. A ticket that would cross a gate asks that gate itself for an inspection, and either receives a pass or sends itself back to design (3.3.4). WHY: Akien, 2026-11-10: \"why would the harbor master's bus face answer anything other than a status query. if anything (ticket) is going to try and cross a gate it's the ticket that asks that gate for an inspection. and the ticket either recieves a pass or it sends itself back to design.\" Measured the same day: the bus face also answers `clear` (fires clearance.py and moves a boat) and `watch` (sends a ticket to FIXME), and both leave. COMMANDS: cairn codemother harbor_master -> \"652 boats (570 open, 82 in port)\"."
+    },
+    {
+      "number": "9.6",
+      "text": "VERBS: activate, charter, deposit, drain, feedback, question, sealed (plus get and show). Moving a ticket across its workflow is the ticket's own act; CodeMother's gates only answer it (3.3.4). Each chart stage (orient through validate) and the verdict is a gate machine that answers queueme <fileref>; the ticket class queues itself to each in turn (3.3.4.3), so there is no chart or verdict verb, and `cross` leaves with the harbor's `clear` (9.4.1.5). WHY: Akien, 2026-11-10, Q#81 (\"should CodeMother answer a `chart` verb ... and a `verdict` verb?\"): \"yes, Q#81 closes on that\", that being each stage and the verdict a gate with queueme, queued by the ticket class."
+    },
+    {
+      "number": "10.3.3",
+      "text": "Owns the Claude Code hooks: mail check, the turn-shape and ask scans, the gates on record writes and deletes. Anything that adapts CC specifically to Cairn goes in the CC device, and every one of CC's scripts lives here."
+    },
+    {
+      "number": "10.3.10",
+      "text": "Skills (skills/: cairnhelp, challenge, chart, commit, intent, sorted, ...) are Claude Code's. The deterministic parts move out of markdown into CC device verbs: a skill's OS-side work runs as a script, and CC's shim processes the result and injects it into the session. WHY: every habit captured that way is one CC no longer spends inference on, so CC gets faster; a first charting pass done in deterministic Python with no LLM until after saved about 90% of tokens, measured in real use."
+    },
+    {
+      "number": "17.13.1",
+      "text": "The RULE 1 check is a path check: code inside device bar may not import cairn.devices.foo (anything not under cairn.devices.bar), except a tool foo publishes (cairn.devices.foo.tools.<x>, its charter saying published_by_device). Inside one device there is one owner, so nothing is checked there. A charter's public_interface describes what the component offers (modules, functions, bus verbs, commands); the check does not read it. Akien 2026-11-09 (Q#77): \"wouldn't it be easier (for the python code anyway) to see if the imports do not include other device paths?\""
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "9.6",
+      "text": "VERBS: activate, charter, deposit, drain, feedback, question, sealed (plus get and show). Moving a ticket across its workflow is the ticket's own act; CodeMother's gates only answer it (3.3.4). Each chart stage (orient through validate) and the verdict is a gate machine that answers queueme <fileref>; the ticket class queues itself to each in turn (3.3.4.3), so there is no chart or verdict verb, and `cross` leaves with the harbor's `clear` (9.4.1.5). WHY: Akien, 2026-11-10, Q#81 (\"should CodeMother answer a `chart` verb ... and a `verdict` verb?\"): \"yes, Q#81 closes on that\", that being each stage and the verdict a gate with queueme, queued by the ticket class.",
+      "ticket_says": "cross with no target sends exactly one request to machines/clearance/queueme on CodeMother, receives a workflow back from the gate; naming FIXME or a disposition, it calls the cross tool instead",
+      "why": "Outline 9.6 states: '`cross` leaves with the harbor's `clear` (9.4.1.5)' — the outline ties cross to harbor_master's clear verb (which fires clearance.py and moves a boat per 9.4.1.5), but the ticket implements cross as a gate machine on CodeMother that queues the ticket at machines/clearance/queueme. These are different mechanisms: one is the harbor_master's verb; the other is a CodeMother gate. The outline gives no clearance gate in the chart stages (orient–validate, verdict), only mentions it implicitly via the cross-harbor relationship."
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [
+    "RULE 1"
+  ],
+  "questions_opened": [
+    "open-c2b8a19e5eaa"
+  ],
+  "questions_already_open": []
+}
