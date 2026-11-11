@@ -1,0 +1,86 @@
+{
+  "id": "8b16f3e77013",
+  "title": "the librarian's WATCHME probes report to CodeMother's gate",
+  "owning_intention": "cairn/devices/librarian/intention+why.json",
+  "intention": "The librarian's two standing WATCHME probes post their findings to CodeMother's WATCHME gate (to codemother, verb machines/watchme/watch, carry built by watch_carry with a holds reading): cairn/devices/librarian/probes/web_server_serves_dynamic_panes.py for ticket 72e8e3509287 and cairn/devices/librarian/probes/ask_spares_akien.py for ticket cd8096f9eeca; both tickets' watchme specs name the gate's receiver.",
+  "why": "Outline 3.3.4 and 9.4.1.5 (Akien 2026-11-10): every WATCHME probe posts its finding to CodeMother's WATCHME gate. Measured 2026-11-10: test_librarian_probes_report_to_the_watch.py sealed red on exactly these two, posts verb '' and receiver is None. It was red before 386ea8131006 too, hidden by a reader KeyError that 386ea8131006 fixed.",
+  "traces_to": "outline 3.3.4, 9.4.1.5; ticket 386ea8131006 (the gate).",
+  "how": "Two probe edits in the 92-probe armed pattern (cairn/devices/cc/probes/the_shim_delivers_mail.py); two receiver writes through ticket_file.write_state; reseal the report proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/devices/librarian/proofs/test_librarian_probes_report_to_the_watch.py greens: every standing librarian WATCHME probe posts verb machines/watchme/watch to codemother, and every standing librarian watchme spec names the receiver {what: codemother watchme gate, in: cairn/devices/codemother/machines/watchme}"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: web_server_serves_dynamic_panes.py: import watch_carry; _TICKET_ID = '72e8e3509287'; def _holds(context) -> bool: False when any render read by _read_renders has an empty or missing 'content', else True (no records holds). PROBE gets to='codemother', verb='machines/watchme/watch', carry=watch_carry(_TICKET_ID, _carry, holds=_holds); the carry's 'ticket' key is dropped (watch_carry supplies it). Docstring: AUTHORITY none; it posts to CodeMother's WATCHME gate.",
+      "writes_to": [
+        "cairn/devices/librarian/probes/web_server_serves_dynamic_panes.py"
+      ],
+      "reads": [
+        "cairn/tools/base/probe.py",
+        "cairn/devices/cc/probes/the_shim_delivers_mail.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: ask_spares_akien.py: import watch_carry; _TICKET_ID = 'cd8096f9eeca'; def _holds(context): return once(context, 'survey', survey)['holds']. PROBE gets to='codemother', verb='machines/watchme/watch', carry=watch_carry(_TICKET_ID, _carry, holds=_holds); body keeps nexus/kind/object and drops its 'ticket' key.",
+      "writes_to": [
+        "cairn/devices/librarian/probes/ask_spares_akien.py"
+      ],
+      "reads": [
+        "cairn/tools/base/probe.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: for 72e8e3509287 and cd8096f9eeca, state['watchme']['receiver'] = dict(cairn.devices.codemother.machines.watchme.gate.RECEIVER), through ticket_file.write_state(plan, state, verb='cast', why='8b16f3e77013: the watchme receiver is CodeMother's gate').",
+      "writes_to": [
+        "/home/akien/dev/src/CairnCommons/tickets/"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_file.py",
+        "cairn/devices/codemother/machines/watchme/gate.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: reseal cairn/devices/librarian/proofs/test_librarian_probes_report_to_the_watch.py; its bytes do not change.",
+      "writes_to": [
+        "cairn/devices/librarian/validations/test_librarian_probes_report_to_the_watch.json"
+      ],
+      "reads": [
+        "cairn/devices/librarian/proofs/test_librarian_probes_report_to_the_watch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/librarian/probes/web_server_serves_dynamic_panes.py",
+      "cairn/devices/librarian/probes/ask_spares_akien.py",
+      "the watchme receiver of tickets 72e8e3509287 and cd8096f9eeca",
+      "cairn/devices/librarian/validations/test_librarian_probes_report_to_the_watch.json"
+    ],
+    "out": [
+      "a writer of ~/.cairn/devices/web_server/0/dynamic_pane_renders.json (72e8e3509287's own watch)",
+      "the verbless harbor_master posters (aider_shim, history_integrity, memory_curve, reading_is_declared_and_current)",
+      "the report proof's assertions"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "test_librarian_probes_report_to_the_watch.py: 3 teeth red, all on 72e8e3509287's probe posting verb '' and its receiver None; cd8096f9eeca's ask_spares_akien posts to harbor_master with no verb",
+      "how": "bin/cairn test --seal, validation cairn/devices/librarian/validations/test_librarian_probes_report_to_the_watch.json"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "0 writers of dynamic_pane_renders.json in the tree; the web_server probe cannot trigger until one exists",
+      "how": "git grep -n dynamic_pane_renders"
+    }
+  ]
+}
