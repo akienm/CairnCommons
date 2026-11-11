@@ -1,0 +1,131 @@
+{
+  "id": "fa4462c803d6",
+  "title": "codemother's stage and verdict gates chart a queued ticket",
+  "owning_intention": "cairn/devices/codemother/machines/chart_gate/intention+why.json",
+  "intention": "CodeMother holds a gate for each chart stage (orient, constrain, survey, decompose, triage, hypothesize, validate) and one for the verdict, each answering machines/<stage>/queueme <fileref>: it reads that stage's draft off the ticket's plan, fills the ticket claim and the earlier stage's berth as the ref (orient also its floor facts), writes the packet through the stage's own door, records the berth on the ticket, posts it to her deposit verb and answers passed true; a missing draft, a missing earlier berth or a door refusal fails the ticket to FIXME and answers passed false with the lacks. The verdict gate disposes each hypothesis from the observed run of its own instrument, never from the draft.",
+  "why": "Outline 9.6 (Akien 2026-11-10, Q#81): each chart stage and the verdict is a gate machine that answers queueme <fileref>, and the ticket class queues itself to each in turn (Ticket.chart, cd8a1de6139c); 3.3.4.3: the gate instantiates the ticket on its own side. Measured 2026-11-11: shim.declared_machines registers watchme and clearance only; the one chart driver is cairn/devices/cc/scripts/chart_ticket.py importing her seven stage machines, and cairn/devices/cc/scripts/verdict_ticket.py writes every disposition 'confirmed'.",
+  "traces_to": "Outline 9.6 and 3.3.4.3 (Q#81 answer); RULE 1 — the chart is reached through CodeMother's gates, not her code; Law 8 — a disposition is observed, never self-graded.",
+  "how": "A new machine cairn/devices/codemother/machines/chart_gate/ (charter, gate.py, proofs) holds StageGate(stage) for the seven stages and the verdict, and gates() builds all eight; shim.declared_machines merges them beside watchme and clearance. The clearance gate's owning-intention journal derivation becomes clearance/gate.py journal_of(ticket, roots), read by both. A red-first proof drives the gates over a scratch tickets store, a scratch packets dir and a spy participant.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "StageGate('orient').queueme({body: {fileref}}) over a ticket whose plan carries chart.orient writes one packet into the packets dir carrying ticket equal to the ticket's id and the floor's domain, records its path as orient_berth in the ticket's chart_claim, posts {berth} to codemother verb deposit, and answers accepted true and passed true with that berth"
+      },
+      {
+        "n": 2,
+        "claim": "StageGate('constrain').queueme after the orient pass writes a packet whose intent_ref equals the recorded orient_berth and whose constraints equal the draft's, and records constrain_berth beside orient_berth"
+      },
+      {
+        "n": 3,
+        "claim": "StageGate('survey').queueme over a ticket with no chart.survey draft, and StageGate('survey') over a ticket with a draft but no constrain_berth, each answer accepted true and passed false with a lack naming what is absent, write no packet, and leave the ticket's cursor at FIXME"
+      },
+      {
+        "n": 4,
+        "claim": "a constrain draft the door refuses (constraints empty) answers passed false with a lack carrying the door's ConstrainRefused words, writes no packet and leaves the cursor at FIXME"
+      },
+      {
+        "n": 5,
+        "claim": "StageGate('verdict', runner=...) over a ticket whose validate and hypothesize berths stand, whose draft carries a disposition 'confirmed' for every hypothesis, and whose injected runner exits 1 for one hypothesis's instrument and 0 for the other's, berths a verdict disposing the first killed and the second confirmed, each by naming its instrument and exit"
+      },
+      {
+        "n": 6,
+        "claim": "chart_gate.gates() carries the eight stages orient, constrain, survey, decompose, triage, hypothesize, validate, verdict each with declared_verbs {queueme}, and cairn/devices/codemother/shim.py declared_machines merges gates() beside watchme and clearance"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: write the charter cairn/devices/codemother/machines/chart_gate/intention+why.json through the artifact door (verb cast) before BUILDME, and an empty __init__.py docstring module beside it.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/intention+why.json",
+        "cairn/devices/codemother/machines/chart_gate/__init__.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: chart_gate/gate.py: STAGES maps each stage to (module, writer, ref key, previous stage): orient (orient, write_packet, None, None), constrain (constrain, write_constrain, intent_ref, orient), survey (constrain_ref, constrain), decompose (survey_ref, survey), triage (decompose_ref, decompose), hypothesize (triage_ref, triage), validate (hypothesize_ref, hypothesize), verdict (verdict, write_verdict, validate_ref, validate). The writer is imported at call time from cairn.devices.codemother.machines.<module>.<module>.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/chart_ticket.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: StageGate(stage, *, participant=None, roots=None, packets_dir=None, runner=None).queueme(envelope) reads body.fileref, Ticket.at(fileref, tickets_dir, roots); packet_of(ticket) is the draft dict plus ticket=id plus ref_key=Ticket.berth(prev); orient also takes floor_packet(request)'s domain and refs where the draft's are None and prepends its unknowns. A lack (no draft, no earlier berth, or a RuntimeError/ValueError/OSError/KeyError from the door) goes to Ticket.failed(lacks, participant, actor='codemother', **journal_of(ticket, roots)) and answers {accepted: True, passed: False, lacks}. A pass calls Ticket.berthed(stage, berth), posts {berth} to codemother verb deposit, and answers {accepted: True, passed: True, berth}.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the verdict gate runs verdict.observe_instruments(packet, runner) once, reads the hypothesize berth through the validate berth's hypothesize_ref, and disposes each hypothesis confirmed iff the reading whose instrument equals the hypothesis's has run.exit == expect_exit and not timed_out, killed otherwise, by '<instrument> exited <n> (expected <m>)'; a hypothesis with no reading is a lack. The draft's dispositions are replaced, and write_verdict is handed a runner that replays the same readings in order.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: clearance/gate.py gains module function journal_of(ticket, *, roots=None) -> {history_path, state_path}, the owning-intention resolution crossing_of did inline (repo, then commons, then an absolute path); crossing_of calls it.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: shim.declared_machines returns {'watchme': ..., 'clearance': ..., **chart_gate.gates(participant=Voice(self._bus))}; chart_gate.gates(*, participant=None) builds a StageGate per STAGES key.",
+      "writes_to": [
+        "cairn/devices/codemother/shim.py",
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/shim.py"
+      ]
+    },
+    {
+      "n": 7,
+      "text": "D7: the red-first proof cairn/devices/codemother/machines/chart_gate/proofs/test_the_stage_gates_chart_a_ticket.py builds a scratch tickets store (live store charter copied in, ticket_file._TICKETS pointed there) holding a fixture whose id is this ticket's own (so the doors' on-file claim check resolves), a scratch packets dir, and a spy participant; one tooth per falsifier clause, binding the gate inside each tooth.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/proofs/test_the_stage_gates_chart_a_ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/proofs/test_a_ticket_charts_itself_stage_by_stage.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/chart_gate/",
+      "cairn/devices/codemother/machines/clearance/gate.py",
+      "cairn/devices/codemother/shim.py"
+    ],
+    "out": [
+      "the stage doors under cairn/devices/codemother/machines/<stage>/ (unchanged)",
+      "cairn/machines/ticket/ticket.py (T4a, PROVED path)",
+      "cairn/devices/cc/scripts/chart_ticket.py, verdict_ticket.py and cross.py (T5)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "declared_machines returns watchme and clearance only; chart_ticket.py imports the seven stage machines; verdict_ticket.py sets disposition 'confirmed' for every hypothesis; every stage door's refusal class subclasses RuntimeError",
+      "how": "sed -n 143,149p cairn/devices/codemother/shim.py; cat cairn/devices/cc/scripts/chart_ticket.py cairn/devices/cc/scripts/verdict_ticket.py; grep '^class .*Refused' cairn/devices/codemother/machines/*/*.py"
+    }
+  ]
+}
