@@ -53,5 +53,163 @@
       "saw": "encapsulation_holds finds cairn/devices/web_server/proofs/test_web_server_chat.py:45 and cairn/devices/web_server/proofs/test_voyage_pane.py:43",
       "how": "python3 -c 'from cairn.machines.build_inspector import inspector; inspector.encapsulation_breaches(\".\")'"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "3650ce94445b: web_server's proofs measure the web server with spec devices, not the librarian's shim or the harbor's voyage",
+      "intent": "cairn/devices/web_server/proofs/test_web_server_chat.py:45 imports LibrarianShim from cairn.devices.librarian.shim, and cairn/devices/web_server/proofs/test_voyage_pane.py:43 imports voyage from cairn.devices.cairn.machines.harbor_master: two web_server proofs that measure other devices' code. Each proof drives the web server with a spec device declared in the proof instead: a chat device (BaseShim + BaseDevice with a chat pane and a chat channel) and a fixed traffic image in voyage.traffic_image's shape.",
+      "scope": "imports in 2 file(s) under cairn/devices/web_server, one proof added",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "every component talks to every other only through its public interface; a ticket's proofs measure only that component",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "One web server. A device gets a PANE in it, never a server of its own; it asks devices for what to draw over the bus.",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/web_server/proofs/test_web_server_chat.py",
+          "cairn/devices/web_server/proofs/test_voyage_pane.py",
+          "cairn/devices/web_server/proofs/test_web_server_proofs_measure_only_the_web_server.py"
+        ],
+        "out": [
+          "cairn/devices/librarian/",
+          "cairn/devices/cairn/",
+          "cairn/machines/build_inspector/"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which files import another device",
+        "what the published surface offers",
+        "what each tooth needs"
+      ],
+      "holdings": [
+        {
+          "what": "the base shim and device",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the traffic image renderer",
+          "address": "cairn/devices/web_server/render.py"
+        },
+        {
+          "what": "the encapsulation_holds sieve",
+          "address": "cairn/machines/build_inspector/inspector.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a cairn/devices/web_server proof asking the encapsulation sieve about these reaches",
+          "measure": "grep -l encapsulation_breaches cairn/devices/web_server/proofs/"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the reaches moved onto the public surface, the sieve tooth added",
+          "why": "the sieve reds cairn/devices/web_server reaching into another device",
+          "kind": "build",
+          "fills": "a cairn/devices/web_server proof asking the encapsulation sieve about these reaches",
+          "uses": [
+            "cairn/tools/base/shim.py",
+            "cairn/devices/web_server/render.py"
+          ],
+          "writes_to": [
+            "cairn/devices/web_server/proofs/test_web_server_chat.py",
+            "cairn/devices/web_server/proofs/test_voyage_pane.py",
+            "cairn/devices/web_server/proofs/test_web_server_proofs_measure_only_the_web_server.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the reaches moved onto the public surface, the sieve tooth added",
+          "why_now": "a standing trouble names cairn/devices/web_server"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the reaches moved onto the public surface, the sieve tooth added",
+          "expect": "every proof green",
+          "falsifier": "the sieve still finds a file under cairn/devices/web_server/proofs importing librarian or harbor_master code",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs/test_web_server_proofs_measure_only_the_web_server.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "clauses 1-2 each hold as a named tooth",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs/test_web_server_proofs_measure_only_the_web_server.py",
+          "timeout_s": 600,
+          "covers": [
+            "the reaches moved onto the public surface, the sieve tooth added"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
