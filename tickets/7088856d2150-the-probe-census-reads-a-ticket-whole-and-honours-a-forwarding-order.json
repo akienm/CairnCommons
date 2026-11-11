@@ -1,0 +1,93 @@
+{
+  "id": "7088856d2150",
+  "title": "the probe census reads a ticket whole and honours a forwarding order",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "The probe-path census reads each ticket whole (plan and state merged through ticket_file), counts a WATCHME-standing ticket as it counts a PROVED one, and reads a probe a retirement deleted as forwarded, not missing, when a valid forwarding order in the corpus names its exact path.",
+  "why": "Measured 2026-11-10 during 15d850266972: cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py reds on {'tid': None, 'probe': 'cairn/tools/cairnmap/probes/the_roster_fault_is_one_finding.py'}. Since 284798998ab0 D11 a ticket is three files, and the census globs *.json, so it reads 7aed0fd0ba29's .state.json as a ticket of its own (no id). Over merged tickets (706 plans) two standing watches name a probe a retirement deleted: 7aed0fd0ba29 at PROVED (deleted by d547b4859f9a, 3882dac1) and 5a4ec289bf15 at WATCHME (cairn/machines/counting_block/probes/raise_rate_falls.py, deleted by 6935a4a71f93, f2b0d810). The WATCHME one is invisible to the teeth, which ask only PROVED and FIXME, though watchme_spec.stands_watch counts WATCHME as standing.",
+  "traces_to": "Law 7 (a spec naming a missing file is a record that lies); ticket 693e9f45e6f2 (the census); the forwarding-order rule at cairn/machines/build_inspector/inspector.py (_valid_orders).",
+  "how": "census(tickets) builds the set of validly forwarded paths from the same ticket list (an entry whose from is absent, whose to exists and whose why is non-empty) and skips a probe whose exact path is in it. The proof's _corpus reads through ticket_file.plans and read_ticket. Tooth 1 asks PROVED and WATCHME. The two deleters' states gain an exact forwarding entry for each probe path, to bin/proofs/test_retired_components_are_gone.py, through ticket_file.write_state.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over the live corpus read through ticket_file, no ticket standing at PROVED or WATCHME names a probe that is neither on disk nor validly forwarded, and every census row carries its ticket id (none is None)"
+      },
+      {
+        "n": 2,
+        "claim": "a FIXME ticket whose probe is absent and unforwarded names that path in its fixme list (the existing tooth, over the merged read)"
+      },
+      {
+        "n": 3,
+        "claim": "a fixture PROVED ticket naming an absent probe reds the census, and a fixture WATCHME ticket naming one reds it too"
+      },
+      {
+        "n": 4,
+        "claim": "the same fixture PROVED ticket does not red when another fixture ticket carries a forwarding order whose from is that exact probe path and whose to exists"
+      },
+      {
+        "n": 5,
+        "claim": "an order whose to does not exist, or whose from still exists, or that names only the probe's parent folder, grants nothing: the fixture still reds"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/tools/base/watchme_spec.py add forwarded_paths(tickets, root) -> set[str]: for each ticket's 'forwarding' dict, an entry {from: {to, why}} counts when from and to are non-empty strings, why is a non-empty string, from does not exist under root and to does. Exact paths only — no prefix match, as build_inspector's charted-ref rule. census() in the proof skips a probe in that set.",
+      "writes_to": [
+        "cairn/tools/base/watchme_spec.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py: _corpus reads through ticket_file.plans and read_ticket; census takes the forwarded set from forwarded_paths over the same list; tooth 1 asks cursor in (PROVED, WATCHME); new teeth for clauses 3 to 5; PROVES gains 1-5 under this ticket. The existing 693e9f45e6f2 'all' key stays.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_file.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: forwarding entries, through ticket_file.write_state: on d547b4859f9a, cairn/tools/cairnmap/probes/the_roster_fault_is_one_finding.py; on 6935a4a71f93, cairn/machines/counting_block/probes/raise_rate_falls.py; each to bin/proofs/test_retired_components_are_gone.py with a why naming the deleting commit.",
+      "writes_to": [
+        "CairnCommons/tickets/d547b4859f9a-cairnmap-retires-and-help-is-the-one-help-surface.state.json",
+        "CairnCommons/tickets/6935a4a71f93 state"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/watchme_spec.py",
+      "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py",
+      "the forwarding field of d547b4859f9a's and 6935a4a71f93's state"
+    ],
+    "out": [
+      "build_inspector (its own forwarding readers stay as they are)",
+      "5a4ec289bf15's and 7aed0fd0ba29's own records",
+      "tickets at SUPERSEDED, RETIRED, KILLED, TICKETME or BUILDME"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "the census row {'tid': None, 'cursor': 'PROVED', 'probe': 'cairn/tools/cairnmap/probes/the_roster_fault_is_one_finding.py'}",
+      "how": "bin/cairn test cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "over 706 merged plans, 33 absent probes; at PROVED only 7aed0fd0ba29, at WATCHME only 5a4ec289bf15, none at FIXME",
+      "how": "ticket_file.plans + read_ticket + watchme_spec.absent_probes over CairnCommons/tickets"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "the deleting commits: 3882dac1 (d547b4859f9a) and f2b0d810 (6935a4a71f93); both tickets already forward their component folders to bin/proofs/test_retired_components_are_gone.py, not the probe paths",
+      "how": "git log --diff-filter=D -1 per probe path; forwarding fields read through read_ticket"
+    }
+  ]
+}
