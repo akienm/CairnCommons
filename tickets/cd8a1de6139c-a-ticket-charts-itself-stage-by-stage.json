@@ -2,10 +2,10 @@
   "id": "cd8a1de6139c",
   "title": "a ticket charts itself stage by stage",
   "owning_intention": "cairn/machines/ticket/intention+why.json",
-  "intention": "A ticket charts itself: Ticket.draft(stage, packet) puts a chart stage's draft on the ticket's plan under chart.<stage>, Ticket.berthed(stage, berth) records the berth a gate wrote under the state's chart_berths, and Ticket.chart(participant) queues the ticket at each chart stage in turn (orient, constrain, survey, decompose, triage, hypothesize, validate), stopping at the first stage whose gate does not pass it.",
+  "intention": "A ticket charts itself: Ticket.draft(stage, packet) puts a chart stage's draft on the ticket's plan under chart.<stage>, Ticket.berthed(stage, berth) records the berth a gate wrote as <stage>_berth in the state's chart_claim, and Ticket.chart(participant) queues the ticket at each chart stage in turn (orient, constrain, survey, decompose, triage, hypothesize, validate), stopping at the first stage whose gate does not pass it.",
   "why": "Outline 9.6 (Akien 2026-11-10, Q#81): each chart stage and the verdict is a gate machine that answers queueme <fileref>, and the ticket class queues itself to each in turn; 3.3.4.3: the ticket sends only its fileref and its life is data on disk, so the stage's draft must stand on the ticket for the gate to read. Measured 2026-11-11: cairn/machines/ticket/ticket.py has queueme, passed and failed and nothing that holds a chart draft, records a stage's berth or queues at a sequence of gates; the one chart driver is cairn/devices/cc/scripts/chart_ticket.py, which imports CodeMother's seven stage machines.",
   "traces_to": "Outline 9.6 and 3.3.4.3 (Q#81 answer); RULE 1 — the chart is reached through CodeMother's gates, not her code.",
-  "how": "ticket.py gains CHART (the stage order), draft/drafted (the plan's chart), berthed/berth (the state's chart_berths) and chart (queueme at each stage in turn, stop at the first non-pass). The tickets store charter declares chart in plan_fields and chart_berths in state_fields. A red-first proof drives it over a scratch tickets store with a spy participant.",
+  "how": "ticket.py gains CHART (the stage order), draft/drafted (the plan's chart), berthed/berth (<stage>_berth in the state's chart_claim) and chart (queueme at each stage in turn, stop at the first non-pass). The tickets store charter declares chart in plan_fields and shapes it in plan_shapes; transitions._shape_lacks enforces the shape at cast. A red-first proof drives it over a scratch tickets store with a spy participant.",
   "falsifier": {
     "clauses": [
       {
@@ -14,7 +14,7 @@
       },
       {
         "n": 2,
-        "claim": "berthed('orient', a) then berthed('constrain', b) leaves the state's chart_berths equal to {orient: a, constrain: b}, berth('orient') returns a and berth('validate') returns None"
+        "claim": "berthed('orient', a) then berthed('constrain', b) leaves the state's chart_claim equal to {orient_berth: a, constrain_berth: b} (the shape chart_claim already carries for validate_berth), berth('orient') returns a and berth('validate') returns None"
       },
       {
         "n": 3,
@@ -26,14 +26,14 @@
       },
       {
         "n": 5,
-        "claim": "the live store charter /home/akien/dev/src/CairnCommons/tickets/_charter+why.json lists chart in plan_fields and chart_berths in state_fields"
+        "claim": "the live store charter /home/akien/dev/src/CairnCommons/tickets/_charter+why.json lists chart in plan_fields and shapes it in plan_shapes, leaves state_fields without chart_berths (the census stands), and the cast door's _shape_lacks refuses a chart carrying an unknown stage or a non-object draft while passing a well-formed one"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: declare chart in plan_fields and chart_berths in state_fields of /home/akien/dev/src/CairnCommons/tickets/_charter+why.json, through the artifact door (cairn.tools.artifact.artifact.write, verb cast), appending each to its list.",
+      "text": "D1: declare chart in plan_fields and shape it in plan_shapes (keys: the seven CHART stages and verdict; values: objects) of /home/akien/dev/src/CairnCommons/tickets/_charter+why.json, through the artifact door (verb cast). No new state field: the census tooth test_the_ticket_is_three_files admits a new plan field only when shaped, and state_fields not at all.",
       "writes_to": [
         "/home/akien/dev/src/CairnCommons/tickets/_charter+why.json"
       ],
@@ -63,7 +63,7 @@
     },
     {
       "n": 4,
-      "text": "D4: Ticket.berthed(stage, berth, *, why) refuses a stage not in CHART or 'verdict' with ValueError, else merges {stage: berth} into doc().get('chart_berths') and writes {'chart_berths': merged} through self._write; Ticket.berth(stage) returns (doc().get('chart_berths') or {}).get(stage).",
+      "text": "D4: Ticket.berthed(stage, berth, *, why) refuses a stage not in CHART or 'verdict' with ValueError, else merges {'<stage>_berth': berth} into the state's chart_claim (a dict; the empty string a cast leaves becomes one) through self._write; Ticket.berth(stage) returns chart_claim.get('<stage>_berth') or None.",
       "writes_to": [
         "cairn/machines/ticket/ticket.py"
       ],
@@ -90,13 +90,24 @@
       "reads": [
         "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
       ]
+    },
+    {
+      "n": 7,
+      "text": "D7: transitions._shape_lacks enforces plan_shapes.chart at the cast door: chart must be a map whose every key is a listed stage and every value an object; a lack is named per offending stage.",
+      "writes_to": [
+        "cairn/tools/base/transitions.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
     }
   ],
   "bounds": {
     "in": [
       "/home/akien/dev/src/CairnCommons/tickets/_charter+why.json",
       "cairn/machines/ticket/ticket.py",
-      "cairn/machines/ticket/proofs/test_a_ticket_charts_itself_stage_by_stage.py"
+      "cairn/machines/ticket/proofs/test_a_ticket_charts_itself_stage_by_stage.py",
+      "cairn/tools/base/transitions.py"
     ],
     "out": [
       "codemother's stage and verdict gates (T4b)",
@@ -109,6 +120,11 @@
       "when": "2026-11-11",
       "saw": "Ticket has queueme, passed and failed only; no chart draft, stage berth or sequence; chart_ticket.py imports the seven stage machines",
       "how": "grep -n 'def ' cairn/machines/ticket/ticket.py and sed -n 1,60p cairn/devices/cc/scripts/chart_ticket.py"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "declaring chart_berths in state_fields reds test_the_ticket_is_three_files (state_fields 29 vs census 28); chart_claim already carries validate_berth/verdict_berth as a dict on 124 tickets",
+      "how": "bin/cairn test cairn/tools/base/proofs/test_the_ticket_is_three_files.py; census of chart_claim shapes over CairnCommons/tickets/*.state.json"
     }
   ]
 }
