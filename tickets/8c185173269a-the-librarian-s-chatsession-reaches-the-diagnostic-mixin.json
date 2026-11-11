@@ -1,0 +1,60 @@
+{
+  "id": "8c185173269a",
+  "title": "the librarian's ChatSession reaches the diagnostic mixin",
+  "owning_intention": "cairn/devices/librarian/intention+why.json",
+  "intention": "The librarian's ChatSession (cairn/devices/librarian/chat.py:253) reaches DiagnosticBase, so the every_class_reaches_the_diagnostic_mixin sieve reads the librarian green.",
+  "why": "Ticket 339a45cee6a1 (Akien 2026-10-27): every class with code inherits the mixin. Measured 2026-11-11: build_inspector refused 8b16f3e77013's PROVED crossing on exactly this one finding.",
+  "traces_to": "ticket 339a45cee6a1; ticket 668c8d64b4e2 (the tester's conversion).",
+  "how": "One edit in chat.py as 668c8d64b4e2 did for the tester, plus a proof modelled on cairn/devices/tester/proofs/test_every_tester_class_reaches_the_diagnostic_mixin.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/devices/librarian/proofs/test_every_librarian_class_reaches_the_diagnostic_mixin.py greens: the sieve returns no findings for component librarian"
+      },
+      {
+        "n": 2,
+        "claim": "ChatSession is a DiagnosticBase, a fresh session's page() returns its tree and an empty transcript, and cairn.devices.librarian.chat imports in a fresh interpreter"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/devices/librarian/chat.py import DiagnosticBase from cairn.tools.base.diagnostic beside the other cairn.tools.base imports; change 'class ChatSession:' to 'class ChatSession(DiagnosticBase):' and make super().__init__() the first line of its __init__. No other body change.",
+      "writes_to": [
+        "cairn/devices/librarian/chat.py"
+      ],
+      "reads": [
+        "cairn/tools/base/diagnostic.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: create cairn/devices/librarian/proofs/test_every_librarian_class_reaches_the_diagnostic_mixin.py with the tester proof's check/FAILURES/TEETH/main shape, every import inside its tooth; PROVES = {'8c185173269a': {'1': 'test_the_sieve_reads_the_librarian_green', '2': 'test_the_session_reaches_the_mixin_and_keeps_its_behaviour'}}. Tooth 2 builds ChatSession(resolve=lambda *a, **k: None, tree='t') and checks isinstance DiagnosticBase and page() == {'tree': 't', 'turns': []}, then imports chat in a fresh interpreter.",
+      "writes_to": [
+        "cairn/devices/librarian/proofs/test_every_librarian_class_reaches_the_diagnostic_mixin.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_every_tester_class_reaches_the_diagnostic_mixin.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/librarian/chat.py",
+      "cairn/devices/librarian/proofs/test_every_librarian_class_reaches_the_diagnostic_mixin.py"
+    ],
+    "out": [
+      "every other librarian file",
+      "the sieve"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "every_class_reaches_the_diagnostic_mixin over cairn/devices/librarian: 1 finding, chat.py:253 ChatSession",
+      "how": "inspector.every_class_reaches_the_diagnostic_mixin({'component':'librarian','dir':'cairn/devices/librarian'}, Path('cairn/devices/librarian'))"
+    }
+  ]
+}
