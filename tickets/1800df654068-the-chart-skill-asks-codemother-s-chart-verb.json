@@ -1,11 +1,11 @@
 {
   "id": "1800df654068",
-  "title": "the /chart skill asks CodeMother's chart verb",
+  "title": "the /chart skill drafts each stage on the ticket and queues it at CodeMother's gate",
   "owning_intention": "skills/chart/intention+why.json",
-  "intention": "The /chart skill writes and floors its stages through CodeMother's chart verb: live.py gains floor and write subcommands that ask her, and SKILL.md's fourteen import blocks become those commands.",
+  "intention": "The /chart skill charts through the ticket, never through CodeMother's code: live.py gains `draft <id> <stage> <packet.json>` (the stage's draft onto the plan, Ticket.draft) and `queue <id> <stage>` (the ticket queues itself at that stage's gate, Ticket.chart over one stage, asking codemother as chart), and SKILL.md's fourteen codemother import blocks become those two commands.",
   "why": "Measured 2026-11-10: skills/chart/SKILL.md instructs fourteen imports of cairn.devices.codemother.machines (lines 48 to 577); RULE 1 says nothing outside a device reaches into its code, skills included.",
-  "traces_to": "RULE 1 (skills included); outline 9.3.4, 9.6 and Q#81.",
-  "how": "Add `floor <stage> <input>` and `write <stage> <packet.json>` to skills/chart/live.py, each one _ask_codemother('chart', ...); replace every import block in SKILL.md with the command. Red-first proof.",
+  "traces_to": "RULE 1 (skills included); outline 9.6, 3.3.4.3; Q#80 and Q#81 answered 2026-11-10.",
+  "how": "Add _draft and _queue to skills/chart/live.py, dispatched from _main, through cairn.machines.ticket.Ticket (a machine's public interface) with a participant over the bus to codemother. In SKILL.md each stage's write block becomes draft + queue, and the seven floor blocks go: the gate fills every ref and orient's floor itself (chart_gate/gate.py packet_of), and constrain's door applies its own. Red-first proof. Supersedes the chart-verb design (26ec04b32637 RETIRED; outline 9.6: no chart verb).",
   "falsifier": {
     "clauses": [
       {
@@ -14,44 +14,47 @@
       },
       {
         "n": 2,
-        "claim": "live.py floor <stage> <input> sends one chart request op floor and prints her packet"
+        "claim": "live.py draft <id> <stage> <packet.json> writes the file's packet as the plan's chart.<stage>, and refuses a stage outside the chart"
       },
       {
         "n": 3,
-        "claim": "live.py write <stage> <packet.json> sends one chart request op write with the file's packet and prints her berth"
+        "claim": "live.py queue <id> <stage> asks codemother machines/<stage>/queueme with the ticket's fileref, once, and prints the berth"
       },
       {
         "n": 4,
-        "claim": "a refusal makes either subcommand exit nonzero with her reason"
+        "claim": "a gate that refuses or does not take the ticket makes queue exit nonzero with the reason"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: skills/chart/live.py: _floor(argv) and _write(argv) dispatched from _main, each through _ask_codemother('chart', {stage, op, input}); a refusal prints the reason and returns 1.",
+      "text": "D1: skills/chart/live.py: _draft(argv) and _queue(argv) dispatched from _main; _queue runs Ticket.at(id).chart(participant=..., stages=(stage,)) and prints '<stage>: <berth>', or the gate's lacks/reason on stderr and returns 1. The participant is a module-level _Gates over _bus() with sender chart; the proof swaps it.",
       "writes_to": [
         "skills/chart/live.py"
       ],
       "reads": [
-        "skills/chart/live.py"
+        "skills/chart/live.py",
+        "cairn/machines/ticket/ticket.py",
+        "cairn/devices/cc/scripts/sail.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: skills/chart/SKILL.md: each of the fourteen python import blocks becomes the matching live.py floor or write command.",
+      "text": "D2: skills/chart/SKILL.md: every python block importing cairn.devices.codemother becomes `python3 -m skills.chart.live draft <id> <stage> <packet>` + `queue <id> <stage>`; the floor blocks are removed and the text says the gate floors orient and fills each ref.",
       "writes_to": [
         "skills/chart/SKILL.md"
       ],
       "reads": [
-        "skills/chart/SKILL.md"
+        "skills/chart/SKILL.md",
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
       ]
     },
     {
       "n": 3,
-      "text": "D3: the proof skills/chart/proofs/test_the_chart_skill_asks_codemothers_chart_verb.py, red-first, PROVES 1-4; it drives _main with a recording _ask_codemother; the house runner.",
+      "text": "D3: the proof skills/chart/proofs/test_the_chart_skill_queues_the_ticket_at_codemothers_gates.py, red-first, PROVES 1-4, drives _main in a scratch tickets store with a recording participant; the house runner.",
       "writes_to": [
-        "skills/chart/proofs/test_the_chart_skill_asks_codemothers_chart_verb.py"
+        "skills/chart/proofs/test_the_chart_skill_queues_the_ticket_at_codemothers_gates.py"
       ],
       "reads": [
         "skills/chart/live.py",
@@ -63,11 +66,12 @@
     "in": [
       "skills/chart/SKILL.md",
       "skills/chart/live.py",
-      "skills/chart/proofs/test_the_chart_skill_asks_codemothers_chart_verb.py"
+      "skills/chart/proofs/test_the_chart_skill_queues_the_ticket_at_codemothers_gates.py"
     ],
     "out": [
-      "CodeMother's chart verb (its own ticket)",
-      "CC's helpers (their own ticket)",
+      "CodeMother's gates and machines",
+      "cairn/machines/ticket",
+      "cairn/devices/cc",
       "every other skill"
     ]
   },
@@ -76,6 +80,176 @@
       "when": "2026-11-10",
       "saw": "14 lines, 48 to 577",
       "how": "grep -n 'from cairn.devices.codemother' skills/chart/SKILL.md"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "26ec04b32637 (codemother answers a chart verb) is RETIRED; outline 9.6 says there is no chart or verdict verb; chart_gate packet_of fills refs and orient's floor",
+      "how": "grep -l 'chart verb' CairnCommons/tickets; sed -n 95,125p cairn/devices/codemother/machines/chart_gate/gate.py"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "1800df654068: the /chart skill drafts each stage on the ticket and queues it at CodeMother's gate",
+      "intent": "The /chart skill charts through the ticket: live.py draft puts a stage's draft on the plan and live.py queue has the ticket queue itself at that stage's gate, so SKILL.md and live.py name no CodeMother module.",
+      "scope": "two live.py subcommands, the SKILL.md blocks that imported CodeMother, and their proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "nothing outside a device reaches into its code, skills included",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "each chart stage is a gate machine answering queueme <fileref>; there is no chart or verdict verb",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "skills/chart/SKILL.md",
+          "skills/chart/live.py",
+          "skills/chart/proofs/test_the_chart_skill_queues_the_ticket_at_codemothers_gates.py"
+        ],
+        "out": [
+          "CodeMother's gates and machines",
+          "cairn/machines/ticket",
+          "cairn/devices/cc",
+          "every other skill"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "the ticket's draft and chart methods",
+        "how the gate builds a stage's packet",
+        "how CC's sail script already drafts and queues"
+      ],
+      "holdings": [
+        {
+          "what": "Ticket.draft, Ticket.chart and Ticket.queueme",
+          "address": "cairn/machines/ticket/ticket.py"
+        },
+        {
+          "what": "ChartStageGate.packet_of fills refs and orient's floor",
+          "address": "cairn/devices/codemother/machines/chart_gate/gate.py"
+        },
+        {
+          "what": "live.py's bus reach and _main dispatch",
+          "address": "skills/chart/live.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a /chart path that charts without importing CodeMother",
+          "measure": "grep -n 'cairn.devices.codemother' skills/chart/SKILL.md: 14 lines, 2026-11-10"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "live.py draft and queue",
+          "why": "the ticket is what asks the gate; the skill only drafts and hands it a participant",
+          "kind": "build",
+          "fills": "a /chart path that charts without importing CodeMother",
+          "uses": [
+            "cairn/machines/ticket/ticket.py"
+          ],
+          "writes_to": [
+            "skills/chart/live.py",
+            "skills/chart/SKILL.md"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "live.py draft and queue",
+          "why_now": "RULE 1 reds the skill's instructions while they import her code"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "live.py draft and queue",
+          "expect": "draft lands chart.<stage> on the plan; queue asks machines/<stage>/queueme once and prints the berth; a refusal exits nonzero with its reason",
+          "falsifier": "any codemother module named in SKILL.md or live.py, or queue exiting 0 on a refused stage",
+          "instrument": "bin/cairn test skills/chart/proofs/test_the_chart_skill_queues_the_ticket_at_codemothers_gates.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the four falsifier clauses each hold as a tooth over a scratch world",
+          "instrument": "bin/cairn test skills/chart/proofs/test_the_chart_skill_queues_the_ticket_at_codemothers_gates.py",
+          "timeout_s": 300,
+          "covers": [
+            "live.py draft and queue"
+          ]
+        },
+        {
+          "claim": "live.py's drain proof stays green",
+          "instrument": "bin/cairn test skills/chart/proofs/test_the_verbs_exit_nonzero_on_a_failed_drain.py",
+          "timeout_s": 300,
+          "covers": [
+            "live.py draft and queue"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
