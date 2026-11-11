@@ -18,11 +18,11 @@
       },
       {
         "n": 3,
-        "claim": "StageGate('survey').queueme over a ticket with no chart.survey draft, and StageGate('survey') over a ticket with a draft but no constrain_berth, each answer accepted true and passed false with a lack naming what is absent, write no packet, and leave the ticket's cursor at FIXME"
+        "claim": "StageGate('survey').queueme over a ticket with no chart.survey draft, and StageGate('survey') over a ticket with a draft but no constrain_berth, each answer accepted true and passed false with a lack naming what is absent, write no packet, and leave the ticket's cursor where it stood with the lacks as its fixme, and ask design to queue it"
       },
       {
         "n": 4,
-        "claim": "a constrain draft the door refuses (constraints empty) answers passed false with a lack carrying the door's ConstrainRefused words, writes no packet and leaves the cursor at FIXME"
+        "claim": "a constrain draft the door refuses (constraints empty) answers passed false with a lack carrying the door's ConstrainRefused words, writes no packet and leaves the ticket's cursor where it stood with the lacks as its fixme, and asks design to queue it"
       },
       {
         "n": 5,
@@ -31,6 +31,10 @@
       {
         "n": 6,
         "claim": "chart_gate.gates() carries the eight stages orient, constrain, survey, decompose, triage, hypothesize, validate, verdict each with declared_verbs {queueme}, and cairn/devices/codemother/shim.py declared_machines merges gates() beside watchme and clearance"
+      },
+      {
+        "n": 7,
+        "claim": "Ticket.failed over a ticket standing at TICKETME (before FIXME's BUILDME anchor) crosses nothing and journals nothing: the cursor is unchanged, the lacks land as the ticket's fixme, no harbor post is made, and design is asked to queue it"
       }
     ]
   },
@@ -58,7 +62,7 @@
     },
     {
       "n": 3,
-      "text": "D3: StageGate(stage, *, participant=None, roots=None, packets_dir=None, runner=None).queueme(envelope) reads body.fileref, Ticket.at(fileref, tickets_dir, roots); packet_of(ticket) is the draft dict plus ticket=id plus ref_key=Ticket.berth(prev); orient also takes floor_packet(request)'s domain and refs where the draft's are None and prepends its unknowns. A lack (no draft, no earlier berth, or a RuntimeError/ValueError/OSError/KeyError from the door) goes to Ticket.failed(lacks, participant, actor='codemother', **journal_of(ticket, roots)) and answers {accepted: True, passed: False, lacks}. A pass calls Ticket.berthed(stage, berth), posts {berth} to codemother verb deposit, and answers {accepted: True, passed: True, berth}.",
+      "text": "D3: StageGate(stage, *, participant=None, roots=None, packets_dir=None, runner=None).queueme(envelope) reads body.fileref, Ticket.at(fileref, tickets_dir, roots); packet_of(ticket) is the draft dict plus ticket=id plus ref_key=Ticket.berth(prev); orient also takes floor_packet(request)'s domain and refs where the draft's are None and prepends its unknowns. A lack (no draft, no earlier berth, or a RuntimeError/ValueError/OSError/KeyError from the door) goes to Ticket.failed (which, before BUILDME, stands and asks design: D8)(lacks, participant, actor='codemother', **journal_of(ticket, roots)) and answers {accepted: True, passed: False, lacks}. A pass calls Ticket.berthed(stage, berth), posts {berth} to codemother verb deposit, and answers {accepted: True, passed: True, berth}.",
       "writes_to": [
         "cairn/devices/codemother/machines/chart_gate/gate.py"
       ],
@@ -69,7 +73,7 @@
     },
     {
       "n": 4,
-      "text": "D4: the verdict gate runs verdict.observe_instruments(packet, runner) once, reads the hypothesize berth through the validate berth's hypothesize_ref, and disposes each hypothesis confirmed iff the reading whose instrument equals the hypothesis's has run.exit == expect_exit and not timed_out, killed otherwise, by '<instrument> exited <n> (expected <m>)'; a hypothesis with no reading is a lack. The draft's dispositions are replaced, and write_verdict is handed a runner that replays the same readings in order.",
+      "text": "D4: the verdict gate disposes each hypothesis of the chain's hypothesize berth (read through the validate berth's hypothesize_ref) from a run of that hypothesis's OWN instrument: verdict.extract_command(instrument), then the gate's runner (the door's run_instrument by default) once per distinct command; confirmed iff it exited 0 and did not time out, killed otherwise, by '<command> exited <n>'; an instrument with no runnable command is a lack. The draft's dispositions are replaced; the criteria are run by write_verdict as ever, handed the same runner.",
       "writes_to": [
         "cairn/devices/codemother/machines/chart_gate/gate.py"
       ],
@@ -107,17 +111,30 @@
       "reads": [
         "cairn/machines/ticket/proofs/test_a_ticket_charts_itself_stage_by_stage.py"
       ]
+    },
+    {
+      "n": 8,
+      "text": "D8: Ticket.failed asks _before_repair(workflow) — does the cursor stand before the anchor of the workflow's FIXME repair summons, read from the registered workflow emit reads? If so it crosses nothing: it writes the lacks as fixme, asks design to queue it and returns the workflow unchanged; otherwise it kicks back to FIXME as before. Proved by a tooth in cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py keyed to this ticket's clause 7.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/workflow_grammar.py"
+      ]
     }
   ],
   "bounds": {
     "in": [
       "cairn/devices/codemother/machines/chart_gate/",
       "cairn/devices/codemother/machines/clearance/gate.py",
-      "cairn/devices/codemother/shim.py"
+      "cairn/devices/codemother/shim.py",
+      "cairn/machines/ticket/ticket.py (Ticket.failed only)",
+      "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
     ],
     "out": [
       "the stage doors under cairn/devices/codemother/machines/<stage>/ (unchanged)",
-      "cairn/machines/ticket/ticket.py (T4a, PROVED path)",
       "cairn/devices/cc/scripts/chart_ticket.py, verdict_ticket.py and cross.py (T5)"
     ]
   },
@@ -126,6 +143,16 @@
       "when": "2026-11-11",
       "saw": "declared_machines returns watchme and clearance only; chart_ticket.py imports the seven stage machines; verdict_ticket.py sets disposition 'confirmed' for every hypothesis; every stage door's refusal class subclasses RuntimeError",
       "how": "sed -n 143,149p cairn/devices/codemother/shim.py; cat cairn/devices/cc/scripts/chart_ticket.py cairn/devices/cc/scripts/verdict_ticket.py; grep '^class .*Refused' cairn/devices/codemother/machines/*/*.py"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "the verdict door's readings are one per CRITERION (observe_instruments iterates verdicts), it refuses a 'pass' whose re-run disagrees, and unanswered() kicks back a criterion reporting 'fail'; so a hypothesis disposed from a criterion's reading could never be killed on a berthable verdict, and the gate must run each hypothesis's own instrument",
+      "how": "sed -n 303,430p cairn/devices/codemother/machines/verdict/verdict.py; sed -n 189,219p cairn/tools/chain/verdict_contract.py"
+    },
+    {
+      "when": "2026-11-11",
+      "saw": "clauses 3 and 4 red with 'IllegalTransition: FIXME is entered from BUILDME or later': a ticket charts at TICKETME, and the repair summons FIXME is anchored before BUILDME, so Ticket.failed's kick-back cannot fire there; outline 3.3.4.3 says only 'on a fail it asks design to queue it'",
+      "how": "bin/cairn test --exec on the proof; transitions.py:1388-1393"
     }
   ]
 }
