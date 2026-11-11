@@ -1,0 +1,79 @@
+{
+  "id": "15d850266972",
+  "title": "a device answers a verb addressed to a machine it holds",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A device answers a verb addressed to a machine it holds, machines/<machine>/<verb>, by handing the envelope to that machine's own declared verb, so a ticket can ask devices/codemother/0/machines/<gate>/queueme <fileref>.",
+  "why": "Outline 3.3.4.3 and 9.6 (Akien 2026-11-10, Q#80 and Q#81 answers): a ticket crosses a gate by asking devices/codemother/0/machines/<inspector>/queueme <fileref>, and each chart stage and the verdict is a gate machine answering queueme. Measured 2026-11-10: BaseDevice.declared_verbs (cairn/tools/base/device.py:186) is a flat table of show and get, so no device can answer a verb addressed to one of its machines.",
+  "traces_to": "RULE 1 (a device is reached through its public interface, the bus); outline 3.3.4.3; the recursive verb shape (verbs descend into more precise direction, like the CLI).",
+  "how": "BaseDevice gains declared_machines() -> {name: machine}, default {}; each machine exposes declared_verbs() -> {verb: callable(envelope) -> dict}. BaseDevice.declared_verbs() adds 'machines/<name>/<verb>' for every held machine verb, so the shim's existing lookup (cairn/tools/base/shim.py:869), its bounce and its announce menu carry them with no shim change. A red-first proof drives a fixture shim with a spy bus.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture device declaring machine 'gate_x' with verb 'queueme' has 'machines/gate_x/queueme' in declared_verbs(), and a shim delivering an envelope with that verb calls the machine's handler with the envelope and posts its answer with reply_to equal to the request id"
+      },
+      {
+        "n": 2,
+        "claim": "an envelope with verb machines/no_such/queueme bounces, its reason naming the declared verbs, which include machines/gate_x/queueme"
+      },
+      {
+        "n": 3,
+        "claim": "an envelope with verb machines/gate_x/no_such bounces the same way and the machine's handler is not called"
+      },
+      {
+        "n": 4,
+        "claim": "the announce menu the shim posts at wiring lists machines/gate_x/queueme"
+      },
+      {
+        "n": 5,
+        "claim": "a held machine whose name or verb contains '/' makes declared_verbs() raise ValueError naming it, and a device that declares no machines answers exactly show and get as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/tools/base/device.py add BaseDevice.declared_machines(self) -> dict returning {} with a docstring citing outline 3.3.4.3, and change BaseDevice.declared_verbs() to return {'show': ..., 'get': ..., **self._machine_verbs()}, where _machine_verbs() walks declared_machines().items(), raises ValueError(f\"machine {name!r} verb {verb!r}: a name or verb may not contain '/'\") when either contains '/', and maps f'machines/{name}/{verb}' to the machine's handler. The machine object needs only a declared_verbs() method; a machine without one raises TypeError naming it.",
+      "writes_to": [
+        "cairn/tools/base/device.py"
+      ],
+      "reads": [
+        "cairn/tools/base/device.py",
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof cairn/tools/base/proofs/test_a_device_answers_a_verb_for_a_machine_it_holds.py, red-first, PROVES 15d850266972 clauses 1 to 5, one tooth each. It copies the _SpyBus and fixture-shim shape of cairn/tools/base/proofs/test_a_raising_handler_still_answers.py: a fixture BaseDevice subclass whose declared_machines() returns {'gate_x': _Gate()}, _Gate.declared_verbs() returning {'queueme': handler recording the envelope and returning {'accepted': True, 'queued': fileref}}. Tooth 4 calls the shim's _announce_menu and reads the posted body's verbs.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_device_answers_a_verb_for_a_machine_it_holds.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_a_raising_handler_still_answers.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/device.py",
+      "cairn/tools/base/proofs/test_a_device_answers_a_verb_for_a_machine_it_holds.py"
+    ],
+    "out": [
+      "any device declaring machines (CodeMother's gate machines are their own ticket)",
+      "the ticket machine and its queueme call (their own ticket)",
+      "cairn/tools/base/shim.py (unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-10",
+      "saw": "BaseDevice.declared_verbs returns only show and get; shim.deliver resolves a verb by dict lookup over declared_verbs()",
+      "how": "read cairn/tools/base/device.py:186 and cairn/tools/base/shim.py:865-880"
+    },
+    {
+      "when": "2026-11-10",
+      "saw": "the six devices with verb tables of their own (cairn, codemother, harbor_master, inference_domain, librarian, tester) all spread **super().declared_verbs()",
+      "how": "grep -A12 'def declared_verbs' over cairn/devices"
+    }
+  ]
+}
