@@ -1,0 +1,211 @@
+{
+  "id": "b65e965237f3",
+  "title": "reseal rung 1 clears a seal-red trouble its proven green no longer supports",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The reseal door's rung 1 clears a proof's seal-red trouble when the trouble stands and standing() reads the proof's current bytes proven green, and clears nothing when no such trouble stands or the proof is not proven.",
+  "why": "Measured 2026-11-10 and again 2026-11-11. seal-red-cairn-devices-codemother-proofs-test-codemother stood at 5x after c42e4e436d6c PROVED, and 'cairn test --reseal' said 'seal still reproduces' and left it standing until CC cleared it by hand. Today seal-red-...-test-clearance-reaches-trouble-through-its-tool stands, raised 15:36Z, while standing() reads that proof proven green. Rung 1 (reseal.py:534) returns without a clear, and validation_store clears only on a verdict change.",
+  "traces_to": "Law 7; Law 3; idea 2026-11-10-the-reseal-door-s-rung-1-seal.",
+  "how": "reseal.py: a helper _clear_a_raise_a_green_settles(proof, rel, raiser, trouble_root) reads {t['id'] for t in store.live(root=trouble_root)} through cairn.devices.trouble.tools.store.store. If trouble_identity(proof) is among them, it calls raiser.clear_trouble(identity, by=CLEARS_FOR, what_changed=...). Any exception leaves the trouble standing. Rung 1 calls it and the returned dict carries 'cleared'. reseal() and reseal_all() gain trouble_root=None.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a proof sealed green over unchanged bytes whose seal-red stands live at a real TroubleDevice leaves the live list after one rung-1 reseal, and the tester never runs"
+      },
+      {
+        "n": 2,
+        "claim": "a proven proof with no standing seal-red gets no clear from rung 1"
+      },
+      {
+        "n": 3,
+        "claim": "a proof whose fingerprint moved keeps its standing seal-red through a reseal that does not run green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the helper sits at module level in reseal.py, and the raiser is defaulted inside it (ModuleRaiser('tester')) only when a clear is due. Rung 1's return gains 'cleared': <identity or None>. reseal_all forwards trouble_root. The proof gains three test_ teeth in test_reseal_door.py, and PROVES gains b65e965237f3: 1, 2 and 3 for them. Each tooth uses a scratch component and a real TroubleDevice(root=<scratch>/troubles) behind a raiser wired to it, as tooth 9 does.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/devices/tester/proofs/test_reseal_door.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/devices/trouble/tools/store/store.py",
+        "cairn/devices/tester/proofs/test_reseal_door.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_reseal_door.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/devices/trouble/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "standing() reads test_clearance_reaches_trouble_through_its_tool.py proven green while its seal-red raised 15:36Z stays live; the tester trail holds 80,880 records",
+      "how": "validation_store.standing() and store.live(); os.listdir of ~/.cairn/logs/tester/0"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "b65e965237f3: reseal rung 1 clears a seal-red trouble its proven green no longer supports",
+      "intent": "Rung 1 clears a proof's standing seal-red when standing() reads the proof proven, and clears nothing otherwise.",
+      "scope": "one helper and one parameter in the reseal door, three teeth in its proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "errors are loud at diagnostic surfaces; a trouble that no longer measures true is noise there",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "every component talks to another only through its public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/reseal.py",
+          "cairn/devices/tester/proofs/test_reseal_door.py"
+        ],
+        "out": [
+          "cairn/tools/validation_store/validation_store.py",
+          "cairn/devices/trouble/"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where rung 1 returns",
+        "how the run lane clears",
+        "what the trouble device publishes"
+      ],
+      "holdings": [
+        {
+          "what": "rung 1 return and the run lane's clear",
+          "address": "cairn/devices/tester/reseal.py"
+        },
+        {
+          "what": "live(root=...) over the trouble store, published_by_device",
+          "address": "cairn/devices/trouble/tools/store/store.py"
+        },
+        {
+          "what": "the scratch component, fakes and a real-holder tooth",
+          "address": "cairn/devices/tester/proofs/test_reseal_door.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a rung-1 clear of a standing seal-red",
+          "measure": "reseal.py:534 returns unchanged with no clear; seal-red on test_clearance_reaches_trouble_through_its_tool.py stands while standing() reads proven, 2026-11-11"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "_clear_a_raise_a_green_settles and three teeth",
+          "why": "a green over unchanged bytes settles the raise under its identity",
+          "kind": "build",
+          "fills": "a rung-1 clear of a standing seal-red",
+          "uses": [
+            "cairn/devices/trouble/tools/store/store.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/reseal.py",
+            "cairn/devices/tester/proofs/test_reseal_door.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "_clear_a_raise_a_green_settles and three teeth",
+          "why_now": "a seal-red stands live over a proven green today"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "_clear_a_raise_a_green_settles and three teeth",
+          "expect": "the scratch holder's live list empties after one rung-1 reseal; no clear without a standing raise; a moved proof keeps its raise",
+          "falsifier": "the trouble stays live, or a clear is emitted with nothing standing",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_reseal_door.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the three falsifier clauses each hold as a tooth",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_reseal_door.py",
+          "timeout_s": 600,
+          "covers": [
+            "_clear_a_raise_a_green_settles and three teeth"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
