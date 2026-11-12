@@ -1,0 +1,65 @@
+{
+  "id": "99258e9bbdb1",
+  "title": "a client that finds its stale bus draining uses it instead of spawning a loser",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "When ensure_bus finds its local bus stale and the shutdown it sends is answered with draining, it uses that bus, which keeps serving through the drain, instead of spawning a second bus that loses bus.lock and raises. It notes the drained use in the client log.",
+  "why": "From remote.py source: ensure_bus spawns after every _replace. While the old bus holds bus.lock the spawn exits EXIT_HELD, and ensure_bus raises 'no bus process answered' after 15 s. Once the bus drains its in-flight requests (sibling 1029d5146152, cast from the 2026-11-12 measured kill in idea 7306eaa10907), every client arriving during the drain would fail that way unless this changes.",
+  "traces_to": "Law 7 (a stale bus served on purpose is said in the log, not silent) and Akien's bus intention: a wake takes at most 60 s (outline 5.5.3.9).",
+  "how": "_replace returns the shutdown reply and returns at once on draining. ensure_bus re-checks _answers on a draining reply, notes it, and returns the old bus's stats; otherwise the path is unchanged. Red-first proof with a fake AF_UNIX bus in a scratch home and _spawn recorded.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "when a stale bus answers shutdown with draining, ensure_bus returns that bus's stats and spawns nothing"
+      },
+      {
+        "n": 2,
+        "claim": "when the shutdown reply carries no draining, ensure_bus waits for the old bus to stop answering and then spawns, as before"
+      },
+      {
+        "n": 3,
+        "claim": "a drained use writes one note line to the client log naming the draining count"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _replace returns the shutdown reply (None when the exchange raised) and returns at once when it carries draining. ensure_bus's local branch, on a draining reply, re-asks _answers; when that is ok it calls _note(...draining n...) and returns its json. Otherwise it falls through to the spawn path unchanged.",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, one tooth per clause: a fake AF_UNIX bus served on a thread at a scratch home's bus.sock, remote._spawn and remote._beside_the_manager monkeypatched, remote._LOG at a scratch file, CAIRN_BUS_HOME unset for the call.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_bus_client_proofs_measure_only_bus_client.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus (sibling ticket 1029d5146152)",
+      "the remote-bus branch of ensure_bus",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "ensure_bus spawns after every _replace; a spawn beside a held bus.lock exits EXIT_HELD, and ensure_bus raises after _START_WAIT_S = 15 s",
+      "how": "read cairn/tools/bus_client/remote.py ensure_bus and _replace, and server.serve's claim/EXIT_HELD path"
+    }
+  ]
+}

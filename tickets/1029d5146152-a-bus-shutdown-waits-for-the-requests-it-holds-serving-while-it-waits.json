@@ -1,0 +1,75 @@
+{
+  "id": "1029d5146152",
+  "title": "a bus shutdown waits for the requests it holds, serving while it waits",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "A shutdown verb that arrives while the bus holds socket requests in flight does not end them. The bus replies draining at once and keeps serving all work, with the stale refusal suspended. It exits at the first moment nothing is in flight, or at the drain cap (CAIRN_BUS_DRAIN_S, default 600 s, the inference-call limit), and logs any request the cap cuts.",
+  "why": "Measured 2026-11-12 (idea 7306eaa10907): at 11:52:18 sail.py chart b2e4dafc5813 replaced a stale bus while sail.py chart a1d3c9e4b702 was 14 min into a constrain ask. The asker got 'the bus process closed the socket without an answer', and the new bus took over 2 unanswered asks as given up. The work was lost and had to be re-run.",
+  "traces_to": "Law 7 (errors are loud, and nothing is silently dropped) and Akien's bus intention: a wake takes at most 60 s and 600 s is the inference-call limit (outline Q#13, 5.4.2.9).",
+  "how": "A _Drain count on BusProcess, entered and left around every handled request except stats and shutdown. Shutdown with a count above zero replies {ok, draining, drain_s} and hands the exit to a thread: wait for zero or the cap, log what was cut, final_flush, server.shutdown. answer() skips the stale refusals while draining. Red-first proof over a scratch bus with a driver adding a slow op and a stale op.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a request in flight when a shutdown arrives gets its own answer, not a closed socket"
+      },
+      {
+        "n": 2,
+        "claim": "while draining, a new request from a caller whose code is newer than the bus is served, not refused stale, and answers in under 60 s"
+      },
+      {
+        "n": 3,
+        "claim": "the bus exits at the first moment nothing is in flight, recording stop cause 'verb'"
+      },
+      {
+        "n": 4,
+        "claim": "at the drain cap (CAIRN_BUS_DRAIN_S) the bus exits even with a request in flight, and its log names that request's op"
+      },
+      {
+        "n": 5,
+        "claim": "with nothing in flight, shutdown replies with the final_flush result and the bus exits as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: a _Drain class on BusProcess (count, condition, deadline). _Handler.handle enters and leaves it around reply_to for every op except stats and shutdown. Shutdown with count 0 is unchanged. With count > 0 it replies {ok: True, draining: n, drain_s: cap} and a daemon thread waits, logs 'bus: drain cut N request(s): <ops>' when N > 0, runs final_flush and calls server.shutdown. A second shutdown mid-drain starts no second drainer. answer() skips both stale returns while draining. The cap is CAIRN_BUS_DRAIN_S, default 600.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/bus.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof with one tooth per clause over a scratch bus (serve --scratch --lan 0 at a scratch HOME). A driver module adds BusProcess.op_testing_slow and op_testing_stale, in the pattern of the stop proof's driver.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_shutdown_drains_what_it_holds.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_shutdown_drains_what_it_holds.py"
+    ],
+    "out": [
+      "cairn/tools/bus_client (sibling ticket 99258e9bbdb1)",
+      "signal stops (SIGTERM/SIGINT)",
+      "cairn/devices/cairn/cycle.py (cairn stop reports STILL ANSWERING during a drain, honestly)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "a stale replace at 11:52:18 cut a 14-min constrain ask: 'the bus process closed the socket without an answer'; the new bus took over 2 unanswered asks as given up",
+      "how": "the bus log on akiendelllinux and the asker's traceback, recorded in CairnCommons/ideas/2026-11-12-measured-2026-11-12-when-a-bus.json"
+    }
+  ]
+}
