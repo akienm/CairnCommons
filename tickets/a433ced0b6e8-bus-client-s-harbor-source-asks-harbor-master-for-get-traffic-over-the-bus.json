@@ -1,0 +1,61 @@
+{
+  "id": "a433ced0b6e8",
+  "title": "bus_client's harbor_source asks harbor_master for get traffic over the bus",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "cairn/tools/bus_client/bus_client.py:93 harbor_source() imports traffic_image from cairn.devices.cairn.machines.harbor_master.voyage and hands that function to the web server: a reach into harbor_master laundered through a tool. Since cd36b8e86cd3 harbor_master answers get traffic over the bus. harbor_source() returns a callable that asks it: get traffic on a reach('harbor_master') bus held after the first ask, the reply's data returned, a refusal raised loudly.",
+  "why": "Measured 2026-11-11: the build inspector filed inspector-new-finding-encapsulation-holds naming cairn/tools/bus_client/bus_client.py:93 importing cairn.devices.cairn.machines.harbor_master.voyage. RULE 1 makes the bus harbor_master's public interface; outline 15.3.4 has the web server ask devices for what to draw over the bus (get/show).",
+  "traces_to": "CLAUDE.md RULE 1; outline 15.3.4 (the web server asks devices for what to draw over the bus); outline 17.13.1.",
+  "how": "In bus_client.py harbor_source(*, ask=None) returns traffic_image(); traffic_image() sends get with body {what: traffic} to harbor_master through ask() when injected, else through one reach('harbor_master') bus built on the first call and kept; it returns reply['body']['data'] and raises RuntimeError naming the reason when the body is not accepted. No import of cairn.devices remains in harbor_source. New proof cairn/tools/bus_client/proofs/test_the_harbor_source_asks_over_the_bus.py, four teeth.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the build inspector's encapsulation_holds finds no breach from a file under cairn/tools/bus_client landing on cairn/devices/cairn/machines/harbor_master"
+      },
+      {
+        "n": 2,
+        "claim": "cairn/tools/bus_client/bus_client.py names no harbor_master module"
+      },
+      {
+        "n": 3,
+        "claim": "harbor_source(ask=...)() sends get with what=traffic to harbor_master and returns the reply's data; a refused reply raises naming its reason"
+      },
+      {
+        "n": 4,
+        "claim": "harbor_source()() over the live bus returns a traffic image (gates, at_anchor, berthed, counts)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ask, then keep the bus: the reach bus is built on the first ask and reused, so /harbor pays the wiring once and the web server's start pays nothing.",
+      "writes_to": [
+        "cairn/tools/bus_client/bus_client.py",
+        "cairn/tools/bus_client/proofs/test_the_harbor_source_asks_over_the_bus.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/harbor_master/device.py",
+        "cairn/devices/web_server/server.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/bus_client.py",
+      "cairn/tools/bus_client/proofs/test_the_harbor_source_asks_over_the_bus.py"
+    ],
+    "out": [
+      "cairn/devices/",
+      "cairn/machines/build_inspector/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "encapsulation_holds finds cairn/tools/bus_client/bus_client.py:93",
+      "how": "python3 -c 'from cairn.machines.build_inspector import inspector; inspector.encapsulation_breaches(\".\")'"
+    }
+  ]
+}
