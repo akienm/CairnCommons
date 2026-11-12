@@ -1,0 +1,68 @@
+{
+  "id": "b7d2e05a1c93",
+  "title": "two journals that grew apart meet without forking the chain",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "cairn/tools/artifact: when two branches or two sessions both append to .artifact-journal.jsonl, git's text merge conflicts or leaves two entries chained to one prev, and the repair is a hand re-link. The artifact tool now carries git's merge driver for the journal: it keeps one side byte for byte, appends the other side's entries it lacks (matched by body, not sha) and re-links only those, so the result replays clean from genesis.",
+  "why": "Measured 2026-11-11 at 6d324d26343d's PROVED push: upstream HEAD's journal was already forked at entry 16162 (peer superclaude-2782 had chained off entry 16018) and CC re-linked it by hand before pushing; verify_chain reds a fork. Measured 2026-11-12 in a scratch repo: two branches that each append two entries conflict on git merge (rc 1, CONFLICT (content)). Outline 3.3.6 puts each ticket on its own branch, which makes every landing such a meeting.",
+  "traces_to": "CLAUDE.md RULE 1; outline 17.2 (artifact: the journal of who came through it, hash-chained); outline 17.13.1.",
+  "how": "cairn/tools/artifact/artifact.py: merge_journals(ours, theirs) -> bytes, with _identity (body less prev and entry) and _parse_journal. cairn/tools/artifact/__main__.py: verbs merge-journal %O %A %B (writes over %A, as git requires) and install-merge-driver <root> (git config merge.cairn-journal.name and .driver, a PYTHONPATH'd python -m command). Both roots' .gitattributes name .artifact-journal.jsonl merge=cairn-journal. New proof proofs/test_two_journals_meet_without_forking.py over a scratch repo.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a merge of two branches that both appended takes no conflict, holds every entry once, and replays clean from genesis"
+      },
+      {
+        "n": 2,
+        "claim": "the side merged into keeps its own lines byte for byte, and incoming entries keep their bodies, re-linked only in prev and entry"
+      },
+      {
+        "n": 3,
+        "claim": "a rebase meets the same way, and meeting copies an earlier merge re-linked does not duplicate them"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the journal is met by a git merge driver the artifact tool carries; one side kept whole, the other's missing entries re-linked onto its tail.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/__main__.py",
+        ".gitattributes",
+        "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/__main__.py",
+        ".gitattributes"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/__main__.py",
+      ".gitattributes",
+      "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+    ],
+    "out": [
+      "cairn/devices/",
+      "cairn/machines/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "encapsulation_holds finds cairn/tools/artifact/artifact.py:305 (verify_chain); cairn/tools/artifact/artifact.py:319 (_append, the one-tree lock that cannot reach across branches)",
+      "how": "python3 -c 'from cairn.machines.build_inspector import inspector; inspector.encapsulation_breaches(\".\")'"
+    }
+  ],
+  "writes_to": [
+    "cairn/tools/artifact/artifact.py",
+    "cairn/tools/artifact/__main__.py",
+    ".gitattributes",
+    "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py",
+    "cairn/tools/artifact/validations/test_two_journals_meet_without_forking.json"
+  ]
+}
