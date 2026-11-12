@@ -1,0 +1,97 @@
+{
+  "id": "bdd0ed77930f",
+  "title": "an install inspector and gate",
+  "owning_intention": "cairn/devices/recovery/machines/install_inspector/intention+why.json",
+  "intention": "A box's install is measured, not remembered. Recovery's bootstrap brings up python and the venv only. One install-inspector call measures every other install fact and reds each lack, and an install gate, asked rather than called, refuses to call the box installed while any red stands.",
+  "why": "Akien, 2026-11-12, verbatim: \"i would say we need an install inspector and gate. then we can set up python, and once it's set up use that to detect what else with just a tool call. part of recovery and install\". Measured the same day: akienasus had none of the 15 skills and no pytest, akiendell none of the 16 skills, and each was fixed by hand, because a box gets only what someone remembered to add and nothing reads what is missing.",
+  "traces_to": "Law 3: an install is not known until measured. Law 4: install facts are enforced by an inspector and gate, not remembered. Law 1: each hand-fix becomes a registered check.",
+  "how": "inspector.py in Recovery: CHECKS lists 'module:function' step functions shaped {id,status,detail}; inspect() runs each with dry_run=True and reds every status but already_applied (a raise is a red); installed() returns (ok, reds). installer.main() becomes inspect, then fix the reds with dry_run=False, then ask installed(), exiting 0 only when it is ok; --check prints the reds and writes nothing. Children prove first: ce1d61032eff (the move), 53e7979f76e7 (skill links), b3ecebdf9695 (dev extra, re-shaped into a check). The commons root joins when akiendell_cc_0 casts its resolver.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with one green, one offered and one raising check, inspect() returns exactly two reds naming their lacks, the raising one carrying its exception"
+      },
+      {
+        "n": 2,
+        "claim": "installed() is (False, those reds) while any red stands and (True, []) once all are green"
+      },
+      {
+        "n": 3,
+        "claim": "inspect() calls every check with dry_run=True and writes nothing; a scratch repo's git config is byte-identical after it measures ensure_journal_merge_driver"
+      },
+      {
+        "n": 4,
+        "claim": "the install run calls each red check once with dry_run=False and no green check, then asks installed() again"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: inspector.py holds CHECKS (module:function strings), inspect(checks=None) -> list[dict], and installed(checks=None) -> tuple[bool, list[dict]]. A check returning a list (the host-seam install()) yields one entry per item. The first CHECKS are the installer's install, ensure_journal_merge_driver and ensure_skill_links, and the dev-extra check.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/install_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/installer.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the new component's charter, written before BUILDME through the artifact door: it is Recovery's machine, its public_interface is inspect/installed/CHECKS, and its why is Akien's words verbatim.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/install_inspector/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/recovery/intention+why.json"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: installer.main() (at its post-ce1d61032eff address) builds its results as inspect, then the fix pass over the reds, then installed(); --check prints the reds and exits 1 if any stand. bin/cmd/install passes --check through unchanged.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof drives injected fake checks and the real ensure_journal_merge_driver over a scratch git repo, one tooth per clause (PROVES 1-4).",
+      "writes_to": [
+        "cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/install_inspector/inspector.py",
+      "cairn/devices/recovery/machines/install_inspector/intention+why.json",
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
+    ],
+    "out": [
+      "each check's own logic (its child's ticket)",
+      "bootstrap.sh",
+      "every other device"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus had 0 of 15 skills and no pytest; akiendell 0 of 16 skills; each fixed by hand",
+      "how": "orchestrator's relay of the two boxes' CC reports"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "every installer step already returns {id,status,detail} and has a dry_run that writes nothing",
+      "how": "read cairn/machines/installer/installer.py (install, ensure_journal_merge_driver)"
+    }
+  ]
+}
