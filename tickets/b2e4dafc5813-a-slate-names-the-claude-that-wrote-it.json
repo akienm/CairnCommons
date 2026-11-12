@@ -1,0 +1,245 @@
+{
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus_cc_0 opened with slate 20261112-journal-merge-driver-proved-hex-gpu-capped, author 'CC', which is akiendelllinux's work; bin/cmd/slate _newest_slate takes the max over all 256 slates with no author filter; skills/saveslate/door.py:259 hardcodes author 'CC'",
+      "how": "akienasus_cc_0's session-open banner and a read of bin/cmd/slate:144-193 and skills/saveslate/door.py:250-262"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "~/.claude/sessions/631166.json carries sessionId 546bccde-..., name 'orchestrator', formerNames [{name: 'akiendelllinux_cc_RESCUE'}]",
+      "how": "cat of the record on akiendelllinux"
+    }
+  ],
+  "traces_to": "Law 6 (one owner, so a record names its writer) and Law 5 (the address carries what THIS mind needs now). Akien 2026-11-12: 'we need to start reporting which claude has done what'.",
+  "why": "Four Claudes now share one commons (orchestrator and akiendelllinux_cc_0 on akiendelllinux, akiendell_cc_0, akienasus_cc_0), and every slate says author 'CC'. Measured 2026-11-12: akienasus_cc_0 opened on akiendelllinux's slate as if it were its own.",
+  "id": "b2e4dafc5813",
+  "title": "a slate names the Claude that wrote it",
+  "owning_intention": "skills/saveslate/intention+why.json",
+  "intention": "The slate door stamps each slate's author with the writing session's name and adds host, both door-minted, so every slate says which Claude on which box wrote it.",
+  "how": "skills/saveslate/door.py fire(): author = claude_identity.who(session).name or 'CC'; host = who().host; both minted by the door.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a slate fired with a session whose record names akienasus_cc_0 lands with author akienasus_cc_0 and host equal to this box's hostname"
+      },
+      {
+        "n": 2,
+        "claim": "a slate fired with a session that has no record lands with author 'CC' and the host still stamped"
+      },
+      {
+        "n": 3,
+        "claim": "a packet carrying its own author or host is refused as door-minted and writes nothing"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ENVELOPE and DOOR_MINTED gain 'host'. fire() gains sessions_dir=None and resolves who = claude_identity.who(session, sessions_dir=sessions_dir), imported inside fire(); record['author'] = who['name'] or 'CC'; record['host'] = who['host']. Nothing else in the door changes.",
+      "writes_to": [
+        "skills/saveslate/door.py"
+      ],
+      "reads": [
+        "skills/saveslate/door.py",
+        "cairn/tools/base/claude_identity.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: proof skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py fires door.fire with a scratch slates_dir and a scratch sessions_dir in the way skills/saveslate/proofs/test_slate_door.py fires it, one tooth per clause, house runner.",
+      "writes_to": [
+        "skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py"
+      ],
+      "reads": [
+        "skills/saveslate/proofs/test_slate_door.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: skills/saveslate/proofs/test_slate_door.py tooth 'the slate carries exactly the template keys' adds 'host' to the expected set; nothing else in that proof changes.",
+      "writes_to": [
+        "skills/saveslate/proofs/test_slate_door.py"
+      ],
+      "reads": [
+        "skills/saveslate/proofs/test_slate_door.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "skills/saveslate/door.py",
+      "skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py",
+      "skills/saveslate/proofs/test_slate_door.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "chart": {
+    "orient": {
+      "request": "b2e4dafc5813: skills/saveslate door stamps the writing Claude's name and host on every slate",
+      "intent": "The saveslate door mints author from claude_identity.who() and a new host field, so every slate names which Claude wrote it and on which box.",
+      "scope": "skills/saveslate door.py, its door proof's key sets, one new proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "RULE 1: the door reaches claude_identity only through cairn.tools.base's public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "author and host are door-minted: a packet carrying either is refused",
+          "source": "skills/saveslate/door.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "skills/saveslate/door.py",
+          "skills/saveslate/proofs/test_slate_door.py",
+          "skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py"
+        ],
+        "out": [
+          "every other component",
+          "bin/cmd/slate (ticket c3f5e1a0d924)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the door mints author",
+        "the door's minted-field refusal",
+        "claude_identity.who"
+      ],
+      "holdings": [
+        {
+          "what": "claude_identity.who() names the session",
+          "address": "cairn/tools/base/claude_identity.py"
+        },
+        {
+          "what": "the door's minted-field refusal (DOOR_MINTED)",
+          "address": "skills/saveslate/door.py"
+        },
+        {
+          "what": "scratch_dir for proof fixtures",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a slate field naming which Claude and box wrote it",
+          "measure": "2026-11-12 read of skills/saveslate/door.py: author is the literal \"CC\" and no host field exists"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "door.fire stamps author=who().name or CC and host=who().host; host joins ENVELOPE and DOOR_MINTED",
+          "why": "Akien 2026-11-12: we need to start reporting which claude has done what",
+          "kind": "build",
+          "fills": "a slate field naming which Claude and box wrote it",
+          "uses": [
+            "cairn/tools/base/claude_identity.py",
+            "cairn/tools/scratch/scratch.py"
+          ],
+          "writes_to": [
+            "skills/saveslate/door.py",
+            "skills/saveslate/proofs/test_slate_door.py",
+            "skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "door.fire stamps author=who().name or CC and host=who().host; host joins ENVELOPE and DOOR_MINTED",
+          "why_now": "akienasus_cc_0 opened on another Claude's slate because every slate said CC"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "door.fire stamps author=who().name or CC and host=who().host; host joins ENVELOPE and DOOR_MINTED",
+          "expect": "the new proof green on three teeth, red with the door change taken away; test_slate_door.py stays green",
+          "falsifier": "a named session's slate reads CC, a slate lacks host, or a packet carrying author or host lands",
+          "instrument": "bin/cairn test skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-3 hold at the saveslate door",
+          "instrument": "bin/cairn test skills/saveslate/proofs/test_a_slate_names_the_claude_that_wrote_it.py",
+          "timeout_s": 300,
+          "covers": [
+            "door.fire stamps author=who().name or CC and host=who().host; host joins ENVELOPE and DOOR_MINTED"
+          ]
+        },
+        {
+          "claim": "the door's standing proof stays green with host in its key sets",
+          "instrument": "bin/cairn test skills/saveslate/proofs/test_slate_door.py",
+          "timeout_s": 300,
+          "covers": [
+            "door.fire stamps author=who().name or CC and host=who().host; host joins ENVELOPE and DOOR_MINTED"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}

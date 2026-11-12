@@ -1,0 +1,235 @@
+{
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus_cc_0 opened with slate 20261112-journal-merge-driver-proved-hex-gpu-capped, author 'CC', which is akiendelllinux's work; bin/cmd/slate _newest_slate takes the max over all 256 slates with no author filter; skills/saveslate/door.py:259 hardcodes author 'CC'",
+      "how": "akienasus_cc_0's session-open banner and a read of bin/cmd/slate:144-193 and skills/saveslate/door.py:250-262"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "~/.claude/sessions/631166.json carries sessionId 546bccde-..., name 'orchestrator', formerNames [{name: 'akiendelllinux_cc_RESCUE'}]",
+      "how": "cat of the record on akiendelllinux"
+    }
+  ],
+  "traces_to": "Law 6 (one owner, so a record names its writer) and Law 5 (the address carries what THIS mind needs now). Akien 2026-11-12: 'we need to start reporting which claude has done what'.",
+  "why": "Four Claudes now share one commons (orchestrator and akiendelllinux_cc_0 on akiendelllinux, akiendell_cc_0, akienasus_cc_0), and every slate says author 'CC'. Measured 2026-11-12: akienasus_cc_0 opened on akiendelllinux's slate as if it were its own.",
+  "id": "a1d3c9e4b702",
+  "title": "a session reads which Claude it is",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cairn.tools.base.claude_identity.who() names the Claude session a process runs under: its session name, former names, box and session id, read from Claude Code's own session record.",
+  "how": "New module cairn/tools/base/claude_identity.py with who(session_id=None, *, sessions_dir=None, environ=None). Read-only and defensive over ~/.claude/sessions/*.json.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "given a session id, who() returns the matching record's name, its formerNames as a list of names, this box's hostname and the id"
+      },
+      {
+        "n": 2,
+        "claim": "given no session id, who() finds the record whose pid is CLAUDE_PID from the environment"
+      },
+      {
+        "n": 3,
+        "claim": "an unknown id or an absent sessions dir returns name '' with the host still given, and a torn record is skipped, never raised"
+      },
+      {
+        "n": 4,
+        "claim": "two records carrying one session id resolve to the one with the newer updatedAt"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: who(session_id=None, *, sessions_dir=None, environ=None) -> {name: str, former_names: list[str], host: str, session: str}. sessions_dir defaults to $CAIRN_CLAUDE_SESSIONS_DIR or ~/.claude/sessions; environ defaults to os.environ; host is os.uname().nodename. Lookup order: a record whose sessionId == session_id (newest updatedAt on ties); else the record whose pid == int(environ['CLAUDE_PID']); else the records of this process's ancestor pids read from /proc/<pid>/stat (skipped where /proc is absent). Nothing found: name '', former_names [], session = session_id or ''. Never raises.",
+      "writes_to": [
+        "cairn/tools/base/claude_identity.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn.tools.base.claude_identity joins public_interface in cairn/tools/base/intention+why.json (through the artifact door).",
+      "writes_to": [
+        "cairn/tools/base/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/base/intention+why.json"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: proof cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py, one tooth per clause, over a scratch sessions dir from cairn.tools.scratch, house runner (PASS/FAIL per tooth), the import inside each tooth.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/claude_identity.py",
+      "cairn/tools/base/intention+why.json",
+      "cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py"
+    ],
+    "out": [
+      "every other component",
+      "~/.claude/sessions (read only)"
+    ]
+  },
+  "chart": {
+    "orient": {
+      "request": "a1d3c9e4b702: tools/base gains claude_identity, so a session reads which Claude it is",
+      "intent": "A new base module, claude_identity.who(), reads Claude Code's session record and names the session a process runs under: its name, former names, box and session id.",
+      "scope": "one new module in cairn/tools/base, its public_interface entry, one proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "RULE 1: skills/saveslate and bin reach this only through base's public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Claude Code's session record is its internal file: read defensively, never written",
+          "source": "cairn/devices/cc/shim.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/base/claude_identity.py",
+          "cairn/tools/base/intention+why.json",
+          "cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py"
+        ],
+        "out": [
+          "every other component",
+          "~/.claude/sessions (read only)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "the session record's fields",
+        "how cc's shim reads the dir",
+        "a scratch dir for fixtures"
+      ],
+      "holdings": [
+        {
+          "what": "the defensive read of ~/.claude/sessions by name",
+          "address": "cairn/devices/cc/shim.py"
+        },
+        {
+          "what": "scratch_dir for proof fixtures",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a published way to ask which Claude session a process runs under",
+          "measure": "2026-11-12 grep for .claude/sessions and CLAUDE_CODE_SESSION_ID over cairn, skills and bin outside proofs found only cairn/devices/cc/shim.py, which is device-private"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "claude_identity.who() and its public_interface entry",
+          "why": "Akien 2026-11-12: we need to start reporting which claude has done what",
+          "kind": "build",
+          "fills": "a published way to ask which Claude session a process runs under",
+          "uses": [
+            "cairn/devices/cc/shim.py",
+            "cairn/tools/scratch/scratch.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/claude_identity.py",
+            "cairn/tools/base/intention+why.json",
+            "cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "claude_identity.who() and its public_interface entry",
+          "why_now": "the slate door and reader need it, and four Claudes now share one commons"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "claude_identity.who() and its public_interface entry",
+          "expect": "the new proof green on four teeth and red on all of them with claude_identity.py absent",
+          "falsifier": "who() misnames the session, ignores CLAUDE_PID, raises on a torn record or absent dir, or picks the older of two records",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-4 hold at claude_identity",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py",
+          "timeout_s": 300,
+          "covers": [
+            "claude_identity.who() and its public_interface entry"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}

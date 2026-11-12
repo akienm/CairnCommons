@@ -1,0 +1,274 @@
+{
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus_cc_0 opened with slate 20261112-journal-merge-driver-proved-hex-gpu-capped, author 'CC', which is akiendelllinux's work; bin/cmd/slate _newest_slate takes the max over all 256 slates with no author filter; skills/saveslate/door.py:259 hardcodes author 'CC'",
+      "how": "akienasus_cc_0's session-open banner and a read of bin/cmd/slate:144-193 and skills/saveslate/door.py:250-262"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "~/.claude/sessions/631166.json carries sessionId 546bccde-..., name 'orchestrator', formerNames [{name: 'akiendelllinux_cc_RESCUE'}]",
+      "how": "cat of the record on akiendelllinux"
+    }
+  ],
+  "traces_to": "Law 6 (one owner, so a record names its writer) and Law 5 (the address carries what THIS mind needs now). Akien 2026-11-12: 'we need to start reporting which claude has done what'.",
+  "why": "Four Claudes now share one commons (orchestrator and akiendelllinux_cc_0 on akiendelllinux, akiendell_cc_0, akienasus_cc_0), and every slate says author 'CC'. Measured 2026-11-12: akienasus_cc_0 opened on akiendelllinux's slate as if it were its own.",
+  "id": "c3f5e1a0d924",
+  "title": "session open restores its own Claude's slate",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "bin/cmd/slate restores the newest slate this Claude wrote and lists every other Claude's newest slate in one line, so no Claude opens on another's work as its own.",
+  "how": "bin/cmd/slate: under --hook read session_id from stdin; who = claude_identity.who(session_id); _newest_slate filters by ownership; build() adds an OTHER CLAUDES roster.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a newer slate by akiendelllinux_cc_0 and an older one by akienasus_cc_0, a session named akienasus_cc_0 restores its own slate"
+      },
+      {
+        "n": 2,
+        "claim": "the same banner lists akiendelllinux_cc_0's newest slate in an OTHER CLAUDES block with its host, written_at and id"
+      },
+      {
+        "n": 3,
+        "claim": "a session named with no slate of its own reads NO SLATE OF YOURS and is not handed another Claude's slate"
+      },
+      {
+        "n": 4,
+        "claim": "a legacy author-'CC' slate whose session equals this session's id counts as this Claude's"
+      },
+      {
+        "n": 5,
+        "claim": "with no identity at all (no name, no session) the reader falls back to the newest slate of all and says it could not tell which Claude it is"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: main(): under --hook, read stdin once (json.loads when stdin is not a tty and non-empty; anything else gives {}) and take session_id; by hand, session_id = $CLAUDE_CODE_SESSION_ID. who = claude_identity.who(session_id), sessions dir from $CAIRN_CLAUDE_SESSIONS_DIR as claude_identity already reads.",
+      "writes_to": [
+        "bin/cmd/slate"
+      ],
+      "reads": [
+        "bin/cmd/slate",
+        "cairn/tools/base/claude_identity.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a slate is mine when its author is who.name or in who.former_names, or its session == who.session (non-empty). _newest_slate(who) returns the newest of mine by the existing key. No name and no session: the old newest-of-all, with the warning 'could not tell which Claude this session is; restored the newest slate of all'. Named but none mine: slate None, banner '!! NO SLATE OF YOURS (<name>): opening cold for this Claude; the other Claudes' slates are listed below'.",
+      "writes_to": [
+        "bin/cmd/slate"
+      ],
+      "reads": [
+        "bin/cmd/slate"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: OTHER CLAUDES block after the slate header: one line per other author (author not 'CC', not mine), its newest slate written in the last 14 days, sorted newest first: '  <author> @ <host or ?>  <written_at>  <id>'. The SLATE header line shows 'author: <author> @ <host>'.",
+      "writes_to": [
+        "bin/cmd/slate"
+      ],
+      "reads": [
+        "bin/cmd/slate"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: proof bin/proofs/test_session_open_restores_its_own_claudes_slate.py runs bin/cmd/slate --hook as a subprocess with CAIRN_SLATES_DIR and CAIRN_CLAUDE_SESSIONS_DIR at scratch dirs and the hook JSON on stdin, one tooth per clause, house runner; bin/proofs/test_slate.py stays green.",
+      "writes_to": [
+        "bin/proofs/test_session_open_restores_its_own_claudes_slate.py"
+      ],
+      "reads": [
+        "bin/proofs/test_slate.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: bin/proofs/test_slate.py run() harness runs the reader with no Claude identity: CAIRN_CLAUDE_SESSIONS_DIR at an empty dir beside its fixtures, CLAUDE_PID and CLAUDE_CODE_SESSION_ID removed, stdin DEVNULL; so its author-'CC' fixtures keep reading as before. No tooth changes.",
+      "writes_to": [
+        "bin/proofs/test_slate.py"
+      ],
+      "reads": [
+        "bin/proofs/test_slate.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cmd/slate",
+      "bin/proofs/test_session_open_restores_its_own_claudes_slate.py",
+      "bin/proofs/test_slate.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "chart": {
+    "orient": {
+      "request": "c3f5e1a0d924: bin/cmd/slate restores this Claude's own slate and lists the other Claudes' slates",
+      "intent": "The session-open reader restores the newest slate this Claude wrote, lists each other Claude's newest slate, and says so when it has none or cannot tell who it is.",
+      "scope": "bin/cmd/slate, its standing proof's harness isolation, one new proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "domain": "bin (the cairn command and its subcommands; bin/cmd/slate is the session-open slate reader)"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "RULE 1: bin reaches claude_identity only through cairn.tools.base's public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "the reader never fails session open: an identity it cannot read falls back to the newest slate and says so",
+          "source": "bin/cmd/slate",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/cmd/slate",
+          "bin/proofs/test_slate.py",
+          "bin/proofs/test_session_open_restores_its_own_claudes_slate.py"
+        ],
+        "out": [
+          "every other component",
+          "skills/saveslate (ticket b2e4dafc5813)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how the reader picks a slate",
+        "the SessionStart hook's stdin JSON",
+        "claude_identity.who"
+      ],
+      "holdings": [
+        {
+          "what": "claude_identity.who() names the session",
+          "address": "cairn/tools/base/claude_identity.py"
+        },
+        {
+          "what": "the reader's newest-slate pick and banner",
+          "address": "bin/cmd/slate"
+        },
+        {
+          "what": "scratch_dir for proof fixtures",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a reader that restores this Claude's slate rather than the newest of all",
+          "measure": "2026-11-12 read of bin/cmd/slate: _newest_slate takes the max over every slate, whoever wrote it"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "_identity, _mine, _others and the OTHER CLAUDES roster in bin/cmd/slate; test_slate.py's harness isolated from the live session",
+          "why": "Akien 2026-11-12: we need to start reporting which claude has done what",
+          "kind": "build",
+          "fills": "a reader that restores this Claude's slate rather than the newest of all",
+          "uses": [
+            "cairn/tools/base/claude_identity.py",
+            "cairn/tools/scratch/scratch.py"
+          ],
+          "writes_to": [
+            "bin/cmd/slate",
+            "bin/proofs/test_slate.py",
+            "bin/proofs/test_session_open_restores_its_own_claudes_slate.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "_identity, _mine, _others and the OTHER CLAUDES roster in bin/cmd/slate; test_slate.py's harness isolated from the live session",
+          "why_now": "akienasus_cc_0 opened on akiendelllinux's slate as its own on 2026-11-12"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "_identity, _mine, _others and the OTHER CLAUDES roster in bin/cmd/slate; test_slate.py's harness isolated from the live session",
+          "expect": "the new proof green on five teeth, red with the reader change taken away; test_slate.py stays green",
+          "falsifier": "a named Claude restores another's newer slate, the roster omits another Claude, a Claude with no slate is handed one, a legacy CC slate of this session is not restored, or a nameless session does not fall back with a warning",
+          "instrument": "bin/cairn test bin/proofs/test_session_open_restores_its_own_claudes_slate.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-5 hold at bin/cmd/slate",
+          "instrument": "bin/cairn test bin/proofs/test_session_open_restores_its_own_claudes_slate.py",
+          "timeout_s": 300,
+          "covers": [
+            "_identity, _mine, _others and the OTHER CLAUDES roster in bin/cmd/slate; test_slate.py's harness isolated from the live session"
+          ]
+        },
+        {
+          "claim": "the reader's standing proof stays green",
+          "instrument": "bin/cairn test bin/proofs/test_slate.py",
+          "timeout_s": 600,
+          "covers": [
+            "_identity, _mine, _others and the OTHER CLAUDES roster in bin/cmd/slate; test_slate.py's harness isolated from the live session"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
