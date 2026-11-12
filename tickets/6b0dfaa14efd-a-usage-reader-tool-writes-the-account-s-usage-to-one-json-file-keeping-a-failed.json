@@ -1,0 +1,78 @@
+{
+  "id": "6b0dfaa14efd",
+  "title": "a usage reader tool writes the account's usage to one JSON file, keeping a failed fetch beside the last good reading",
+  "owning_intention": "cairn/tools/usage/intention+why.json",
+  "intention": "cairn/tools/usage/ reads the account's usage with one HTTPS GET, writes ~/.cairn/usage/usage.json carrying fetched_at, and keeps a failed fetch beside the last good reading, never in its place.",
+  "why": "Measured 2026-11-12 on akiendell: no cairn/tools/usage exists; the orchestrator's draft C:/Users/akien/usage_draft.py implements read_and_write, last and a --hook entry; ~/.claude/.credentials.json exists on this box (contents not read)",
+  "traces_to": "Law 7 (a failed fetch is permanent in the record, never a fresh-looking reading); Law 3 (a usage figure is a measurement with an age); CP4; Law 6 (a tool has users).",
+  "how": "Start from the orchestrator's draft (C:/Users/akien/usage_draft.py): read_and_write(fetch=...) and last(), a --hook entry that always exits 0, and the token scrubbed from every record and output. Charter first, red-first proof with the fetch injected and urlopen patched to raise.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a good injected fetch writes percent and resets_at for seven_day and five_hour with fetched_at, and last() reads it fresh with its age"
+      },
+      {
+        "n": 2,
+        "claim": "a failing fetch after a good one is written as an error beside the unchanged last_good, and last() reports state error with the old reading, never fresh"
+      },
+      {
+        "n": 3,
+        "claim": "the OAuth token appears in neither the store file nor anything printed, including when the fetch's own error message contains it"
+      },
+      {
+        "n": 4,
+        "claim": "a missing credentials file or an empty token is a recorded error, and --hook returns 0 on every failure"
+      },
+      {
+        "n": 5,
+        "claim": "the proof reaches no network: urlopen is patched to raise during every tooth"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/usage/__init__.py, cairn/tools/usage/__main__.py, cairn/tools/usage/usage.py",
+      "writes_to": [
+        "cairn/tools/usage/__init__.py",
+        "cairn/tools/usage/__main__.py",
+        "cairn/tools/usage/usage.py"
+      ],
+      "reads": [
+        "cairn/tools/usage/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/usage/proofs/test_usage_reads_and_keeps_one_file.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/usage/__init__.py",
+      "cairn/tools/usage/__main__.py",
+      "cairn/tools/usage/usage.py",
+      "cairn/tools/usage/proofs/test_usage_reads_and_keeps_one_file.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "no cairn/tools/usage exists; the orchestrator's draft C:/Users/akien/usage_draft.py implements read_and_write, last and a --hook entry; ~/.claude/.credentials.json exists on this box (contents not read)",
+      "how": "directory listing of cairn/tools; read the draft; Test-Path on the credentials file"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "NOT measured: the real reply shape of https://api.anthropic.com/api/oauth/usage (the draft's keys seven_day, five_hour, utilization, resets_at are its author's), and whether the token in the credentials file is accepted: HYPOTHESIS; no network call was made",
+      "how": "none: the build and its proof use an injected fetch by design"
+    }
+  ]
+}
