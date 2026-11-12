@@ -67,5 +67,178 @@
       "saw": "red-first: 1 failed (a far reach sends hold), 2 passed",
       "how": "bin/cairn test cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "bc0bbfd33a71: a non-home box cannot drive the ticket machine — hold is not open across the LAN",
+      "intent": "A client whose bus home is another box reaches a device there without asking for hold. The ask goes over call, and the home bus's no_receiver wakes the device on mail. A local reach still holds.",
+      "scope": "cairn/tools/bus_client/bus_client.py (_wire) and one new proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "the LAN door answers only call, stats and verbs (ticket 5183005fa134); this fix stays inside that set and does not widen it",
+          "source": "cairn/devices/cairn/machines/bus/server.py",
+          "kind": "law"
+        },
+        {
+          "text": "RULE 1: the proof restates LAN_OPS and imports nothing of the bus machine",
+          "source": "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py",
+          "kind": "law"
+        },
+        {
+          "text": "a local reach holds the devices it names, exactly as before",
+          "source": "cairn/tools/bus_client/bus_client.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/bus_client/bus_client.py",
+          "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+        ],
+        "out": [
+          "cairn/devices/cairn/machines/bus (the LAN door stays as it is)",
+          "cairn/tools/bus_client/remote.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where reach asks for hold",
+        "which ops the LAN door answers",
+        "what wakes an unheld device on mail"
+      ],
+      "holdings": [
+        {
+          "what": "_wire: ensure_bus, RemoteBus, then bus.hold(*devices)",
+          "address": "cairn/tools/bus_client/bus_client.py"
+        },
+        {
+          "what": "remote_address: (host, port) when the home names another box",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "RemoteBus.request goes as op call, method request",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "no_receiver wakes the addressee through hold_name(wire=True)",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a reach that does not ask a far bus for hold",
+          "measure": "2026-11-12: sail.py chart on akienasus against akiendelllinux.local:7419 raised the hold refusal; the skills.sail.reflection door raised it again"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "_wire holds only when remote_address() is None",
+          "why": "hold is refused across the LAN, so no far box can reach a device, which means it cannot chart, cross, verdict or reflect",
+          "kind": "build",
+          "fills": "a reach that does not ask a far bus for hold",
+          "uses": [
+            "cairn/tools/bus_client/bus_client.py",
+            "cairn/tools/bus_client/remote.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/bus_client.py",
+            "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "_wire holds only when remote_address() is None",
+          "why_now": "every far-box voyage needs the home box to relay each gate"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "_wire holds only when remote_address() is None",
+          "expect": "the new proof green on three teeth, and tooth 1 red with the change taken away",
+          "falsifier": "a far reach sends hold or any op outside LAN_OPS, a local reach stops holding, or a far request does not go as call/request",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-3 hold at bus_client",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py",
+          "timeout_s": 300,
+          "covers": [
+            "_wire holds only when remote_address() is None"
+          ]
+        },
+        {
+          "claim": "a client still reaches and never beats",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_client_reaches_and_never_beats.py",
+          "timeout_s": 300,
+          "covers": [
+            "_wire holds only when remote_address() is None"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
