@@ -1,0 +1,74 @@
+{
+  "id": "bce45318b2e0",
+  "title": "the two detached spawns that hand-built their own flags take them from windowless_spawn, and the site check scans instead of listing",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "pulse._detached and memory_sync.push take their Popen keywords from detached_kwargs(), and tooth 3 of the windowless_spawn proof finds spawn sites by scanning every non-proof module under cairn/, so a future hand-built flag set reds.",
+  "why": "Measured 2026-11-12 on akiendell: pulse.py:137-141 sets creationflags 0x08|0x08000000 (no CREATE_NEW_PROCESS_GROUP) else start_new_session; its argv is [python, LISTENER, --port, --bind, ...], python by default sys.executable. memory_sync.py:49-51 sets creationflags DETACHED_PROCESS|CREATE_NO_WINDOW else start_new_session and spawns git -C CLONE push -q. The proof's SITES is a hard list of six files that omits both.",
+  "traces_to": "Law 1 and Law 4 (one helper for the flag set, enforced by a proof that scans rather than a list a hand must keep); Law 3 (a measured defect: akiendell windows); Law 7 (a skipped push is said aloud).",
+  "how": "Red-first proof with Popen mocked (nothing spawns): each site's flag kwargs equal detached_kwargs(); a planted module that hand-builds flags makes the scan red. pulse.py: kw.update(detached_kwargs()). memory_sync.py is a standalone hook script run by absolute path with no PYTHONPATH, so it adds the repo root to sys.path and imports the helper at call time inside push(); when the import fails it says so on stderr and skips the push (the next SessionStart pull pushes commits that are ahead), never failing the Stop hook.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "pulse._detached, with Popen mocked, passes flag kwargs equal to detached_kwargs() and no other creationflags or start_new_session"
+      },
+      {
+        "n": 2,
+        "claim": "memory_sync.push, with Popen mocked, spawns ['git', '-C', CLONE, 'push', '-q'] with flag kwargs equal to detached_kwargs()"
+      },
+      {
+        "n": 3,
+        "claim": "the site check scans every non-proof .py under cairn/ for Popen( creationflags= or start_new_session=True and reds a planted module that hand-builds flags or spawns without detached_kwargs"
+      },
+      {
+        "n": 4,
+        "claim": "with cairn unimportable, memory_sync.push returns 0 and writes the reason to stderr without spawning, so the Stop hook never fails"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/web_server/groundloop/pulse.py, cairn/devices/cc/scripts/memory_sync.py, cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py",
+      "writes_to": [
+        "cairn/devices/web_server/groundloop/pulse.py",
+        "cairn/devices/cc/scripts/memory_sync.py",
+        "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/web_server/groundloop/pulse.py",
+      "cairn/devices/cc/scripts/memory_sync.py",
+      "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py",
+      "cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "pulse.py:137-141 sets creationflags 0x08|0x08000000 (no CREATE_NEW_PROCESS_GROUP) else start_new_session; its argv is [python, LISTENER, --port, --bind, ...], python by default sys.executable. memory_sync.py:49-51 sets creationflags DETACHED_PROCESS|CREATE_NO_WINDOW else start_new_session and spawns git -C CLONE push -q. The proof's SITES is a hard list of six files that omits both.",
+      "how": "Read of pulse.py 132-141 and 144-151, memory_sync.py 43-53, the proof's SITES (line 35) and tooth 3 (line 112), memory_link.py's install_hooks (hook command is the absolute script path with no PYTHONPATH)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "A console window opening for these two children is NOT measured here; the premise is the orchestrator's: a console window is a window whatever the child is. HYPOTHESIS until tooth 2 of ticket 0156856b1fae has run.",
+      "how": "none"
+    }
+  ]
+}
