@@ -100,5 +100,202 @@
       "reads": [],
       "text": "Run the proof red, build, run it twice serially green plus the component's standing proofs. Commit before the hollow reading; seal with bin/cairn test --seal <path>."
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "0482542c2b7c: the web server has a shim that receives the request and starts the web server (cairn/devices/web_server)",
+      "intent": "WebServerShim(BaseShim) fronts WebServerDevice; listener.py hands each request to it so the first starts the device; the ground loop's pulse (web_server/groundloop/pulse.py) starts listener.py on the cairn home when the port is silent (open-68fe4af67c6d (b), outline 5.8.3.4.1, 15.3.5).",
+      "scope": "the shim, the listener's hand-off, the pulse, instance 0's declaration; the librarian and superclaude launchers keep their own start paths",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "every component talks to every other only through its public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "It runs on one box, so a box that joins the instance starts no web server of its own",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/web_server/shim.py",
+          "cairn/devices/web_server/listener.py",
+          "cairn/devices/web_server/groundloop/pulse.py",
+          "cairn/devices/web_server/0/bin/web_server",
+          "cairn/devices/web_server/proofs/test_web_server_shim.py",
+          "cairn/devices/web_server/proofs/test_web_server.py",
+          "cairn/devices/web_server/intention+why.json"
+        ],
+        "out": [
+          "the librarian launcher's start path",
+          "superclaude's web start",
+          "port 80 in any proof",
+          "box-to-box federation of the web server"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how a shim starts its device",
+        "how the ground loop finds pulse.py",
+        "which box is home"
+      ],
+      "holdings": [
+        {
+          "what": "BaseShim lazy device start",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the librarian shim's shape",
+          "address": "cairn/devices/librarian/shim.py"
+        },
+        {
+          "what": "spawn_pulses",
+          "address": "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+        },
+        {
+          "what": "WebServerDevice.serve",
+          "address": "cairn/devices/web_server/server.py"
+        },
+        {
+          "what": "DeviceRoster",
+          "address": "cairn/tools/bus_client/roster.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "the web server's shim",
+          "measure": "ls cairn/devices/web_server/shim.py"
+        },
+        {
+          "what": "the web server's pulse",
+          "measure": "ls cairn/devices/web_server/groundloop/pulse.py"
+        },
+        {
+          "what": "instance 0 of web_server",
+          "measure": "ls cairn/devices/web_server/0"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the shim, its hand-off and its pulse",
+          "why": "no shim for web_server: ls cairn/devices/*/shim.py (2026-11-06)",
+          "kind": "build",
+          "fills": "the web server's shim",
+          "uses": [
+            "cairn/tools/base/shim.py",
+            "cairn/devices/web_server/server.py",
+            "cairn/tools/bus_client/roster.py"
+          ],
+          "writes_to": [
+            "cairn/devices/web_server/shim.py",
+            "cairn/devices/web_server/listener.py",
+            "cairn/devices/web_server/groundloop/pulse.py",
+            "cairn/devices/web_server/0/bin/web_server",
+            "cairn/devices/web_server/proofs/test_web_server_shim.py",
+            "cairn/devices/web_server/proofs/test_web_server.py",
+            "cairn/devices/web_server/intention+why.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the shim, its hand-off and its pulse",
+          "why_now": "9.6.1's chain needs the web server's shim to already hold the port"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the shim, its hand-off and its pulse",
+          "expect": "four teeth green; standing web_server proofs green",
+          "falsifier": "a second GET builds a second device, or a silent scratch port stays silent after a pulse, or an attaching box starts a server",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs/test_web_server_shim.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the falsifier holds as named teeth",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs/test_web_server_shim.py",
+          "timeout_s": 300,
+          "covers": [
+            "the shim, its hand-off and its pulse"
+          ]
+        },
+        {
+          "claim": "the web server's standing proofs stay green",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs",
+          "timeout_s": 600,
+          "covers": [
+            "the shim, its hand-off and its pulse"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
