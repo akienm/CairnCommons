@@ -1,0 +1,99 @@
+{
+  "ticket": "8e3474a6ae43",
+  "at": "2026-11-12T18:02:25+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1252371,
+      "duration_ms": 44365,
+      "is_error": false,
+      "session_id": "15ea9dbb-299f-4edf-8787-0e6ee26a08d5"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "dc2028bf9e7abc13e99937ad569cd4ba909c7ef68ebd6103d7a00d3d35e800dc",
+  "ticket_sha256": "11e0ff0c63a4f16b0c2b2abd028b5f583399e61d179ddc2ddf0cbcc31bffe574",
+  "touches": [
+    {
+      "number": "1.3.1",
+      "text": "Tool: a complete primitive. Has users, not an owner. Calls no other Cairn component (stdlib and base only) and owns no state of its own. Lives in cairn/tools/ (17). Its data for a holder lives under that holder: ~/.cairn/devices/<device>/<instance>/tools/<tool>/."
+    },
+    {
+      "number": "1.3.2",
+      "text": "Machine: tools plus the glue that holds them together. Has an owner. Anything that calls another component, uses other tools, or owns state it must gate is a machine. Lives inside its device (cairn/devices/<device>/machines/<machine>/), or in cairn/machines/ when several devices hold one (16)."
+    },
+    {
+      "number": "2.3.7",
+      "text": "A device talks to other devices only over the bus, never by importing them."
+    },
+    {
+      "number": "2.3.7.1",
+      "text": "The exceptions are client tools a device publishes:"
+    },
+    {
+      "number": "2.3.7.1.1",
+      "text": "Database: because faster (11.3.4)."
+    },
+    {
+      "number": "2.3.7.1.2",
+      "text": "Librarian: the embedding links work better without device boundaries in the way (4.5.2)."
+    },
+    {
+      "number": "2.3.7.1.3",
+      "text": "Trouble: it has to be able to report when nothing else can, so a direct line makes sense for recovery (6.3.4)."
+    },
+    {
+      "number": "2.3.7.1.4",
+      "text": "Scratch bus: a proof needs a bus it controls (a real store, stub devices, nobody live listening), so the cairn device publishes scratch_bus, the way db_domain's client carries scratch(). Akien 2026-11-12, answering Q#86 (8 proof imports of the bus machine in tester, codemother and librarian, measured 2026-11-11): \"works for me\". 2.3.8Every device has the panes the base shim defines (17.1.3.5.2), drawn by the web server (15):"
+    },
+    {
+      "number": "4.3.1.4",
+      "text": "Ownership. The librarian owns every tree and delegates some to the devices that learn. EVERYTHING THAT LEARNS USING OUR GRAPH TREES IS A DELEGATE (CodeMother, chart and any learning block are examples, not a list), and each holds its trees by the librarian's delegation (Law 6: delegation through the owner's gate). WHY: two holders with different weights over the same nodes have different perspectives and can debate points, and the librarian, asked anything, can look at the query from both."
+    },
+    {
+      "number": "9.3.5",
+      "text": "Owns the inspectors and gates (9.4): everything in the code pipeline that checks. The exception is diagnostic_inspector, which is base's (17.1)."
+    },
+    {
+      "number": "9.4.3",
+      "text": "build_inspector"
+    },
+    {
+      "number": "9.4.3.3.2",
+      "text": "It is the READY TO MERGE ONTO MAIN step of the pipeline: everything's proved, and merging implies pushing it up. With a branch per ticket (3.3.6), commits on the branch are as often as we like; the inspector is the step at ready to merge. Checking what a change touched belongs here; nothing hangs off the git post-commit hook."
+    },
+    {
+      "number": "11.1",
+      "text": "PURPOSE: Wrap a service so there is exactly one way to it."
+    },
+    {
+      "number": "11.2",
+      "text": "WHY: One way means one place to authenticate, meter, route and gate, and one place RULE 1 can be enforced by physics (import_sieve, 17.13)."
+    },
+    {
+      "number": "17.13",
+      "text": "import_sieve: one parse of every .py into an import graph; what reaches what. WHY: enforces \"only the proxy reaches the host/database\" and RULE 1 by physics. USERS: CodeMother, the inference proxy."
+    },
+    {
+      "number": "17.13.1",
+      "text": "The RULE 1 check is a path check: code inside device bar may not import cairn.devices.foo (anything not under cairn.devices.bar), except a tool foo publishes (cairn.devices.foo.tools.<x>, its charter saying published_by_device). Inside one device there is one owner, so nothing is checked there. A charter's public_interface describes what the component offers (modules, functions, bus verbs, commands); the check does not read it. Akien 2026-11-09 (Q#77): \"wouldn't it be easier (for the python code anyway) to see if the imports do not include other device paths?\""
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "17.13.1",
+      "text": "The RULE 1 check is a path check: code inside device bar may not import cairn.devices.foo (anything not under cairn.devices.bar), except a tool foo publishes (cairn.devices.foo.tools.<x>, its charter saying published_by_device). Inside one device there is one owner, so nothing is checked there. A charter's public_interface describes what the component offers (modules, functions, bus verbs, commands); the check does not read it. Akien 2026-11-09 (Q#77): \"wouldn't it be easier (for the python code anyway) to see if the imports do not include other device paths?\"",
+      "ticket_says": "one sieve in build_inspector reds every cross-component import that does not land in the target's declared interface (where each charter declares `public_interface` — the dotted modules others may import)",
+      "why": "The outline explicitly states at 17.13.1: 'A charter's public_interface describes what the component offers (modules, functions, bus verbs, commands); the check does not read it.' The check is described as path-based only. The ticket proposes making the check machine-readable against the declared interface specification, which contradicts the outline's statement that the check does not read public_interface. Akien's Q#77 comment reinforces the path-check approach, not interface-declaration checking."
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [
+    "open-839606d2d273"
+  ],
+  "questions_already_open": []
+}
