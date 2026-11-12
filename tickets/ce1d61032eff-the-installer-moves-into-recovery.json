@@ -1,0 +1,157 @@
+{
+  "id": "ce1d61032eff",
+  "title": "the installer moves into Recovery",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "The installer machine lives inside the device that holds it, at cairn/devices/recovery/machines/installer/. Every live spelling of its address follows it: dotted, slash, path-joined and open ticket records. History keeps the old path, and no instance-space berth is orphaned.",
+  "why": "Measured 2026-11-12, outline check on 53e7979f76e7 (question open-4f17ea923105, answered by measurement). Outline 1.3.2 says a machine one device holds lives inside that device, and 6.3.5 puts install in Recovery. The only live caller of cairn.machines.installer is bin/cmd/install, yet the installer sits in cairn/machines/, the address for machines several devices hold.",
+  "traces_to": "Law 5: intent, state and proofs share an address, and the outline's address puts a held machine inside its holder. RULE 1: Recovery's machine sits inside Recovery.",
+  "how": "git mv the directory, repoint the three spellings (bin/cmd/install plus the imports and charter, the parents[N] depth constants, and open ticket 53e7979f76e7's record), and reseal the validations at the new path. A proof after the shape of 38125c3ada38's checks the move, the live grep, the run, instance-space and the census. It is independent of 53e7979f76e7: that ticket's function travels with installer.py, and whichever lands second repoints the other's paths (D4).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/machines/installer/ is gone, and cairn/devices/recovery/machines/installer/ holds installer.py, ask_user.sh, its charter and both proofs"
+      },
+      {
+        "n": 2,
+        "claim": "git grep for machines.installer and machines/installer over live files (all tracked files except history.json, state.json, validations, journals and PROVED ticket records) finds only the new address"
+      },
+      {
+        "n": 3,
+        "claim": "bin/cmd/install --dry-run exits 0 from the new home, and the module's _REPO holds bin/cairn"
+      },
+      {
+        "n": 4,
+        "claim": "nothing under ~/.cairn outside venvs, logs, mail, notices and chart packets carries cairn.machines.installer or machines/installer in a path or live config key"
+      },
+      {
+        "n": 5,
+        "claim": "the device census loads recovery with its installer machine, with zero failures"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: git mv cairn/machines/installer to cairn/devices/recovery/machines/installer, minus __pycache__, leaving no shim at the old path. Delete the moved validations and reseal at the new path with `bin/cairn test --seal`; never copy a seal. history.json moves with the component and is not edited.",
+      "writes_to": [
+        "cairn/machines/installer/__init__.py",
+        "cairn/machines/installer/installer.py",
+        "cairn/machines/installer/ask_user.sh",
+        "cairn/machines/installer/intention+why.json",
+        "cairn/machines/installer/state.json",
+        "cairn/machines/installer/history.json",
+        "cairn/machines/installer/proofs/test_installer.py",
+        "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py",
+        "cairn/machines/installer/validations/test_installer.json",
+        "cairn/machines/installer/validations/test_install_lays_the_journal_merge_driver.json",
+        "cairn/devices/recovery/machines/installer/__init__.py",
+        "cairn/devices/recovery/machines/installer/installer.py",
+        "cairn/devices/recovery/machines/installer/ask_user.sh",
+        "cairn/devices/recovery/machines/installer/intention+why.json",
+        "cairn/devices/recovery/machines/installer/state.json",
+        "cairn/devices/recovery/machines/installer/history.json",
+        "cairn/devices/recovery/machines/installer/proofs/test_installer.py",
+        "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py",
+        "cairn/devices/recovery/machines/installer/validations/test_installer.json",
+        "cairn/devices/recovery/machines/installer/validations/test_install_lays_the_journal_merge_driver.json"
+      ],
+      "reads": [
+        "cairn/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2, the path-joined spelling: installer.py's `_REPO = parents[3]` becomes parents[5], and the proofs' `parents[4]` REPO becomes parents[6]. test_installer.py's REPO/'cairn'/'machines'/'installer'/'ask_user.sh' becomes the recovery path. Each new root is asserted to hold bin/cairn.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py",
+        "cairn/devices/recovery/machines/installer/proofs/test_installer.py",
+        "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/installer.py",
+        "cairn/machines/installer/proofs/test_installer.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3, the dotted and slash spellings: bin/cmd/install runs `python3 -m cairn.devices.recovery.machines.installer.installer`. The proofs' `from cairn.machines.installer...` imports and the charter's invoke and import line move to the new dotted name, the charter through the artifact door.",
+      "writes_to": [
+        "bin/cmd/install",
+        "cairn/devices/recovery/machines/installer/intention+why.json",
+        "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+      ],
+      "reads": [
+        "bin/cmd/install"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4, the ticket-record spelling: if 53e7979f76e7 has not crossed PROVED when this builds, its bounds, decisions' writes_to and reads, and owning_intention are repointed to the new address through `cairn artifact write`. PROVED tickets (5183005fa134, 76cb8cf3fbed, 7cfbc64b2a67, 96f71a89a0fa) are closed records and keep the old path.",
+      "writes_to": [
+        "../CairnCommons/tickets/53e7979f76e7-cairn-install-lays-the-skills.json"
+      ],
+      "reads": []
+    },
+    {
+      "n": 5,
+      "text": "D5, the instance-space guard: the proof scans ~/.cairn, skipping venvs, logs, mail, notices and chart packets, which are history, for a path or live config key carrying cairn.machines.installer or machines/installer, and must find none. Measured 2026-11-12 before the move: none. The installer keeps no instance berth of its own.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/proofs/test_launchers_moved_to_their_devices.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "../CairnCommons/tickets/53e7979f76e7-cairn-install-lays-the-skills.json",
+      "bin/cmd/install",
+      "cairn/devices/recovery/machines/installer/__init__.py",
+      "cairn/devices/recovery/machines/installer/ask_user.sh",
+      "cairn/devices/recovery/machines/installer/history.json",
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/installer/intention+why.json",
+      "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py",
+      "cairn/devices/recovery/machines/installer/state.json",
+      "cairn/devices/recovery/machines/installer/validations/test_install_lays_the_journal_merge_driver.json",
+      "cairn/devices/recovery/machines/installer/validations/test_installer.json",
+      "cairn/machines/installer/__init__.py",
+      "cairn/machines/installer/ask_user.sh",
+      "cairn/machines/installer/history.json",
+      "cairn/machines/installer/installer.py",
+      "cairn/machines/installer/intention+why.json",
+      "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py",
+      "cairn/machines/installer/proofs/test_installer.py",
+      "cairn/machines/installer/state.json",
+      "cairn/machines/installer/validations/test_install_lays_the_journal_merge_driver.json",
+      "cairn/machines/installer/validations/test_installer.json"
+    ],
+    "out": [
+      "installer.py's behaviour (no logic change)",
+      "PROVED ticket records",
+      "history.json contents",
+      "every other device"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "the only live caller of cairn.machines.installer is bin/cmd/install; other hits are history (bus history.json, a bus_client validation)",
+      "how": "grep -rlE 'machines[./]installer' over cairn/, bin/ and skills/"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "no instance-space berth names the installer; hits are mail, tester notices, chart packets, logs and one counting-block history row",
+      "how": "grep -rlE 'machines[./]installer' ~/.cairn (excluding venvs and logs) and find ~/.cairn -type d -name installer"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "of 5 tickets naming the old path, only 53e7979f76e7 is open",
+      "how": "the state.json cursor of each ticket grep returned"
+    }
+  ]
+}

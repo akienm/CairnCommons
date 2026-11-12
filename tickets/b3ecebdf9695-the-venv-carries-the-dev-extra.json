@@ -1,0 +1,71 @@
+{
+  "id": "b3ecebdf9695",
+  "title": "the venv carries the dev extra",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "Every box's ~/.cairn/venv carries pyproject's dev extra. Bootstrap's verify names a venv without it as a finding with its repair, and its apply installs the editable checkout with [dev].",
+  "why": "Measured 2026-11-12: on akienasus, ~/.cairn/venv had no pytest. akienasus_cc_0 installed the dev extra (pytest, wtree, starlette) by hand. A box that cannot import pytest cannot run `cairn test`, so it proves nothing.",
+  "traces_to": "Law 3 and Law 8: proofs must be runnable on every box to measure anything. Law 4: the akienasus hand install becomes the floor's physics.",
+  "how": "In bootstrap.sh: a dev-extra probe after the psycopg2 probe reads the extra's names from pyproject.toml; apply installs '<repo>[dev]'; the stamp gains 'extras=dev'. Proved in scratch CAIRN_VENVs driven through _sh, with a recording stub interpreter for the apply tooth.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn_bootstrap_apply over a scratch CAIRN_VENV whose python is a recording stub invokes pip install --editable on '<repo>[dev]'"
+      },
+      {
+        "n": 2,
+        "claim": "a venv with the editable install but missing a dev-extra module fails cairn_bootstrap_verify, with a finding that names the dev extra and its repair"
+      },
+      {
+        "n": 3,
+        "claim": "a stamp written without 'extras=dev' does not match _cairn_stamp_want"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn_bootstrap_verify, right after the psycopg2 probe, the venv's python reads [project.optional-dependencies].dev from pyproject.toml with tomllib, strips version specifiers, and imports each name. On any failure it appends 'DEV EXTRA MISSING ... Repair: $venv/bin/pip install -e \"$CAIRN_REPO_ROOT[dev]\"' and returns 1. Apply's editable install becomes --editable \"$CAIRN_REPO_ROOT[dev]\", and the three 'Repair:' strings naming pip install -e follow suit. _cairn_stamp_want adds the literal 'extras=dev'.",
+      "writes_to": [
+        "cairn/devices/recovery/bootstrap.sh"
+      ],
+      "reads": [
+        "cairn/devices/recovery/bootstrap.sh",
+        "pyproject.toml"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof drives bootstrap.sh through a scratch CAIRN_VENV, one tooth per clause (PROVES 1-3). The apply tooth uses a stub python that records its argv and answers pip --version, so nothing reaches the network.",
+      "writes_to": [
+        "cairn/devices/recovery/proofs/test_the_floor_carries_the_dev_extra.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/proofs/test_bootstrap.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/bootstrap.sh",
+      "cairn/devices/recovery/proofs/test_the_floor_carries_the_dev_extra.py"
+    ],
+    "out": [
+      "pyproject.toml",
+      "cairn/machines/installer/",
+      "every other device"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus ~/.cairn/venv had no pytest; the dev extra was installed by hand",
+      "how": "akienasus_cc_0's report, relayed by the orchestrator"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "bootstrap.sh line 282 runs pip install --editable on the repo with no extra",
+      "how": "grep -n 'pip install' cairn/devices/recovery/bootstrap.sh"
+    }
+  ]
+}
