@@ -71,5 +71,197 @@
       "saw": "a stale replace at 11:52:18 cut a 14-min constrain ask: 'the bus process closed the socket without an answer'; the new bus took over 2 unanswered asks as given up",
       "how": "the bus log on akiendelllinux and the asker's traceback, recorded in CairnCommons/ideas/2026-11-12-measured-2026-11-12-when-a-bus.json"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "1029d5146152: a bus shutdown waits for the requests it holds, serving while it waits",
+      "intent": "A shutdown verb that arrives while the bus holds socket requests replies draining, keeps serving all work with the stale refusal suspended, and exits at the first idle moment or at the CAIRN_BUS_DRAIN_S cap (600 s), naming any request it cuts.",
+      "scope": "cairn/devices/cairn/machines/bus/server.py (BusProcess, _Handler.handle, answer) and one new proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "a shutdown always ends the process: the drain is capped and the exit after it is unconditional",
+          "source": "cairn/devices/cairn/machines/bus/server.py",
+          "kind": "law"
+        },
+        {
+          "text": "a wake never takes more than 60 s, so the drain serves new work instead of refusing it; 600 s is the inference-call limit",
+          "source": "press_office/CairnComponentOutline.txt 5.5.3.9",
+          "kind": "law"
+        },
+        {
+          "text": "one ring per instance: an asker waits inside its bus process, so no second bus may serve beside a draining one",
+          "source": "cairn/devices/cairn/machines/bus/bus.py",
+          "kind": "law"
+        },
+        {
+          "text": "RULE 1: this ticket writes only the bus machine; the client's half is ticket 99258e9bbdb1",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/bus/server.py",
+          "cairn/devices/cairn/machines/bus/proofs/test_a_shutdown_drains_what_it_holds.py"
+        ],
+        "out": [
+          "cairn/tools/bus_client (ticket 99258e9bbdb1)",
+          "signal stops",
+          "cairn/devices/cairn/cycle.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where a socket request is answered",
+        "what shutdown does to handler threads",
+        "what the stale check refuses",
+        "how a proof drives a scratch bus with extra ops"
+      ],
+      "holdings": [
+        {
+          "what": "_Handler.handle answers one request per connection, and shutdown flushes then calls server.shutdown",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "BusProcess.answer refuses stale callers by root and by code_stamp",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "final_flush and hand_over_asks at serve()'s finally",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "the stop proof's driver pattern: a -c driver that patches the server module, then serve --scratch",
+          "address": "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py"
+        },
+        {
+          "what": "scratch_dir for proof homes",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a count of the requests a bus holds, and a shutdown that waits on it",
+          "measure": "2026-11-12 read of server.py: handle() has no count; shutdown ends serve_forever at once, and the daemon handler threads die with the process"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a held-request count on BusProcess, a draining shutdown in _Handler.handle, and the stale refusal suspended in answer() while draining",
+          "why": "measured 2026-11-12: a stale replace cut a 14-min constrain ask (idea 7306eaa10907)",
+          "kind": "build",
+          "fills": "a count of the requests a bus holds, and a shutdown that waits on it",
+          "uses": [
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/tools/scratch/scratch.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/devices/cairn/machines/bus/proofs/test_a_shutdown_drains_what_it_holds.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a held-request count on BusProcess, a draining shutdown in _Handler.handle, and the stale refusal suspended in answer() while draining",
+          "why_now": "the client half (99258e9bbdb1) rides on the draining reply this piece adds"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a held-request count on BusProcess, a draining shutdown in _Handler.handle, and the stale refusal suspended in answer() while draining",
+          "expect": "the new proof green on five teeth, red on teeth 1-4 with the server change taken away; the stop-cause and one-bus proofs stay green",
+          "falsifier": "a held request gets a closed socket, a newer caller is refused stale during the drain, the bus outlives its last held request or dies before it, the cap does not cut or name, or an idle shutdown's reply changes",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_shutdown_drains_what_it_holds.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-5 hold at the bus server",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_shutdown_drains_what_it_holds.py",
+          "timeout_s": 300,
+          "covers": [
+            "a held-request count on BusProcess, a draining shutdown in _Handler.handle, and the stale refusal suspended in answer() while draining"
+          ]
+        },
+        {
+          "claim": "the bus's stop-cause proof stays green",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py",
+          "timeout_s": 300,
+          "covers": [
+            "a held-request count on BusProcess, a draining shutdown in _Handler.handle, and the stale refusal suspended in answer() while draining"
+          ]
+        },
+        {
+          "claim": "the one-bus proof stays green",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_one_bus_process.py",
+          "timeout_s": 600,
+          "covers": [
+            "a held-request count on BusProcess, a draining shutdown in _Handler.handle, and the stale refusal suspended in answer() while draining"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }

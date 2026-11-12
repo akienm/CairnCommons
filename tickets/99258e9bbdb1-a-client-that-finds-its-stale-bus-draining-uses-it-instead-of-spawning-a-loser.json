@@ -61,5 +61,178 @@
       "saw": "ensure_bus spawns after every _replace; a spawn beside a held bus.lock exits EXIT_HELD, and ensure_bus raises after _START_WAIT_S = 15 s",
       "how": "read cairn/tools/bus_client/remote.py ensure_bus and _replace, and server.serve's claim/EXIT_HELD path"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "99258e9bbdb1: a client that finds its stale bus draining uses it instead of spawning a loser",
+      "intent": "When ensure_bus finds its local bus stale and the shutdown it sends is answered with draining, it uses that bus, which keeps serving, instead of spawning a bus that loses bus.lock and raises, and notes the drained use in the client log.",
+      "scope": "cairn/tools/bus_client/remote.py (_replace, ensure_bus) and one new proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Law 6: another box's bus is that box's to start, so the remote branch of ensure_bus is untouched",
+          "source": "cairn/tools/bus_client/remote.py",
+          "kind": "law"
+        },
+        {
+          "text": "RULE 1: the proof's bus is its own fixture and imports nothing of the bus machine",
+          "source": "cairn/tools/bus_client/proofs/test_bus_client_proofs_measure_only_bus_client.py",
+          "kind": "law"
+        },
+        {
+          "text": "a non-draining shutdown reply keeps today's wait-then-spawn exactly",
+          "source": "cairn/tools/bus_client/remote.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/bus_client/remote.py",
+          "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+        ],
+        "out": [
+          "cairn/devices/cairn/machines/bus (ticket 1029d5146152)",
+          "the remote-bus branch of ensure_bus",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what ensure_bus does after a replace",
+        "what _replace waits on",
+        "where the client log is written"
+      ],
+      "holdings": [
+        {
+          "what": "ensure_bus: stale \u2192 _replace \u2192 spawn \u2192 wait _START_WAIT_S",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "_answers: one stats exchange or None",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "_note: one line to the client log at _LOG",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "scratch_dir for proof homes",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a client path that uses a draining bus instead of spawning beside it",
+          "measure": "2026-11-12 read of remote.py: ensure_bus sets found = None after every _replace and spawns"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "_replace returns the shutdown reply and returns at once on draining; ensure_bus uses a draining bus and notes it",
+          "why": "every client arriving during a drain (ticket 1029d5146152) would otherwise spawn a loser and raise after 15 s",
+          "kind": "build",
+          "fills": "a client path that uses a draining bus instead of spawning beside it",
+          "uses": [
+            "cairn/tools/bus_client/remote.py",
+            "cairn/tools/scratch/scratch.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/remote.py",
+            "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "_replace returns the shutdown reply and returns at once on draining; ensure_bus uses a draining bus and notes it",
+          "why_now": "the bus half's draining reply is useless to clients that race it"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "_replace returns the shutdown reply and returns at once on draining; ensure_bus uses a draining bus and notes it",
+          "expect": "the new proof green on three teeth, red on teeth 1 and 3 with the change taken away; the bus_client measure-only proof stays green",
+          "falsifier": "ensure_bus spawns beside a draining bus or returns other stats, an idle replace stops spawning or spawns while the old bus answers, or a drained use writes no note",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-3 hold at bus_client",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py",
+          "timeout_s": 300,
+          "covers": [
+            "_replace returns the shutdown reply and returns at once on draining; ensure_bus uses a draining bus and notes it"
+          ]
+        },
+        {
+          "claim": "bus_client's proofs still reach no device",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_bus_client_proofs_measure_only_bus_client.py",
+          "timeout_s": 300,
+          "covers": [
+            "_replace returns the shutdown reply and returns at once on draining; ensure_bus uses a draining bus and notes it"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
