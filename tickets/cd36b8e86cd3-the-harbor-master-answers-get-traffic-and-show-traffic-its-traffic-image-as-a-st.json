@@ -1,0 +1,57 @@
+{
+  "id": "cd36b8e86cd3",
+  "title": "the harbor master answers get traffic and show traffic: its traffic image as a status view",
+  "owning_intention": "cairn/devices/cairn/machines/harbor_master/intention+why.json",
+  "intention": "harbor_master declares one view, map (cairn/devices/cairn/machines/harbor_master/device.py:58). Its traffic image (voyage.traffic_image, the emergent gates, at anchor, berthed) is reached only by importing voyage, which is how cairn/tools/bus_client/bus_client.py:93 hands it to the web server. harbor_master declares a second view, traffic, the traffic image over its own fleet register, so any device asks get traffic or show traffic over the bus.",
+  "why": "Measured 2026-11-11: the build inspector filed inspector-new-finding-encapsulation-holds naming cairn/tools/bus_client/bus_client.py:93 importing cairn.devices.cairn.machines.harbor_master.voyage so the web server can render /harbor. RULE 1 makes the bus harbor_master's public interface, and outline 9.4.1.5 gives it status queries (show, get); the traffic image is a status the bus does not yet answer.",
+  "traces_to": "CLAUDE.md RULE 1; outline 9.4.1.5 (harbor_master's verbs are status queries: show, get); outline 17.13.1.",
+  "how": "In device.py declared_views returns {\"map\": self._fleet_map, \"traffic\": self._traffic_view}; _traffic_view returns voyage.traffic_image(self._fleet_map()), imported at call time. New proof cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_get_traffic.py, three teeth.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "harbor_master's declared_views names traffic, and get traffic is accepted with data equal to voyage.traffic_image over the device's fleet register"
+      },
+      {
+        "n": 2,
+        "claim": "show traffic is accepted and carries the same data with a text rendering"
+      },
+      {
+        "n": 3,
+        "claim": "the get traffic data survives a JSON round trip unchanged, so it crosses the bus whole"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: a status view, not a verb: traffic joins map in declared_views, so get and show answer it through the existing handlers; outline 9.4.1.5's verb list is unchanged.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/harbor_master/device.py",
+        "cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_get_traffic.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/harbor_master/voyage.py",
+        "cairn/tools/base/device.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/harbor_master/device.py",
+      "cairn/devices/cairn/machines/harbor_master/proofs/test_the_harbor_answers_get_traffic.py"
+    ],
+    "out": [
+      "cairn/tools/bus_client/",
+      "cairn/devices/web_server/",
+      "cairn/machines/build_inspector/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "encapsulation_holds finds cairn/tools/bus_client/bus_client.py:93",
+      "how": "python3 -c 'from cairn.machines.build_inspector import inspector; inspector.encapsulation_breaches(\".\")'"
+    }
+  ]
+}
