@@ -1,0 +1,208 @@
+{
+  "id": "1c5e0e7a9d42",
+  "title": "a nested drain hands each envelope over once",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "BaseShim._check_mail drains from a snapshot of undelivered mail. When a handler asks and the bus server drains the same mailbox again from inside the wait (_serve_held), the inner drain takes the rest of the snapshot and the outer loop then hands each of those envelopes over a second time. A shim now remembers what any drain in the current batch has taken and the outer loop skips it.",
+  "why": "Measured 2026-11-12 03:09:50-51 UTC in ~/.cairn/logs/bus/0: asks 4b518544, 80b9e419 and 609d25fb (CC to codemother, posted 02:58-03:05, CC gave up on each) were delivered to codemother 2, 3 and 2 times in 1.7 s. The first reply to each was receipted bus-asker-gave-up. The four replies after it (fb8242a2, 09a1f6b0, 90919898, 2d846154) have no branch in post() and stood, raising mail-cc-stood-600s 20 times.",
+  "traces_to": "CLAUDE.md RULE 1; outline 5.8.3.3 (a shim processes all messages from the bus for its device); outline 17.13.1.",
+  "how": "cairn/tools/base/shim.py: _check_mail counts its depth and calls _drain_mail (its old body). An envelope is added to _taken_in_drain once deliver() returns. The waiting list and each loop step skip ids in that set. The set clears when the outermost drain returns, so it never grows past one batch and later mail is still delivered. New proof proofs/test_a_nested_drain_takes_each_envelope_once.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with three envelopes waiting and the first handler draining the mailbox from inside, each envelope reaches the device once and is receipted once"
+      },
+      {
+        "n": 2,
+        "claim": "mail that arrives after the outer drain returns is still delivered by the next drain"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the shim skips what a drain in its current batch took; the server's serving of held shims stays.",
+      "writes_to": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus/",
+      "cairn/devices/codemother/"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "encapsulation_holds finds cairn/tools/base/shim.py:663 (_check_mail); cairn/devices/cairn/machines/bus/server.py:250 (_serve_held, the re-entry)",
+      "how": "python3 -c 'from cairn.machines.build_inspector import inspector; inspector.encapsulation_breaches(\".\")'"
+    }
+  ],
+  "writes_to": [
+    "cairn/tools/base/shim.py",
+    "cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py",
+    "cairn/tools/base/validations/test_a_nested_drain_takes_each_envelope_once.json"
+  ],
+  "chart": {
+    "orient": {
+      "request": "1c5e0e7a9d42: a nested drain hands each envelope over once (cairn/tools/base/shim.py)",
+      "intent": "cairn/tools/base/shim.py: BaseShim._check_mail drains from a snapshot of undelivered mail. When a handler asks and the bus server drains the same mailbox again from inside the wait (_serve_held in cairn/devices/cairn/machines/bus/server.py), the inner drain takes the rest of the snapshot and the outer loop then hands each of those envelopes over a second time. A shim now remembers what any drain in the current batch has taken and the outer loop skips it.",
+      "scope": "BaseShim's mail drain only; the bus server and the standing replies are not touched",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "every component talks to every other only through its public interface; a ticket's proofs measure only that component",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "The shims, each connected to the bus, pick up the messages and route them to their device",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/base/shim.py",
+          "cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py"
+        ],
+        "out": [
+          "cairn/devices/cairn/machines/bus/",
+          "cairn/devices/codemother/"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which files import another device",
+        "what the published surface offers",
+        "what each tooth needs"
+      ],
+      "holdings": [
+        {
+          "what": "the in-flight guard",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the encapsulation_holds sieve",
+          "address": "cairn/machines/build_inspector/inspector.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a per-batch record of what this shim's drains took",
+          "measure": "grep -l encapsulation_breaches cairn/tools/base/proofs/"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the reaches moved onto the public surface, the sieve tooth added",
+          "why": "the sieve reds cairn/tools/base reaching into another device",
+          "kind": "build",
+          "fills": "a per-batch record of what this shim's drains took",
+          "uses": [
+            "cairn/tools/base/shim.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/shim.py",
+            "cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the reaches moved onto the public surface, the sieve tooth added",
+          "why_now": "a standing trouble names cairn/tools/base"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the reaches moved onto the public surface, the sieve tooth added",
+          "expect": "every proof green",
+          "falsifier": "the sieve still finds an envelope a nested drain took is handed over again by the outer drain",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "clauses 1-2 each hold as a named tooth",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_nested_drain_takes_each_envelope_once.py",
+          "timeout_s": 600,
+          "covers": [
+            "the reaches moved onto the public surface, the sieve tooth added"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
