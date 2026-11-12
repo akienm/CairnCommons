@@ -1,0 +1,259 @@
+{
+  "id": "7cfbc64b2a67",
+  "title": "cairn install lays the journal merge driver in both repos",
+  "owning_intention": "cairn/machines/installer/intention+why.json",
+  "intention": "cairn install configures the cairn-journal merge driver in every repo root on the box (cairn and CairnCommons), re-lays it when it names an interpreter or checkout that is gone, and reports it like every other setup step.",
+  "why": "Ticket b7d2e05a1c93 made two sessions' artifact journals meet re-linked instead of forking, but the driver lives in .git/config, which git does not carry. It is installed by hand on akiendelllinux only; on any other box git silently falls back to its text merge and the journal chain can fork again.",
+  "traces_to": "Law 7 (a record of truth is never silently degraded) and Law 4 (the .gitattributes comment 'the driver is installed per box' is policy until the installer carries it); outline 6.3.5 (any change to what the host is goes through the installer).",
+  "how": "Add ensure_journal_merge_driver(roots=None, dry_run=False) to cairn/machines/installer/installer.py beside ask_cairn_home and ask_box_identity, and call it from main() after box-identity. It reads each root's merge.cairn-journal.driver with git config, judges it with shlex (names -m cairn.tools.artifact merge-journal, its interpreter exists, its PYTHONPATH is this checkout), and lays a missing or stale one through the artifact tool's CLI.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a repo whose merge.cairn-journal.driver is unset reads offered under dry_run, and its config is left unwritten"
+      },
+      {
+        "n": 2,
+        "claim": "a run lays the driver in every repo root it is given, and a second run reads already_applied"
+      },
+      {
+        "n": 3,
+        "claim": "a driver naming an interpreter that does not exist is judged stale and re-laid with this python"
+      },
+      {
+        "n": 4,
+        "claim": "a root that is not a git repository is skipped and named in the detail, not red"
+      },
+      {
+        "n": 5,
+        "claim": "cairn install --dry-run lists the journal-merge-driver step among its results"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ensure_journal_merge_driver(roots: dict[str, Path] | None = None, dry_run: bool = False) -> dict in installer.py, id 'journal-merge-driver'. roots defaults to cairn.tools.artifact.artifact.roots() (imported inside the function). For each root: skip (named in detail) when <dir>/.git does not exist; read 'git -C <dir> config --get merge.cairn-journal.driver'; it is GOOD when shlex.split of it has words[0] == 'PYTHONPATH=' + str(REPO) where REPO is installer.py's parents[3], Path(words[1]).exists(), and the words contain '-m', 'cairn.tools.artifact', 'merge-journal'. Statuses: all good -> already_applied; dry_run with any bad -> offered (nothing written); else lay each bad one with subprocess.run([sys.executable, '-m', 'cairn.tools.artifact', 'install-merge-driver', str(dir)], cwd=REPO, env with PYTHONPATH=REPO), re-judge, and return applied, or failed with detail 'RED: ...' naming the root and the stderr. No question is asked: a local git config is benign, as box-identity makes its keys without asking.",
+      "writes_to": [
+        "cairn/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/installer.py",
+        "cairn/tools/artifact/__main__.py",
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: main() puts ensure_journal_merge_driver(dry_run=args.dry_run) into results after ask_box_identity and before install(...).",
+      "writes_to": [
+        "cairn/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py, house runner (each tooth in try/except Exception, prints PASS/FAIL <tooth>, returns 1 on any failure), PROVES {'7cfbc64b2a67': {'1': ..., '2': ..., '3': ..., '4': ..., '5': ...}}. Teeth 1-4 build scratch repos with git init under cairn.tools.scratch.scratch.scratch_dir and pass them as roots; never touch the live repos' config. Tooth 3 writes a driver naming /nonexistent/python3. Tooth 5 calls installer.main(['--dry-run']) with stdout captured and finds the line '] journal-merge-driver:'. The function is imported inside each tooth.",
+      "writes_to": [
+        "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+      ],
+      "reads": [
+        "cairn/machines/installer/proofs/test_installer.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/installer/installer.py",
+      "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+    ],
+    "out": [
+      "cairn/tools/artifact (its verb is used through the CLI, unchanged)",
+      "cairn/devices/recovery/bootstrap.sh",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-11",
+      "saw": "merge.cairn-journal.driver set in both repos on akiendelllinux, by hand through cairn artifact install-merge-driver",
+      "how": "git config --get merge.cairn-journal.driver in cairn and CairnCommons"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "git check-attr reads merge: cairn-journal on any clone because .gitattributes is tracked, so it cannot tell an installed driver from none",
+      "how": "git check-attr merge .artifact-journal.jsonl in both repos"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "installer.install() prints a JSON seam's apply steps and re-verifies without running them; only installer.py's code seams act",
+      "how": "read cairn/machines/installer/installer.py lines 225-290"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "7cfbc64b2a67: cairn install lays the journal merge driver in both repos",
+      "intent": "One new installer step, ensure_journal_merge_driver, judges each repo root's merge.cairn-journal.driver and lays a missing or stale one through the artifact tool's CLI; main() runs it after box-identity.",
+      "scope": "installer.py and one new proof beside it",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "outline 6.3.5: any change to what the host is goes through the installer",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        },
+        {
+          "text": "RULE 1: the artifact tool is reached only through its public interface, its CLI verb",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/machines/installer/installer.py",
+          "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+        ],
+        "out": [
+          "cairn/tools/artifact",
+          "cairn/devices/recovery/bootstrap.sh",
+          "the live repos' .git/config during the proof"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what string install-merge-driver writes",
+        "which roots the artifact tool declares",
+        "how main() assembles results"
+      ],
+      "holdings": [
+        {
+          "what": "the install-merge-driver verb",
+          "address": "cairn/tools/artifact/__main__.py"
+        },
+        {
+          "what": "roots(): cairn and CairnCommons",
+          "address": "cairn/tools/artifact/artifact.py"
+        },
+        {
+          "what": "scratch_dir for proof fixtures",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "an installer step that lays the merge driver",
+          "measure": "2026-11-12 grep -n merge cairn/machines/installer/installer.py found nothing; cairn install --dry-run listed cairn-home, box-identity, usage-widget-hook only"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "ensure_journal_merge_driver and its call in main()",
+          "why": "cc_0 at the close of b7d2e05a1c93: the driver is per box and belongs in the box bootstrap",
+          "kind": "build",
+          "fills": "an installer step that lays the merge driver",
+          "uses": [
+            "cairn/tools/artifact/__main__.py",
+            "cairn/tools/artifact/artifact.py"
+          ],
+          "writes_to": [
+            "cairn/machines/installer/installer.py",
+            "cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "ensure_journal_merge_driver and its call in main()",
+          "why_now": "b7d2e05a1c93 is PROVED and its driver is installed on one box only"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "ensure_journal_merge_driver and its call in main()",
+          "expect": "the new proof green on five teeth, red on all of them against the old installer.py; test_installer.py green unchanged",
+          "falsifier": "an unset driver is written under dry_run, a run leaves a root without the driver, a stale interpreter is accepted, a non-repo root reds, or cairn install --dry-run omits the step",
+          "instrument": "bin/cairn test cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-5 hold at the installer",
+          "instrument": "bin/cairn test cairn/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py",
+          "timeout_s": 300,
+          "covers": [
+            "ensure_journal_merge_driver and its call in main()"
+          ]
+        },
+        {
+          "claim": "every standing installer tooth passes unchanged",
+          "instrument": "bin/cairn test cairn/machines/installer/proofs/test_installer.py",
+          "timeout_s": 300,
+          "covers": [
+            "ensure_journal_merge_driver and its call in main()"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
