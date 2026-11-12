@@ -1,0 +1,100 @@
+{
+  "id": "0156856b1fae",
+  "title": "Cairn's own spawns open no console on Windows",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+  "why": "Measured 2026-11-12 on akiendell: Akien reported 'you keep spinning up python windows, you have at least 4 open now'; of 4 python processes started by bin/cairn's lazy-init, the children 29212 (ground_loop) and 16184 (bus serve) own a console window and the venv launchers that started them do not.",
+  "traces_to": "CP4 and Law 3 - a measured defect in behaviour on the user's box; Law 1 and Law 4 - one spawn helper in place of six hand-built flag sets, enforced by a proof that greps for bare Popen.",
+  "how": "New tool windowless_spawn: detached_kwargs() returns creationflags DETACHED_PROCESS|CREATE_NO_WINDOW|CREATE_NEW_PROCESS_GROUP on nt and start_new_session on posix; background_python() returns the base interpreter (or pythonw) rather than the venv launcher on nt. The six Popen sites move onto it. Red-first proof, whose Windows tooth spawns through the venv launcher with CREATE_NO_WINDOW and checks whether the grandchild gets a console.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the helper's nt kwargs carry CREATE_NO_WINDOW and DETACHED_PROCESS and no start_new_session, and name an interpreter that is not the venv launcher; its posix kwargs carry start_new_session and no creationflags"
+      },
+      {
+        "n": 2,
+        "claim": "on Windows a child spawned through the helper from the venv interpreter leaves no process in its tree with a console window; this tooth confirms or kills the venv-launcher hypothesis and reports UNMEASURED on a non-Windows box"
+      },
+      {
+        "n": 3,
+        "claim": "none of the six spawn sites calls Popen with a hand-built flag set; each takes its keywords from the helper"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: a new tool windowless_spawn with a charter beside it; the charter is written before BUILDME crosses.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/tools/windowless_spawn/intention+why.json"
+      ],
+      "reads": []
+    },
+    {
+      "n": 2,
+      "text": "D2: the six Popen sites take **detached_kwargs() and background_python() from the helper.",
+      "writes_to": [
+        "cairn/tools/base/shim.py",
+        "cairn/devices/cairn/machines/ground_loop/cli.py",
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+        "cairn/devices/cc/shim.py",
+        "cairn/machines/web_operator/web_operator.py",
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/devices/cairn/machines/ground_loop/cli.py",
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+        "cairn/devices/cc/shim.py",
+        "cairn/machines/web_operator/web_operator.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof, one tooth per clause; tooth 2 is the launcher experiment.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/windowless_spawn.py",
+      "cairn/tools/windowless_spawn/intention+why.json",
+      "cairn/tools/base/shim.py",
+      "cairn/devices/cairn/machines/ground_loop/cli.py",
+      "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+      "cairn/devices/cc/shim.py",
+      "cairn/machines/web_operator/web_operator.py",
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+    ],
+    "out": [
+      "subprocess.run / check_output call sites",
+      "devices/web_server/groundloop/pulse.py and cc/scripts/memory_sync.py, which already carry the flags",
+      "Claude Code's own shell and hook children",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "4 python processes; only children 29212 (ground_loop) and 16184 (bus serve, conhost 16980) have a console window; launchers 25696 and 1648 have none",
+      "how": "Get-Process MainWindowHandle and Get-CimInstance Win32_Process conhost parents on akiendell"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "tools/bus_client/remote.py:270 already passes DETACHED_PROCESS|CREATE_NO_WINDOW and its child still has a window; six other Popen sites pass only start_new_session",
+      "how": "git grep of Popen/creationflags over cairn/"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "HYPOTHESIS, not a measurement: the venv launcher starts the real interpreter as a child without those flags, so the child allocates a console; the proof's tooth 2 tests it",
+      "how": "none yet - proof clause 2"
+    }
+  ]
+}
