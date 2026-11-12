@@ -1,0 +1,76 @@
+{
+  "id": "d692ef650534",
+  "title": "a ticket cast on a far box carries its berths to the commons",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cast_ticket copies every berth a ticket cites (sorted_berth, and an intent_berth that is a file) into the commons at berths/<skill>/<name>. read_berth falls back to that copy when the path does not resolve on this box. So a ticket cast on any box crosses BUILDME on the home box with no hand copy.",
+  "why": "Measured 2026-11-12 on akiendelllinux, relayed verbatim: BUILDME for 1029d5146152 and 99258e9bbdb1 was refused '[buildme_rides_the_sorted] sorted berth readable (expected: True, actual: False)'. The berths were fired on akienasus and sit in its instance-space; the crossing needed an scp of each berth.",
+  "traces_to": "the three roots (CLAUDE.md: if losing it loses knowledge, it's commons) and Law 8 (the gate's evidence must be readable where the gate runs).",
+  "how": "At cast, after _berth_lacks passes, write each cited berth's bytes through the artifact door to <CairnCommons>/berths/<skill>/<name>. read_berth gains a third candidate, the commons address, after the reviewed address. Red-first proof against a scratch commons.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cast_ticket over a doc whose sorted_berth and intent_berth are files writes a byte-identical copy of each at <commons>/berths/<skill>/<basename>"
+      },
+      {
+        "n": 2,
+        "claim": "read_berth over a berth path that does not exist on this box returns the commons copy's document"
+      },
+      {
+        "n": 3,
+        "claim": "a 'none, because' intent_berth writes no copy, and the cast is otherwise unchanged"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cast_ticket writes each cited berth file through cairn.tools.artifact.artifact.write to <CairnCommons>/berths/<parent dir name>/<basename>, verb 'cast', after _berth_lacks passes and before the ticket write.",
+      "writes_to": [
+        "cairn/tools/base/transitions.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: read_berth tries <CairnCommons>/berths/<parent name>/<name> after reviewed_address.",
+      "writes_to": [
+        "cairn/machines/skill_block/skill_block.py"
+      ],
+      "reads": [
+        "cairn/machines/skill_block/skill_block.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: a red-first proof, one tooth per clause, casting into a scratch commons.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_cast_carries_its_berths_to_the_commons.py"
+      ],
+      "reads": [
+        "skills/sorted/proofs/test_sorted_instructs_the_shaped_plan.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/transitions.py",
+      "cairn/machines/skill_block/skill_block.py",
+      "cairn/tools/base/proofs/test_a_cast_carries_its_berths_to_the_commons.py"
+    ],
+    "out": [
+      "cairn/machines/build_inspector (it reads through read_berth, unchanged)",
+      "skills/sorted/door.py (berths still fire to instance-space)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "[buildme_rides_the_sorted] sorted berth readable (expected: True, actual: False)",
+      "how": "sail.py cross 1029d5146152 and 99258e9bbdb1 on akiendelllinux, berths fired on akienasus (relayed by the orchestrator)"
+    }
+  ]
+}
