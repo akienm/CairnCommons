@@ -1,0 +1,74 @@
+{
+  "id": "c7dc2ccdd9ad",
+  "title": "the commons root has one resolver, and the installer survives its absence",
+  "owning_intention": "cairn/machines/installer/intention+why.json",
+  "intention": "Every production default for the commons root comes from cairn.tools.base.address (ROOTS['commons']), and installer.install over an absent commons returns a named failed result instead of raising.",
+  "why": "Measured 2026-11-12 on akiendell: six production sites default to ~/dev/src/CairnCommons (git grep over dev/src and the Path.home() / dev / src form); about 35 sites inline the sibling form; address.py already holds ROOTS['commons']",
+  "traces_to": "Law 1: one resolver for a settled answer, not six hand-built; Law 7: an absent commons is a named result, not a traceback; CP4.",
+  "how": "Replace the six home-relative defaults with address.ROOTS['commons'] while keeping each site's existing env override (CAIRN_COMMONS_ROOT, CAIRN_ARTIFACT_ROOTS); make install() return a failed result naming the missing intentions directory. Red-first proof. The 35 sibling-form copies are bounded out and counted.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "no production .py file outside proofs and probes spells the home-relative commons path (git grep finds none)"
+      },
+      {
+        "n": 2,
+        "claim": "each of the six sites yields address.ROOTS['commons'] when no override is set, and still honours CAIRN_COMMONS_ROOT where it did"
+      },
+      {
+        "n": 3,
+        "claim": "installer.install(intentions_dir=<absent dir>, dry_run=True) returns a failed result naming that path and raises nothing"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/machines/installer/installer.py, cairn/tools/ticket_inspector/inspector.py, cairn/tools/operator_inbox/inbox.py, cairn/machines/skill_block/skill_block.py, cairn/devices/tester/hollow.py",
+      "writes_to": [
+        "cairn/machines/installer/installer.py",
+        "cairn/tools/ticket_inspector/inspector.py",
+        "cairn/tools/operator_inbox/inbox.py",
+        "cairn/machines/skill_block/skill_block.py",
+        "cairn/devices/tester/hollow.py"
+      ],
+      "reads": [
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/machines/installer/proofs/test_the_commons_root_has_one_resolver.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/installer/installer.py",
+      "cairn/tools/ticket_inspector/inspector.py",
+      "cairn/tools/operator_inbox/inbox.py",
+      "cairn/machines/skill_block/skill_block.py",
+      "cairn/devices/tester/hollow.py",
+      "cairn/machines/installer/proofs/test_the_commons_root_has_one_resolver.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "six production sites default to ~/dev/src/CairnCommons (git grep over dev/src and the Path.home() / dev / src form); about 35 sites inline the sibling form; address.py already holds ROOTS['commons']",
+      "how": "git grep -nE over *.py outside proofs and probes"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "installer.install -> gather_host_seams(d) -> d.iterdir() with no existence check, so an absent directory raises FileNotFoundError",
+      "how": "read installer.py lines 24-30 and 312-313 (the dry run itself not executed: HYPOTHESIS that this is the crash the orchestrator saw)"
+    }
+  ]
+}
