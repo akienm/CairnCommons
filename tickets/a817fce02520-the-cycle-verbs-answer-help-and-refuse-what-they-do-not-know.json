@@ -85,5 +85,166 @@
       "saw": "the stop shortcut acted on `--help`: the live ground loop lock freed and the live bus stopped answering",
       "how": "bin/cairn stop --help (the live system went down); cycle.py read: no argv is consulted"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "a817fce02520: the cycle verbs answer --help and refuse what they do not know (cairn/devices/cairn/cycle.py, cairn/devices/cairn/bin/start, cairn/devices/cairn/bin/stop, cairn/devices/cairn/bin/restart)",
+      "intent": "`cairn start`, `cairn stop` and `cairn restart` answer -h or --help with one usage line and change nothing, and refuse any other argument with exit 2, naming it, before they touch the ground loop or the bus.",
+      "scope": "cycle.py gains main(verb, argv); the three shortcuts call it; one red-first proof added",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "`cairn start` (= cairn cairn start) brings the system up: ground loop, bus, shims. `cairn stop` takes it down",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        },
+        {
+          "text": "every proof that cycles a system runs over a scratch HOME, never the live one",
+          "source": "cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/cycle.py",
+          "cairn/devices/cairn/bin/start",
+          "cairn/devices/cairn/bin/stop",
+          "cairn/devices/cairn/bin/restart",
+          "cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py"
+        ],
+        "out": [
+          "bin/cairn",
+          "cairn/devices/cairn/machines/ground_loop/",
+          "cairn/tools/bus_client/"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the shortcuts live",
+        "how the cycle proof isolates a scratch system",
+        "what the verbs do with their arguments today"
+      ],
+      "holdings": [
+        {
+          "what": "the cycle verbs",
+          "address": "cairn/devices/cairn/cycle.py"
+        },
+        {
+          "what": "the cycle proof's scratch-HOME harness",
+          "address": "cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py"
+        },
+        {
+          "what": "the scratch door",
+          "address": "cairn/tools/scratch/scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "an argument check before a cycle verb acts",
+          "measure": "grep -n argv cairn/devices/cairn/bin/start cairn/devices/cairn/bin/stop cairn/devices/cairn/bin/restart"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "cycle.main(verb, argv) and the three shortcuts calling it",
+          "why": "`cairn stop --help` took the live system down on 2026-11-10",
+          "kind": "build",
+          "fills": "an argument check before a cycle verb acts",
+          "uses": [
+            "cairn/devices/cairn/cycle.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/cycle.py",
+            "cairn/devices/cairn/bin/start",
+            "cairn/devices/cairn/bin/stop",
+            "cairn/devices/cairn/bin/restart",
+            "cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "cycle.main(verb, argv) and the three shortcuts calling it",
+          "why_now": "probing a verb with --help ran it, and the next probe could do so again"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "cycle.main(verb, argv) and the three shortcuts calling it",
+          "expect": "--help prints usage and changes nothing; an unknown argument exits 2 naming it; a bare verb still acts",
+          "falsifier": "a cycle verb given --help or an unknown argument changes the loop or bus pid, or a bare verb stops acting",
+          "instrument": "bin/cairn test cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "clauses 1, 2, 3 and 5 each hold as a named tooth, and the cycle proof (clause 4) stays green",
+          "instrument": "bin/cairn test cairn/devices/cairn/proofs/test_the_cycle_verbs_refuse_what_they_do_not_know.py cairn/devices/cairn/proofs/test_start_stop_restart_cycle_the_system.py",
+          "timeout_s": 600,
+          "covers": [
+            "cycle.main(verb, argv) and the three shortcuts calling it"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
