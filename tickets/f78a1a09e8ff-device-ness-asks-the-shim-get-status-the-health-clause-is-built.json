@@ -76,5 +76,172 @@
       "how": "sed -n 55,62p cairn/tools/base/deviceness.py; grep -n ROOT_VIEWS cairn/tools/base/shim.py; read of the 7cb1989e7825 ticket's falsifier map"
     }
   ],
-  "id": "f78a1a09e8ff"
+  "id": "f78a1a09e8ff",
+  "chart": {
+    "orient": {
+      "request": "f78a1a09e8ff: cairn/tools/base/deviceness.py asks the shim get status, so the health clause is built",
+      "intent": "deviceness gains answers_health(device_id, ask) and is_live_device(candidate, ask): fitted at the rack AND its shim answers get status with exit 0 and data. HEALTH_QUERY_CLAUSE stops declaring itself UNBUILT and names get status at shim.py ROOT_VIEWS. is_device is unchanged.",
+      "scope": "deviceness.py, its probe and two proofs in cairn/tools/base, and the tools/base charter's lines that still call the clause unbuilt",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "RULE 1: deviceness opens no bus; the ask is injected, the bus client's in the live path and fakes in the proof (D1)",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "is_device keeps its signature and its answer; every caller of it is out of bounds (D2)",
+          "source": "CairnCommons/tickets/f78a1a09e8ff-device-ness-asks-the-shim-get-status-the-health-clause-is-built.json",
+          "kind": "law"
+        },
+        {
+          "text": "the probe keeps the wire key predicate_is_half_built, now carrying the built clause (D3)",
+          "source": "CairnCommons/tickets/f78a1a09e8ff-device-ness-asks-the-shim-get-status-the-health-clause-is-built.json",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/base/deviceness.py",
+          "cairn/tools/base/proofs/test_deviceness_asks_health.py",
+          "cairn/tools/base/probes/device_claims_match_shims.py",
+          "cairn/tools/base/proofs/test_deviceness.py",
+          "cairn/tools/base/intention+why.json"
+        ],
+        "out": [
+          "cairn/tools/base/shim.py",
+          "the bus",
+          "every caller of is_device"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "the shim's root status view",
+        "the PROVED falsifier the health clause answers to",
+        "the charter lines that describe the clause"
+      ],
+      "holdings": [
+        {
+          "what": "every shim answers the root view status",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the fitted predicate and the clause constant",
+          "address": "cairn/tools/base/deviceness.py"
+        },
+        {
+          "what": "the divergence probe that carries the clause on the wire",
+          "address": "cairn/tools/base/probes/device_claims_match_shims.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a predicate that asks a device's shim for health",
+          "measure": "2026-11-12 (predecessor): deviceness.py:55 HEALTH_QUERY_CLAUSE read 'UNBUILT - no health-query protocol exists on the bus', and is_device answered the fitted clause only"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "answers_health and is_live_device in deviceness, HEALTH_QUERY_CLAUSE built",
+          "why": "74d4124bc0e7 (PROVED) has a two-clause falsifier, fitted AND answers a health query over the bus, and only the first half was ever built",
+          "kind": "build",
+          "fills": "a predicate that asks a device's shim for health",
+          "uses": [
+            "cairn/tools/base/shim.py",
+            "cairn/tools/base/deviceness.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/deviceness.py",
+            "cairn/tools/base/proofs/test_deviceness_asks_health.py",
+            "cairn/tools/base/probes/device_claims_match_shims.py",
+            "cairn/tools/base/proofs/test_deviceness.py",
+            "cairn/tools/base/intention+why.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "answers_health and is_live_device in deviceness, HEALTH_QUERY_CLAUSE built",
+          "why_now": "the health query exists (every shim answers get status), so the clause is no longer unbuildable"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "answers_health and is_live_device in deviceness, HEALTH_QUERY_CLAUSE built",
+          "expect": "test_deviceness_asks_health green on its three teeth and test_deviceness green, with answers_health absent the new proof is red",
+          "falsifier": "answers_health reads True for a refusal, a raise, or data None; is_live_device is True for a fitted device whose shim does not answer; is_device's answer changes; or deviceness.py still says UNBUILT",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_deviceness_asks_health.py cairn/tools/base/proofs/test_deviceness.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-3 hold at deviceness",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_deviceness_asks_health.py cairn/tools/base/proofs/test_deviceness.py",
+          "timeout_s": 300,
+          "covers": [
+            "answers_health and is_live_device in deviceness, HEALTH_QUERY_CLAUSE built"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
