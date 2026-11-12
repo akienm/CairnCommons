@@ -1,0 +1,80 @@
+{
+  "title": "device-ness asks the shim get status: the health clause is built",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Device-ness is answered whole: a device is fitted at the rack and its shim answers get status.",
+  "why": "2026-11-12: cairn/tools/base/deviceness.py:55 HEALTH_QUERY_CLAUSE still reads 'UNBUILT - no health-query protocol exists on the bus' (measured 2026-08-11), and is_device() answers the fitted clause only. Since then every shim answers the root view status (cairn/tools/base/shim.py:68 ROOT_VIEWS, :1317), and ticket 7cb1989e7825 (PROVED) maps 'every device answers a health query' to the bus tooth 'the bus answers get status'. 74d4124bc0e7 (PROVED) has a falsifier with two clauses, fitted AND answers a health query over the bus. Outline 5.8.3.2.3: the shim answers what it can; for a health question it holds no answer to, it wakes the device and asks.",
+  "traces_to": "74d4124bc0e7 (device-ness is decided at the shim; its falsifier's second clause); outline 5.8.3.2.3 (the shim answers a health question, waking the device if it must); f5dbfddea8c6 (no rule rests as policy; this was the deviceness site).",
+  "how": "deviceness gains answers_health(device_id, ask) that asks the device's shim `get status` through an injected ask callable (the bus client's in the live path) and reads True when the reply is exit 0 with data not None; HEALTH_QUERY_CLAUSE is replaced by the clause's built reading, which names get status and shim.py; divergence() reports per-device answered/not-answered when given an ask, and keeps the fitted axis alone when not. is_device stays the fitted predicate; a new is_live_device(candidate, ask) is fitted AND answers_health. Proof cairn/tools/base/proofs/test_deviceness_asks_health.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "answers_health reads True for a fake shim whose get status replies exit 0 with data, and False for one that refuses, raises, or replies data None"
+      },
+      {
+        "n": 2,
+        "claim": "is_live_device is False for a fitted device whose shim does not answer, and True for one that does; is_device is unchanged for both"
+      },
+      {
+        "n": 3,
+        "claim": "deviceness.py no longer says UNBUILT, and HEALTH_QUERY_CLAUSE names get status at cairn/tools/base/shim.py"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the ask is injected (a callable taking device id, verb, view and returning the shim's reply dict); the live path passes the bus client's ask, the proof passes fakes. No bus is opened inside deviceness.",
+      "writes_to": [
+        "cairn/tools/base/deviceness.py"
+      ],
+      "reads": [
+        "cairn/tools/base/deviceness.py",
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: is_device keeps its signature and answer; is_live_device is the whole predicate.",
+      "writes_to": [
+        "cairn/tools/base/deviceness.py",
+        "cairn/tools/base/proofs/test_deviceness_asks_health.py"
+      ],
+      "reads": [
+        "cairn/tools/base/deviceness.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the constant rides two readers, the probe's payload (key predicate_is_half_built, kept as the wire name with the built clause as its value; its against_falsifier text restated) and test_deviceness's tooth test_the_unbuilt_half_is_declared_not_omitted, which now asserts the clause names get status. Both are in bounds.",
+      "writes_to": [
+        "cairn/tools/base/probes/device_claims_match_shims.py",
+        "cairn/tools/base/proofs/test_deviceness.py"
+      ],
+      "reads": [
+        "cairn/tools/base/deviceness.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/deviceness.py",
+      "cairn/tools/base/proofs/test_deviceness_asks_health.py",
+      "cairn/tools/base/probes/device_claims_match_shims.py",
+      "cairn/tools/base/proofs/test_deviceness.py"
+    ],
+    "out": [
+      "cairn/tools/base/shim.py",
+      "the bus",
+      "every caller of is_device"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "2026-11-12: cairn/tools/base/deviceness.py:55 HEALTH_QUERY_CLAUSE still reads 'UNBUILT - no health-query protocol exists on the bus' (measured 2026-08-11), and is_device() answers the fitted clause only. Since then every shim answers the root view status (cairn/tools/base/shim.py:68 ROOT_VIEWS, :1317), and ticket 7cb1989e7825 (PROVED) maps 'every device answers a health query' to the bus tooth 'the bus answers get status'. 74d4124bc0e7 (PROVED) has a falsifier with two clauses, fitted AND answers a health query over the bus. Outline 5.8.3.2.3: the shim answers what it can; for a health question it holds no answer to, it wakes the device and asks.",
+      "how": "sed -n 55,62p cairn/tools/base/deviceness.py; grep -n ROOT_VIEWS cairn/tools/base/shim.py; read of the 7cb1989e7825 ticket's falsifier map"
+    }
+  ],
+  "id": "f78a1a09e8ff"
+}
