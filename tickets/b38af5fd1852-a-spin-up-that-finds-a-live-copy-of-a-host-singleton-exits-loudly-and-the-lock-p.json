@@ -1,0 +1,75 @@
+{
+  "id": "b38af5fd1852",
+  "title": "a spin-up that finds a live copy of a host singleton exits loudly, and the lock path carries the cairn instance",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Every host singleton (bus, ground loop, and a device name on the bus) refuses a second live copy loudly, and the claim's path carries the cairn instance.",
+  "why": "Measured 2026-11-12 on akiendell: live box: bus.lock held=True and ground_loop run.lock held=True (singleton.held); one bus launcher+child pair (1648->16184) and one ground_loop shim+child pair (23396->4904), no duplicates; the bus child 16184 owns conhost 16980, the ground_loop child 4904 none seen",
+  "traces_to": "Law 1 (one claim tool, not one per site); Law 4 (the kernel lock, not a convention); Law 7 (the loser refuses loudly); the orchestrator's note that I-the-command-lazy-inits-the-system.md rejects a host-local lock with no instance name.",
+  "how": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/base/singleton.py claim, keyed by cairn instance, and prove each by a second claimant that exits.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "for ground_loop and bus, a second start while the first is live exits non-zero with a message naming the held lock, and leaves the first running"
+      },
+      {
+        "n": 2,
+        "claim": "the two lock paths each contain the cairn instance segment (devices/<device>/<instance>/...), none is host-global"
+      },
+      {
+        "n": 3,
+        "claim": "a second connection under a device name already live on the bus is refused or supersedes the first, as the census decides, and never leaves two"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/base/singleton.py, cairn/devices/cairn/machines/bus/server.py, cairn/devices/cairn/machines/ground_loop/guard.py",
+      "writes_to": [
+        "cairn/tools/base/singleton.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/ground_loop/guard.py"
+      ],
+      "reads": [
+        "cairn/tools/base/singleton.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_second_spin_up_of_a_host_singleton_exits.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/singleton.py",
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/ground_loop/guard.py",
+      "cairn/tools/base/proofs/test_a_second_spin_up_of_a_host_singleton_exits.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "live box: bus.lock held=True and ground_loop run.lock held=True (singleton.held); one bus launcher+child pair (1648->16184) and one ground_loop shim+child pair (23396->4904), no duplicates; the bus child 16184 owns conhost 16980, the ground_loop child 4904 none seen",
+      "how": "singleton.held over every *.lock under ~/.cairn, plus Get-CimInstance Win32_Process, read only (nothing spawned)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "singleton.py locks on nt with msvcrt.locking; bus/server.py _lock() also does, with its own claim() beside it rather than singleton.claim; ground_loop/guard.py claims through singleton.claim and its __main__ catches ClaimRefused",
+      "how": "read singleton.py, bus/server.py 782-815, guard.py"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "NOT censused: what a second bus or ground_loop start prints and exits with on nt; whether rack (a roster in cairn/tools/rack/rack.py, no process) needs a claim; whether the bus refuses a second connection under a live device name (grep for duplicate-name handling in bus/*.py and bus_client/*.py found none)",
+      "how": "grep; the run itself would spawn processes, HYPOTHESIS that bus server.py exits EXIT_HELD (line 936) as its message says"
+    }
+  ]
+}
