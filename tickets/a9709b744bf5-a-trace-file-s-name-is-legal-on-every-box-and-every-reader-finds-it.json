@@ -1,0 +1,90 @@
+{
+  "id": "a9709b744bf5",
+  "title": "a trace file's name is legal on every box and every reader finds it",
+  "owning_intention": "cairn/machines/learning_block/intention+why.json",
+  "intention": "learning_block names a block's trace file without ':' (legal on NTFS), reads both that name and the legacy 'skill:<name>.jsonl' name, and every reader in the repo goes through it.",
+  "why": "Measured 2026-11-12 on akiendell (Windows): every skill firing (/idea, /intent, /sorted) fails WinError 87 because write_trace renames to 'skill:<name>.jsonl'; NTFS reads the colon as an alternate data stream and leaves an empty file 'skill' behind. No skill door can run on Windows, so nothing can be born there.",
+  "traces_to": "Law 3 and Law 5 - a corpus the watches measure must be writable and readable on every box; Law 1 - one function names a trace file, not seven hand-built spellings.",
+  "how": "Add public trace_path(block, root=None) -> Path (':'->'__') and legacy_trace_path to learning_block; write_trace folds any legacy file into the new one then unlinks it; read_trace reads legacy then new; clearance and the three skill probes move onto read_trace/trace_path. Red-first proof: a hollow writer fails it.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "write_trace for a block named 'skill:x' writes a file whose name contains no Windows-reserved character and the record is read back by read_trace"
+      },
+      {
+        "n": 2,
+        "claim": "read_trace over a store holding a legacy 'skill:x.jsonl' plus a new file returns the records of both, legacy first"
+      },
+      {
+        "n": 3,
+        "claim": "a write onto a store holding a legacy file folds its records into the new file, retires the legacy file and loses no record"
+      },
+      {
+        "n": 4,
+        "claim": "the intent, sorted and saveslate door-refusal probes and clearance count the same passes and refusals over a legacy-only store and over a new-name-only store"
+      },
+      {
+        "n": 5,
+        "claim": "no source file outside learning_block builds a '<block>.jsonl' trace path by hand"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: learning_block gains public trace_path/legacy_trace_path; write_trace folds-and-retires the legacy file; read_trace reads both.",
+      "writes_to": [
+        "cairn/machines/learning_block/learning_block.py"
+      ],
+      "reads": [
+        "cairn/machines/learning_block/learning_block.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: clearance and the three skill door-refusal probes read through read_trace instead of hand-built names.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/clearance.py",
+        "skills/intent/probes/intent_door_refusals.py",
+        "skills/saveslate/probes/slate_door_refusals.py",
+        "skills/sorted/probes/sorted_door_refusals.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/clearance.py",
+        "skills/intent/probes/intent_door_refusals.py",
+        "skills/saveslate/probes/slate_door_refusals.py",
+        "skills/sorted/probes/sorted_door_refusals.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof, one tooth per clause, in a scratch trace root; clause 5 is a git-grep over the repo.",
+      "writes_to": [
+        "cairn/machines/learning_block/proofs/test_a_trace_file_name_is_legal_on_every_box.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/learning_block/learning_block.py",
+      "cairn/devices/codemother/machines/clearance/clearance.py",
+      "skills/intent/probes/intent_door_refusals.py",
+      "skills/saveslate/probes/slate_door_refusals.py",
+      "skills/sorted/probes/sorted_door_refusals.py",
+      "cairn/machines/learning_block/proofs/test_a_trace_file_name_is_legal_on_every_box.py"
+    ],
+    "out": [
+      "engine_trace_corpus probe (globs the store, unaffected by the name)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "WinError 87 renaming skill:idea.tmp to skill:idea.jsonl; an empty file 'skill' left in ~/.cairn/devices/learning_block/0/traces",
+      "how": "python skills/idea/door.py on akiendell, then ls of the traces dir"
+    }
+  ]
+}
