@@ -1,0 +1,71 @@
+{
+  "id": "bc0bbfd33a71",
+  "title": "a non-home box cannot drive the ticket machine — hold is not open across the LAN",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "A client whose bus home is another box reaches a device there without asking for hold, which the LAN door refuses. The ask goes over call, and the home bus's mail wake (no_receiver) wakes the device at its home. A local reach is unchanged.",
+  "why": "Measured 2026-11-12: on akienasus, with CAIRN_BUS_HOME=akiendelllinux.local:7419, `sail.py chart 1029d5146152` raised \"RuntimeError: bus process: 'hold' is not open across the LAN — one of ('call', 'stats', 'verbs')\". reach() goes through _wire, which always calls bus.hold, so no box but the home can drive the ticket machine.",
+  "traces_to": "Law 6 (another box's bus is that box's: the far side asks, the home wakes) and ticket 5183005fa134's LAN door, kept as narrow as it was.",
+  "how": "_wire holds only when the home is on this box (remote_address() is None). Red-first proof replaces remote.exchange with a recorder, so nothing dials.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a remote home, reach('codemother') sends only ops in LAN_OPS and no hold"
+      },
+      {
+        "n": 2,
+        "claim": "with a home on this box, reach('codemother') sends one hold naming codemother, as before"
+      },
+      {
+        "n": 3,
+        "claim": "a request through a far reach is sent as one op 'call', method 'request'"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _wire calls bus.hold(*devices) only when devices is non-empty and remote_address() is None; the docstring names why (mail wakes the device at its home; hold is not a LAN op).",
+      "writes_to": [
+        "cairn/tools/bus_client/bus_client.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/bus_client.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, one tooth per clause, with remote.exchange replaced by a recorder and CAIRN_BUS_HOME set per tooth; LAN_OPS restated, not imported (RULE 1).",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/bus_client.py",
+      "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus (the LAN door stays as it is)",
+      "cairn/tools/bus_client/remote.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "RuntimeError: bus process: 'hold' is not open across the LAN — one of ('call', 'stats', 'verbs')",
+      "how": "python3 cairn/devices/cc/scripts/sail.py chart 1029d5146152 on akienasus with CAIRN_BUS_HOME=akiendelllinux.local:7419"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "red-first: 1 failed (a far reach sends hold), 2 passed",
+      "how": "bin/cairn test cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+    }
+  ]
+}
