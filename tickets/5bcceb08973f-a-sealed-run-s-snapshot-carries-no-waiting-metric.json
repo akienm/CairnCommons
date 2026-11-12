@@ -81,5 +81,163 @@
       "saw": "a hollow run at the red-first commit of 98ab0e9db57f recreated the dropped inference_calls table with 32 proof rows; not this ticket's scope",
       "how": "store.owner_of and a pg_dump of the recreated table"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "5bcceb08973f: a sealed run's snapshot carries no waiting metric (cairn/devices/tester/isolation.py, cairn/tools/metric/metric.py)",
+      "intent": "A sealed run's snapshot carries no waiting metric: the instance seal's copy of ~/.cairn keeps each holder's metrics recorder directory and leaves its records behind, so a metrics collect under the seal cannot land the live recorder's records into the shared metrics table a second time.",
+      "scope": "the snapshot's ignore hook skips each metrics recorder's records.jsonl; one sentence in the tester's charter; one red-first proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "every component talks to every other only through its public interface; a ticket's proofs measure only that component",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "a metric records into its holder's data recorder: no bus, no database",
+          "source": "cairn/tools/metric/metric.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/isolation.py",
+          "cairn/devices/tester/intention+why.json",
+          "cairn/devices/tester/proofs/test_a_sealed_snapshot_leaves_waiting_metrics_behind.py"
+        ],
+        "out": [
+          "cairn/tools/metric/",
+          "cairn/tools/data_recorder/",
+          "cairn/devices/cairn/"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the snapshot is copied",
+        "what a metrics recorder holds on disk",
+        "how a fixture root can stand in for ~/.cairn"
+      ],
+      "holdings": [
+        {
+          "what": "the snapshot's ignore hook",
+          "address": "cairn/devices/tester/isolation.py"
+        },
+        {
+          "what": "the metrics recorder's address",
+          "address": "cairn/tools/metric/metric.py"
+        },
+        {
+          "what": "the data recorder's records file",
+          "address": "cairn/tools/data_recorder/data_recorder.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a snapshot skip for the metrics recorder's records",
+          "measure": "grep -n metric cairn/devices/tester/isolation.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "_snapshot_ignore skips records.jsonl in every tools/data_recorder/metrics directory",
+          "why": "sealed runs re-landed the live recorder's waiting records; a dedupe removed 199,215 copies",
+          "kind": "build",
+          "fills": "a snapshot skip for the metrics recorder's records",
+          "uses": [
+            "cairn/tools/metric/metric.py",
+            "cairn/tools/data_recorder/data_recorder.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/isolation.py",
+            "cairn/devices/tester/intention+why.json",
+            "cairn/devices/tester/proofs/test_a_sealed_snapshot_leaves_waiting_metrics_behind.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "_snapshot_ignore skips records.jsonl in every tools/data_recorder/metrics directory",
+          "why_now": "every sealed run with a waiting live recorder doubles the metrics table again"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "_snapshot_ignore skips records.jsonl in every tools/data_recorder/metrics directory",
+          "expect": "the snapshot's metrics recorder reads empty; every other file copies byte-equal",
+          "falsifier": "the snapshot's metrics recorder holds a record, or any other file differs or is missing",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_sealed_snapshot_leaves_waiting_metrics_behind.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "clauses 1-3 each hold as a named tooth",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_sealed_snapshot_leaves_waiting_metrics_behind.py",
+          "timeout_s": 600,
+          "covers": [
+            "_snapshot_ignore skips records.jsonl in every tools/data_recorder/metrics directory"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
