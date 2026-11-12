@@ -1,0 +1,57 @@
+{
+  "id": "033f607c5316",
+  "title": "floor refs and census paths come back with forward slashes on every box",
+  "owning_intention": "cairn/tools/orient/intention+why.json",
+  "intention": "Every path the orient floor and census emit is written with forward slashes, so a ref resolves and compares the same on every box.",
+  "why": "Measured 2026-11-12 on akiendell: orient.py:95 and :252 emit str(Path.relative_to(...)); the orchestrator reports backslash refs on akiendell",
+  "traces_to": "Law 3 and Law 8: a ref that differs by box defeats the door's re-run of the floor (provenance falls to 'claude'); CP4.",
+  "how": "Emit as_posix() at the emitting sites in orient.py; the red-first proof checks the emitted strings carry no backslash.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "no path string emitted by the orient floor or census contains a backslash"
+      },
+      {
+        "n": 2,
+        "claim": "the same strings still resolve to the files they name"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/orient/orient.py",
+      "writes_to": [
+        "cairn/tools/orient/orient.py"
+      ],
+      "reads": [
+        "cairn/tools/orient/orient.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/orient/proofs/test_orient_emits_forward_slash_paths.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/orient/orient.py",
+      "cairn/tools/orient/proofs/test_orient_emits_forward_slash_paths.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "orient.py:95 and :252 emit str(Path.relative_to(...)); the orchestrator reports backslash refs on akiendell",
+      "how": "git grep -n relative_to over orient.py (the on-box refs are not re-captured: HYPOTHESIS that these two sites are the whole cause)"
+    }
+  ]
+}

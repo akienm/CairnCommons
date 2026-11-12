@@ -1,0 +1,57 @@
+{
+  "id": "dc945eb1f072",
+  "title": "typing cairn in PowerShell runs the cairn command",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "From PowerShell on Windows, cairn <verb> reaches bin/cairn through cairn.cmd and prints what the shell-side command prints.",
+  "why": "Measured 2026-11-12 on akiendell: bin/cairn is a shell script; running it from PowerShell gave a SyntaxError; bin/cairn.cmd exists as a shim",
+  "traces_to": "CP4 and Law 3: a command that works only from Git Bash is a box-specific gap; the measurement comes before the fix.",
+  "how": "Measure how PowerShell resolves cairn today; then make the entry resolve to bin/cairn.cmd (name, PATHEXT or a documented shim) and prove it by running a harmless verb with no console window left open.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "from PowerShell, cairn resolves to bin/cairn.cmd"
+      },
+      {
+        "n": 2,
+        "claim": "cairn with a read-only verb exits 0 and prints the same first line as from Git Bash"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at bin/cairn.cmd",
+      "writes_to": [
+        "bin/cairn.cmd"
+      ],
+      "reads": [
+        "bin/cairn.cmd"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "bin/proofs/test_cairn_resolves_from_powershell.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn.cmd",
+      "bin/proofs/test_cairn_resolves_from_powershell.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "bin/cairn is a shell script; running it from PowerShell gave a SyntaxError; bin/cairn.cmd exists as a shim",
+      "how": "orchestrator report plus ls bin/ (how PowerShell resolves cairn is not measured: HYPOTHESIS that it does not reach the .cmd)"
+    }
+  ]
+}
