@@ -1,0 +1,225 @@
+{
+  "id": "69075b0e8212",
+  "title": "bin's proofs run the host's bash and never exec bin/cairn as a Windows program",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "Every bin proof builds its bash argv from the host's bash (shutil.which on Windows) or from bash_script_argv, and none spawns the bare word bash or execs bin/cairn directly; an AST door proof over bin/proofs holds it.",
+  "why": "Measured 2026-11-12 on akiendell: grep and ast over bin/proofs: bare bash argv at test_a_declared_instance_is_wired_by_the_command.py:76, test_logger_for_bash.py:67,279,378, test_proof_gate.py:230; str(CAIRN) exec at test_a_word_with_no_script_goes_onto_the_bus.py:75,106 (WinError 193 for all its teeth). After the edits the bus proof is green (4 of 4) and test_logger_for_bash gets past its first tooth to five green; test_proof_gate and the declared-instance proof keep the same reds they had at baseline (git stash comparison)",
+  "traces_to": "Law 3 and Law 8: a proof that runs another OS's shell on a box measures that shell, not the component; Law 4: held by a scan, not remembered.",
+  "how": "Edit the four proofs: script paths go through cairn.tools.base.script_argv.bash_script_argv, -c and --rcfile commands use a module _BASH that is shutil.which('bash') on nt and 'bash' elsewhere. Add bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py, an AST scan of bin/proofs/test_*.py for list literals whose first element is the string bash and for str(CAIRN) as an argv head. No change to bin/cairn. Other reds in those four proofs (census of 1342 commands, a FileExistsError, a 201-vs-10 line trim) are other causes, measured at baseline, and are left alone.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an AST scan of bin/proofs/test_*.py finds no list literal whose first element is the string bash"
+      },
+      {
+        "n": 2,
+        "claim": "an AST scan finds no argv headed by str(CAIRN), a direct exec of the bin/cairn shebang script"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at bin/proofs/test_a_declared_instance_is_wired_by_the_command.py, bin/proofs/test_logger_for_bash.py, bin/proofs/test_proof_gate.py, bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py",
+      "writes_to": [
+        "bin/proofs/test_a_declared_instance_is_wired_by_the_command.py",
+        "bin/proofs/test_logger_for_bash.py",
+        "bin/proofs/test_proof_gate.py",
+        "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+      ],
+      "reads": [
+        "cairn/tools/base/script_argv.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/proofs/test_a_declared_instance_is_wired_by_the_command.py",
+      "bin/proofs/test_logger_for_bash.py",
+      "bin/proofs/test_proof_gate.py",
+      "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py",
+      "bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "grep and ast over bin/proofs: bare bash argv at test_a_declared_instance_is_wired_by_the_command.py:76, test_logger_for_bash.py:67,279,378, test_proof_gate.py:230; str(CAIRN) exec at test_a_word_with_no_script_goes_onto_the_bus.py:75,106 (WinError 193 for all its teeth). After the edits the bus proof is green (4 of 4) and test_logger_for_bash gets past its first tooth to five green; test_proof_gate and the declared-instance proof keep the same reds they had at baseline (git stash comparison)",
+      "how": "git grep, an ast walk, and running each proof with the venv python before and after via git stash"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "in bin/proofs make every proof run the host's bash or bash_script_argv (cairn/tools/base/script_argv.py), never a bare bash argv or a direct exec of bin/cairn",
+      "intent": "bin proofs spawn the host's bash and never exec the cairn shebang script",
+      "scope": "in: the bin proofs named; out: bin/cairn and every other component",
+      "unknowns": [
+        "the Linux side was not run by me: on Linux the helper returns the bare word bash, as before"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/proofs/test_a_declared_instance_is_wired_by_the_command.py",
+          "bin/proofs/test_logger_for_bash.py",
+          "bin/proofs/test_proof_gate.py",
+          "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py",
+          "bin/proofs/test_cairn_help_lists_in_the_operators_order.py",
+          "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py",
+          "bin/proofs/test_superclaude_is_never_refused_by_the_floor.py",
+          "bin/proofs/test_the_floor_links_a_class_verb_that_landed_late.py",
+          "bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py",
+          "bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the component builds a bash argv"
+      ],
+      "holdings": [
+        {
+          "what": "the component's executor",
+          "address": "bin/proofs/test_proof_gate.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a bin proof set free of bare bash argv and direct shebang exec",
+          "measure": "0 of 1: an AST scan of bin/proofs found bare bash and str(CAIRN) exec sites"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the four-plus-five proofs build argv through bash_script_argv or the host bash, held by the door proof",
+          "why": "a bare bash resolves to WSL on Windows and a shebang exec is WinError 193",
+          "kind": "build",
+          "fills": "a bin proof set free of bare bash argv and direct shebang exec",
+          "uses": [
+            "bin/proofs/test_proof_gate.py"
+          ],
+          "writes_to": [
+            "bin/proofs/test_a_declared_instance_is_wired_by_the_command.py",
+            "bin/proofs/test_logger_for_bash.py",
+            "bin/proofs/test_proof_gate.py",
+            "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py",
+            "bin/proofs/test_cairn_help_lists_in_the_operators_order.py",
+            "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py",
+            "bin/proofs/test_superclaude_is_never_refused_by_the_floor.py",
+            "bin/proofs/test_the_floor_links_a_class_verb_that_landed_late.py",
+            "bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py",
+            "bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the four-plus-five proofs build argv through bash_script_argv or the host bash, held by the door proof",
+          "why_now": "built; proof red first, green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the four-plus-five proofs build argv through bash_script_argv or the host bash, held by the door proof",
+          "expect": "the door proof's two teeth pass and the bus proof runs green",
+          "falsifier": "a bare bash list or str(CAIRN) argv head reds the door proof",
+          "instrument": "python bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the proof pass",
+          "instrument": "python bin/proofs/test_no_bin_proof_spawns_a_bare_bash.py",
+          "timeout_s": 300,
+          "covers": [
+            "the four-plus-five proofs build argv through bash_script_argv or the host bash, held by the door proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
