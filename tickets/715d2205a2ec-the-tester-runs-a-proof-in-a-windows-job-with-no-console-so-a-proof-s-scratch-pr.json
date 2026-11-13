@@ -73,5 +73,172 @@
       "saw": "NOT measured: that a job object kills a ground_loop started with DETACHED_PROCESS|CREATE_NEW_PROCESS_GROUP (breakaway is off by default, so it should); the Windows run of the real spawn waits on Q#92",
       "how": "hand measurement after the build"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "715d2205a2ec: the tester runs a proof in a Windows job with no console, so a proof's scratch process dies with the run and opens no window in cairn/devices/tester/runs.py",
+      "intent": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no window; the sites that spawn are not edited.",
+      "scope": "in: cairn/devices/tester/runs.py, cairn/devices/tester/device.py, cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py; out: every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/runs.py",
+          "cairn/devices/tester/device.py",
+          "cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py"
+        ],
+        "out": [
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what cairn/devices/tester/runs.py does today against the ticket's measurement"
+      ],
+      "holdings": [
+        {
+          "what": "the standing code the build reads: runs.py",
+          "address": "cairn/devices/tester/runs.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no",
+          "measure": "on Windows test_shim_starts_the_loop left two ground_loop python.exe running and never returned (90 minutes); batch 1 of ten other proofs left none (per-proof before/after process and conhost snapshots from a scratch script, one proof at a time)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1: the fix at cairn/devices/tester/runs.py, cairn/devices/tester/device.py",
+          "why": "Measured 2026-11-12 on akiendell: on Windows test_shim_starts_the_loop left two ground_loop python.exe running and never returned (90 minutes); batch 1 of ten other proofs left none",
+          "kind": "build",
+          "fills": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no",
+          "uses": [
+            "cairn/devices/tester/runs.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/runs.py",
+            "cairn/devices/tester/device.py"
+          ]
+        },
+        {
+          "what": "D2: one proof, one tooth per clause; red first.",
+          "why": "Measured 2026-11-12 on akiendell: on Windows test_shim_starts_the_loop left two ground_loop python.exe running and never returned (90 minutes); batch 1 of ten other proofs left none",
+          "kind": "build",
+          "fills": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no",
+          "uses": [
+            "cairn/devices/tester/runs.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1: the fix at cairn/devices/tester/runs.py, cairn/devices/tester/device.py",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        },
+        {
+          "what": "D2: one proof, one tooth per clause; red first.",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1: the fix at cairn/devices/tester/runs.py, cairn/devices/tester/device.py",
+          "expect": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no window; the sites that spawn are not edited.",
+          "falsifier": "(1) on nt the tester starts a proof with CREATE_NO_WINDOW inside a job that carries KILL_ON_JOB_CLOSE, and closing the job ends every descendant; (2) on posix run_owned is subprocess.run with the same arguments, and the proof run is unchanged; (3) device.py has no subprocess.run left at the proof-run and exec sites; both go through run_owned; (4) kill_what_it_started on nt no longer answers that environments cannot be enumerated",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py"
+        },
+        {
+          "piece": "D2: one proof, one tooth per clause; red first.",
+          "expect": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no window; the sites that spawn are not edited.",
+          "falsifier": "(1) on nt the tester starts a proof with CREATE_NO_WINDOW inside a job that carries KILL_ON_JOB_CLOSE, and closing the job ends every descendant; (2) on posix run_owned is subprocess.run with the same arguments, and the proof run is unchanged; (3) device.py has no subprocess.run left at the proof-run and exec sites; both go through run_owned; (4) kill_what_it_started on nt no longer answers that environments cannot be enumerated",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_a_windows_run_ends_what_it_started.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: the fix at cairn/devices/tester/runs.py, cairn/devices/tester/device.py",
+            "D2: one proof, one tooth per clause; red first."
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
