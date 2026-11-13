@@ -86,5 +86,178 @@
       "saw": "the shim posts a reply only when the handler returns a dict; bus.request reads the reply by reply_to until its deadline",
       "how": "read cairn/tools/base/shim.py deliver and cairn/devices/cairn/machines/bus/bus.py request"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "e4714e460e32: a slow chart stage never holds codemother's lock (cairn/devices/codemother/machines/chart_gate/gate.py)",
+      "intent": "a deferred stage gate checks the fileref, queues the ticket on its stage's one FIFO and returns None, so the shim lets go of codemother's lock; one worker per stage per process runs the stage and posts the answer to the asker by reply_to; an early refusal still answers at once",
+      "scope": "cairn/devices/codemother/machines/chart_gate/gate.py and its new proof only",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "outline 3.3.4.3: the gate queues the ticket and the ticket goes on by itself; 5.5.3.3: Send is asynchronous",
+          "source": "press_office/CairnComponentOutline.txt",
+          "kind": "law"
+        },
+        {
+          "text": "constrain's floor guard is per process, so stages at one gate run one after another",
+          "source": "cairn/devices/codemother/machines/constrain/constrain.py",
+          "kind": "law"
+        },
+        {
+          "text": "Law 7: a door that raises still answers its asker, passed false with the lack named",
+          "source": "cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/chart_gate/gate.py",
+          "cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py"
+        ],
+        "out": [
+          "the bus machine",
+          "cairn/machines/ticket",
+          "cairn/devices/cc/scripts/sail.py",
+          "skills/chart/live.py",
+          "constrain",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the shim's lock is held",
+        "how a late reply reaches a request",
+        "why stages at one gate must be serial"
+      ],
+      "holdings": [
+        {
+          "what": "the shim posts a verb's reply by reply_to only when the handler returns a dict",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "Voice posts as codemother on the personal channel, reply_to passing through",
+          "address": "cairn/devices/codemother/machines/watchme/gate.py"
+        },
+        {
+          "what": "the scratch bus a proof wires codemother's shim on",
+          "address": "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a stage gate that answers off the request thread",
+          "measure": "2026-11-12 akiendelllinux: b0e65cf8a77e's constrain ran 44 tester proofs (1858 s) inside queueme, 18:36-19:07, holding codemother's lock"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "deferred StageGate: per-stage FIFO and worker, reply by reply_to",
+          "why": "the shim holds one lock per device while a verb runs, so a slow stage held every other box's deposit, chart and verdict",
+          "kind": "build",
+          "fills": "a stage gate that answers off the request thread",
+          "uses": [
+            "cairn/tools/base/shim.py",
+            "cairn/devices/codemother/machines/watchme/gate.py",
+            "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/chart_gate/gate.py",
+            "cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "deferred StageGate: per-stage FIFO and worker, reply by reply_to",
+          "why_now": "every far box's codemother verb waited behind one 31-minute constrain"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "deferred StageGate: per-stage FIFO and worker, reply by reply_to",
+          "expect": "4 teeth green twice; the stage-gates proof still green",
+          "falsifier": "a deposit waits on a held stage, the held stage replies without reply_to or its berth, a raising door leaves the asker unanswered, or two tickets run at once at one gate",
+          "instrument": "bin/cairn test cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-4 hold at codemother's stage gates",
+          "instrument": "bin/cairn test cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py",
+          "timeout_s": 300,
+          "covers": [
+            "deferred StageGate: per-stage FIFO and worker, reply by reply_to"
+          ]
+        },
+        {
+          "claim": "the stage gates still chart a ticket",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/chart_gate/proofs/test_the_stage_gates_chart_a_ticket.py",
+          "timeout_s": 600,
+          "covers": [
+            "deferred StageGate: per-stage FIFO and worker, reply by reply_to"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
