@@ -1,0 +1,76 @@
+{
+  "id": "404d3f6f3d9b",
+  "title": "a hollow reading outlives a reseal of the code it measured",
+  "owning_intention": "cairn/tools/validation_store/intention+why.json",
+  "intention": "A hollow reading is carried across a reseal whenever the code it was taken over is the code the new seal measures, and dropped only when that code moved, even when the seal the reading landed on was already stale.",
+  "why": "Measured 2026-11-13 on 5a37dd56fa45: its Linux hollow reading landed on a standing seal taken on Windows (fp 1330…) while the Linux tree hashed 8318… over the same committed closure; the pre-commit reseal at cairn 7bb6d6811 saw the fingerprint differ from the PRIOR SEAL's and dropped a reading taken over exactly the code it measured. PROVED clearance then refused hollow_evidence_absent and sent the boat to FIXME. The orchestrator counts n=6 of this bounce. d5a05b6d1752 names the void; it cannot stop a wrong one.",
+  "traces_to": "Law 3 — a reading expires with the code it measured, not with the seal it rode; Law 1 — retaking a still-valid hollow reading and the FIXME round it costs is re-deriving the settled.",
+  "how": "record_hollow stamps sealed_fingerprint_now(proof, standing) onto evidence.hollow_anchor[ticket]['fingerprint']. persist_validation's carry becomes per ticket: hollow[t] and hollow_anchor[t] ride a new record whose source_fingerprint equals the prior seal's fingerprint (today's rule) or t's own stamp. A reading with no stamp keeps today's rule only.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a hollow reading for ticket A landed on a standing seal whose source_fingerprint is stale, then a new seal persisted over the same unchanged code, still carries evidence.hollow[A] and hollow_anchor[A]"
+      },
+      {
+        "n": 2,
+        "claim": "a hollow reading for A taken, then the code edited, then a new seal persisted over the edited code, carries no evidence.hollow[A]"
+      },
+      {
+        "n": 3,
+        "claim": "readings for A (taken before an edit) and B (taken after it) on one proof, then a new seal over the edited code, carries hollow[B] and not hollow[A]"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: record_hollow computes sealed_fingerprint_now(proof_path, trail[-1]) and writes it as hollow_anchor[ticket]['fingerprint'], creating the anchor dict when anchor is None; the stamp lives beside the reading, never inside hollow[t] (06f0445e7a63).",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: persist_validation's hollow carry is per ticket: for each t in the prior hollow, carry hollow[t] (and hollow_anchor[t] when present) unless the new record already carries hollow; carry when new fp == prior seal fp, or new fp == hollow_anchor[t]['fingerprint']. A new record that carries its own hollow still wins.",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof builds a scratch repo (scratch_dir) holding one fixture component with code.py and proofs/test_fx.py, repoints validation_store._REPO_ROOT at it for the run, and persists records through persist_validation with a stub trouble_device; one tooth per clause; never the live validations.",
+      "writes_to": [
+        "cairn/tools/validation_store/proofs/test_a_hollow_reading_outlives_a_reseal_of_its_code.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/proofs/test_a_seal_reads_only_its_own_components_files.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/tools/validation_store/proofs/test_a_hollow_reading_outlives_a_reseal_of_its_code.py"
+    ],
+    "out": [
+      "cairn/devices/tester (d5a05b6d1752's naming stays as is)",
+      "cairn/devices/codemother/machines/clearance (the FIXME disposition, 973574dddb77)",
+      "cairn/devices/cc/scripts (the orchestrator's helpers)",
+      "the Windows≠Linux fingerprint (a second cast)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "test_flock_stands_for_fcntl.json sealed fp 1330… at 52890c2f8 (Windows) and 8318… at 7bb6d6811 (Linux hook reseal, caller 'cairn test --reseal', no hollow) over a closure no commit touched between",
+      "how": "git show <sha>:cairn/tools/base/validations/test_flock_stands_for_fcntl.json, git log over the three closure files, source_fingerprint recomputed on akienasus = 8318…"
+    }
+  ]
+}
