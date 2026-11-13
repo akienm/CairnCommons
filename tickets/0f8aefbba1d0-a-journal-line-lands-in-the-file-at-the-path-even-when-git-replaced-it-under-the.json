@@ -2,15 +2,15 @@
   "id": "0f8aefbba1d0",
   "title": "a journal line lands in the file at the path, even when git replaced it under the open handle",
   "owning_intention": "cairn/tools/artifact/intention+why.json",
-  "intention": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+  "intention": "The artifact door never drops a journal line silently when git rewrites the tree it writes into: a git rewrite run under `cairn artifact quiet` cannot interleave with a door write, and a rewrite that ignores it makes the door raise and park the entry, never drop it.",
   "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
   "traces_to": "Law 7: errors are permanent in records of truth, and the journal is the record of who wrote every record. Law 8: a peer leans on the journal's chain without re-checking it.",
-  "how": "_append checks its locked handle against the path twice. At lock time: if os.fstat(fh) and os.stat(path) name different files, close, re-open and re-lock, up to 5 times, then raise. After the write and fsync: if the path now names a different file, open it a+, lock it, and append the same entry re-chained on that file's tail unless its entry id is already there. Red-first proof in a scratch git repo replays the measured loss.",
+  "how": "The door holds a repo-level flock (<git dir>/cairn-door.lock) across the record write and the journal append; `cairn artifact quiet -- <git cmd>` holds the same lock around a git rewrite. _append re-opens when its locked handle is not the file at the path (lock time), and after the write, if the path names a different file, parks the entry in <git dir>/cairn-orphaned-lines.jsonl and raises loud. close.sh wraps its pull --rebase --autostash in quiet.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "a line appended while git stash replaces the journal under _append's open handle is in the journal at the path after the stash pops, exactly once, and verify_chain over that journal returns []"
+        "claim": "a git rewrite run under quiet cannot interleave with a door write; a rewrite that ignores it makes the door raise and park the entry, never drop it"
       },
       {
         "n": 2,
@@ -21,7 +21,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+      "text": "D1: artifact.py gains door_lock(root): an exclusive flock (msvcrt on nt) on <git dir>/cairn-door.lock, git dir from `git rev-parse --absolute-git-dir` at the root (no git dir: no lock), re-entrant within a process. write() and remove() hold it across the record write and _append. _append checks (st_dev, st_ino) of its locked handle against the path: at lock time a mismatch re-opens and re-locks, at most 5 tries, then raises OSError naming the path; after the write and fsync a mismatch appends the entry to <git dir>/cairn-orphaned-lines.jsonl and raises JournalLineOrphaned naming the path, the entry id and the park file. On nt a zero st_ino skips the check. The docstrings name this ticket.",
       "writes_to": [
         "cairn/tools/artifact/artifact.py"
       ],
@@ -31,7 +31,27 @@
     },
     {
       "n": 2,
-      "text": "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit.",
+      "text": "D2: `cairn artifact quiet [-C <dir>] -- <cmd...>` takes door_lock for the git dir at <dir> (default cwd), runs the command, releases, and exits with its code.",
+      "writes_to": [
+        "cairn/tools/artifact/__main__.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/__main__.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: close.sh's two `git pull -q --rebase --autostash` run under `bin/cairn artifact quiet --`.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof builds a scratch git repo with a journal (prior entries, one uncommitted) and points the door at it with set_diagnostic_roots. Tooth 1: (a) a `quiet -- sh -c 'git stash push; sleep; git stash pop'` subprocess holds the lock while a door write starts; the write lands after the pop, with the record's bytes, its line once, verify_chain [] and the stash list empty; (b) a stash run on the journal's first open, ignoring the lock, makes the door raise JournalLineOrphaned and the entry stands in the park file; (c) a file replaced at the path between open and lock gets the line, once. Red on the old code. Tooth 2: a write with no rewrite adds exactly one line chained on the tail. PROVES names clauses 1 and 2; sealed in the same commit.",
       "writes_to": [
         "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
         "cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json"
@@ -44,13 +64,16 @@
   "bounds": {
     "in": [
       "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/__main__.py",
+      "cairn/devices/cc/scripts/close.sh",
       "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
       "cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json"
     ],
     "out": [
       "the journal merge driver (merge_journals)",
+      "the orchestrator's batch scripts (session scratchpad, not repo files; it wraps them in quiet itself)",
       "close.sh's silenced output",
-      "a verb that journals standing bytes (idea 2026-11-13-a-record-whose-bytes-landed-but-whose)",
+      "re-landing a parked entry: a verb that journals standing bytes (idea 2026-11-13-a-record-whose-bytes-landed-but-whose)",
       "every other component"
     ]
   },
@@ -59,6 +82,11 @@
       "when": "2026-11-13",
       "saw": "git stash replaced the journal's inode under an open a+ handle; the line written through the handle was missing from the journal at the path after the pop, while the state file kept its new bytes",
       "how": "scratch repro repro_inode.py (inode replaced: True; st: s1; journal: [base, earlier_uncommitted]), and the live f695fac922cd state.json at 418522b68877 with no journal line, inside the commons reflog's 16:29:58-16:30:28Z pull --rebase --autostash"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "re-landing the line in the file at the path mid-stash makes `git stash pop` refuse (local changes would be overwritten); the stash keeps the record's new bytes and the earlier lines, with or without the merge driver",
+      "how": "scratch repro repro_reland.py, both variants; the cast D1 was re-scoped on this measurement with the orchestrator's go"
     }
   ],
   "chart": {
