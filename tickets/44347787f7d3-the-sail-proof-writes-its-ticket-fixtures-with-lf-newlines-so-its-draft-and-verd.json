@@ -1,0 +1,209 @@
+{
+  "id": "44347787f7d3",
+  "title": "the sail proof writes its ticket fixtures with LF newlines, so its draft and verdict teeth run on Windows",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "test_sail_queues_the_ticket_at_codemothers_gates.py writes its ticket fixtures (plan and state, four sites) with newline='\n', so the bytes the door reads are LF on every OS and the draft and verdict teeth run on Windows.",
+  "why": "Measured 2026-11-12 on akiendell: the sail proof is 6/8 on Windows in both a CRLF and an LF-pinned checkout (draft and verdict teeth IllegalTransition), and 8/8 with newline='\\n' on the four fixture writes",
+  "traces_to": "Law 3: a proof that fails on a box for want of its own fixture's bytes measures the fixture, not the subject; Law 8: a proof has to pass where it is run to be trusted.",
+  "how": "Add newline='\n' to the four write_text calls that write json fixtures in the proof. Declare the two teeth under the new ticket in PROVES. No change to the door or the ticket serialiser.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "test_draft_writes_each_stage_without_claim_or_refs passes on Windows, where it failed IllegalTransition before"
+      },
+      {
+        "n": 2,
+        "claim": "test_verdict_drafts_every_criterion_and_queues_at_the_verdict_gate passes on Windows, where it failed IllegalTransition before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/sail.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+      "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "the sail proof is 6/8 on Windows in both a CRLF and an LF-pinned checkout (draft and verdict teeth IllegalTransition), and 8/8 with newline='\\n' on the four fixture writes",
+      "how": "ran the proof in two scratch clones, then patched the four write_text calls in the LF clone and re-ran it"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "the door writes bytes: artifact._atomic_write uses tmp.write_bytes; ticket_file.write_ticket goes through door.write; write_text without newline is only in test fixtures",
+      "how": "read artifact.py _atomic_write and ticket_file.py write_ticket; git grep over proofs: 1163 write_text calls in 298 files, 496 of them write_text(json.dumps(...)); production 50 calls"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "44347787f7d3: the sail proof writes its ticket fixtures with LF newlines, so its draft and verdict teeth run on Windows",
+      "intent": "test_sail_queues_the_ticket_at_codemothers_gates.py writes its plan and state fixtures with newline=\"\\n\", so the bytes the artifact door reads are LF on every OS and its draft and verdict teeth pass on Windows; the door and the ticket serialiser are unchanged.",
+      "scope": "the four fixture write_text calls in that one proof and its PROVES entry; the door, the ticket serialiser, the other 495 write_text(json.dumps) proof sites and the 50 production write_text calls are not changed",
+      "unknowns": [
+        "the 495 other proof fixtures of this shape are a census, not fixed here",
+        "the posix side was not run by me: on Linux newline=\"\\n\" changes nothing"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        ],
+        "out": [
+          "cairn/tools/artifact/artifact.py",
+          "cairn/tools/base/ticket_file.py",
+          "every other proof"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "whether the door's write path writes text or bytes",
+        "which fixture writes produce CRLF on Windows"
+      ],
+      "holdings": [
+        {
+          "what": "the artifact door's byte-exact write",
+          "address": "cairn/tools/artifact/artifact.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "LF newlines on the sail proof's fixture writes",
+          "measure": "the proof's draft and verdict teeth failed IllegalTransition on akiendell 2026-11-12 with CRLF fixtures, 6/8 in CRLF and LF-pinned checkouts"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "newline=\"\\n\" on the four fixture write_text calls, and a PROVES entry naming the two teeth",
+          "why": "the proof's own fixture, not the door, turned each newline into CRLF so the door's round-trip refused",
+          "kind": "build",
+          "fills": "LF newlines on the sail proof's fixture writes",
+          "uses": [
+            "cairn/tools/artifact/artifact.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "newline=\"\\n\" on the four fixture write_text calls, and a PROVES entry naming the two teeth",
+          "why_now": "built; proof red first (6/8 on Windows), green twice (8/8)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "newline=\"\\n\" on the four fixture write_text calls, and a PROVES entry naming the two teeth",
+          "expect": "all 8 teeth pass on Windows",
+          "falsifier": "the draft or verdict tooth still fails IllegalTransition on Windows",
+          "instrument": "python3 cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "all 8 teeth of the sail proof pass, the draft and verdict teeth included",
+          "instrument": "python3 cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+          "timeout_s": 300,
+          "covers": [
+            "newline=\"\\n\" on the four fixture write_text calls, and a PROVES entry naming the two teeth"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
