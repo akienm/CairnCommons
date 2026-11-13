@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked: the smallest fix at the named site is the plain fix; no smaller route.",
+      "hidden_assumption": "That the cause is the site grep found; the ticket's measured field says which part is hypothesis and the proof settles it.",
+      "prior_art": "In-house: tickets a9709b744bf5 (trace names) and 0156856b1fae (windows spawns) came from the same box; git grep over the named files found the sites. Field: none needed.",
+      "real_collision": "None found: no charter requires the current behaviour."
+    },
+    "exit": "routed_forward",
+    "falsifier": "on nt the tester starts a proof with CREATE_NO_WINDOW inside a job that carries KILL_ON_JOB_CLOSE, and closing the job ends every descendant ; on posix run_owned is subprocess.run with the same arguments, and the proof run is unchanged ; device.py has no subprocess.run left at the proof-run and exec sites; both go through run_owned ; kill_what_it_started on nt no longer answers that environments cannot be enumerated",
+    "from_idea": "2026-11-13-orchestrator-ask-2026-11-13-after-akien",
+    "how": "In cairn/devices/tester/runs.py add run_owned(argv, **kw): on posix it is subprocess.run unchanged; on nt it creates a job (ctypes kernel32) with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, starts the child with creationflags CREATE_NO_WINDOW, assigns it to the job at once, waits like subprocess.run (timeout kills the tree), then closes the job. kill_what_it_started on nt stops returning the 'cannot be enumerated' note and returns the job kill it did. cairn/devices/tester/device.py uses run_owned at the two subprocess.run sites that start a proof or an exec command. Red-first proof cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py: on any host it mocks the kernel32 calls and asserts the job limit, the assignment, the creationflags and that posix is untouched. The tooth that really spawns a grandchild on Windows is NOT written, because a proof that starts Windows processes waits on Q#92 (CAIRN_PROOF_MAY_SPAWN, Akien's); that tooth is Linux-only and the Windows result is a hand measurement with the leak table's before/after snapshot.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "title": "the tester runs a proof in a Windows job with no console, so a proof's scratch process dies with the run and opens no window",
+    "traces_to": "Law 3 (the leak was measured before it was fixed); Law 7 (the nt note in kill_what_it_started was an admission, now it is a kill); Law 4 (physics in the runner, not a rule each proof must remember); CP4.",
+    "what": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no window; the sites that spawn are not edited."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "found on akiendell only; reported by the orchestrator"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "1a8a96de630f",
+  "skill": "intent",
+  "title": "the tester runs a proof in a Windows job with no console, so a proof's scratch process dies with the run and opens no window",
+  "trace_id": "dd9a51e12363",
+  "when": "2026-11-13T11:28:21.731486"
+}

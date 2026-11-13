@@ -1,0 +1,77 @@
+{
+  "id": "715d2205a2ec",
+  "title": "the tester runs a proof in a Windows job with no console, so a proof's scratch process dies with the run and opens no window",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "On Windows the tester starts each proof in a job object that kills every descendant when the run ends, and with no console window, so a scratch process a proof starts dies with that proof and opens no window; the sites that spawn are not edited.",
+  "why": "Measured 2026-11-12 on akiendell: on Windows test_shim_starts_the_loop left two ground_loop python.exe running and never returned (90 minutes); batch 1 of ten other proofs left none",
+  "traces_to": "Law 3 (the leak was measured before it was fixed); Law 7 (the nt note in kill_what_it_started was an admission, now it is a kill); Law 4 (physics in the runner, not a rule each proof must remember); CP4.",
+  "how": "In cairn/devices/tester/runs.py add run_owned(argv, **kw): on posix it is subprocess.run unchanged; on nt it creates a job (ctypes kernel32) with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, starts the child with creationflags CREATE_NO_WINDOW, assigns it to the job at once, waits like subprocess.run (timeout kills the tree), then closes the job. kill_what_it_started on nt stops returning the 'cannot be enumerated' note and returns the job kill it did. cairn/devices/tester/device.py uses run_owned at the two subprocess.run sites that start a proof or an exec command. Red-first proof cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py: on any host it mocks the kernel32 calls and asserts the job limit, the assignment, the creationflags and that posix is untouched. The tooth that really spawns a grandchild on Windows is NOT written, because a proof that starts Windows processes waits on Q#92 (CAIRN_PROOF_MAY_SPAWN, Akien's); that tooth is Linux-only and the Windows result is a hand measurement with the leak table's before/after snapshot.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on nt the tester starts a proof with CREATE_NO_WINDOW inside a job that carries KILL_ON_JOB_CLOSE, and closing the job ends every descendant"
+      },
+      {
+        "n": 2,
+        "claim": "on posix run_owned is subprocess.run with the same arguments, and the proof run is unchanged"
+      },
+      {
+        "n": 3,
+        "claim": "device.py has no subprocess.run left at the proof-run and exec sites; both go through run_owned"
+      },
+      {
+        "n": 4,
+        "claim": "kill_what_it_started on nt no longer answers that environments cannot be enumerated"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/tester/runs.py, cairn/devices/tester/device.py",
+      "writes_to": [
+        "cairn/devices/tester/runs.py",
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/runs.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/runs.py",
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_a_windows_run_ends_what_it_started.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "on Windows test_shim_starts_the_loop left two ground_loop python.exe running and never returned (90 minutes); batch 1 of ten other proofs left none",
+      "how": "per-proof before/after process and conhost snapshots from a scratch script, one proof at a time"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "runs.kill_what_it_started returns 'none: process environments cannot be enumerated on Windows' on nt; device.py:726 and :970 call subprocess.run with no creationflags",
+      "how": "read cairn/devices/tester/runs.py and device.py"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "NOT measured: that a job object kills a ground_loop started with DETACHED_PROCESS|CREATE_NEW_PROCESS_GROUP (breakaway is off by default, so it should); the Windows run of the real spawn waits on Q#92",
+      "how": "hand measurement after the build"
+    }
+  ]
+}
