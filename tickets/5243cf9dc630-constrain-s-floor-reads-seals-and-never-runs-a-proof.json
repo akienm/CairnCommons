@@ -1,0 +1,91 @@
+{
+  "id": "5243cf9dc630",
+  "title": "constrain's floor reads seals and never runs a proof",
+  "owning_intention": "cairn/devices/codemother/machines/constrain/intention+why.json",
+  "intention": "constrain's floor reports each instrument's state from its seal (standing) and never runs a proof inside a chart stage, so a floor costs seconds and two firings over the same bytes agree, while a seal that moved rides out as an unknown naming the files that moved.",
+  "why": "Measured 2026-11-12 on akiendelllinux: b0e65cf8a77e's floor ran 55 of 62 tester proofs serially for 3389.8 s (18:36-19:32), one of them 1040.8 s. At e1d7881233e6 those 54 seals stood moved-closure and 7 proven, so the changed-subject filter was already in force. The runs came from tester/device.py moving 51 closures (fdcf52ae0, ticket 73caa3ab76f6, not resealed). Bounded parallel workers are floored at 1040.8 s, and they serialize at the tester's shim lock (device.py _handle_run runs run_proof synchronously; server.py _locked_hook holds one RLock per shim).",
+  "traces_to": "Law 1 (a seal already measured is not re-derived inside a chart stage); Law 3 (an unsealed proof is reported as unmeasured); outline 3.3.4.3.",
+  "how": "HELD FOR THE ORCHESTRATOR'S RULING before BUILDME (cast only, 2026-11-12). The choice, measured: neither offered option pays. (a) is already in force, and (b) needs a tester change (run off its shim lock), which is out of bounds, and is floored at the longest proof anyway. So _run_instrument reads standing(abs_path): proven is green (as today), and moved, red and never-sealed are reported with their standing state and no tester ask; for moved the how names the closure files whose bytes changed, and floor_packet carries each as an unknown. The tester ask, the run cache and its flock (070c5fc9624c) are deleted; d58e7887cc99's wait goes with them. Provenance: the floor becomes a pure function of the bytes and the seals, so measured_provenance reproduces it exactly. The collision to rule: test_chart_constrain.py's test_a_named_check_is_never_reported_unrun and test_one_red_check_does_not_blanket_the_report plant an UNSEALED failing proof and require 'red'; under this design it reads never-sealed (still not green, so their why holds), and the teeth would be rewritten to plant a sealed-red and a moved seal.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a proven seal reads green with no tester ask"
+      },
+      {
+        "n": 2,
+        "claim": "a moved, red or never-sealed instrument is reported with its standing state (moved naming the changed closure files), asks the tester zero times, and rides out of floor_packet as an unknown"
+      },
+      {
+        "n": 3,
+        "claim": "two firings over the same bytes give identical checks, and measured_provenance reproduces them"
+      },
+      {
+        "n": 4,
+        "claim": "the floor over cairn/devices/tester at e1d7881233e6 asks the tester zero times and finishes under 30 s"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _run_instrument reads standing and never asks the tester; the run cache and its flock are deleted.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/constrain/constrain.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/constrain/constrain.py",
+        "cairn/tools/base/validation.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause; clause 4 runs the floor over a worktree at e1d7881233e6.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: on the ruling, test_chart_constrain's two planted-proof teeth plant a sealed-red and a moved seal.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/constrain/constrain.py",
+      "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py",
+      "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+    ],
+    "out": [
+      "cairn/devices/tester (cc_0 holds it; its shim lock is the reason parallel runs do not pay)",
+      "cairn/tools/base/validation.py (read only)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "b0e65 floor: 62 entries, 55 run, 7 from seals, all green, 3389.8 s serial; longest 1040.8, 581.7, 277.8, 258.5, 241.7 s",
+      "how": "read ~/.cairn/devices/codemother/0/machines/constrain/run_cache on akiendelllinux (copies at the session scratchpad b0e65/rc)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "at e1d7881233e6: 54 seals moved-closure, 7 proven; tester/device.py moved 51 of them (fdcf52ae0), hollow.py 23, reseal.py 19, isolation.py 17",
+      "how": "standing() over each proof in a temp worktree at e1d7881233e6 on akiendelllinux"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "tester _handle_run calls run_proof synchronously; server.py wraps each shim's poke in one RLock",
+      "how": "read cairn/devices/tester/device.py:524 and cairn/devices/cairn/machines/bus/server.py _locked_hook"
+    }
+  ]
+}
