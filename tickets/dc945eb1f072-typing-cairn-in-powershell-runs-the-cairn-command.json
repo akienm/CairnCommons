@@ -58,5 +58,163 @@
       "saw": "From PowerShell on akiendell, Get-Command cairn -All lists bin\\cairn.cmd first and the extensionless bin\\cairn second; (Get-Command cairn).Source is bin\\cairn.cmd, in this session and in a fresh powershell -NoProfile. PATHEXT carries .CMD and bin is on PATH. The ticket's HYPOTHESIS that PowerShell does not reach the .cmd is FALSIFIED. The source of the observed SyntaxError is UNKNOWN (possibly a direct ./bin/cairn or python bin/cairn). Clause 2 (a read-only verb exits 0, same first line as Git Bash) is UNMEASURED: running cairn executes bin/cairn, whose lazy-init spawns windows and waits on Akien's word.",
       "how": "Get-Command cairn -All; (Get-Command cairn).Source; powershell -NoProfile -Command (Get-Command cairn).Source; $env:PATHEXT; bin/cairn.cmd read, not run"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "dc945eb1f072: from PowerShell on Windows, cairn reaches bin/cairn through cairn.cmd and prints what the shell-side command prints",
+      "intent": "A proof pins that PATHEXT resolution over bin/ picks cairn.cmd, and that a read-only verb through cairn.cmd exits 0 with the same first line as Git Bash; bin/cairn.cmd itself needs no change.",
+      "scope": "bin/cairn.cmd is read, not written; one new proof under bin/proofs; every other component is out",
+      "unknowns": [
+        "tooth 2 SPAWNS windows and is red unless CAIRN_PROOF_MAY_SPAWN=1: clause 2 is UNMEASURED until Akien gives the windows word, the same word bce4 waits on",
+        "the ticket's hypothesis that PowerShell does not reach the .cmd was falsified by Get-Command cairn -All; the source of the earlier SyntaxError is UNKNOWN",
+        "the posix side was not run: tooth 1 is Windows-only and says UNRAN elsewhere"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/proofs/test_cairn_resolves_from_powershell.py"
+        ],
+        "out": [
+          "every other component",
+          "bin/cairn.cmd"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how PowerShell resolves cairn",
+        "the existing shim",
+        "the existing bin proofs' shape"
+      ],
+      "holdings": [
+        {
+          "what": "the Windows shim cairn.cmd",
+          "address": "bin/cairn.cmd"
+        },
+        {
+          "what": "the extensionless dispatcher",
+          "address": "bin/cairn"
+        },
+        {
+          "what": "bash_script_argv, the Windows script runner",
+          "address": "cairn/tools/base/script_argv.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof that cairn resolves to cairn.cmd from PowerShell",
+          "measure": "ls bin/proofs/test_cairn_resolves_from_powershell.py answered no such file (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a two-tooth proof: PATHEXT resolution with a scratch self-check, and a windows-word-gated read-only verb comparison",
+          "why": "the ticket's hypothesis was falsified, so the behaviour held and nothing pinned it",
+          "kind": "build",
+          "fills": "a proof that cairn resolves to cairn.cmd from PowerShell",
+          "uses": [
+            "bin/cairn.cmd",
+            "bin/cairn",
+            "cairn/tools/base/script_argv.py"
+          ],
+          "writes_to": [
+            "bin/proofs/test_cairn_resolves_from_powershell.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a two-tooth proof: PATHEXT resolution with a scratch self-check, and a windows-word-gated read-only verb comparison",
+          "why_now": "built locally; tooth 1 green twice, tooth 2 red by design until the windows word"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a two-tooth proof: PATHEXT resolution with a scratch self-check, and a windows-word-gated read-only verb comparison",
+          "expect": "tooth 1 green twice; tooth 2 green only with CAIRN_PROOF_MAY_SPAWN=1",
+          "falsifier": "bin/ resolves cairn to anything but cairn.cmd, or a lone extensionless script resolves, or the read-only verb's rc or first line differs from Git Bash",
+          "instrument": "bin/cairn test bin/proofs/test_cairn_resolves_from_powershell.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_cairn_resolves_from_powershell.py is green (tooth 2 needs CAIRN_PROOF_MAY_SPAWN=1, Akien's windows word)",
+          "instrument": "bin/cairn test bin/proofs/test_cairn_resolves_from_powershell.py",
+          "timeout_s": 900,
+          "covers": [
+            "a two-tooth proof: PATHEXT resolution with a scratch self-check, and a windows-word-gated read-only verb comparison"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
