@@ -1,0 +1,210 @@
+{
+  "id": "8b171277190c",
+  "title": "sail's chart call waits as long as a gate's answer can take, not 120 seconds",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "sail.py's chart call waits as long as a gate's answer can take: one CHART_TIMEOUT_S (890 s, below the bus socket's 900 s) with a why-comment beside the other timeouts, passed to Ticket.chart; clearance keeps GATE_TIMEOUT_S.",
+  "why": "Measured 2026-11-12 on akiendell: sail.py:140 chart passes timeout=GATE_TIMEOUT_S (120.0); the tester chart's constrain gate ran many minutes and sail gave up at 120 s while codemother kept going",
+  "traces_to": "Law 7: a gate that is still running must not be reported as refused by a caller that stopped listening; Law 1: a measured answer (the gate can take minutes) becomes structure, not a retry.",
+  "how": "Add CHART_TIMEOUT_S = 890.0 beside VERDICT_TIMEOUT_S with the why (the constrain gate runs every proof of the component as instruments), and pass it in chart(). Proof: load sail by path, patch its _ticket to a stub whose chart() records the timeout it is handed, call chart(), assert the recorded timeout is CHART_TIMEOUT_S and at least 890; no live bus.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "chart() hands Ticket.chart the long timeout (CHART_TIMEOUT_S, 890 s), not GATE_TIMEOUT_S"
+      },
+      {
+        "n": 2,
+        "claim": "cross() still hands clearance GATE_TIMEOUT_S"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/cc/scripts/sail.py",
+      "writes_to": [
+        "cairn/devices/cc/scripts/sail.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/sail.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_a_chart_waits_as_long_as_a_gate_can_take.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/sail.py",
+      "cairn/devices/cc/proofs/test_a_chart_waits_as_long_as_a_gate_can_take.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "sail.py:140 chart passes timeout=GATE_TIMEOUT_S (120.0); the tester chart's constrain gate ran many minutes and sail gave up at 120 s while codemother kept going",
+      "how": "orchestrator read sail.py and the 18:3x-19:0x tester chart on its box; I read sail.py lines 48-50 and 137-140 here"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "8b171277190c: sail's chart call waits as long as a gate's answer can take, not 120 seconds",
+      "intent": "sail.py chart() hands Ticket.chart CHART_TIMEOUT_S (890 s, below the bus socket's 900 s) instead of GATE_TIMEOUT_S, so a chart whose constrain gate runs every proof is not abandoned at 120 s; clearance keeps 120 s.",
+      "scope": "cairn/devices/cc/scripts/sail.py chart() and its proof; clearance's timeout, the verdict's, and the bus socket are not changed",
+      "unknowns": [
+        "whether clearance's 120 s is ever too short is unmeasured; left alone as ruled",
+        "the posix side was not run by me; the proof drives a stub, no OS-specific code"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/scripts/sail.py",
+          "cairn/devices/cc/proofs/test_a_chart_waits_as_long_as_a_gate_can_take.py"
+        ],
+        "out": [
+          "clearance's GATE_TIMEOUT_S",
+          "cairn/tools/bus_client/remote.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where chart() takes its timeout",
+        "how the verdict's long timeout is stated"
+      ],
+      "holdings": [
+        {
+          "what": "sail.py's chart and its timeouts",
+          "address": "cairn/devices/cc/scripts/sail.py"
+        },
+        {
+          "what": "the sail proof's recording-bus pattern",
+          "address": "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a chart wait as long as a gate's answer can take",
+          "measure": "sail.py chart() passed GATE_TIMEOUT_S = 120.0 to Ticket.chart; the tester chart's constrain gate ran many minutes (orchestrator, 2026-11-12)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "chart() passes a new CHART_TIMEOUT_S = 890.0 with a why-comment",
+          "why": "a gate that runs every proof can outlast 120 s and the caller abandoned it",
+          "kind": "build",
+          "fills": "a chart wait as long as a gate's answer can take",
+          "uses": [
+            "cairn/devices/cc/scripts/sail.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/sail.py",
+            "cairn/devices/cc/proofs/test_a_chart_waits_as_long_as_a_gate_can_take.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "chart() passes a new CHART_TIMEOUT_S = 890.0 with a why-comment",
+          "why_now": "built; proof red first (chart handed 120.0), green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "chart() passes a new CHART_TIMEOUT_S = 890.0 with a why-comment",
+          "expect": "chart hands 890.0; clearance still 120.0",
+          "falsifier": "chart hands GATE_TIMEOUT_S, or clearance's timeout moves",
+          "instrument": "python3 cairn/devices/cc/proofs/test_a_chart_waits_as_long_as_a_gate_can_take.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the chart-timeout proof pass",
+          "instrument": "python3 cairn/devices/cc/proofs/test_a_chart_waits_as_long_as_a_gate_can_take.py",
+          "timeout_s": 300,
+          "covers": [
+            "chart() passes a new CHART_TIMEOUT_S = 890.0 with a why-comment"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
