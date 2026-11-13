@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Revert the rider for in-process handlers. That removes the bound 4d597cac9f5d exists for; the floor's ask is the one that legitimately runs long, so the floor names its own wait. Looked; this is it.",
+      "hidden_assumption": "That a tester run never legitimately exceeds 3600 s. Measured: the longest b0e65 run was 1040.8 s, and the longest tester/run on the home bus 1384 s.",
+      "prior_art": "0bcb816d6e9c added STAGE_BUDGET_S for the ticket's own wait past a stage's reply; this reuses it. The floor-cost ticket (cast only, pending) will cut how many proofs run; it does not change how long one may run.",
+      "real_collision": "None. The stage itself already runs off her lock (e4714e460e32), so waiting longer holds no shim lock."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when a scaled 200 s tester run comes back green through _ask_once, the timeout constrain asks with is ticket.STAGE_BUDGET_S read at call time, and a run past the budget still comes back unrunnable. Wrong intent if the floor should not wait for long proofs at all (that is the floor-cost ticket's question, not this one's).",
+    "from_idea": "none, because the orchestrator ruled it (ii) from the asker census cast on ticket 4d597cac9f5d (CairnCommons/tickets/4d597cac9f5d-bus-request-s-timeout-bounds-a-synchronous-in-process-handler.json)",
+    "how": "_ask_tester imports STAGE_BUDGET_S at call time and passes it as the request's timeout in place of the literal 180. A red-first proof stubs the tester on a scratch bus and scales every requested timeout by 0.001, so a 200 s run (0.2 s) is unrunnable on 7ae315843 and green after the fix, while a run past the budget still comes back unrunnable.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 (an unrunnable verdict is a record and must not claim a fault for a proof that ran green); Law 1 (one budget, imported, not a second copy); outline 3.3.4.3.",
+    "what": "constrain's floor waits for the tester's run verb up to the stage's budget (STAGE_BUDGET_S, imported from cairn/machines/ticket/ticket.py), so a tester proof that runs longer than 180 s reads as its own verdict, not as unrunnable, now that bus.request's timeout bounds an in-process handler."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "After 4d597cac9f5d bus.request bounds in-process handlers, so constrain's 180 s ask would turn every tester proof over 3 minutes (5 of b0e65's 55, up to 1040.8 s) into unrunnable. It now waits the stage budget. A census of every other asker found none that needs the same change."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "d0424d06c05f",
+  "skill": "intent",
+  "title": "constrain's floor waits for the tester's run verb up to the stage's budget (STAGE_BUDGET_S, imported from cairn/machines",
+  "trace_id": "7c711828a172",
+  "when": "2026-11-12T19:56:51.470022"
+}

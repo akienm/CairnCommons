@@ -1,0 +1,77 @@
+{
+  "id": "d58e7887cc99",
+  "title": "constrain's floor waits the stage budget for the tester",
+  "owning_intention": "cairn/devices/codemother/machines/constrain/intention+why.json",
+  "intention": "constrain's floor waits for the tester's run verb up to the stage's budget (STAGE_BUDGET_S, imported from cairn/machines/ticket/ticket.py), so a tester proof that runs longer than 180 s reads as its own verdict, not as unrunnable.",
+  "why": "4d597cac9f5d (7ae315843) makes bus.request's timeout bound an in-process handler. constrain asks the tester's run verb with timeout=180, and the tester's handler runs inside the bus process, so each proof over 180 s now raises TimeoutError and the floor records unrunnable. Measured 2026-11-12 on akiendelllinux: b0e65cf8a77e's floor ran 5 of 55 proofs over 180 s, the longest 1040.8 s.",
+  "traces_to": "Law 7 (an unrunnable verdict is a record and must not claim a fault for a proof that ran green); Law 1 (one budget, imported, not copied); outline 3.3.4.3.",
+  "how": "Orchestrator's ruling 2026-11-12, option (ii): _ask_tester imports STAGE_BUDGET_S from cairn.machines.ticket.ticket at call time and passes it as the request's timeout, in place of the literal 180. The proof runs a stub 'tester' on a scratch bus (wire_delivery, a reply by reply_to carrying body.record), patches bus_client.reach to a wrapper that scales every requested timeout by 0.001, and drives constrain._ask_once. It is red first against 7ae315843. Census of every other non-proof asker the rider now bounds, all fine: (a) inference_domain resolve, 30 s default, p99 1 s, the 3 over 30 s were one event on 2026-10-02; (b) codemother feedback (sail/reflection.py) and drain (skills/chart/live.py), 30 s default, handlers fast, the over-30 s cases (feedback 363 s, drain 77 s) were queueing behind a chart stage on her shim lock, which e4714e460e32 removes; (c) inference_domain infer, watch.py 60 s, max 29 s; (d) sail.py chart and verdict at 890 s and live.py at 120 s, answered at once by deferred gates (e4714e460e32) and settled by 0bcb816d6e9c; (e) tester's sealed is a post, not a request; the codemother commit verb has had no sender since f2b0d8105; (f) the get, calls, metrics, notices and notice-seen askers have max 7 s or less.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a stub tester run slower than the old 180 s, with timeouts scaled by 0.001, comes back from _ask_once as the tester's green; on 7ae315843 it comes back unrunnable"
+      },
+      {
+        "n": 2,
+        "claim": "the timeout constrain asks with is ticket.STAGE_BUDGET_S read at call time: patched to 1234.0, the ask carries 1234.0"
+      },
+      {
+        "n": 3,
+        "claim": "a run past the scaled stage budget still comes back unrunnable, naming TimeoutError"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _ask_tester's timeout is STAGE_BUDGET_S, imported at call time.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/constrain/constrain.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/constrain/constrain.py",
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, over a scratch bus with a stub tester and scaled timeouts.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_waits_the_stage_budget_for_the_tester.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/constrain/constrain.py",
+      "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_waits_the_stage_budget_for_the_tester.py"
+    ],
+    "out": [
+      "cairn/devices/tester (cc_0 holds it)",
+      "cairn/devices/cairn/machines/bus (4d597cac9f5d)",
+      "cairn/machines/ticket (read only)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "b0e65's floor: 55 tester runs, 5 over 180 s (1040.8, 581.7, 277.8, 258.5, 241.7 s)",
+      "how": "read ~/.cairn/devices/codemother/0/machines/constrain/run_cache on akiendelllinux"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "home bus request-to-reply since 2026-10-01: tester/run max 1384 s; inference_domain resolve p99 1 s, 3 over 30 s all on 2026-10-02; codemother feedback max 363 s and drain max 77 s, the feedback cases all inside a constrain queueme hold 16:41-16:53",
+      "how": "psql bus_traffic self-join on reply_to, on akiendelllinux"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "_ask_tester asks with timeout=180; no other non-proof asker targets tester/run",
+      "how": "grep -rn 'request(' over cairn, skills, bin excluding proofs"
+    }
+  ]
+}

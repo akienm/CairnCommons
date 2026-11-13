@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each read or measured. (1) Read constrain.py _ask_tester: reach('tester').request(..., verb='run', timeout=180); _ask_once turns any exception into verdict unrunnable. (2) Read bus.py at 7ae315843: request() now raises TimeoutError at the deadline even when the handler runs in-process. (3) Measured: b0e65's floor ran 5 of 55 proofs over 180 s, the longest 1040.8 s; the longest tester/run on the home bus was 1384 s. (4) STAGE_BUDGET_S = 3600.0 is in cairn/machines/ticket/ticket.py, which imports nothing from codemother, so importing it at call time is cycle-free.",
+    "builder_check": "A builder needs: the one line (constrain.py _ask_tester timeout), a call-time import so the proof can patch it, and the rig (scratch bus, a 'tester' handler wired by wire_delivery that replies by reply_to with body.record, bus_client.reach patched to a wrapper that scales timeout). All are in the ticket's how.",
+    "children": "none, because it is one line and one proof; see cairn/devices/codemother/machines/constrain/constrain.py",
+    "collision_check": "4d597cac9f5d bounds the bus wait; this sizes the one asker whose handler legitimately runs long. 0bcb816d6e9c owns STAGE_BUDGET_S; this only reads it. Distinctions, not collisions.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) a stub tester run slower than the old 180 s, with timeouts scaled by 0.001, comes back from _ask_once as the tester's green, and is unrunnable on 7ae315843; (2) the timeout constrain asks with is ticket.STAGE_BUDGET_S read at call time (patched to 1234.0, the ask carries 1234.0); (3) a run past the scaled budget still comes back unrunnable naming TimeoutError. Horizon: PROVEME of this ticket.",
+    "gates_bound": "code-seam prove_gate: one proof under cairn/devices/codemother/machines/constrain/proofs/, one tooth per clause, red first on 7ae315843. Feeds back to origin through FIXME (Laws 3 and 8).",
+    "missing_check": "Wrapped. The census of every other non-proof asker is recorded on the ticket's measured field, and none needs the change. The floor's cost (how many proofs run) belongs to a separate cast-only ticket.",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator ruled it 2026-11-12 (option ii); see cairn/devices/codemother/machines/constrain/intention+why.json",
+    "task_or_ticket": "ticket",
+    "title": "constrain's floor waits the stage budget for the tester",
+    "watchme": "none, because its proof (to be written beside cairn/devices/codemother/machines/constrain/intention+why.json) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "constrain's tester ask now waits STAGE_BUDGET_S, so the rider's bound no longer turns a proof longer than 3 minutes into unrunnable."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "d46869b3b93f",
+  "skill": "sorted",
+  "title": "constrain's floor waits the stage budget for the tester",
+  "trace_id": "7aff79d2be50",
+  "when": "2026-11-12T19:57:08.471559"
+}
