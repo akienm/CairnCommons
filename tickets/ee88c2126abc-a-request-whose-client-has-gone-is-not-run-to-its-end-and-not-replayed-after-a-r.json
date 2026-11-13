@@ -80,5 +80,167 @@
       "saw": "request()'s deadline adds the id to _abandoned, which receipts a late reply only; the request envelope stays in _pending for delivery",
       "how": "read cairn/devices/cairn/machines/bus/bus.py request() and the _abandoned comment, ticket cd2d27fe3261"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "ee88c2126abc: a request whose client has gone is not run, and not replayed after a restart (cairn/devices/cairn/machines/bus/bus.py, cairn/devices/cairn/machines/bus/server.py)",
+      "intent": "The bus refuses before delivery any request whose asker has gone (deadline reached, client socket closed, or handed over at a stop), receipting it bus-asker-gave-up; a handler already running is not cancelled.",
+      "scope": "cairn/devices/cairn/machines/bus/bus.py, cairn/devices/cairn/machines/bus/server.py and cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py only",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Answer to open-98ebd82e7a02: refuse before delivery only; no cooperative cancel",
+          "source": "CairnCommons/questions/open-98ebd82e7a02.json",
+          "kind": "law"
+        },
+        {
+          "text": "Law 7: the record of truth says why nobody took it (bus-asker-gave-up receipt)",
+          "source": "cairn/devices/cairn/machines/bus/bus.py",
+          "kind": "law"
+        },
+        {
+          "text": "Law 8: each tooth counts what a fixture device took, with a plain mail behind the same lock taken, so a vacuous drain reds",
+          "source": "cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/bus/bus.py",
+          "cairn/devices/cairn/machines/bus/server.py",
+          "cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py"
+        ],
+        "out": [
+          "cairn/tools/base/shim.py (composed, not changed)",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which path every delivery reads through",
+        "how the server can see a client gone"
+      ],
+      "holdings": [
+        {
+          "what": "_abandoned / take_over_asks / hand_over_asks",
+          "address": "cairn/devices/cairn/machines/bus/bus.py"
+        },
+        {
+          "what": "set_while_waiting, _serve_held, _holding",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "_check_mail drains through bus.undelivered(to=device)",
+          "address": "cairn/tools/base/shim.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a gate refusing a gone asker's request before delivery",
+          "measure": "2026-11-12: queued codemother gate requests ran after their askers left; the next bus replayed handed-over asks (idea 7306eaa10907)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the given-up gate in undelivered() and the closed-client check in the request wait",
+          "why": "a gone asker's request still runs and wedges the gate behind it",
+          "kind": "build",
+          "fills": "a gate refusing a gone asker's request before delivery",
+          "uses": [
+            "cairn/devices/cairn/machines/bus/bus.py",
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/tools/base/shim.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/bus/bus.py",
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the given-up gate in undelivered() and the closed-client check in the request wait",
+          "why_now": "the wedge left the home bus serial behind dead requests"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the given-up gate in undelivered() and the closed-client check in the request wait",
+          "expect": "3 teeth green twice; bus proofs 30/30",
+          "falsifier": "a gone asker's request is taken by the device, or its receipt is not bus-asker-gave-up",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-3 hold at the bus",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py",
+          "timeout_s": 300,
+          "covers": [
+            "the given-up gate in undelivered() and the closed-client check in the request wait"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
