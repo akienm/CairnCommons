@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: (a) the park at orphan_park(root) holds whole entries as _append wrote them (path, verb, why, sha_before, sha_after, caller, stack, prev, entry) \u2014 true by 0f8aefbba1d0's code; (b) a parked entry's sha_before equal to the journal's last sha_after for its path, with the record standing at its sha_after, means no write landed between \u2014 any door write moves the last sha_after, and a write around the door makes the standing bytes differ; (c) _append raising JournalLineOrphaned during reland appends to the park itself, so reland rewrites the park as what it kept plus every line beyond what it read, never by blind overwrite.",
+    "builder_check": "A builder needs: the file cairn/tools/artifact/artifact.py \u2014 reland(name, *, why) -> dict beside orphan_park (line ~459) using roots()[name], door_lock, read_journal, last_sha, _sha, _append, caller(); returns {'relanded': [ids], 'kept': [{'entry','path','reason'}], 'dropped': [ids already landed]}. The park write is a plain atomic write (it is under the git dir, not a record): temp file + os.replace. In cairn/tools/artifact/__main__.py a `reland` subparser (root, --why required), printing the result as JSON and exiting 1 when kept is non-empty. The proof: copy the scratch-git world from test_a_journal_line_survives_a_git_rewrite.py (set_diagnostic_roots, a commons-shaped repo), produce a real parked entry by shape (b) (_MidAppend stashing mid-append), pop, then call reland; for clause 2 write the record again through the door before reland (journal moves on) and separately overwrite it around the door; for clause 3 run reland twice. All named in the decisions.",
+    "children": "none, because this is one function, one verb and one proof",
+    "collision_check": "0f8aefbba1d0 names the re-land as a later act in its bounds.out: this is that act, a distinction not a collision. hand-edit (park_hand_edit/approve) is a different lane \u2014 bytes written around the door wait for Akien; a parked line is a door write whose bytes and why were already judged by the door, so its re-land needs no approval. genesis journals never-journaled records only.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clause 1: a parked entry whose record stands at its sha_after and whose sha_before is the journal's last for its path is appended once, chained (verify_chain []), check_staged passes for the record, and the park is empty. Clause 2: a parked entry whose record moved on, or whose sha_before is not the journal's last for its path, stays parked, is named in the output, the journal is unchanged, and the verb exits 1. Clause 3: reland over an empty park, or over a parked entry already landed, appends nothing and leaves the park empty. Red on a73b82545: no reland verb exists. Horizon: PROVED.",
+    "gates_bound": "code-seam gate-set: tester-sealed proof with a hollow reading (Law 8), red-first on a73b82545; build_inspector over the artifact tool at PROVED; FIXME on a red.",
+    "missing_check": "Wrapped: the guard (sha_before vs journal last, sha_after vs standing bytes), the idempotence (an entry whose id stands as entry or relanded_from is dropped without appending), entries re-landed in park order so two lines for one path chain, the copy carrying relanded_from / relanded_why / relanded_by (caller()), the park rewritten atomically under door_lock, the CLI verb with exit 1 when anything stays parked and every kept entry named with its reason. Out: a verb journaling standing bytes with no park entry (no live producer since 0f8aefbba1d0; hand edits have their lane), and wiring reland into close.sh or the batches (the orchestrator's own scripts).",
+    "node_class": "code-seam",
+    "questions": "none, because the park shape is fixed by cairn/tools/artifact/artifact.py _append (ticket 0f8aefbba1d0) and the scope was set by the orchestrator's order",
+    "task_or_ticket": "ticket",
+    "title": "a parked journal line is re-landed through the door, chained, only over the bytes it describes",
+    "watchme": "none, because the proof replays the measured park beside the door it repairs, cairn/tools/artifact/proofs/, and the pre-commit `cairn artifact check` reds any record whose line was not re-landed",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The re-land keeps the original writer's caller and why on the line and adds relanded_by, so the journal still says who wrote the bytes, not who repaired the line."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "27d5dd32f014",
+  "skill": "sorted",
+  "title": "a parked journal line is re-landed through the door, chained, only over the bytes it describes",
+  "trace_id": "8c5b1e5a6b52",
+  "when": "2026-11-13T10:20:31.710488"
+}

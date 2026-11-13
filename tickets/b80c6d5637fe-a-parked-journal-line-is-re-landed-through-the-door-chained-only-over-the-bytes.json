@@ -1,0 +1,84 @@
+{
+  "id": "b80c6d5637fe",
+  "title": "a parked journal line is re-landed through the door, chained, only over the bytes it describes",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "`cairn artifact reland <root> --why` re-lands every journal entry the door parked when git replaced the journal under its append: each is appended once, chained on the journal's tail, keeping its writer's caller and why, and only when the record still stands at the bytes the entry describes; anything else stays parked and is named.",
+  "why": "Since 0f8aefbba1d0 the door parks a line git replaced under it, in <git dir>/cairn-orphaned-lines.jsonl, and names the re-land as a later act. Measured 2026-11-13: f695fac922cd's lost PROVEME line could only be repaired by a scratch script calling artifact._entry/_append by hand (restore_f695_entry.py); until a verb exists, every parked line is a commit blocked with 'changed around the door' or a repair written around the door.",
+  "traces_to": "Law 7: errors are permanent in records of truth, and the journal is the record of who wrote every record. Law 1: the repair is one command, not re-derived each time.",
+  "how": "artifact.py gains reland(name, *, why): under door_lock it reads the park and the journal; per parked entry, in order: already landed (its id stands as an entry or a relanded_from) -> dropped; journal's last sha_after for its path == its sha_before and the record's standing bytes hash to its sha_after -> a copy with relanded_from/relanded_why/relanded_by goes through _append; else kept with its reason. The park is rewritten atomically to what was kept plus any line parked during the run. __main__.py adds `reland`, printing the result and exiting 1 when anything is kept.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a parked entry whose record stands at its sha_after and whose sha_before is the journal's last for its path is appended once, chained, verify_chain clean, check_staged passing for the record, and the park emptied"
+      },
+      {
+        "n": 2,
+        "claim": "a parked entry whose record moved on, or whose sha_before is not the journal's last for its path, stays parked and is named, the journal is unchanged, and the verb exits 1"
+      },
+      {
+        "n": 3,
+        "claim": "reland over an empty park, or over a parked entry already landed, appends nothing and leaves the park empty"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: artifact.py gains reland(name, *, why) -> {'relanded': [new entry ids], 'dropped': [parked ids already landed], 'kept': [{'entry', 'path', 'reason'}]}, beside orphan_park. Under door_lock(root): read the park (absent -> nothing to do), read_journal; for each parked entry in park order: if its id equals some journal entry's entry or relanded_from -> dropped; elif last_sha(journal, path) == sha_before and _sha(standing bytes or None) == sha_after -> copy less prev/entry, plus relanded_from (its id), relanded_why (why), relanded_by (caller()), through _append, and the journal list grows by it; else kept with the reason naming both shas. A JournalLineOrphaned from _append keeps that entry and the rest. The park is rewritten (temp + os.replace, or removed when empty) to the kept entries plus every park line beyond the ones read. A blank why is refused. The docstring names this ticket.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: `cairn artifact reland <root> --why '<why>'` (root a root name or its toplevel path, as check takes) calls reland, prints the result as JSON, and exits 1 when kept is non-empty, 0 otherwise.",
+      "writes_to": [
+        "cairn/tools/artifact/__main__.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/__main__.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof builds the scratch-git commons world of test_a_journal_line_survives_a_git_rewrite.py and parks a real entry by its shape (b) (a stash mid-append, then the pop). Tooth 1: reland appends it once, chained, verify_chain [], check_staged [] after staging the record, park empty, the line keeping the original why and caller and naming relanded_from. Tooth 2: (a) the record written again through the door before reland, (b) the record overwritten around the door: each keeps the entry parked, named, the journal unchanged, and the CLI exits 1. Tooth 3: reland twice — the second appends nothing; a park whose entry already stands is emptied without appending. Red on a73b82545 (no reland). PROVES names clauses 1-3; sealed in the same commit.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_parked_line_is_relanded_through_the_door.py",
+        "cairn/tools/artifact/validations/test_a_parked_line_is_relanded_through_the_door.json"
+      ],
+      "reads": [
+        "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/__main__.py",
+      "cairn/tools/artifact/proofs/test_a_parked_line_is_relanded_through_the_door.py",
+      "cairn/tools/artifact/validations/test_a_parked_line_is_relanded_through_the_door.json"
+    ],
+    "out": [
+      "journaling standing bytes with no parked entry (no live producer since 0f8aefbba1d0; hand edits have their own lane)",
+      "calling reland from close.sh or the orchestrator's batch scripts",
+      "the journal merge driver",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "f695fac922cd's state.json bytes landed but its PROVEME journal line was lost; the door returned unchanged:true for the standing bytes, so the repair needed a scratch script calling artifact._entry/_append by hand",
+      "how": "restore_f695_entry.py in the session scratchpad, and idea 2026-11-13-a-record-whose-bytes-landed-but-whose"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "0f8aefbba1d0's door parks the lost entry at <git dir>/cairn-orphaned-lines.jsonl and leaves the re-land as a later act; no verb reads the park",
+      "how": "grep orphan_park cairn/tools/artifact/ at a73b82545: only _append and the 0f8a proof read it"
+    }
+  ]
+}
