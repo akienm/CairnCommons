@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each read or measured. (1) Read cairn/devices/cairn/machines/bus/bus.py:505-545: request() calls post(); in process the poke chain runs the target's handler inside post(), and the deadline is set only after post() returns. So a synchronous handler's run is never bounded. (2) Measured 2026-11-12 on akiendelllinux: constrain's reach('tester').request(..., timeout=180) at constrain.py:328, run in the bus process, returned a 581.7 s run green (run_cache census, n=44, max 581.7 s). (3) Read test_a_reply_after_its_asker_gave_up_is_receipted.py and ticket ee88c2126abc: a late reply after a timeout that did fire is already handled.",
+    "builder_check": "A builder cannot start today: they need the design pass's mechanism and its caller census. The how says so. Everything else is in the ticket: the line numbers, the measured run, the proof's address, and the sibling proof for late replies.",
+    "children": "none, because the design pass decides whether the caller census splits it; see cairn/devices/cairn/machines/bus/intention+why.json",
+    "collision_check": "bus.py request's docstring says the reply lands in the ring by the time post() returns: that describes the mechanism, and the same docstring promises 'LOUD on timeout (CP1)', which this restores. Bus decision 8 (one lock per shim) is untouched. ee88c2126abc and 2b0630f07651 handle an asker that left; this handles the timeout firing. Distinctions, not collisions.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) an in-process request to a verb whose handler runs past the timeout raises TimeoutError within timeout + 1 s; (2) a handler that finishes inside the timeout still returns its reply to the asker; (3) the slow handler still runs to its end, and its late reply is receipted as an abandoned ask's, never delivered as fresh mail. Horizon: PROVEME after the design pass.",
+    "gates_bound": "code-seam prove_gate: a proof under cairn/devices/cairn/machines/bus/proofs/, one tooth per clause, red-first on today's request. Feeds back to origin through FIXME (Laws 3 and 8).",
+    "missing_check": "Not wrapped, by the orchestrator's design: the mechanism (post() on a worker joined with the timeout, versus handing the poke chain for an asked envelope off the asker's thread) and the caller census (which callers today rely on an unbounded in-process request) are the design pass's. The orchestrator ruled cast-only, its builder picked after e4714e460e32 lands. The falsifier is still writable because it measures the outcome.",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator holds the design pass and picks the builder after e4714e460e32 lands; see cairn/devices/cairn/machines/bus/intention+why.json",
+    "task_or_ticket": "ticket",
+    "title": "bus.request's timeout bounds a synchronous in-process handler",
+    "watchme": "none, because its proof (to be written beside cairn/devices/cairn/machines/bus/intention+why.json) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "In process, bus.request's timeout bounds nothing, because the handler runs inside post() before the deadline starts: 581.7 s answered under timeout=180. e4714e460e32 removes the slowest such handler, but the door still promises a bound it does not keep."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "b97ac98703cc",
+  "skill": "sorted",
+  "title": "bus.request's timeout bounds a synchronous in-process handler",
+  "trace_id": "d22efe96184b",
+  "when": "2026-11-12T19:29:33.181004"
+}

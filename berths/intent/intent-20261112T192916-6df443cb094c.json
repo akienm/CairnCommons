@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Fix every slow handler instead (e4714e460e32 does this for codemother's gates). That is per handler and the next slow verb repeats it, so the bound belongs at the one door. Looked; this is the smaller lasting change, though e4714 lowers its urgency, which is why the orchestrator holds the build.",
+      "hidden_assumption": "That no caller depends on in-process request being unbounded. Constrain's 180 s tester ask returned 581.7 s green, so a bounded request would have turned that run into a not-run reading. The census of callers whose handlers outlast their timeout is the design pass's first step.",
+      "prior_art": "ee88c2126abc (an asker that left is held as abandoned) and 2b0630f07651 (a gone client's request is not run to its end) handle the asker leaving, not the timeout firing. c2036433beaf and 445e66f32ba0 keep a poke from waiting on another shim's lock. test_a_reply_after_its_asker_gave_up_is_receipted.py covers a reply after a timeout that did fire. Nothing makes the timeout fire in process.",
+      "real_collision": "bus.py request's docstring says the reply 'lands in the ring by the time post() returns' in process. That describes the mechanism, not a ruled contract, and the same docstring promises LOUD on timeout. This is a distinction to record. Bus decision 8, one lock per shim, is untouched."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when an in-process request to a handler that runs past the timeout raises TimeoutError within timeout + 1 s, a handler finishing inside the timeout still returns its reply, and the slow handler still runs to its end. Wrong intent if the bus's ruled contract is that an in-process request is synchronous by design.",
+    "from_idea": "none, because the orchestrator relayed it from a measured run: a 581.7 s tester run answered green under bus.request(timeout=180) at cairn/devices/codemother/machines/constrain/constrain.py:328, read against cairn/devices/cairn/machines/bus/bus.py request",
+    "how": "First cut, held for the design pass the orchestrator runs once e4714e460e32 lands (cast only, builder picked later). The deadline has to start before the poke chain and stop the asker's wait at it, while the handler runs to its end and its late reply is held as abandoned (ticket ee88c2126abc's path). Candidates: request runs post() on a worker and joins with the timeout, or the poke chain for an _asked envelope is handed off the asker's thread. The proof measures the outcome, not the mechanism.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "CP1 and Law 7 (bus.py request's own docstring: 'LOUD on timeout'): a timeout that bounds nothing is a silent failure of the contract it states. 5.5.3.3 (Send is asynchronous). Law 3: an asker's timeout is a claim about how long it waits, and today it is unmeasured in process.",
+    "what": "bus.request's timeout bounds the wait for a reply even when the target's handler runs synchronously inside post()'s poke chain, so an asker hears TimeoutError at its deadline rather than whenever the handler ends."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "In process, request() calls post(), whose poke chain runs the target's handler before the deadline loop starts, so the timeout bounds nothing: a 581.7 s tester run answered green under timeout=180 (constrain.py:328), measured 2026-11-12 on akiendelllinux."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "67714c871036",
+  "skill": "intent",
+  "title": "bus.request's timeout bounds the wait for a reply even when the target's handler runs synchronously inside post()'s poke",
+  "trace_id": "8af893890ce9",
+  "when": "2026-11-12T19:29:16.505380"
+}

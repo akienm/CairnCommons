@@ -1,0 +1,84 @@
+{
+  "id": "4d597cac9f5d",
+  "title": "bus.request's timeout bounds a synchronous in-process handler",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "bus.request's timeout bounds the asker's wait for a reply even when the target's handler runs synchronously inside post()'s poke chain, so the asker hears TimeoutError at its deadline rather than when the handler ends, and the handler still runs to its end.",
+  "why": "Measured 2026-11-12 on akiendelllinux: constrain's reach('tester').request(..., timeout=180) (constrain.py:328), run in the bus process, returned a 581.7 s tester run green (run_cache census, n=44, max 581.7 s). Read bus.py:505-545: request() calls post(), whose poke chain runs the target's handler before the deadline is set, so in the bus process the timeout bounds nothing. The docstring promises 'LOUD on timeout (CP1)'.",
+  "traces_to": "CP1 and Law 7 (request's own 'LOUD on timeout'); 5.5.3.3 (Send is asynchronous); Law 3 (an asker's timeout is a claim about how long it waits, unmeasured in process today).",
+  "how": "CAST ONLY, HELD FOR A DESIGN PASS before BUILDME (orchestrator, 2026-11-12: the bus is shared by every device, so its builder is picked after e4714e460e32 lands, because e4714 changes how much this matters). Open: the mechanism (request runs post() on a worker and joins at the timeout, or the poke chain for an _asked envelope leaves the asker's thread); the late reply is receipted on ee88c2126abc's abandoned path. CENSUS OF CHART-STAGE ASKERS (2026-11-12, at cairn 385638cd8; each reaches codemother through the bus client, so its wait is a bus.request in the bus process). Before e4714 every one was bounded only by the client socket (remote _TIMEOUT_S 900 s); after it, by its own timeout, because the deferred gate's reply comes after post() returns. (a) skills/chart/live.py queue, one stage, _GATE_TIMEOUT_S 120: a constrain over 120 s raises ticket-unqueued although the gate queued it and the berth lands. WRONG: it should wait on the berth (Ticket.berth(stage) or the failed journal), not on the reply. (b) sail.py chart, Ticket.chart over every stage, CHART_TIMEOUT_S 890 (8b171277190c): the 1858 s constrain raises ticket-unqueued and the chart stops, while constrain still berths and nothing queues survey. WRONG, for the same reason; outline 3.3.4.3 has the ticket go on by itself. (c) sail.py verdict, VERDICT_TIMEOUT_S 890: the verdict gate is deferred and runs each hypothesis instrument up to 600 s plus the door's criteria re-runs, so it can pass 890 s. WRONG, the same. (d) sail.py clearance, GATE_TIMEOUT_S 120: ClearanceGate is not deferred and runs inside post(), so this is the bug this ticket fixes. Today it is unbounded up to 900 s, and a bounded timeout is correct here, because clearance is a quick read. (e) Ticket.chart and Ticket.queueme default 30 s: no live caller outside proofs. So (a) to (c) belong to a sibling at cairn/machines/ticket (the asker waits on the berth, not on a stage-length reply), which the design pass casts before this builds. Bounding request first would make (a) to (c) fail sooner, not later.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an in-process request to a verb whose handler runs past the timeout raises TimeoutError within timeout + 1 s"
+      },
+      {
+        "n": 2,
+        "claim": "a handler that finishes inside the timeout still returns its reply to the asker"
+      },
+      {
+        "n": 3,
+        "claim": "the slow handler still runs to its end, and its late reply is receipted as an abandoned ask's, never delivered as fresh mail"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the bound lives in bus.request; its mechanism is the design pass's to settle.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/bus.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/bus.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_a_reply_after_its_asker_gave_up_is_receipted.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, red-first on today's request, over a scratch bus with a handler that sleeps past the timeout.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_requester_takes_its_reply.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/bus.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py"
+    ],
+    "out": [
+      "cairn/machines/ticket (the census's sibling: askers wait on the berth)",
+      "cairn/devices/cc/scripts/sail.py",
+      "skills/chart/live.py",
+      "cairn/devices/codemother",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "run_cache: tester n=44 total=1858.0s max=581.7s red=0, each asked with timeout=180",
+      "how": "read-only census of ~/.cairn/devices/codemother/0/machines/constrain/run_cache on akiendelllinux (orchestrator); grep -n timeout=180 cairn/devices/codemother/machines/constrain/constrain.py"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "request() sets its deadline only after post() returns, and in process post()'s poke chain runs the target's handler",
+      "how": "read cairn/devices/cairn/machines/bus/bus.py:505-545"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "chart-stage askers: live.py queue 120 s, sail.py chart 890 s, verdict 890 s, clearance 120 s, Ticket defaults 30 s with no live caller; each reaches codemother via the bus client (remote socket _TIMEOUT_S 900)",
+      "how": "grep -rn '.chart(\\|.queueme(\\|TIMEOUT_S' --include=*.py excluding proofs; read sail.py Asker, live.py _gates, cairn/tools/bus_client/remote.py _TIMEOUT_S"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "e4714e460e32's deposit answered in 0.22 s and 0.03 s while a stage was held, 4/4 twice on Linux",
+      "how": "orchestrator: bin/cairn test cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py at 385638cd8"
+    }
+  ]
+}
