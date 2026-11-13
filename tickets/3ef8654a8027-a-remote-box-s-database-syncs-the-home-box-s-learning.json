@@ -1,0 +1,75 @@
+{
+  "id": "3ef8654a8027",
+  "title": "a remote box's database syncs the home box's learning",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "intention": "A remote box keeps its own database and syncs it with the home box's (outline 11.3.5.1): every learning table the home box holds is on the remote box with the same owner and the same node rows, so live-tree reads and proofs mean the same on every box.",
+  "why": "Measured 2026-11-12: akienasus's local db holds one *_nodes table and none of codemother's trees, while akiendelllinux's codemother_orient_nodes holds 688 rows. So 2b3d842bc118's clause_4_the_live_tables_are_hers reds on akienasus ('codemother_orient_nodes owner=None rows=0/531'), and outline 11.3.5.1 has no ticket.",
+  "traces_to": "Outline 11.3.5.1 (a remote box syncs its db with the home box's; the local copy is fast and the sync is the backup) and 4.3.1.5.1.1 (a row number is the same on every box).",
+  "how": "HELD FOR A DESIGN PASS before BUILDME (orchestrator, 2026-11-12: cast, don't build). Open: the sync's unit (the built per-nexus <owner>_<nexus>_nodes tables versus the outline's one long node list, 4.3.1.5.1), its transport (postgres replication versus a row copy over the bus through db_domain), and its direction (home to remote only, or both ways with home-reserved slots). The proof measures the outcome, which is fixed: tables, owners and node rows match the home box after a sync.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "after a sync on a remote box, every learning table the home box holds exists on the remote box with the same owner and at least the home box's node ids"
+      },
+      {
+        "n": 2,
+        "claim": "a node row read on both boxes is identical"
+      },
+      {
+        "n": 3,
+        "claim": "2b3d842bc118's clause_4_the_live_tables_are_hers runs green on akienasus"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the sync lives in db_domain, the database proxy device (outline 11.3); its mechanism is the design pass's to settle.",
+      "writes_to": [
+        "cairn/devices/db_domain/sync.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/intention+why.json",
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause 1-2, beside db_domain; clause 3 is 2b3d842bc118's tooth run on akienasus.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/proofs/test_codemother_learning_lands_in_its_own_tables.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/sync.py",
+      "cairn/devices/db_domain/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
+    ],
+    "out": [
+      "cairn/devices/librarian (the slot reservation of 4.3.1.5.1.1 is the design pass's to place)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus: psql -d cairn shows 1 *_nodes table; clause_4 bad list 'orient: codemother_orient_nodes owner=None rows=0/531 chart_orient_nodes owner=None', the same for all nine nexi",
+      "how": "psql -d cairn -Atc \"select count(*) from pg_tables where tablename like '%_nodes'\"; bin/cairn test cairn/devices/codemother/proofs/test_codemother_learning_lands_in_its_own_tables.py"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "akiendelllinux: codemother_orient_nodes holds 688 rows",
+      "how": "ssh akiendelllinux.local psql -d cairn -Atc 'select count(*) from codemother_orient_nodes'"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "no ticket cites outline 11.3.5.1",
+      "how": "grep -l '11.3.5.1' CairnCommons/tickets/*.json; grep -li 'home box' CairnCommons/tickets/*.json"
+    }
+  ]
+}
