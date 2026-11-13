@@ -1,0 +1,203 @@
+{
+  "id": "f2a3b90c2931",
+  "title": "the cc proofs run the host's bash, not the bare word bash",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "Every cc proof builds its bash argv from the host's bash (shutil.which on Windows), and an AST door proof over cairn/devices/cc/proofs holds that no argv list starts with the bare word bash.",
+  "why": "Measured 2026-11-12 on akiendell: git grep for a list literal headed by bash in cairn/devices/cc/proofs found 3 site(s): test_tmux_mode.py:157, test_tmux_mode.py:166, test_tmux_mode.py:175",
+  "traces_to": "Law 3 and Law 8: a proof that runs another OS's shell on a box measures that shell, not the component; Law 4: held by a scan.",
+  "how": "In test_tmux_mode.py add a module _BASH that is shutil.which('bash') on nt and 'bash' elsewhere and use it as the argv head at the 3 site(s). Add cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py, an AST scan of the cc proofs for a Call whose first argument is a list headed by the string bash. Other reds in these proofs are other causes and are left alone.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an AST scan of cairn/devices/cc/proofs/test_*.py finds no Call whose first argument is a list headed by the string bash"
+      },
+      {
+        "n": 2,
+        "claim": "the edited proofs name the host's bash (a _BASH head) at their spawn sites"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/cc/proofs/test_tmux_mode.py",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_tmux_mode.py"
+      ],
+      "reads": [
+        "cairn/tools/base/script_argv.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_tmux_mode.py",
+      "cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "git grep for a list literal headed by bash in cairn/devices/cc/proofs found 3 site(s): test_tmux_mode.py:157, test_tmux_mode.py:166, test_tmux_mode.py:175",
+      "how": "git grep -nE over cairn/devices/cc/proofs"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "Run the cc proofs' bash under the host's bash: cairn/devices/cc/proofs/test_tmux_mode.py spawn the bare word bash (WSL launcher); see cairn/tools/base/script_argv.py",
+      "intent": "the cc proofs name the host's bash",
+      "scope": "in: the edited cc proofs and cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py; out: every other component, cairn/tools/base",
+      "unknowns": [
+        "the Linux side was not run by me: on Linux the helper returns the bare word bash, as before"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/proofs/test_tmux_mode.py",
+          "cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the component builds a bash argv"
+      ],
+      "holdings": [
+        {
+          "what": "the component's executor",
+          "address": "cairn/devices/cc/proofs/test_tmux_mode.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a cc proof that guards against a bare bash argv",
+          "measure": "git grep of cairn/devices/cc/proofs for an AST scan of a bash-headed argv found none"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "bare bash sites use a host-bash head and an AST door proof holds it",
+          "why": "a bare bash resolves to the WSL launcher on Windows",
+          "kind": "build",
+          "fills": "a cc proof that guards against a bare bash argv",
+          "uses": [
+            "cairn/devices/cc/proofs/test_tmux_mode.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/proofs/test_tmux_mode.py",
+            "cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "bare bash sites use a host-bash head and an AST door proof holds it",
+          "why_now": "built; proof red first, green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "bare bash sites use a host-bash head and an AST door proof holds it",
+          "expect": "the scan finds no bash-headed argv list in the cc proofs",
+          "falsifier": "an AST scan of cairn/devices/cc/proofs/test_*.py finds a list headed by the string bash",
+          "instrument": "cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py run with the venv python"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the proof pass",
+          "instrument": "cairn/devices/cc/proofs/test_no_cc_proof_spawns_a_bare_bash.py run with the venv python",
+          "timeout_s": 300,
+          "covers": [
+            "bare bash sites use a host-bash head and an AST door proof holds it"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
