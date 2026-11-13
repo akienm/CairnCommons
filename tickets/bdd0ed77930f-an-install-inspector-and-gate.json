@@ -109,5 +109,190 @@
       "saw": "A spawn's interpreter must import the parent's packages. cairn.tools.windowless_spawn.background_python() returned the base interpreter (sys.prefix C:\\Users\\akien\\AppData\\Local\\Python\\pythoncore-3.14-64), not the venv (C:\\Users\\akien\\.cairn\\venv); a child spawned through it died at import psycopg2 (ModuleNotFoundError, bus.log) while the venv itself imports psycopg2 2.9.13. Fixed in bfbfe42a7; its tooth 1 now compares the child's sys.prefix to the parent's. An install check could catch the class: a spawn interpreter whose site-packages differ from the caller's. The spawn-interpreter install check is the follow-up ticket 404f193284ac, not part of this one.",
       "how": "background_python() run with -c 'import sys; print(sys.prefix)' and compared with the venv's sys.prefix; bus.log tail; python -c 'import psycopg2' in the venv python"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "bdd0ed77930f: an install inspector and gate",
+      "intent": "One inspect() call measures every registered install fact with dry_run=True and reds each lack; installed() is the gate that refuses while a red stands; the installer's fix_reds calls each red once with dry_run=False.",
+      "scope": "install_inspector/inspector.py, fix_reds and the main() rewiring in installer.py, and one proof; skill-link checks (53e7979f76e7), the spawn-interpreter check (404f193284ac), bootstrap.sh and the commons root are out",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Errors are loud at diagnostic surfaces and permanent in records of truth: a raising check is a red, never swallowed.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "every component talks to every other only through its public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/recovery/machines/install_inspector/inspector.py",
+          "cairn/devices/recovery/machines/installer/installer.py",
+          "cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
+        ],
+        "out": [
+          "ensure_skill_links (53e7979f76e7)",
+          "the spawn-interpreter check (404f193284ac)",
+          "cairn/devices/recovery/bootstrap.sh",
+          "every other device"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "an existing install inspector or gate",
+        "the step shape {id,status,detail}",
+        "a charter for install_inspector"
+      ],
+      "holdings": [
+        {
+          "what": "the step shape {id,status,detail} with dry_run (ensure_journal_merge_driver, ensure_dev_extra)",
+          "address": "cairn/devices/recovery/machines/installer/installer.py"
+        },
+        {
+          "what": "the install_inspector charter",
+          "address": "cairn/devices/recovery/machines/install_inspector/intention+why.json"
+        }
+      ],
+      "absences": [
+        {
+          "what": "inspector.py with CHECKS, inspect and installed",
+          "measure": "ls cairn/devices/recovery/machines/install_inspector/inspector.py answers no such file"
+        },
+        {
+          "what": "fix_reds in the installer",
+          "measure": "grep -c fix_reds cairn/devices/recovery/machines/installer/installer.py answers 0"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "inspector.py: CHECKS, inspect(), installed()",
+          "why": "a box's install is measured, not remembered (Akien, 2026-11-12)",
+          "kind": "build",
+          "fills": "inspector.py with CHECKS, inspect and installed",
+          "uses": [
+            "cairn/devices/recovery/machines/installer/installer.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/install_inspector/inspector.py"
+          ]
+        },
+        {
+          "what": "fix_reds and main() rewired to inspect, fix_reds, installed",
+          "why": "the fix pass must touch only the reds, once each",
+          "kind": "build",
+          "fills": "fix_reds in the installer",
+          "uses": [
+            "cairn/devices/recovery/machines/installer/installer.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "inspector.py: CHECKS, inspect(), installed()",
+          "why_now": "the install checks exist (installer, merge driver, dev extra) with nothing reading them together"
+        },
+        {
+          "what": "fix_reds and main() rewired to inspect, fix_reds, installed",
+          "why_now": "inspect and installed alone cannot fix a box"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "inspector.py: CHECKS, inspect(), installed()",
+          "expect": "one red per lack, a raise carried as a red, installed() false while any red stands, nothing written",
+          "falsifier": "a green is reported red, a raise is swallowed, installed() is true with a red, or inspect writes",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
+        },
+        {
+          "piece": "fix_reds and main() rewired to inspect, fix_reds, installed",
+          "expect": "each red check called once with dry_run=False, no green check called, installed() asked again",
+          "falsifier": "a green check is run, a red is run twice, or installed() is not re-asked",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the four falsifier clauses hold as named teeth",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py",
+          "timeout_s": 900,
+          "covers": [
+            "inspector.py: CHECKS, inspect(), installed()",
+            "fix_reds and main() rewired to inspect, fix_reds, installed"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
