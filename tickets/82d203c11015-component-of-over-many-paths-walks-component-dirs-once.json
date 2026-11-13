@@ -1,0 +1,69 @@
+{
+  "id": "82d203c11015",
+  "title": "component_of over many paths walks component_dirs once",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "address gains components_of(paths), which answers component_of for every path with one walk of component_dirs, so a caller over a closure pays one walk instead of one per file.",
+  "why": "Measured 2026-11-12: the home bus wedged at 100% of one core with codemother's traffic starving. py-spy put the CPU in validation_store calling address.component_of once per closure file; each call re-walks 77 components (~8.5 ms), 2.66 s over 300 files.",
+  "traces_to": "Law 1 (the settled component set is re-derived per path, a defect) and the bus intention (a wake never takes more than 60 s).",
+  "how": "Factor component_of's owner loop into _deepest_owner over pre-resolved component dirs; component_of uses it with one walk, components_of walks once and maps every path through it. Red-first proof: agreement with component_of, and one component_dirs call for 40 paths.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "components_of(paths) answers, for every path, exactly what component_of answers for it, including None for a path under no component"
+      },
+      {
+        "n": 2,
+        "claim": "components_of over 40 paths calls component_dirs exactly once"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _deepest_owner(target, resolved) holds the deepest-ancestor rule; component_of and the new components_of(paths, pkg_root=None) -> dict both call it; the dict is keyed by each path as given.",
+      "writes_to": [
+        "cairn/tools/base/address.py"
+      ],
+      "reads": [
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof samples git ls-files paths plus one outside path for agreement, and counts component_dirs calls through a wrapper set for the call and restored after.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_components_of_walks_once.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/address.py",
+      "cairn/tools/base/proofs/test_components_of_walks_once.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store/validation_store.py (adopts under its own ticket)",
+      "cairn/devices/tester/device.py (adopts under its own ticket)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "component_of ~8.5 ms a call, 20 calls 171.4 ms; component_dirs 77 components in 6.5 ms",
+      "how": "python3 timing over cairn.tools.base.address on akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "_owned_by_the_proofs_component over 300 repo files: 2.66 s; over a 40-file closure: 0.37 s",
+      "how": "python3 timing over cairn.tools.validation_store.validation_store on akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "home bus pid 1881010 at 100% of one core in validation_store -> address.component_of -> component_dirs under codemother's queueme; reach timed out at 120 s",
+      "how": "py-spy dump on akiendelllinux, relayed by the orchestrator"
+    }
+  ]
+}

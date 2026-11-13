@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each measured. (1) Measured 2026-11-12 on akienasus: address.component_of costs about 8.5 ms a call (20 calls 171.4 ms) because it re-walks component_dirs (77 components, 6.5 ms) every call. (2) Measured 2026-11-12 on akienasus: validation_store._owned_by_the_proofs_component over 300 repo files took 2.66 s; over the 40-file closure of cairn/tools/base/validations/test_base_probes_report_to_the_watch.json, 0.37 s. (3) Measured 2026-11-12 by the orchestrator with py-spy on the home bus, pid 1881010, 100% of one core: codemother queueme -> constrain -> tester run_proof -> _read_closure -> validation_store -> address.component_of -> component_dirs, holding codemother's shim lock while reach timed out at 120 s. (4) Assumed and stated: the component set does not change within one call, so one walk serves every path in it.",
+    "builder_check": "Where and what. cairn/tools/base/address.py: factor the loop in component_of into _deepest_owner(target, resolved) where resolved is the list of resolved component dirs; component_of calls it with one walk; add components_of(paths, pkg_root=None) -> dict mapping each input path (as given) to its owner or None, walking component_dirs once. Proof cairn/tools/base/proofs/test_components_of_walks_once.py, two teeth: agreement over a sample of git ls-files paths plus one outside path; count calls by replacing address.component_dirs with a counting wrapper for the call. No open question.",
+    "children": "none, because the adopters are separate components with their own tickets; this one is cairn/tools/base/address.py",
+    "collision_check": "Whys checked. address.component_of's docstring: the deepest ancestor wins, and a path is never ambiguous. Kept, through the shared helper. address imports pathlib and nothing else, a property constrain leans on; the new function adds no import. RULE 1: the change is inside tools/base, and address is in its public_interface. No collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) components_of(paths) answers, for every path, exactly what component_of answers for it, including None for a path under no component; (2) components_of over 40 paths calls component_dirs exactly once. Horizon: the proof at PROVEME.",
+    "gates_bound": "code-seam prove_gate: a red-first proof at cairn/tools/base/proofs/test_components_of_walks_once.py, one tooth per clause; both fail today because components_of is absent. It feeds back to origin on failure through FIXME (Laws 3 and 8).",
+    "missing_check": "Checked: this ticket adds only the batch function in tools/base address and proves it. The two callers, validation_store._owned_by_the_proofs_component and tester device._reached, are separate components (RULE 1: a build lives inside its own component) and adopt it under their own tickets, cast after this one. component_of keeps its signature and answers; it shares one deepest-owner helper with the new function so the two cannot disagree. Nothing asserted-wrapped is open.",
+    "node_class": "code-seam",
+    "questions": "none, because the deepest-owner rule this keeps is settled in cairn/tools/base/address.py component_of's docstring",
+    "task_or_ticket": "ticket",
+    "title": "component_of over many paths walks component_dirs once",
+    "watchme": "none, because its proof (to be written beside cairn/tools/base/address.py at cairn/tools/base/proofs/test_components_of_walks_once.py) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A per-path lookup that re-walks the whole tree each call turned a closure read into seconds of CPU under a shim lock and starved codemother. A batch form walks once."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "30f1bd7aa124",
+  "skill": "sorted",
+  "title": "component_of over many paths walks component_dirs once",
+  "trace_id": "b71356633f60",
+  "when": "2026-11-12T16:57:19.002092"
+}
