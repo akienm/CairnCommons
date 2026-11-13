@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: (a) verdict.py run_instrument runs `bin/cairn test --exec <cmd> --timeout <timeout_s>` (verdict.py:247), so the chart's declared timeout_s arrives as run_exec's timeout \u2014 true by the code at d0c7d8376; (b) the inner `bin/cairn test <proof>` with no --timeout gets args.timeout = 120 at cli.py:553, and that is the budget its run_proof enforces unless the proof declares PROOF_TIMEOUT_S (device.py declared_timeout, ticket 8383a32d20c5); (c) run_exec builds the child env from os.environ (device.py:960), so a var set there reaches the command and any shell or bwrap it spawns, as CAIRN_TESTER_TEST_ID does today.",
+    "builder_check": "A builder needs: cairn/devices/tester/device.py run_exec, where env is built (`env[TEST_ID_ENV] = test`): add `env[\"CAIRN_TESTER_PROOF_BUDGET\"] = str(timeout)` when timeout is set. cairn/devices/tester/cli.py, the line `if args.timeout is None: args.timeout = 120`: replace with a helper reading os.environ CAIRN_TESTER_PROOF_BUDGET, int() it, use it if > 0, else 120. The proof follows test_a_proof_declares_its_own_time_limit.py's fixture writer (scratch_dir, fixture_component/proofs/test_fixture.py) and test_a_command_runs_under_the_seal_by_exec.py's `_exec` (bash_script_argv(bin/cairn)). Every tooth runs bin/cairn test as a subprocess with an explicit env. All named in the decisions.",
+    "children": "none, because this is two lines of code and one proof",
+    "collision_check": "8383a32d20c5 (a proof declares its own time limit): its precedence \u2014 the proof's declaration beats the caller's \u2014 stands; this changes only what the caller's default is inside an exec envelope. A distinction, not a collision. conditions.py hashes CAIRN_* env into seal conditions, so seals made under an exec will carry the var; conditions.changed only posts notices on a green over a red, so no notice storm.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clause 1: `cairn test --exec 'printenv CAIRN_TESTER_PROOF_BUDGET' --timeout 300` prints 300. Clause 2: `cairn test <fixture sleeping 8 s>` under CAIRN_TESTER_PROOF_BUDGET=3 reports the 3 s budget exceeded. Clause 3: under CAIRN_TESTER_PROOF_BUDGET=300, --timeout 3 over the same fixture reports the 3 s budget; under CAIRN_TESTER_PROOF_BUDGET=3 a fixture declaring PROOF_TIMEOUT_S=30 and sleeping 5 s is green; with no env var the default stays 120. Red on d0c7d8376 for clauses 1 and 2. Horizon: PROVED, then the 8e73 verdict retry no longer times out at 120 s.",
+    "gates_bound": "code-seam gate-set: tester-sealed proof with a hollow reading (Law 8), red-first on d0c7d8376; build_inspector over the tester at PROVED; FIXME on a red.",
+    "missing_check": "Wrapped: run_exec exports the bound; the cli default reads a positive integer from it, else 120; an unparseable or non-positive value falls back to 120 rather than crashing; --timeout given explicitly beats the env; PROOF_TIMEOUT_S beats both, unchanged. Out: recording a run duration in seals (the orchestrator's alternative \u2014 no field exists to read); verdict.py itself (it already passes the declared number); the 8e73 verdict retry (the orchestrator queues it).",
+    "node_class": "code-seam",
+    "questions": "none, because the precedence is fixed by ticket 8383a32d20c5 and the scope by the orchestrator's order",
+    "task_or_ticket": "ticket",
+    "title": "an exec's bound reaches the proof it runs, so a chart's declared timeout is the proof's budget",
+    "watchme": "none, because the proof cairn/devices/tester/proofs/test_an_exec_bound_reaches_the_proof_it_runs.py replays the measured envelope beside the tester, and the 8e73 verdict retry (ticket 8e73a9efa04a) is the live reading",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A chart's declared timeout_s bounded only the exec envelope; every proof inside it ran at the tester's 120 s default, so a 300 s declaration was silently 120."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "02e18a55bd04",
+  "skill": "sorted",
+  "title": "an exec's bound reaches the proof it runs, so a chart's declared timeout is the proof's budget",
+  "trace_id": "ee2be49f42f5",
+  "when": "2026-11-13T10:29:48.277297"
+}
