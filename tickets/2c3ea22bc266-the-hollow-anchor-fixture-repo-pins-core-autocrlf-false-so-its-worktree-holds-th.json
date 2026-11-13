@@ -1,0 +1,53 @@
+{
+  "id": "2c3ea22bc266",
+  "title": "the hollow-anchor fixture repo pins core.autocrlf false, so its worktree holds the bytes git stored on every box",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The _fixture in test_hollow_anchors_before_the_build_that_stands.py sets core.autocrlf false in its scratch repo right after git init, so the file the fixture wrote and the blob git holds are the same bytes and the anchor-holds-every-file tooth refuses as it does on Linux.",
+  "why": "Measured 2026-11-12 on akiendell: on Windows test_an_anchor_holding_every_file_raises_naming_the_anchor returned a reading (verdict green, reasons empty, subject.py measured not unchanged) where it must raise; with core.autocrlf false in the fixture repo all 8 teeth of that proof are ok",
+  "traces_to": "Law 3: measured, the worktree read CRLF and the blob LF under autocrlf=true and the tooth went red to ok with the pin; Law 8: the proof reds on the unpinned fixture on any host.",
+  "how": "One line after the git init in _fixture: _git(repo, 'config', 'core.autocrlf', 'false'). Red-first proof cairn/devices/tester/proofs/test_the_anchor_fixture_pins_its_line_endings.py builds the fixture for real and reads the repo's own config, so it reds on Linux too.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the fixture repo's own core.autocrlf is false after _fixture runs"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_anchor_fixture_pins_its_line_endings.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py",
+      "cairn/devices/tester/proofs/test_the_anchor_fixture_pins_its_line_endings.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "on Windows test_an_anchor_holding_every_file_raises_naming_the_anchor returned a reading (verdict green, reasons empty, subject.py measured not unchanged) where it must raise; with core.autocrlf false in the fixture repo all 8 teeth of that proof are ok",
+      "how": "test_hollow_anchors_before_the_build_that_stands.py run before and after the one-line pin"
+    }
+  ]
+}
