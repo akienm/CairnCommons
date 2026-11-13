@@ -1,0 +1,213 @@
+{
+  "id": "852b6b5fa4bd",
+  "title": "the scratch proof holds on Windows: bare_temp_reach names paths with forward slashes and the stuck-sweep tooth locks its directory with an open handle",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "bare_temp_reach reports each hit as a forward-slash path on every host, and the unsweepable-directory tooth holds an open file handle through the atexit sweep so the sweep fails and says so on Windows as chmod does on Linux.",
+  "why": "Measured 2026-11-12 on akiendell: on Windows test_scratch.py reads 2 of 8 teeth failed: the reach tooth got ['proofs\\\\test_bare.py:2: ...'], the stuck-sweep tooth saw no could-not-remove line because chmod 0o500 did not stop the sweep; with the as_posix edit, an open handle in the child, and the exemption's as_posix it reads green twice",
+  "traces_to": "Law 3: both causes measured by running the proof before and after; Law 8: a tooth that cannot fail on the host measures nothing, and the stuck-sweep tooth could not.",
+  "how": "scratch.py line 238: py.relative_to(root).as_posix(). In test_scratch.py: the tooth opens a file under the stuck directory and keeps it referenced to interpreter teardown and cleans up with shutil.rmtree; the whole-repo scan's own-file exemption is built with as_posix so it still matches the posix reach names. The existing proof, red on Windows HEAD, is the red-first proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "bare_temp_reach names a bare proof with a forward-slash relative path on every host"
+      },
+      {
+        "n": 2,
+        "claim": "a sweep that cannot remove its directory prints could not remove naming it, and the run still exits 0, on Windows and on Linux"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/scratch/scratch.py, cairn/tools/scratch/proofs/test_scratch.py",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/scratch/proofs/test_scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/scratch/proofs/test_scratch.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/scratch/scratch.py",
+      "cairn/tools/scratch/proofs/test_scratch.py",
+      "cairn/tools/scratch/proofs/test_scratch.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "on Windows test_scratch.py reads 2 of 8 teeth failed: the reach tooth got ['proofs\\\\test_bare.py:2: ...'], the stuck-sweep tooth saw no could-not-remove line because chmod 0o500 did not stop the sweep; with the as_posix edit, an open handle in the child, and the exemption's as_posix it reads green twice",
+      "how": "test_scratch.py run before and after the edit"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "852b6b5fa4bd: the scratch proof holds on Windows: bare_temp_reach names paths with forward slashes and the stuck-sweep tooth locks its directory with an open handle",
+      "intent": "bare_temp_reach reports each hit as a forward-slash relative path on every host, and test_scratch.py's unsweepable-directory tooth holds an open handle through the atexit sweep so the sweep fails loudly on Windows as chmod makes it on Linux.",
+      "scope": "cairn/tools/scratch/scratch.py line 238 and cairn/tools/scratch/proofs/test_scratch.py; the sweep logic, the other teeth and every other component are not changed",
+      "unknowns": [
+        "the posix side was not run by me: as_posix is the identity there and chmod still locks the directory, so the held handle is belt and braces on Linux"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "domain": "tools/scratch (a tool: the proof scratch directory and its sweep)"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/scratch/scratch.py",
+          "cairn/tools/scratch/proofs/test_scratch.py"
+        ],
+        "out": [
+          "the sweep and registration logic in scratch.py",
+          "every other tooth in test_scratch.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where bare_temp_reach builds its hit paths",
+        "how the stuck-sweep tooth makes a directory unremovable"
+      ],
+      "holdings": [
+        {
+          "what": "the scratch tool's bare_temp_reach scan",
+          "address": "cairn/tools/scratch/scratch.py"
+        },
+        {
+          "what": "the scratch proof, red on Windows HEAD",
+          "address": "cairn/tools/scratch/proofs/test_scratch.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a bare_temp_reach whose hit paths and a Windows-lockable stuck-sweep tooth read the same on every host",
+          "measure": "test_scratch.py run 2026-11-13 on Windows HEAD: 2 of 8 teeth failed (the reach tooth and the stuck-sweep tooth)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "as_posix on the hit path in scratch.py, an open handle held through the sweep in the stuck-sweep tooth, and the exemption built with as_posix",
+          "why": "the proof states a forward-slash contract and a loud-sweep contract, and on Windows two teeth could not hold either",
+          "kind": "build",
+          "fills": "a bare_temp_reach whose hit paths and a Windows-lockable stuck-sweep tooth read the same on every host",
+          "uses": [
+            "cairn/tools/scratch/scratch.py",
+            "cairn/tools/scratch/proofs/test_scratch.py"
+          ],
+          "writes_to": [
+            "cairn/tools/scratch/scratch.py",
+            "cairn/tools/scratch/proofs/test_scratch.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "as_posix on the hit path in scratch.py, an open handle held through the sweep in the stuck-sweep tooth, and the exemption built with as_posix",
+          "why_now": "built; the proof red first on Windows, green twice after"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "as_posix on the hit path in scratch.py, an open handle held through the sweep in the stuck-sweep tooth, and the exemption built with as_posix",
+          "expect": "test_scratch.py green, 8 of 8 teeth",
+          "falsifier": "either tooth still fails, or the whole-repo scan tooth goes red",
+          "instrument": "bin/cairn test cairn/tools/scratch/proofs/test_scratch.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_scratch.py reads green with all eight teeth passing",
+          "instrument": "bin/cairn test cairn/tools/scratch/proofs/test_scratch.py",
+          "timeout_s": 300,
+          "covers": [
+            "as_posix on the hit path in scratch.py, an open handle held through the sweep in the stuck-sweep tooth, and the exemption built with as_posix"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
