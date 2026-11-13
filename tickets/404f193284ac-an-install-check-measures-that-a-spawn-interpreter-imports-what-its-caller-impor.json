@@ -21,9 +21,10 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: the fix at cairn/devices/recovery/machines/installer/installer.py",
+      "text": "D1: the fix at cairn/devices/recovery/machines/installer/installer.py The inspector's CHECKS gains the registration string (how: 'register it in CHECKS').",
       "writes_to": [
-        "cairn/devices/recovery/machines/installer/installer.py"
+        "cairn/devices/recovery/machines/installer/installer.py",
+        "cairn/devices/recovery/machines/install_inspector/inspector.py"
       ],
       "reads": [
         "cairn/tools/windowless_spawn/windowless_spawn.py"
@@ -41,7 +42,8 @@
   "bounds": {
     "in": [
       "cairn/devices/recovery/machines/installer/installer.py",
-      "cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py"
+      "cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py",
+      "cairn/devices/recovery/machines/install_inspector/inspector.py"
     ],
     "out": [
       "every other component"
@@ -53,5 +55,166 @@
       "saw": "background_python() returned the base interpreter, not the venv, and a child died at import psycopg2 (bus.log); fixed in bfbfe42a7",
       "how": "background_python() run with -c 'import sys; print(sys.prefix)' compared with the venv's sys.prefix; recorded in ticket bdd0ed77930f's measured"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "404f193284ac: an install check measures that a spawn interpreter imports what its caller imports",
+      "intent": "A registered install-inspector check, check_spawn_interpreter, reds a box whose spawn interpreter (background_python()) does not report its caller's sys.prefix, naming the interpreter and both prefixes.",
+      "scope": "the installer's new check, its one registration line in the inspector's CHECKS, and one proof; the interpreter helper is read, never written",
+      "unknowns": [
+        "a real second interpreter with a different prefix was not run: the proof injects the run seam, and the live check on this box answers already_applied",
+        "the posix side was not run on the Windows box where the build was made"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/recovery/machines/installer/installer.py",
+          "cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py",
+          "cairn/devices/recovery/machines/install_inspector/inspector.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/windowless_spawn",
+          "bin"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what background_python returns",
+        "the install inspector's CHECKS list",
+        "an existing spawn-interpreter check"
+      ],
+      "holdings": [
+        {
+          "what": "background_python, the spawn interpreter's name",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        },
+        {
+          "what": "the install inspector and its CHECKS",
+          "address": "cairn/devices/recovery/machines/install_inspector/inspector.py"
+        },
+        {
+          "what": "the installer's checks shaped {id,status,detail}",
+          "address": "cairn/devices/recovery/machines/installer/installer.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "check_spawn_interpreter in the installer",
+          "measure": "git grep -c check_spawn_interpreter HEAD -- cairn/devices/recovery answers 0 (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "check_spawn_interpreter with injectable run, python and caller_prefix, registered in CHECKS, and a two-tooth red-first proof",
+          "why": "a child spawned with the base interpreter died at import psycopg2 and nothing on the box said so beforehand",
+          "kind": "build",
+          "fills": "check_spawn_interpreter in the installer",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py",
+            "cairn/devices/recovery/machines/install_inspector/inspector.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "cairn/devices/recovery/machines/install_inspector/inspector.py",
+            "cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "check_spawn_interpreter with injectable run, python and caller_prefix, registered in CHECKS, and a two-tooth red-first proof",
+          "why_now": "built locally: red first (both teeth AttributeError), then green twice on Windows"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "check_spawn_interpreter with injectable run, python and caller_prefix, registered in CHECKS, and a two-tooth red-first proof",
+          "expect": "2 teeth green twice, and the installer and inspector proofs unchanged",
+          "falsifier": "a different prefix does not return offered naming both, or the caller's own prefix is not already_applied, or the check is absent from CHECKS",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_install_checks_the_spawn_interpreter.py is green",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py",
+          "timeout_s": 900,
+          "covers": [
+            "check_spawn_interpreter with injectable run, python and caller_prefix, registered in CHECKS, and a two-tooth red-first proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
