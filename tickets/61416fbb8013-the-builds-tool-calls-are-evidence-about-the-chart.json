@@ -1,7 +1,7 @@
 {
   "id": "61416fbb8013",
   "title": "the-builds-tool-calls-are-evidence-about-the-chart",
-  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "owning_intention": "skills/sail/intention+why.json",
   "intention": "Observe the tool calls a /sail voyage actually makes, and turn the ones that contradict a chart berth into findings routed back to the chain that authored the claim.",
   "why": "AKIEN, 2026-08-14, collapsing /chart into /sail: it 'runs in sail, gets feedback about tool calls that happen inside the build. and we add that feedback into our mechanisms.' THE LIVED SYMPTOM, and it is a builder's, felt every voyage: the chart chain tells you what exists, what is absent, and where the edges are — and then the build finds out. survey says the holding is not there; you open it in step 2 and it is. constrain draws a bound; the real work sits one directory outside it. orient names an address; the code lives elsewhere. Today every one of those is absorbed silently by the builder, who adjusts and keeps going, and the chain that was WRONG never hears about it. The next voyage over the same territory re-derives the same correction from scratch — which is Law 1's defect stated exactly. What makes this a build rather than a wish is that the findings are ALREADY SPECIFIED and have simply had nowhere to go: skills/sail's own falsifier names 'a bound from the constrain berth silently widened' and 'a holding rebuilt in parallel' as reds, and both are tool-call-visible. The gap is not knowing what a finding is; it is that nothing looks.",
   "traces_to": [
@@ -13,12 +13,31 @@
     "cairn/tools/feedback — the tool that owns the -2- edge and the shape of a declared route."
   ],
   "falsifier": {
-    "proves_green": "SHAPE BEFORE CODE, and the shape question is what keeps this at THINKME: WHAT COUNTS AS A CONTRADICTION. A voyage makes hundreds of tool calls and nearly all of them are ordinary; an observer that reports every call not foreseen by survey is a firehose, and a firehose is how a feedback channel gets muted in week one. The three candidates CC can see, offered as candidates: (1) NAMED CLAIMS ONLY — a finding only where a berth made a checkable assertion (survey's absences, constrain's out-list, orient's address), which is narrow, cheap, and provably non-noisy because the claim set is finite and already written; (2) CLAIM SET PLUS SHAPE — (1) plus structural surprises like a write outside every charted path; (3) EVERYTHING NOT FORESEEN, which is the firehose and is named here to be refused explicitly rather than drifted into. CC would build (1) and grow it against real findings (build-minimal), but the choice is a design call and the ticket does not pre-empt it.",
-    "proves_red": "RED if: (1) the observer reports a call as a contradiction when no berth made a claim about it — that is the firehose, and one such report is enough because it is the failure that silences the channel; (2) a finding is produced but names no berth field it falsifies, i.e. a complaint rather than a measurement; (3) the reader greps the raw JSONL instead of parsing records, which reports False on real content because the file stores \\n and \\uXXXX escaped (this failure has bitten twice in this corpus and is now a known tooth); (4) the observer becomes a second CHART RUN by another name — re-deriving orientation mid-build is exactly what Akien dropped, and this is the drift with the shortest path; (5) findings are written somewhere other than the declared -2- route, which would be a private channel and 'add that feedback into our mechanisms' says otherwise.",
-    "horizon": "Not urgent and the reason is measurable, not a feeling: nothing delivers along the -2- edge for ANY producer yet (cairn/tools/feedback edge (a)), so a finding produced today would sit exactly where a finding not produced today sits. It becomes urgent when the deliverer lands, and it should be built BEFORE the deliverer only if the deliverer needs a real finding to grow against — which it probably does, and that ordering argument is the one real reason to move this early."
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a Write or Edit in the window to a path outside the ticket's bounds.in is a finding of kind surprise naming field bounds.in, the path and the call's timestamp"
+      },
+      {
+        "n": 2,
+        "claim": "a write into a path the ticket's bounds.out names is a finding of kind contradiction naming field bounds.out"
+      },
+      {
+        "n": 3,
+        "claim": "every tool_use in the window is counted, and a Read of a path some decision reads or writes makes no finding (no claim, no finding: the firehose tooth); a Read no decision lists is a miss naming decisions.reads"
+      },
+      {
+        "n": 4,
+        "claim": "a path stored escaped in the raw JSONL (\\u002f) is read by parsing records, so the escaped write is still flagged"
+      },
+      {
+        "n": 5,
+        "claim": "the observation merged into a reflection packet passes skills/sail/reflection.check, carries the count in cost_estimate, and its flags name artifact ticket and the field"
+      }
+    ]
   },
   "constraints": [],
-  "how": "",
+  "how": "skills/sail/toolcalls.py parses the session transcript JSONL (records, never a grep) over the ticket's window, counts every tool_use, and classifies Write/Edit/NotebookEdit paths against the ticket's bounds.in and bounds.out and Read paths against its decisions' reads and writes_to. `merge` folds the observation into a /sail reflection packet (cost_estimate carries the count, each finding is a flag on artifact ticket naming the field), and the reflection door already rides bus verb feedback to codemother, whose ingest_reflections is the consumer.",
   "chart_notes": {
     "orient": "The data is at ~/.claude/projects/-home-akien-dev-src-cairn/*.jsonl — the same glob turnscan and ruling/corpus.py already open, and both filter tool calls out (corpus.py:74 skips tool_use_id records; turnscan keeps end_turn messages). The claims to check against are the berths, reachable by command rather than by eyeballing: `python3 -m skills.chart.live chain <ticket-id>`. The berth fields that make checkable assertions are survey's absences and holdings, constrain's out-list, and orient's address.",
     "constrain": "OUT: a second chart run, any mid-build re-orientation, any new channel that is not the declared -2- route, and any priority or urgency field on a finding (the feedback tool's route is an address and nothing else — 'we're leaving room for those, we're not building or ticketing those now'). Also OUT: deciding which chart LEG a finding belongs to as a routing key — that is a-segments-outbound-edge-carries-one-address and it is Akien's.",
@@ -27,7 +46,79 @@
   "decisions": [
     {
       "n": 1,
-      "text": "Akien 2026-10-13 answered open-a5798f263e66, verbatim: \"option 2. since we're in there anyway... but we won't be able to catch them all. we aren't trying to do that with option 2, instead we're trying to feed the learning components\". So the observer flags BOTH contradictions of a berth's claim (routed back to the chain step that authored it) AND structural surprises with no claim behind them (first: a write outside every charted path). Surprises carry kind 'surprise' and no author; they feed the learning components rather than a chain step - the build measures which learning components read chart findings today and names that consumer before BUILDME (a probe needs a consumer). Completeness is NOT a tooth: the proof shows a planted surprise is flagged and reaches the consumer, never that every surprise is caught."
+      "text": "Akien 2026-10-13 answered open-a5798f263e66, verbatim: \"option 2. since we're in there anyway... but we won't be able to catch them all. we aren't trying to do that with option 2, instead we're trying to feed the learning components\". So the observer flags BOTH contradictions of a berth's claim (routed back to the chain step that authored it) AND structural surprises with no claim behind them (first: a write outside every charted path). Surprises carry kind 'surprise' and no author; they feed the learning components rather than a chain step - the build measures which learning components read chart findings today and names that consumer before BUILDME (a probe needs a consumer). Completeness is NOT a tooth: the proof shows a planted surprise is flagged and reaches the consumer, never that every surprise is caught.",
+      "writes_to": [],
+      "reads": []
+    },
+    {
+      "n": 2,
+      "text": "D2: Akien 2026-11-13 answered open-0aa1abce1583: every tool call after the chart is an anticipation miss and a learning opportunity, so the count is every tool_use in the window, not only the flagged ones.",
+      "writes_to": [],
+      "reads": []
+    },
+    {
+      "n": 3,
+      "text": "D3: the claims are the ticket's own bounds and decisions (constrain and decompose as cast), read from the commons, because the chart berths sit in instance-space on whichever box charted and the transcript sits on the box that built. The window is first-to-last tool call whose input names the ticket id, or --since/--until; a ticket named by no call is unwindowed and the tool says so.",
+      "writes_to": [
+        "skills/sail/toolcalls.py"
+      ],
+      "reads": [
+        "bin/cmd/turnscan"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: merge(observation, packet) fills the reflection packet's cost_estimate and findings; the builder still says at_par by hand and fires skills.sail.reflection, whose bus verb feedback lands in codemother's ingest_reflections (the named consumer).",
+      "writes_to": [
+        "skills/sail/toolcalls.py"
+      ],
+      "reads": [
+        "skills/sail/reflection.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: the proof builds fixture transcripts and a fixture ticket in a tmp dir, one tooth per clause.",
+      "writes_to": [
+        "skills/sail/proofs/test_the_builds_tool_calls_are_counted.py"
+      ],
+      "reads": []
+    },
+    {
+      "n": 6,
+      "text": "D6: the sail charter's filed edge (f) and invoke name the observer.",
+      "writes_to": [
+        "skills/sail/intention+why.json"
+      ],
+      "reads": [
+        "skills/sail/intention+why.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "skills/sail/toolcalls.py",
+      "skills/sail/proofs/test_the_builds_tool_calls_are_counted.py",
+      "skills/sail/intention+why.json"
+    ],
+    "out": [
+      "skills/sail/reflection.py",
+      "cairn/devices/codemother",
+      "bin/cmd/turnscan",
+      "cairn/machines/ruling",
+      "a second chart run"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "3830 tool_use blocks in this session's transcript, each an assistant record whose message.content carries {type: tool_use, name, input}; nothing in cairn counts them (aider_shim offload_yield_probe carries cc_calls: None with this ticket named as owner)",
+      "how": "parsed ~/.claude/projects/-home-akien-cairn/8914d998-*.jsonl on akienasus; read cairn/devices/aider_shim/probes/offload_yield_probe.py:150"
+    },
+    {
+      "when": "2026-08-14",
+      "saw": "bin/cmd/turnscan and cairn/machines/ruling/corpus.py both parse the transcript glob and both discard tool calls",
+      "how": "read turnscan DEFAULT_CORPUS and corpus.py:74"
     }
   ]
 }
