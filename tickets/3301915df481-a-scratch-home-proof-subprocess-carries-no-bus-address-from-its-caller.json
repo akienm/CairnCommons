@@ -1,0 +1,101 @@
+{
+  "id": "3301915df481",
+  "title": "a scratch-HOME proof subprocess carries no bus address from its caller",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "A proof that gives a subprocess a scratch HOME gives it no bus address the parent carried, so a scratch-HOME run never reaches a live far bus.",
+  "why": "Measured 2026-11-12 on akienasus: this session's env carried CAIRN_BUS_HOME=akiendelllinux.local:7419, and test_root_verb_vocabulary.py:165 _run builds dict(os.environ, HOME=str(home), PYTHONPATH=...), so the scratch-HOME subprocess dialled the Dell's live bus and test_get_status_is_uniform_across_the_roster red over the Dell's cairn status (cached False), while the Dell's own 21:46 seal read it green. Under CAIRN_BUS_HOME=nowhere.invalid:7419 the same tooth fails 'the bus at nowhere.invalid:7419 did not answer'. A scratch HOME is not isolation while the bus address rides an env var. Same family as 3deafc9e36de (a foreign checkout's client meets a live bus); this is the env side.",
+  "traces_to": "Law 3 (a proof measures the code under it, not whatever bus the caller's env points at) and Law 8 (a red manufactured by the env is a fake failure, and the same leak can manufacture a green).",
+  "how": "(a) cairn/tools/scratch/scratch.py: def home_env(home, **extra) -> dict, after git_env: {k: v for k, v in os.environ.items() if not k.startswith('CAIRN_BUS_')}, then HOME=str(home), then extra (str values) applied last. The charter's 'what' names it, written through the artifact door. (b) The six tools/base proofs that build a scratch-HOME env from os.environ take it: test_root_verb_vocabulary.py:165, test_root_verbs.py:144, test_a_view_takes_arguments.py:122, test_help_answers_as_list_with_shortcuts.py:80, test_shim_starts_the_loop.py:75-78, test_a_loop_a_test_run_starts_is_the_runs.py:70-71 (home_env, then drop _ENV). The generated fixture source at test_a_loop_a_test_run_starts_is_the_runs.py:126 is a string and stays. (c) Red-first proofs: cairn/tools/scratch/proofs/test_home_env_carries_no_bus_address.py (clause 1) and cairn/tools/base/proofs/test_a_scratch_home_proof_reaches_no_live_bus.py (clauses 2 and 3).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "scratch.home_env(home, **extra) returns the caller's env with every CAIRN_BUS_* key removed, HOME=home, every other key kept, and extras applied last, so an explicit CAIRN_BUS_HOME extra survives"
+      },
+      {
+        "n": 2,
+        "claim": "test_root_verb_vocabulary.py::test_get_status_is_uniform_across_the_roster passes with CAIRN_BUS_HOME=nowhere.invalid:7419 in the parent env"
+      },
+      {
+        "n": 3,
+        "claim": "no function in cairn/tools/base/proofs/test_*.py copies os.environ and sets a HOME key on the copy; a scratch-HOME env is built through scratch.home_env"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: scratch gains home_env beside git_env; its charter's 'what' names it.",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/scratch/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the six tools/base scratch-HOME env builders take home_env.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_root_verb_vocabulary.py",
+        "cairn/tools/base/proofs/test_root_verbs.py",
+        "cairn/tools/base/proofs/test_a_view_takes_arguments.py",
+        "cairn/tools/base/proofs/test_help_answers_as_list_with_shortcuts.py",
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py",
+        "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_root_verb_vocabulary.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: two proofs, one tooth per clause: clause 1 in-process in tools/scratch; clause 2 a pytest -k subprocess under the unreachable address and clause 3 an ast scan, both in tools/base.",
+      "writes_to": [
+        "cairn/tools/scratch/proofs/test_home_env_carries_no_bus_address.py",
+        "cairn/tools/base/proofs/test_a_scratch_home_proof_reaches_no_live_bus.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/proofs/test_scratch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/scratch/scratch.py",
+      "cairn/tools/scratch/intention+why.json",
+      "cairn/tools/base/proofs/test_root_verb_vocabulary.py",
+      "cairn/tools/base/proofs/test_root_verbs.py",
+      "cairn/tools/base/proofs/test_a_view_takes_arguments.py",
+      "cairn/tools/base/proofs/test_help_answers_as_list_with_shortcuts.py",
+      "cairn/tools/base/proofs/test_shim_starts_the_loop.py",
+      "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py",
+      "cairn/tools/scratch/proofs/test_home_env_carries_no_bus_address.py",
+      "cairn/tools/base/proofs/test_a_scratch_home_proof_reaches_no_live_bus.py"
+    ],
+    "out": [
+      "the 19 scratch-HOME env builders outside tools/base (devices/cc, recovery, trouble, cairn, codemother, sleep_cycle, aider_shim, skill_block, bin/proofs): each component adopts home_env in its own ticket (RULE 1)",
+      "cairn/tools/bus_client/remote.py (how a client reads its address is unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "test_get_status_is_uniform_across_the_roster failed on the Dell bus's live cairn status (cached False)",
+      "how": "CAIRN_BUS_HOME=akiendelllinux.local:7419 bin/cairn test --exec 'python3 -m pytest -q cairn/tools/base/proofs/test_root_verb_vocabulary.py -k test_get_status_is_uniform_across_the_roster' on akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "the same tooth failed: the bus at nowhere.invalid:7419 did not answer",
+      "how": "CAIRN_BUS_HOME=nowhere.invalid:7419, same command"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "25 HOME overrides on os.environ copies across proofs, 6 in tools/base, none through a shared helper",
+      "how": "grep -rn for HOME= / \"HOME\" assignments over cairn and bin"
+    }
+  ]
+}
