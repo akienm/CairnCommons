@@ -2,15 +2,15 @@
   "id": "45a6331971fd",
   "title": "a host seam that cannot apply on this box's platform is not offered, so the install gate can reach green on Windows",
   "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
-  "intention": "cairn install does not offer a host seam that declares it applies only to another platform, so on Windows the gate reads green once every seam that can apply here has verified.",
+  "intention": "cairn install does not offer a host seam that declares it applies only to another platform: it reads not_applicable, never already_applied, and the install gate counts it green, so on Windows the gate reads green once every seam that can apply here has verified.",
   "why": "Measured 2026-11-12 on akiendell: on akiendell the installer dry-run check prints [OFFERED] usage-widget-hook and exits 1; gather_host_seams returns one seam; run_verify(seam) returns (False, '/usr/bin/bash: line 1: jq: command not found'); ~/.claude/usage-cache.json is absent; installer.py install() reads no platform field",
   "traces_to": "Law 4: the gate is physics only if it can be satisfied where it runs; Law 3: the offer was measured on the box, not assumed; Law 7: the skip carries a named reason.",
-  "how": "Give a host-seam intention an optional platforms declaration (the platforms it applies to; absent means every platform), have install() in the installer skip, with status skipped and a named reason, a seam whose platforms exclude this box's, and declare usage-widget-hook as linux only. The proof drives install(dry_run=True) over a scratch intentions dir holding one seam for another platform and one for this platform. Red first: the proof is red on HEAD because the other-platform seam reads offered.",
+  "how": "Give a host-seam intention an optional platforms declaration (absent means every platform). install() reports a seam whose platforms exclude sys.platform as status not_applicable (skipped=platform, reason named) without running its verify; the inspector's red_of counts not_applicable green beside already_applied; usage-widget-hook declares linux only. Ruled by the orchestrator 2026-11-12: already_applied keeps its meaning (the seam is on the box).",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "a host seam that declares another platform is reported skipped with the platform named, never offered, and its verify is not run"
+        "claim": "a host seam that declares another platform is reported not_applicable with the platform named, never offered and never already_applied, and its verify is not run"
       },
       {
         "n": 2,
@@ -19,6 +19,10 @@
       {
         "n": 3,
         "claim": "on akiendell the installer's dry-run check no longer lists usage-widget-hook as a red"
+      },
+      {
+        "n": 4,
+        "claim": "the install gate passes a not_applicable seam and still refuses a red one beside it"
       }
     ]
   },
@@ -40,14 +44,35 @@
         "cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
       ],
       "reads": []
+    },
+    {
+      "n": 3,
+      "text": "D3: the inspector's red_of counts not_applicable green beside already_applied.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/install_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/install_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: usage-widget-hook declares platforms linux, written through the artifact door.",
+      "writes_to": [
+        "CairnCommons/intentions-not-beside-code/usage-widget-hook.json"
+      ],
+      "reads": []
     }
   ],
   "bounds": {
     "in": [
+      "CairnCommons/intentions-not-beside-code/usage-widget-hook.json",
+      "cairn/devices/recovery/machines/install_inspector/inspector.py",
       "cairn/devices/recovery/machines/installer/installer.py",
       "cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
     ],
     "out": [
+      "bin",
       "every other component"
     ]
   },
@@ -61,10 +86,9 @@
   "chart": {
     "orient": {
       "request": "45a6331971fd: a host seam that cannot apply on this box's platform is not offered, so the install gate can reach green on Windows",
-      "intent": "install() skips a host seam whose declared platforms exclude this box's, without running its verify, and reports it green with skipped=platform and the reason named; usage-widget-hook declares linux only.",
-      "scope": "installer.py install() plus the usage-widget-hook seam's platforms field; the inspector, bin and other seams are not changed",
+      "intent": "install() reports a host seam whose declared platforms exclude this box's as not_applicable (never already_applied), without running its verify; the install gate counts not_applicable green; usage-widget-hook declares linux only.",
+      "scope": "installer.py install(), the inspector's red_of, and the usage-widget-hook seam's platforms field; bin and other seams are not changed",
       "unknowns": [
-        "the status a skipped seam carries: the gate reads only already_applied as green, and skipped already means operator-declined (a red), so the build reports already_applied with a skipped=platform key and a detail beginning 'skipped:'; whether the inspector should gain a distinct not_applicable status is a design choice left to Akien",
         "the seam's platform names are sys.platform values (linux, win32, darwin); no other seam declares one yet",
         "the posix side was not run: on linux usage-widget-hook is judged by its verify as before, by construction only"
       ],
@@ -90,11 +114,11 @@
       "bounds": {
         "in": [
           "cairn/devices/recovery/machines/installer/installer.py",
+          "cairn/devices/recovery/machines/install_inspector/inspector.py",
           "cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py",
           "CairnCommons/intentions-not-beside-code/usage-widget-hook.json"
         ],
         "out": [
-          "cairn/devices/recovery/machines/install_inspector/inspector.py",
           "bin",
           "every other host seam"
         ]
@@ -129,7 +153,11 @@
       "absences": [
         {
           "what": "a platform declaration a host seam can carry, read by install()",
-          "measure": "installer.py install() reads no platform field (read lines 468-544); on akiendell the dry-run check lists usage-widget-hook OFFERED"
+          "measure": "installer.py install() read no platform field before this build; on akiendell the dry-run check listed usage-widget-hook OFFERED"
+        },
+        {
+          "what": "a status the gate counts green that is not already_applied",
+          "measure": "inspector.py red_of passed only already_applied before this build (read the GREEN constant)"
         }
       ],
       "unknowns": [],
@@ -145,7 +173,7 @@
     "decompose": {
       "sub_problems": [
         {
-          "what": "install() skips a seam whose platforms exclude sys.platform; usage-widget-hook declares platforms linux",
+          "what": "install() reports a seam whose platforms exclude sys.platform as not_applicable; usage-widget-hook declares platforms linux",
           "why": "the gate refuses any red, and a KDE seam can never verify on Windows",
           "kind": "build",
           "fills": "a platform declaration a host seam can carry, read by install()",
@@ -156,6 +184,18 @@
           "writes_to": [
             "cairn/devices/recovery/machines/installer/installer.py",
             "cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
+          ]
+        },
+        {
+          "what": "the inspector's red_of counts not_applicable green",
+          "why": "so a skipped seam does not stand as a red while already_applied keeps its meaning",
+          "kind": "build",
+          "fills": "a status the gate counts green that is not already_applied",
+          "uses": [
+            "cairn/devices/recovery/machines/install_inspector/inspector.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/install_inspector/inspector.py"
           ]
         }
       ],
@@ -170,8 +210,12 @@
     "triage": {
       "order": [
         {
-          "what": "install() skips a seam whose platforms exclude sys.platform; usage-widget-hook declares platforms linux",
-          "why_now": "built and pushed; proof red on HEAD (2 of 3), green twice after"
+          "what": "install() reports a seam whose platforms exclude sys.platform as not_applicable; usage-widget-hook declares platforms linux",
+          "why_now": "built and pushed; proof green twice with 4 teeth"
+        },
+        {
+          "what": "the inspector's red_of counts not_applicable green",
+          "why_now": "built and pushed with the first piece"
         }
       ],
       "unknowns": [],
@@ -185,9 +229,15 @@
     "hypothesize": {
       "hypotheses": [
         {
-          "piece": "install() skips a seam whose platforms exclude sys.platform; usage-widget-hook declares platforms linux",
-          "expect": "the other-platform seam is reported skipped by name and its verify never runs; the real check on akiendell no longer lists usage-widget-hook",
-          "falsifier": "a seam for another platform reads offered, its verify runs, or an undeclared seam is judged differently than before",
+          "piece": "install() reports a seam whose platforms exclude sys.platform as not_applicable; usage-widget-hook declares platforms linux",
+          "expect": "the other-platform seam reads not_applicable and its verify never runs; the real check on akiendell no longer lists usage-widget-hook",
+          "falsifier": "a seam for another platform reads offered or already_applied, its verify runs, or an undeclared seam is judged differently than before",
+          "instrument": "python3 cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
+        },
+        {
+          "piece": "the inspector's red_of counts not_applicable green",
+          "expect": "installed() is ok over a not_applicable seam and still refuses a red one beside it",
+          "falsifier": "the gate reds a not_applicable seam, or passes a red seam beside one",
           "instrument": "python3 cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
         }
       ],
@@ -202,11 +252,12 @@
     "validate": {
       "criteria": [
         {
-          "claim": "the proof's three teeth pass: a seam for another platform is skipped by name and never verified, undeclared seams are judged as before, and usage-widget-hook declares linux",
+          "claim": "the proof's four teeth pass: a seam for another platform reads not_applicable and is never verified, undeclared seams are judged as before, usage-widget-hook declares linux, and the gate passes not_applicable while refusing a red",
           "instrument": "python3 cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py",
           "timeout_s": 300,
           "covers": [
-            "install() skips a seam whose platforms exclude sys.platform; usage-widget-hook declares platforms linux"
+            "install() reports a seam whose platforms exclude sys.platform as not_applicable; usage-widget-hook declares platforms linux",
+            "the inspector's red_of counts not_applicable green"
           ]
         }
       ],
