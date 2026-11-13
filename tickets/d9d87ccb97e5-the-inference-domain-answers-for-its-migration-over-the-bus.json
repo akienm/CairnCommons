@@ -1,0 +1,83 @@
+{
+  "id": "d9d87ccb97e5",
+  "title": "the inference domain answers for its migration over the bus",
+  "owning_intention": "cairn/devices/inference_domain/intention+why.json",
+  "intention": "inference_domain answers a bus verb `migration` with {old_table_gone, leaves, dump_spent, dump_avoided, dump_newest}, read on its own box, so a proof on any box can ask the home instance instead of its own leaf count.",
+  "why": "Measured 2026-11-13 on akienasus: 98ab0e9db57f tooth 7 reds '17 leaves in the answer tree' because it reads this box's store and dump; the answer tree is one box's (open-39f6229e7241, outline 5.5.3.8, 11.3.5.1), and e95b5d93cff0's bounds keep inference_domain's code out, so the reading needs a verb at the address that owns it (RULE 1; orchestrator ruling 'e95b A' via a sibling ticket).",
+  "traces_to": "RULE 1 (a device is reached only through its bus); Law 8 (a proof reads the same on every box).",
+  "how": "migrate_answers_to_their_tree.report() reads the old table's registration and presence, the answer tree's leaf count, and the newest dump's COPY section (miss cost spent, hit cost avoided, newest created); device.py declares `migration` and returns report()'s dict JSON-safe. The report lives in the migration module because tooth 1 of 98ab0e9db57f allows only that module to name the old table.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with the old table gone and a dump standing, the migration verb answers old_table_gone true, the tree's leaf count, and the dump's spent, avoided and newest created"
+      },
+      {
+        "n": 2,
+        "claim": "with the old table still registered or present, old_table_gone is false"
+      },
+      {
+        "n": 3,
+        "claim": "with no dump standing, dump_spent, dump_avoided and dump_newest are null, and the verb still answers"
+      },
+      {
+        "n": 4,
+        "claim": "the device declares the verb migration, and device.py still names no old table"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: report() in the migration module reads the store and the newest dump under the instance's temp.",
+      "writes_to": [
+        "cairn/devices/inference_domain/migrate_answers_to_their_tree.py"
+      ],
+      "reads": [
+        "cairn/devices/inference_domain/migrate_answers_to_their_tree.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: device.py declares `migration`, its handler returns report() JSON-safe.",
+      "writes_to": [
+        "cairn/devices/inference_domain/device.py"
+      ],
+      "reads": [
+        "cairn/devices/inference_domain/device.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof fakes the store and writes a scratch dump, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/inference_domain/proofs/test_the_domain_answers_for_its_migration.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/inference_domain/migrate_answers_to_their_tree.py",
+      "cairn/devices/inference_domain/device.py",
+      "cairn/devices/inference_domain/proofs/test_the_domain_answers_for_its_migration.py"
+    ],
+    "out": [
+      "every other component",
+      "every other proof",
+      "e95b5d93cff0's tooth"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "AssertionError: 17 leaves in the answer tree",
+      "how": "bin/cairn test over the proxy proof on akienasus (e95b5d93cff0's measured)"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "declared_verbs is resolve, embed, infer, calls; no verb reports the migration",
+      "how": "read cairn/devices/inference_domain/device.py declared_verbs"
+    }
+  ]
+}
