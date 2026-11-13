@@ -53,5 +53,157 @@
       "saw": "akiendell: cairn/machines/installer holds only __pycache__/ (git ls-files over it is empty) and tooth_files_are_home reds 'still exists'; tooth_install_runs_from_the_new_home reds OSError WinError 193 from subprocess.run([bin/cmd/install]) at proof line 74",
       "how": "ran the proof with the venv python; ls and git ls-files over cairn/machines/installer; read proof lines 52-79"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "1bf20054b165: the installer-lives-in-recovery proof counts tracked files at the old address and runs install through bash_script_argv",
+      "intent": "test_installer_lives_in_recovery.py is green on a Windows box: tooth_files_are_home counts tracked files at the old address (git ls-files) so a stale untracked __pycache__ is not 'still exists', and tooth_install_runs_from_the_new_home builds its argv with bash_script_argv so Windows can run bin/cmd/install.",
+      "scope": "the one proof file; the installer, bin and tools/base are read, never written",
+      "unknowns": [
+        "the posix side was not run on the Windows box where the edit was built; the orchestrator runs it"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base",
+          "bin"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what the files-are-home tooth counts",
+        "how the install tooth spawns bin/cmd/install",
+        "an existing argv helper for a shebang script on Windows"
+      ],
+      "holdings": [
+        {
+          "what": "the installer-lives-in-recovery proof",
+          "address": "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+        },
+        {
+          "what": "bash_script_argv, the Windows-safe argv for a shebang script",
+          "address": "cairn/tools/base/script_argv.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a tracked-files-only count at the old address in the proof",
+          "measure": "git show HEAD:cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py | grep -c ls-files answers 0 (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a git ls-files counter for the old address, self-checked on a scratch repo, and an install tooth that spawns through bash_script_argv",
+          "why": "a proof that reds on one box for a stale cache and a launcher proves nothing about the move it measures",
+          "kind": "build",
+          "fills": "a tracked-files-only count at the old address in the proof",
+          "uses": [
+            "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py",
+            "cairn/tools/base/script_argv.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a git ls-files counter for the old address, self-checked on a scratch repo, and an install tooth that spawns through bash_script_argv",
+          "why_now": "built uncommitted: red on HEAD for both teeth, green twice with the edit on Windows"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a git ls-files counter for the old address, self-checked on a scratch repo, and an install tooth that spawns through bash_script_argv",
+          "expect": "5 teeth green twice on Windows and unchanged on posix",
+          "falsifier": "files_are_home reds on a stale untracked __pycache__, or stays green with a tracked file at the old address, or the install tooth reds on Windows",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_installer_lives_in_recovery.py is green",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py",
+          "timeout_s": 900,
+          "covers": [
+            "a git ls-files counter for the old address, self-checked on a scratch repo, and an install tooth that spawns through bash_script_argv"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
