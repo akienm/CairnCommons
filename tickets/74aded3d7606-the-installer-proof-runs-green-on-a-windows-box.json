@@ -60,5 +60,165 @@
       "saw": "Three causes, each measured. (1) subprocess.run(['bash', ...]) from python on Windows resolves via CreateProcess to C:\\Windows\\System32\\bash.exe, the WSL launcher, though shutil.which lists Git's bash first; it strips the backslashes from a Windows path (rc 127). (2) text=True writes 'Y\\r\\n' on Windows and ask_user.sh read 'Y\\r'. (3) the applied tooth built 'test -f C:\\Users\\...' and bash ate the backslashes. Fixed: installer.bash_exe() (shutil.which) used by run_verify and the proof; ask_user.sh strips a trailing CR; the proof's commands use as_posix(). test_installer.py 13 teeth GREEN twice on Windows.",
       "how": "python subprocess probes of both bashes, then test_installer.py before and after each fix"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "74aded3d7606: the installer proof runs green on a Windows box",
+      "intent": "test_installer.py is green on a Windows box: the bash the installer and its proof spawn is the PATH bash and not WSL's System32 launcher, ask_user.sh tolerates a CR on its answer, and the proof's shell commands carry posix paths.",
+      "scope": "installer.py bash_exe and run_verify, ask_user.sh's answer read, and test_installer.py; every other component is out",
+      "unknowns": [
+        "the posix side was not run on the Windows box where the fix was built; the orchestrator runs it"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/recovery/machines/installer/installer.py",
+          "cairn/devices/recovery/machines/installer/ask_user.sh",
+          "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the installer and its proof spawn bash",
+        "an existing bash resolver",
+        "the measured cause of the 127"
+      ],
+      "holdings": [
+        {
+          "what": "the installer's run_verify and its bash spawn",
+          "address": "cairn/devices/recovery/machines/installer/installer.py"
+        },
+        {
+          "what": "the dumb Y/N gate",
+          "address": "cairn/devices/recovery/machines/installer/ask_user.sh"
+        },
+        {
+          "what": "the installer proof with the ask_yn and applied teeth",
+          "address": "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "bash_exe in the installer",
+          "measure": "git show 93bbd366a^:cairn/devices/recovery/machines/installer/installer.py | grep -c bash_exe answers 0 (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "bash_exe, the CR-tolerant answer read, and posix paths in the proof",
+          "why": "a proof that reds on one OS for a launcher and a line ending proves nothing about the installer",
+          "kind": "build",
+          "fills": "bash_exe in the installer",
+          "uses": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "cairn/devices/recovery/machines/installer/ask_user.sh",
+            "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "cairn/devices/recovery/machines/installer/ask_user.sh",
+            "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "bash_exe, the CR-tolerant answer read, and posix paths in the proof",
+          "why_now": "built and pushed at 93bbd366a after measuring three causes"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "bash_exe, the CR-tolerant answer read, and posix paths in the proof",
+          "expect": "13 teeth green twice on Windows and unchanged on posix",
+          "falsifier": "ask_yn or applied reds on Windows, or any tooth reds on posix",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_installer.py is green",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_installer.py",
+          "timeout_s": 900,
+          "covers": [
+            "bash_exe, the CR-tolerant answer read, and posix paths in the proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
