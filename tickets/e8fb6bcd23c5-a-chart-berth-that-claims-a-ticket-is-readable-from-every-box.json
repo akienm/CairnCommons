@@ -1,0 +1,99 @@
+{
+  "id": "e8fb6bcd23c5",
+  "title": "a chart berth that claims a ticket is readable from every box",
+  "owning_intention": "cairn/tools/chain/intention+why.json",
+  "intention": "Every chart-stage berth whose packet names a ticket is mirrored to CairnCommons/berths/chart/<name>, and chain_for_ticket over the default store reads that mirror too, so a hollow, verdict or chain read on a box other than the one that charted finds the chain.",
+  "why": "Measured 2026-11-12 on akienasus for 3195b3b834bc, charted on akiendelllinux: the hollow refused with 'ticket 3195b3b834bc names no decompose berth', and sail.py verdict raised FileNotFoundError on ~/.cairn/devices/chart/0/packets/validate-20261112T205954-68e56653ee1c.json. chain._packet_index globs only <~/.cairn/devices>/*/packets, the local instance-space, so the orchestrator had to run both on the Dell. Sibling of d692ef650534, which mirrors sorted and intent berths to the commons at cast; chart berths are written later, by codemother's stage writers, so they need their own carry.",
+  "traces_to": "Law 7 (a reader may not report as absent a chain that exists) and Law 1 (re-charting or hand-copying berths re-derives a settled chain).",
+  "how": "(a) cairn/tools/chain/chain.py: carry_berth(path) reads the packet; if it carries a str 'ticket', write its bytes through cairn.tools.artifact.artifact.write to <roots()['CairnCommons']>/berths/chart/<basename>, verb 'chart', returning the destination (None when unclaimed or no commons). (b) _packet_index and _berths_token: when the root is the default BERTHS_ROOT, also index <commons>/berths/chart/*.json (stage from the filename prefix, as now) and fold that folder's mtime into the token; dedupe by basename, the local path winning. An explicit berths_root reads only itself. (c) Each stage writer calls chain.carry_berth(path) after its file is written: orient.write_packet, constrain.write_constrain, survey.write_survey, decompose.write_decompose, triage.write_triage, hypothesize.write_hypothesize, validate's writer (validate.py ~282) and verdict.write_verdict. (d) Red-first proof over a scratch store and a scratch commons.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a claiming berth written by a stage writer is also present at <commons>/berths/chart/<name>, byte-identical"
+      },
+      {
+        "n": 2,
+        "claim": "a berth whose packet names no ticket is not copied"
+      },
+      {
+        "n": 3,
+        "claim": "chain_for_ticket over a default store that lacks the berth finds it through the commons mirror"
+      },
+      {
+        "n": 4,
+        "claim": "a berth present in both the local store and the mirror is indexed once, at the local path"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: carry_berth and the mirror-aware index in chain.py.",
+      "writes_to": [
+        "cairn/tools/chain/chain.py"
+      ],
+      "reads": [
+        "cairn/tools/chain/chain.py",
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: each of the eight stage writers calls chain.carry_berth on the path it wrote.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/orient/orient.py",
+        "cairn/devices/codemother/machines/constrain/constrain.py",
+        "cairn/devices/codemother/machines/survey/survey.py",
+        "cairn/devices/codemother/machines/decompose/decompose.py",
+        "cairn/devices/codemother/machines/triage/triage.py",
+        "cairn/devices/codemother/machines/hypothesize/hypothesize.py",
+        "cairn/devices/codemother/machines/validate/validate.py",
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/orient/orient.py",
+        "cairn/devices/codemother/machines/validate/validate.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over a scratch store and scratch commons.",
+      "writes_to": [
+        "cairn/tools/chain/proofs/test_a_claiming_chart_berth_is_read_from_every_box.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/chain/chain.py",
+      "cairn/devices/codemother/machines/orient/orient.py",
+      "cairn/devices/codemother/machines/constrain/constrain.py",
+      "cairn/devices/codemother/machines/survey/survey.py",
+      "cairn/devices/codemother/machines/decompose/decompose.py",
+      "cairn/devices/codemother/machines/triage/triage.py",
+      "cairn/devices/codemother/machines/hypothesize/hypothesize.py",
+      "cairn/devices/codemother/machines/validate/validate.py",
+      "cairn/devices/codemother/machines/verdict/verdict.py",
+      "cairn/tools/chain/proofs/test_a_claiming_chart_berth_is_read_from_every_box.py"
+    ],
+    "out": [
+      "cairn/tools/base/transitions.py and cairn/machines/skill_block/skill_block.py (d692ef650534's)",
+      "back-filling berths charted before this lands",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "hollow: 'ticket 3195b3b834bc names no decompose berth'; verdict: FileNotFoundError on ~/.cairn/devices/chart/0/packets/validate-20261112T205954-68e56653ee1c.json",
+      "how": "cairn/devices/cc/scripts/prove.sh and sail.py verdict 3195b3b834bc on akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "_packet_index globs os.path.join(root, '*', 'packets', '*.json') with root = BERTHS_ROOT = ~/.cairn/devices",
+      "how": "reading cairn/tools/chain/chain.py lines 54 and 147-170"
+    }
+  ]
+}
