@@ -1,0 +1,61 @@
+{
+  "id": "c92ba2ab1712",
+  "title": "build_inspector's proofs reach the system temp directory only through the scratch door",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "Every proof in cairn/machines/build_inspector takes its temp directory from cairn.tools.scratch.scratch.scratch_dir, so nothing a build_inspector proof makes outlives its run.",
+  "why": "Measured 2026-11-12: bare_temp_reach over the repo named 2 build_inspector line(s): cairn/machines/build_inspector/proofs/test_no_iou_stands.py:46 (root = Path(tempfile.mkdtemp(prefix=\"testing-no-iou-stands-\")), landed under f5dbfddea8c6); cairn/machines/build_inspector/proofs/test_no_iou_stands.py:123 (bare = Path(tempfile.mkdtemp(prefix=\"testing-no-iou-stands-nogit-\")), landed under f5dbfddea8c6); so cairn/tools/scratch/proofs/test_scratch.py::test_no_proof_in_this_repo_calls_mkdtemp_bare reds. cc_0's 9859b8d64 (ticket 383ac6351996): the LF hook proof took its temp dir from scratch_dir after the scratch-door proof redded its bare mkdtemp.",
+  "traces_to": "Law 4 (the scratch door is physics, and these lines step around it) and CP6 (what a proof leaves in /tmp accumulates unseen; 3581 dirs did once).",
+  "how": "At each site, replace Path(tempfile.mkdtemp(prefix=P)) with scratch_dir(P), imported from cairn.tools.scratch.scratch, and drop the tempfile import where nothing else uses it: cairn/machines/build_inspector/proofs/test_no_iou_stands.py:46 (root = Path(tempfile.mkdtemp(prefix=\"testing-no-iou-stands-\")), landed under f5dbfddea8c6); cairn/machines/build_inspector/proofs/test_no_iou_stands.py:123 (bare = Path(tempfile.mkdtemp(prefix=\"testing-no-iou-stands-nogit-\")), landed under f5dbfddea8c6). Precedent: cc_0's 9859b8d64 (ticket 383ac6351996): the LF hook proof took its temp dir from scratch_dir after the scratch-door proof redded its bare mkdtemp. The standing door proof cairn/machines/build_inspector/proofs/test_build_inspectors_proofs_reach_temp_only_through_the_scratch_door.py (ticket 2bac0ebce3a8) already reds over these lines; its PROVES gains this ticket's key on the same tooth test_no_proof_in_build_inspector_reaches_temp_bare, so the crossing names it. Proofs-only build: the ticket carries a top-level writes_to.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "bare_temp_reach over cairn/machines/build_inspector names no line, so no build_inspector proof reaches the system temp directory except through scratch_dir"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: each named site takes scratch_dir(prefix) in place of Path(tempfile.mkdtemp(prefix=...)).",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_no_iou_stands.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/proofs/test_no_iou_stands.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/machines/build_inspector/proofs/test_build_inspectors_proofs_reach_temp_only_through_the_scratch_door.py gains this ticket's PROVES key on its standing tooth test_no_proof_in_build_inspector_reaches_temp_bare.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_build_inspectors_proofs_reach_temp_only_through_the_scratch_door.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_base_proofs_reach_temp_only_through_the_scratch_door.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/proofs/test_no_iou_stands.py",
+      "cairn/machines/build_inspector/proofs/test_build_inspectors_proofs_reach_temp_only_through_the_scratch_door.py"
+    ],
+    "out": [
+      "every other component's bare sites (each in its own ticket, RULE 1)",
+      "cairn/tools/scratch (the door and the scan are unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "bare_temp_reach over the repo named 2 build_inspector line(s): cairn/machines/build_inspector/proofs/test_no_iou_stands.py:46 (root = Path(tempfile.mkdtemp(prefix=\"testing-no-iou-stands-\")), landed under f5dbfddea8c6); cairn/machines/build_inspector/proofs/test_no_iou_stands.py:123 (bare = Path(tempfile.mkdtemp(prefix=\"testing-no-iou-stands-nogit-\")), landed under f5dbfddea8c6); so cairn/tools/scratch/proofs/test_scratch.py::test_no_proof_in_this_repo_calls_mkdtemp_bare reds",
+      "how": "PYTHONPATH=. python3 -c 'from cairn.tools.scratch.scratch import bare_temp_reach; print(bare_temp_reach(REPO))'"
+    }
+  ],
+  "writes_to": [
+    "cairn/machines/build_inspector/proofs/test_no_iou_stands.py",
+    "cairn/machines/build_inspector/proofs/test_build_inspectors_proofs_reach_temp_only_through_the_scratch_door.py"
+  ]
+}
