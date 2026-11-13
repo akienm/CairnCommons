@@ -57,5 +57,169 @@
       "saw": "on akiendell test_artifact_door.py reds all 14 declared teeth with 'aborted: FileNotFoundError' (also red at HEAD, baseline measured by swapping the two source files to HEAD); with teeth_callers stubbed, the remaining teeth run and 2 fail: the scratch hook says door not reachable, and the tester hook tooth's python3 reports no module cairn.tools.artifact.__main__",
       "how": "ran the proof as is, then via importlib with teeth_callers replaced by a no-op; read proof lines 69-130 and 415-443"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "2a208067d036: the artifact-door proof reaches its hook teeth on Windows, and names the teeth that need Linux instead of crashing past them",
+      "intent": "test_artifact_door.py runs every declared tooth to the end on Windows: the Linux-only caller teeth fail by name (UNRAN: needs linux cgroups) instead of aborting the rest, and the hook teeth reach the door in their scratch repos.",
+      "scope": "one proof file, cairn/tools/artifact/proofs/test_artifact_door.py; the hooks and artifact.py are read, not written",
+      "unknowns": [
+        "how a Windows caller is classified (gate / akien / cc) is UNDECIDED: 3 teeth stay red, named UNRAN, until that is designed (a_process_under_a_transient_cairn_service_reads_as_GATE, a_live_process_in_a_login_session_reads_as_AKIEN, test_the_three_caller_classes_measure_gate_cc_akien); A.caller() returns cgroup None on Windows",
+        "the posix run was not made: the changes are guarded by _has_linux_callers() and os.name == 'nt', so posix behaviour is unchanged by construction only",
+        "the hooks join PYTHONPATH with ':' and Windows python splits on ';'; this is harmless on a live repo (cwd is the door) and was worked around in the proof, not fixed in the hooks"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/artifact/proofs/test_artifact_door.py"
+        ],
+        "out": [
+          "cairn/tools/artifact/hooks/pre-commit",
+          "cairn/devices/tester/hooks/pre-commit",
+          "cairn/tools/artifact/artifact.py",
+          "how a Windows caller is classified"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "why the proof aborts on Windows",
+        "the hook's door lookup",
+        "how the tester hook builds PYTHONPATH"
+      ],
+      "holdings": [
+        {
+          "what": "the artifact door proof",
+          "address": "cairn/tools/artifact/proofs/test_artifact_door.py"
+        },
+        {
+          "what": "the artifact pre-commit hook",
+          "address": "cairn/tools/artifact/hooks/pre-commit"
+        },
+        {
+          "what": "the tester pre-commit hook",
+          "address": "cairn/devices/tester/hooks/pre-commit"
+        },
+        {
+          "what": "bash_script_argv, the Windows script runner",
+          "address": "cairn/tools/base/script_argv.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a Windows-safe path through the artifact-door proof's caller and hook teeth",
+          "measure": "the proof run on akiendell aborted with FileNotFoundError and reds all 14 teeth (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "guard the Linux-only caller teeth, run the cli tooth through bash_script_argv, pass CAIRN_REPO to the scratch commits, hand the stand-in package over to the real door on nt",
+          "why": "a crash on the first Linux-only call hid every other tooth on Windows",
+          "kind": "build",
+          "fills": "a Windows-safe path through the artifact-door proof's caller and hook teeth",
+          "uses": [
+            "cairn/tools/artifact/hooks/pre-commit",
+            "cairn/devices/tester/hooks/pre-commit",
+            "cairn/tools/base/script_argv.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/proofs/test_artifact_door.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "guard the Linux-only caller teeth, run the cli tooth through bash_script_argv, pass CAIRN_REPO to the scratch commits, hand the stand-in package over to the real door on nt",
+          "why_now": "built and pushed (e1d788123); three teeth red by name, the rest green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "guard the Linux-only caller teeth, run the cli tooth through bash_script_argv, pass CAIRN_REPO to the scratch commits, hand the stand-in package over to the real door on nt",
+          "expect": "on Windows every declared tooth runs; only the three Linux-only teeth fail, by name",
+          "falsifier": "a tooth aborts with FileNotFoundError, a hook tooth is red on Windows, or a Linux-only tooth is green on a box without cgroups",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_artifact_door.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_artifact_door.py on Windows runs every tooth to the end, the three Linux-only teeth fail by name UNRAN and the hook teeth are green",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_artifact_door.py",
+          "timeout_s": 900,
+          "covers": [
+            "guard the Linux-only caller teeth, run the cli tooth through bash_script_argv, pass CAIRN_REPO to the scratch commits, hand the stand-in package over to the real door on nt"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
