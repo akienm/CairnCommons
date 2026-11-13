@@ -1,0 +1,61 @@
+{
+  "id": "900c227b5d81",
+  "title": "the memory-link proof asks whether the memory dir is a link the way memory_link does, so a Windows junction counts",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "The proof's link check accepts what memory_link.py makes on each OS: a symlink, or on nt a junction, that resolves to the clone.",
+  "why": "Measured 2026-11-12 on akiendell: akiendell: ~/.claude/projects/C--automation-local-cairn/memory is LinkType Junction, Target C:/Users/akien/dev/src/cc-memory; that dir has .git; all 7 project memory dirs are junctions. The proof at HEAD (clean worktree) fails run 2 'is not a link'. memory_link.py:78-86 is_link() accepts a junction via os.readlink; proof line 95 uses Path.is_symlink().",
+  "traces_to": "Law 3 and Law 8: a proof red on one OS for a platform reason, not a behaviour reason, is not measuring the component; Law 9: the red is a distance from the spec and this one is the proof's own; CP4.",
+  "how": "Replace the proof's `mem.is_symlink() and mem.resolve() == clone` with a check that accepts a symlink or (os.name == 'nt') a reparse point whose resolve() equals the clone; it must still red when the dir is a plain directory or a link to somewhere else. The proof's red-first teeth plant a plain dir and a link elsewhere.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on a Windows box the proof's run 2 passes when memory_link.py makes a junction to the clone"
+      },
+      {
+        "n": 2,
+        "claim": "a plain directory at the memory path still fails the link check"
+      },
+      {
+        "n": 3,
+        "claim": "a link or junction to a different directory still fails the link check"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/memory_link.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py",
+      "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akiendell: ~/.claude/projects/C--automation-local-cairn/memory is LinkType Junction, Target C:/Users/akien/dev/src/cc-memory; that dir has .git; all 7 project memory dirs are junctions. The proof at HEAD (clean worktree) fails run 2 'is not a link'. memory_link.py:78-86 is_link() accepts a junction via os.readlink; proof line 95 uses Path.is_symlink().",
+      "how": "Get-Item -Force over the memory dirs; Test-Path on the clone's .git; the proof run in a git worktree of HEAD; read of memory_link.py 72-90 and the proof 94-96"
+    }
+  ]
+}
