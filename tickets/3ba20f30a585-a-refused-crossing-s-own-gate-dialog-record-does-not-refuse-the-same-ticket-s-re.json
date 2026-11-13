@@ -1,0 +1,93 @@
+{
+  "id": "3ba20f30a585",
+  "title": "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "working_tree_clean, judged for a crossing of ticket T, does not count dirt made only of T's own appended gate_dialog lines (in T's log.jsonl) and the artifact-journal lines that name T's log; everything else still refuses.",
+  "why": "Measured 2026-11-12 on akiendelllinux, 3195b3b834bc's log: at 21:21:33 PROVED was refused (ExitGateRed the_stones_are_pushed, cairn 2 ahead, commons 3 ahead); the re-cross at 21:22:02 was refused by BuildGateRed working_tree_clean, dirty_count 2, both in CairnCommons: .artifact-journal.jsonl and tickets/3195b3b834bc-...log.jsonl, which are exactly the gate_dialog line and journal line the 21:21:33 refusal wrote (ticket.py:215 append_log, ticket_log.py:104). A commit, then 21:22:29 crossed. The same refuse-then-commit pattern ran at 21:01:12, 21:04:32 and 21:05:45 before PROVEME passed at 21:07:55. Every refusal costs a commit before the retry. Sibling of 12443bcc113f (another ticket's records, behind Q#94), whose clause 4 keeps the crossing ticket's own records refusing, so Q#94's answer does not cover this narrower case. 8w/F11/8x (c1cca2e3dc23) target orphaned work; a gate's own dialog line records the crossing and is not work.",
+  "traces_to": "Law 8 (a crossing still refuses over loose code or work: only the gate's own dialog is excused) and Law 1 (a commit between a refusal and its re-cross records nothing new and costs a gate round per refusal).",
+  "how": "inspect() in cairn/machines/build_inspector/inspector.py gains ticket=None and stamps row['crossing_ticket'] on the rows it shakes, so SIEVES keep their (row, comp_dir) signature. working_tree_clean reads row.get('crossing_ticket') and, for each dirty path, drops it only if it is T's log (tickets/T-*.log.jsonl) or .artifact-journal.jsonl in the commons, git show HEAD:<rel> is a line-boundary prefix of the working copy, and every appended line parses as JSON with kind gate_dialog and actor T (log) or path equal to T's log rel path (journal). Pattern: history_integrity's git show HEAD compare at inspector.py:3709. In cairn/tools/base/transitions.py, _build_gate and inspect_build take ticket and pass it to inspect; _clean_tree_gate and inspect_clean_tree take ticket and pass {'component', 'crossing_ticket'} as the row; emit passes journal_extra.get('ticket') at both call sites. Red-first proof over scratch git repos through the repos= keyword.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a commons whose only dirt is appended gate_dialog lines with actor T in T's log, plus appended journal lines naming that log, gives no working_tree_clean finding for a row whose crossing_ticket is T"
+      },
+      {
+        "n": 2,
+        "claim": "the same dirt judged for a row whose crossing_ticket is another ticket U, or none, still gives a working_tree_clean finding naming both paths"
+      },
+      {
+        "n": 3,
+        "claim": "an appended line of another kind or another actor, or a rewritten committed line, in T's log still refuses T"
+      },
+      {
+        "n": 4,
+        "claim": "any other dirty path beside T's dialog, including a journal line naming another path, still refuses T, and the finding names that path"
+      },
+      {
+        "n": 5,
+        "claim": "emit passes the crossing ticket to both the build gate and the clean-tree gate, so a PROVED re-cross after a refusal is not refused by that refusal's own dialog"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: working_tree_clean drops a dirty path only when it is T's log or the commons journal and every line appended since HEAD is T's own gate dialog; inspect() gains ticket and stamps row['crossing_ticket'].",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/tools/base/ticket_log.py",
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: transitions threads the crossing ticket: _build_gate/inspect_build and _clean_tree_gate/inspect_clean_tree take ticket, emit passes journal_extra.get('ticket').",
+      "writes_to": [
+        "cairn/tools/base/transitions.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over scratch git repos through working_tree_clean's repos= keyword; clause 5 reads emit's call sites by AST or drives emit over a scratch component.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/tools/base/transitions.py",
+      "cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py"
+    ],
+    "out": [
+      "another ticket's records (ticket 12443bcc113f, Q#94)",
+      "cairn/machines/ticket/ticket.py gate_dialog logging",
+      "cairn/tools/base/ticket_log.py",
+      "the_stones_are_pushed exit lane",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "3195b3b834bc PROVED refused 21:21:33 (not pushed), re-cross refused 21:22:02 on working_tree_clean over the refusal's own log line and journal line, crossed 21:22:29 after a commit",
+      "how": "gate_dialog lines in CairnCommons/tickets/3195b3b834bc-...log.jsonl and the refusal text on the Dell"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "every gate reply, refusals included, is appended by append_log(kind gate_dialog, actor=<ticket>) with a journal line naming the log path",
+      "how": "read cairn/machines/ticket/ticket.py:215, cairn/tools/base/ticket_log.py:104 and the tail of CairnCommons/.artifact-journal.jsonl"
+    }
+  ]
+}
