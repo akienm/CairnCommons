@@ -1,0 +1,34 @@
+{
+  "id": "host-postgres-collation-matches-the-os",
+  "date": "2026-11-13",
+  "owner": "CC — CC gates writes to this intention; the databases are the box's, refreshed by their owners (akien for cairn, the postgres role for postgres and template1).",
+  "intention": "Every postgres database on a cairn box records the collation version the OS's glibc actually provides, with its indexes rebuilt under that order, so no connect warns 'collation version mismatch' and no text index is sorted under a glibc the box no longer runs.",
+  "why": "Measured 2026-11-13 on akienasus after its release upgrade (landed 2026-11-11): every psql connect to cairn printed 'WARNING: database \"cairn\" has a collation version mismatch ... created using collation version 2.39, but the operating system provides version 2.43'. pg_database showed cairn, postgres and template1 all at datcollversion 2.39 against pg_database_collation_actual_version 2.43 (template0 records none). A standing warning on every connect buries the real ones (Law 7), and an index built under the old sort order can miss rows a lookup under the new one expects. Nothing in either repo carried the fix, and template1 hands the stale version to every database created after the upgrade.",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces, so a permanent false alarm defeats the surface) and outline 11.3.5 (postgres is a host service, installed and upgraded by Recovery); the host-seam class: the seed carries what an upgraded box needs.",
+  "node_class": "host-seam",
+  "ticket": "b1f182b6b818",
+  "cost": "REINDEX DATABASE locks each table while its indexes rebuild; on a 9.6 MB cairn db that is seconds. Run it when no proof is mid-write if you can; a reader blocked for those seconds is the only cost.",
+  "apply": {
+    "note": "Complete recipe. Needs only postgres and sudo. REINDEX first, REFRESH second: REFRESH alone silences the warning over indexes still sorted the old way. Neither statement may run inside a transaction block, so each is its own psql -c.",
+    "1_list": "psql -d postgres -At -c \"select datname || '|' || pg_get_userbyid(datdba) from pg_database where datcollversion is not null and datcollversion <> pg_database_collation_actual_version(oid)\"",
+    "2_each": "for each <db>|<owner> line: as the owner (psql directly when the owner is the calling user, else sudo -u <owner> psql), run psql -d <db> -c 'REINDEX DATABASE <db>' then psql -d <db> -c 'ALTER DATABASE <db> REFRESH COLLATION VERSION'",
+    "3_template1": "template1 is in the list on an upgraded box and must be refreshed too, or every later CREATE DATABASE inherits the stale version"
+  },
+  "verify": {
+    "command": "test -z \"$(psql -d postgres -At -c \"select datname from pg_database where datcollversion is not null and datcollversion <> pg_database_collation_actual_version(oid)\" 2>&1)\" && ! psql -d cairn -At -c 'select 1' 2>&1 | grep -q 'collation version mismatch'",
+    "green": "exit 0: no database records a collation version other than the one the OS provides, and a connect to cairn prints no mismatch warning",
+    "horizon": "after every OS release upgrade (glibc moves with it), and at a box's first cairn start after one"
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "akienasus: cairn|2.39|2.43|akien, postgres|2.39|2.43|postgres, template1|2.39|2.43|postgres, template0 none; every connect warns; PostgreSQL 16.15",
+      "how": "psql -d postgres -At -c \"select datname, datcollversion, pg_database_collation_actual_version(oid), pg_get_userbyid(datdba) from pg_database\""
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "akienasus after apply: postgres, cairn and template1 each REINDEX then 'changing version from 2.39 to 2.43'; all three record 2.43; verify exit 0 twice",
+      "how": "the intention's apply (sudo -n -u postgres for postgres and template1), then its verify twice"
+    }
+  ]
+}
