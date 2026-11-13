@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked at keeping the text scan and exempting the injection proof by name: that is the name-based exemption address_rule.py dropped, and it would re-break on the next payload. The AST question is the smallest predicate that asks what the leak was made of.",
+      "hidden_assumption": "That a hand drop always goes through an .execute call with the SQL as a literal or f-string at the call site. A drop built in a variable first, then executed, would pass; measured 0 such in the corpus, and the tooth's job is the 201a37bf1613 leak shape.",
+      "prior_art": "cairn/tools/base/address_rule.py did exactly this move for spelled addresses (ticket the-instance-address-is-resolved-never-spelled); its docstring names 'a mention becomes a catch'. Prototype measured 2026-11-12 (scratchpad leak_ast_probe.py): text scan hits 1 file (a mention), AST hits 0, both leak shapes caught.",
+      "real_collision": "Ticket 201a37bf1613 owns clause 4's intent (no proof leaks scratch tables); this keeps that intent and sharpens its measurement, a distinction, not a collision."
+    },
+    "exit": "routed_forward",
+    "falsifier": "A fixture with store.add_owned_index(t, 'o', b, ['x) ; DROP TABLE ' + t]) passes the tooth; fixtures with cur.execute(f'DROP TABLE IF EXISTS {t}') and _NONCE = os.getpid() each red it; the whole proofs corpus stays green. Wrong intent if a real hand drop is found spelled some way the predicate misses (e.g. through a helper), measured by the same corpus scan.",
+    "from_idea": "2026-11-12-db-domain-s-test-scratch-cannot-outlive",
+    "how": "Replace the text scan in test_scratch_cannot_outlive_its_process.py's test_no_proof_drops_a_table_by_hand with an AST predicate (the address_rule.py pattern): flag a .execute()/.executemany() call whose first argument's string parts say DROP TABLE, and an assignment to the name _NONCE. Red-first teeth over fixture sources: a mention in a string constant passes, the two leak shapes red.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (a hollow green, or here a false red, is leaned on by a peer) and Law 3: the tooth must measure the leak, not the words; a false red on a mention cost a proof-only repair to d494ff4ae955 on 2026-11-12.",
+    "what": "db_domain's no-hand-drop tooth reds a proof that drops a table or mints a nonce by hand, and never a proof that only mentions those words in a string."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-12: the text scan's only hit on main is a SQL-injection payload (a mention); the AST predicate hits nothing and still catches both leak shapes."
+    },
+    {
+      "stratum": "code",
+      "text": "Known blind spot recorded, not fixed: SQL assigned to a variable then executed is not caught; 0 in the corpus today."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "70d40f974f5e",
+  "skill": "intent",
+  "title": "db_domain's no-hand-drop tooth reds a proof that drops a table or mints a nonce by hand, and never a proof that only men",
+  "trace_id": "811f3d123182",
+  "when": "2026-11-12T17:43:21.572465"
+}

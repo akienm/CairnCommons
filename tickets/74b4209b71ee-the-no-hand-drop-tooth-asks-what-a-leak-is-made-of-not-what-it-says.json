@@ -1,0 +1,68 @@
+{
+  "id": "74b4209b71ee",
+  "title": "the no-hand-drop tooth asks what a leak is made of, not what it says",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "intention": "db_domain's no-hand-drop tooth reds a proof that drops a table or mints a nonce by hand, and never a proof that only mentions those words in a string.",
+  "why": "Measured 2026-11-12: test_no_proof_drops_a_table_by_hand (201a37bf1613 clause 4) is a text scan, and it redded test_an_owned_index_is_owner_gated.py for an SQL-injection payload, a string handed to store.add_owned_index. A mention became a catch, and it cost a proof-only repair to d494ff4ae955.",
+  "traces_to": "Law 3 and Law 8: the tooth must measure the leak, not the words; a false red is distrust spent where none was owed.",
+  "how": "Replace the text scan with a module-level AST predicate _hand_leaks(src) -> list[str] in test_scratch_cannot_outlive_its_process.py (address_rule.py's pattern): a Call to .execute/.executemany whose first argument holds a str Constant matching DROP TABLE, and an Assign/AnnAssign to the Name _NONCE; a SyntaxError is an offender. The tooth runs it over cairn/**/proofs/*.py. A new proof, test_a_mention_is_not_a_hand_drop.py, imports the predicate and holds one tooth per clause over fixture sources plus the corpus.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture source that mentions DROP TABLE only inside a string handed to a non-execute call yields no offence"
+      },
+      {
+        "n": 2,
+        "claim": "a fixture with cur.execute(f\"DROP TABLE IF EXISTS {t}\") yields an offence naming its line"
+      },
+      {
+        "n": 3,
+        "claim": "a fixture with _NONCE = os.getpid() yields an offence naming its line"
+      },
+      {
+        "n": 4,
+        "claim": "the whole cairn/**/proofs/*.py corpus yields no offence under the predicate"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _LEAK_SPELLINGS and the text scan give way to the AST predicate _hand_leaks in the existing proof; test_no_proof_drops_a_table_by_hand calls it.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py",
+        "cairn/tools/base/address_rule.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the new proof holds one tooth per clause over fixture sources and the corpus, PROVES keys 1..4.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_a_mention_is_not_a_hand_drop.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py",
+      "cairn/devices/db_domain/proofs/test_a_mention_is_not_a_hand_drop.py"
+    ],
+    "out": [
+      "every other component",
+      "db_domain's store code",
+      "non-proof code"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "text scan hit 1 proof (an injection payload, a mention); the AST predicate hit 0 proofs and caught both leak shapes in fixtures",
+      "how": "scratchpad leak_ast_probe.py over ~/dev/src/cairn on main"
+    }
+  ]
+}
