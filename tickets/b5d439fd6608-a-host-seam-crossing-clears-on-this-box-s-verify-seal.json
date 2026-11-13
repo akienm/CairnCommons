@@ -1,0 +1,79 @@
+{
+  "id": "b5d439fd6608",
+  "title": "a host-seam crossing clears on this box's verify seal",
+  "owning_intention": "cairn/devices/codemother/machines/clearance/intention+why.json",
+  "intention": "A host-seam ticket's crossing through the clearance gate names its owning intention as the proof, and clearance judges that proof by this box's host-seam standing(), so a verify sealed on this box clears the crossing and an unsealed or drifted one refuses.",
+  "why": "Measured 2026-11-13 by the orchestrator: a no-target sail.py cross of host-seam tickets 496dcbeba174 and b1f182b6b818 refuses 'the crossing names no proof at all', because gate.declaring() finds no proofs/*.py whose PROVES names them, and dfe6c1432fc8 kept clearance out of bounds.",
+  "traces_to": "Law 8 — nothing enters proven-space without a proof; for a host-seam the proof is the box-local verify seal (CairnCommons/node_classes/host-seam.json prove_gate).",
+  "how": "D1: ClearanceGate.crossing_of names the ticket's owning_intention (resolved under the commons) as proven_by when the ticket's node_class is host-seam. D2: clearance rule 2 is unchanged (standing() already dispatches host-seam); rule 2b's _coverage_lacks takes a proven host-seam standing as that entry's coverage instead of PROVES teeth and the hollow reading. D3: red-first proof over a fixture host-seam ticket in a scratch crossing world.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the gate's crossing for a fixture host-seam ticket names its owning intention as proven_by, and a non-host-seam ticket's crossing is unchanged"
+      },
+      {
+        "n": 2,
+        "claim": "a host-seam crossing whose intention has no seal on this box is refused as not in proven-space; after cli --host-seam --seal it clears, rule 2b included"
+      },
+      {
+        "n": 3,
+        "claim": "after a host fact moves, the same crossing is refused again, the refusal naming the moved fact"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: crossing_of reads node_class off the ticket's workflow (parse_workflow(ticket.workflow).node_class); for host-seam, proven_by = [absolute path of owning_intention under the commons], else the existing proven_by().",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/gate.py",
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: _coverage_lacks skips proof_coverage.lacks and hollow_lacks for a named path where validation_store.is_host_seam(path), and adds a lack when standing(path) is not proven; every other named proof keeps both instruments.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/clearance.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/clearance.py",
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof, one tooth per clause, standing a fixture world the way test_the_proven_space_rule_follows_the_ticket_kind.py does, with a fixture host-seam intention shaped as in cairn/devices/tester/proofs/test_a_host_seam_seals_on_this_box_only.py; host facts patched by wrapping validation_store.host_facts.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/proofs/test_a_host_seam_crossing_clears_on_this_boxs_seal.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/proofs/test_the_proven_space_rule_follows_the_ticket_kind.py",
+        "cairn/devices/tester/proofs/test_a_host_seam_seals_on_this_box_only.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/clearance/gate.py",
+      "cairn/devices/codemother/machines/clearance/clearance.py",
+      "cairn/devices/codemother/machines/clearance/proofs/test_a_host_seam_crossing_clears_on_this_boxs_seal.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/devices/tester/cli.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "gate.declaring() returns no proof for 496dcbeba174 or b1f182b6b818; clearance.py:1446 refuses an empty _named",
+      "how": "grep -rl 496dcbeba174 over proofs/ (only a docstring) and reading gate.py:137-147, clearance.py:1443-1450"
+    }
+  ]
+}
