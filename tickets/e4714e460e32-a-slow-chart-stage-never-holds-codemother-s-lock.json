@@ -1,0 +1,90 @@
+{
+  "id": "e4714e460e32",
+  "title": "a slow chart stage never holds codemother's lock",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "A chart or verdict stage whose instruments run for minutes never holds codemother's shim lock while they run. StageGate.queueme hands the stage to the gate's own worker and returns at once, and the worker replies to the asker by reply_to when the stage is done. Every other ticket's deposit, chart stage and verdict is answered meanwhile.",
+  "why": "Measured 2026-11-12 on akiendelllinux (orchestrator: py-spy at 18:51, plus a run_cache census at 19:1x): b0e65cf8a77e's constrain ran 44 tester proofs serially inside queueme. That was 1858 s, all green, matching the 18:36 to 19:07 wall clock (stack queueme → write_constrain → instrument_constraints → _run_instrument → _ask_tester → tester run). Every other box's deposit, chart and verdict to codemother timed out behind her one shim lock, including 99ef0135b9b6's clause 4 from akienasus.",
+  "traces_to": "Outline 3.3.4.3 (the ticket asks the gate to queue it, and the gate-side instance processes pass or fail) and 5.5.3.3 (Send is asynchronous). 5.5.3.8: the instance runs several heavy tasks at once across boxes. Law 1: no caller re-spends a 31-minute stage by timing out behind it.",
+  "how": "In cairn/devices/codemother/machines/chart_gate/gate.py, split StageGate.queueme into two parts. The first is the verb: it validates the fileref and Ticket.at, then enqueues (envelope, ticket) on the gate's own FIFO and returns None, so the shim posts no reply and its lock is released. The second is the worker: one daemon thread per StageGate, started lazily, that runs today's body (packet_of, the door, berthed or failed, the deposit post). It then posts the same answer dict to the envelope's sender with reply_to = the envelope id, through self._participant. A refusal that today returns early (no fileref, an unreadable ticket) still answers at once. One worker per gate is required, because constrain's re-entry guard (CAIRN_CONSTRAIN_FLOOR_RUNNING) is a process-global env var. Callers are unchanged: they read the reply by reply_to (bus.request).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "while one ticket's stage is held open at a gate, a deposit request to codemother is answered within 10 s"
+      },
+      {
+        "n": 2,
+        "claim": "the held stage, once released, replies to its asker by reply_to with passed true and its berth, and the berth is recorded on the ticket"
+      },
+      {
+        "n": 3,
+        "claim": "a stage whose door raises still replies by reply_to, with passed false and the lack named, and the ticket fails at that gate"
+      },
+      {
+        "n": 4,
+        "claim": "two tickets queued at one gate run one after the other, never at once"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: StageGate.queueme enqueues and returns None; one worker per gate runs the stage and posts the answer by reply_to.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/chart_gate/gate.py",
+        "cairn/tools/base/shim.py",
+        "cairn/devices/cairn/machines/bus/bus.py",
+        "cairn/devices/codemother/machines/watchme/gate.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof holds a stage open with a fixture door and rides the published scratch bus, one tooth per clause, red-first on today's synchronous queueme.",
+      "writes_to": [
+        "cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/proofs/test_codemother_proofs_ride_the_published_scratch_bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/chart_gate/gate.py",
+      "cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus (the per-shim lock and request timeout stay as they are)",
+      "cairn/machines/ticket",
+      "cairn/devices/cc/scripts/sail.py",
+      "skills/chart/live.py",
+      "cairn/devices/codemother/machines/constrain (how long its instruments take is not this ticket's)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akiendelllinux: codemother's one request thread in queueme → write_constrain → instrument_constraints → _run_instrument → _ask_tester → tester run for 25+ minutes",
+      "how": "py-spy dump of the codemother shim at 18:51 (orchestrator)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "run_cache: tester ran n=44 total=1858.0s max=581.7s red=0, seal n=6; writes from 18:36:19 to 19:07:11",
+      "how": "read-only census of ~/.cairn/devices/codemother/0/machines/constrain/run_cache on akiendelllinux (orchestrator ran CC's script)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "54 of the tester's 61 proofs have no standing seal at 473aa8ceb",
+      "how": "cairn.tools.base.validation.discover + standing over cairn/devices/tester on akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "the shim posts a reply only when the handler returns a dict; bus.request reads the reply by reply_to until its deadline",
+      "how": "read cairn/tools/base/shim.py deliver and cairn/devices/cairn/machines/bus/bus.py request"
+    }
+  ]
+}
