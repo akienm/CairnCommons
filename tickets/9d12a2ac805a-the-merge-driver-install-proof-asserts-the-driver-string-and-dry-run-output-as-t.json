@@ -1,0 +1,210 @@
+{
+  "id": "9d12a2ac805a",
+  "title": "the merge-driver install proof asserts the driver string and dry-run output as they are on Windows, not as they print on Linux",
+  "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
+  "intention": "the merge-driver install proof builds and asserts the driver string as the artifact tool writes it (shell-quoted) and reaches the dry run's output through a red step, so it passes on Windows and on Linux.",
+  "why": "Measured 2026-11-12 on akiendell: on akiendell the proof ran 3 of 5 red: tooth 2 (unquoted PYTHONPATH expected), tooth 3 (backslashes stripped in the stale string), tooth 5 (dry run prints only reds)",
+  "traces_to": "Law 3: the proof asserted a form never measured on this box; Law 8: a proof that reds on a correct build is not trusted either way.",
+  "how": "In the proof: quote the repo path with shlex.quote in tooth 2's assertion and tooth 3's stale string, read the interpreter with shlex.split, and in tooth 5 aim the artifact tool's roots at an unconfigured scratch repo so the dry run prints [OFFERED] journal-merge-driver. No installer change.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the proof runs green on akiendell, twice, all five teeth"
+      },
+      {
+        "n": 2,
+        "claim": "the proof still reds if the installer stops laying the driver (a hollow build fails the teeth)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at ",
+      "writes_to": [],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "on akiendell the proof ran 3 of 5 red: tooth 2 (unquoted PYTHONPATH expected), tooth 3 (backslashes stripped in the stale string), tooth 5 (dry run prints only reds)",
+      "how": "ran the proof with the venv python and read each failure; read _driver_fault and main in installer.py"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "9d12a2ac805a: the merge-driver install proof asserts the driver string and dry-run output as they are on Windows, not as they print on Linux",
+      "intent": "test_install_lays_the_journal_merge_driver.py builds and asserts the driver string shell-quoted as the artifact tool writes it, and reaches the dry run's output through a red step, so it passes on Windows and Linux.",
+      "scope": "the proof file only; installer.py's ensure_journal_merge_driver and main are right and are not changed",
+      "unknowns": [
+        "the posix side was not run: the quoting is by construction there, where shlex.quote leaves a plain path unquoted"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+        ],
+        "out": [
+          "cairn/devices/recovery/machines/installer/installer.py",
+          "bin",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how the artifact tool writes the driver string",
+        "how the installer reads it back",
+        "what the dry run prints"
+      ],
+      "holdings": [
+        {
+          "what": "the installer's driver check and step",
+          "address": "cairn/devices/recovery/machines/installer/installer.py"
+        },
+        {
+          "what": "the artifact tool's install-merge-driver verb",
+          "address": "cairn/tools/artifact/__main__.py"
+        },
+        {
+          "what": "the merge-driver install proof",
+          "address": "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof of the merge-driver step whose assertions hold on Windows",
+          "measure": "the proof ran 3 of 5 red on akiendell on 2026-11-12; installer.py reads the shell-quoted form via shlex"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the proof quotes the repo path with shlex.quote, reads the interpreter with shlex.split, and aims the dry run at an unconfigured scratch repo",
+          "why": "the proof asserted forms measured only on Linux",
+          "kind": "build",
+          "fills": "a proof of the merge-driver step whose assertions hold on Windows",
+          "uses": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "cairn/tools/artifact/__main__.py"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the proof quotes the repo path with shlex.quote, reads the interpreter with shlex.split, and aims the dry run at an unconfigured scratch repo",
+          "why_now": "built and pushed; red 3 of 5 before, green twice after"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the proof quotes the repo path with shlex.quote, reads the interpreter with shlex.split, and aims the dry run at an unconfigured scratch repo",
+          "expect": "all five teeth pass on akiendell",
+          "falsifier": "a tooth stays red on a correct installer, or stays green when the installer stops laying the driver",
+          "instrument": "python3 cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "all five teeth of the merge-driver install proof pass",
+          "instrument": "python3 cairn/devices/recovery/machines/installer/proofs/test_install_lays_the_journal_merge_driver.py",
+          "timeout_s": 300,
+          "covers": [
+            "the proof quotes the repo path with shlex.quote, reads the interpreter with shlex.split, and aims the dry run at an unconfigured scratch repo"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
