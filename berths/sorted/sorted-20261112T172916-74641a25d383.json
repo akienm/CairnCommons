@@ -1,0 +1,34 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each measured or read. (1) Measured 2026-11-12 by the orchestrator on akiendelllinux (py-spy, pid 1881010): codemother's queueme ran a constrain ask under her shim lock for minutes after the asker's reach timed out at 120 s, starving every later codemother request. (2) Measured 2026-11-12 (ticket 1029d5146152's why): a new bus took over 2 unanswered asks as given up after a replace. (3) Read from cairn/devices/cairn/machines/bus/bus.py: request()'s deadline only marks the ask _abandoned, so a LATE REPLY is receipted given up (ticket cd2d27fe3261), but the request envelope itself stays pending and is delivered; a restarted bus reads undelivered transit backlog and delivers it again. (4) Read from server.py: op_call runs post then drain on the client connection's handler thread, which nothing stops when the client leaves. Unsettled, so opened as open-98ebd82e7a02: whether a running handler is cooperatively told to stop, and what 'gone' means.",
+    "builder_check": "A builder needs: which envelopes count as gone (the bus's _abandoned and handed-over ask sets, keyed by request id; a closed client socket on the handler thread), where delivery is gated (the drain path in bus.py that hands an envelope to a shim, and server.py's taking over of handed-over asks), what 'receipted given up' writes (the same receipt shape cd2d27fe3261 writes for a late reply), and the answer to open-98ebd82e7a02 on running handlers. The proof is cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py: a scratch bus, a slow fixture device, an asker that times out or disconnects before delivery, and a restart over a handed-over ask; each tooth counts the fixture handler's runs.",
+    "children": "none, because it is one gate in the bus machine, cairn/devices/cairn/machines/bus/bus.py",
+    "collision_check": "Whys checked. 1029d5146152: a shutdown drains the requests it holds, because their askers are still waiting; this ticket is the case where the asker is not waiting, so the two are exclusive by the asker's presence and both stand. 054a03f974f6: handed-over asks held as given up for a day; this extends 'given up' from the reply to the request. cd2d27fe3261: late reply receipted given up; extended the same way. Outline 5.5.3.9 (a wake never takes more than 60 s) is what the starvation broke. RULE 1: inside the bus machine.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses, pending open-98ebd82e7a02: (1) an envelope whose asker's request() reached its deadline before the envelope was delivered is receipted given up and its handler never runs; (2) after a restart, an envelope the previous bus handed over as an ask is receipted given up by the next bus and its handler never runs; (3) a request whose client socket closes before delivery is receipted given up and never runs. Horizon: the proof at PROVEME, on a scratch bus.",
+    "gates_bound": "code-seam prove_gate: a red-first proof at cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py, one tooth per clause; each fails today because the envelope is delivered. It feeds back to origin on failure through FIXME (Laws 3 and 8). BUILDME is held by the lane the_ticket_has_every_answer_it_needs while open-98ebd82e7a02 stands open.",
+    "missing_check": "Not wrapped, and named: the reach of 'not run to its end' for a handler already running. Python cannot kill a thread, so it is either refuse-before-delivery only or that plus a cooperative cancel flag long handlers check; question open-98ebd82e7a02 holds BUILDME until answered. Everything else is wrapped: an envelope whose asker is abandoned or handed over is receipted given up before delivery, live and after a restart.",
+    "node_class": "code-seam",
+    "questions": [
+      "open-98ebd82e7a02"
+    ],
+    "task_or_ticket": "ticket",
+    "title": "a request whose client has gone is not run to its end, and not replayed after a restart",
+    "watchme": "none, because its proof (to be written beside cairn/devices/cairn/machines/bus/bus.py) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "'Given up' covered the reply, never the request: a gone asker's ask still ran for minutes under a shim lock, and was replayed after a restart."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "2b0630f07651",
+  "skill": "sorted",
+  "title": "a request whose client has gone is not run to its end, and not replayed after a restart",
+  "trace_id": "34a217b8f0e1",
+  "when": "2026-11-12T17:29:16.755302"
+}

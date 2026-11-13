@@ -1,0 +1,84 @@
+{
+  "id": "ee88c2126abc",
+  "title": "a request whose client has gone is not run to its end, and not replayed after a restart",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "When a request's asker has gone (its request() deadline passed, its socket closed, or it was handed over at a stop), the bus receipts the request given up and does not deliver it, live and after a restart; how a running handler is told is open-98ebd82e7a02.",
+  "why": "Measured 2026-11-12: codemother ran a constrain ask under her shim lock for minutes after its asker's reach timed out at 120 s, starving every later codemother request; and a replaced bus took over unanswered asks whose envelopes still stood for delivery.",
+  "traces_to": "The bus intention (outline 5.5.3.9: a wake never takes more than 60 s) and Law 1 (work nobody is waiting for spends the resolver on nothing).",
+  "how": "Gate delivery on the asker: an envelope whose id is in the abandoned or handed-over set, or whose client socket closed, gets the given-up receipt instead of a handler. Running handlers per open-98ebd82e7a02. Red-first proof on a scratch bus counts a slow fixture handler's runs.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an envelope whose asker's request() reached its deadline before delivery is receipted given up and its handler never runs"
+      },
+      {
+        "n": 2,
+        "claim": "after a restart, an envelope the previous bus handed over as an ask is receipted given up by the next bus and its handler never runs"
+      },
+      {
+        "n": 3,
+        "claim": "a request whose client socket closes before delivery is receipted given up and its handler never runs"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: delivery in bus.py checks the envelope's id against _abandoned and the handed-over asks and writes the given-up receipt instead of calling the handler.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/bus.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/bus.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: server.py marks a call's request id abandoned when its client connection closes before the reply; the taking-over of handed-over asks at start feeds the same set.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof, one tooth per clause, on a scratch bus with a slow fixture device.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/bus.py",
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_gone_clients_request_is_not_run.py"
+    ],
+    "out": [
+      "cairn/devices/codemother (a cooperative cancel there, if open-98ebd82e7a02 asks for one, is its own ticket)",
+      "cairn/tools/bus_client",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "home bus pid 1881010 at 100% of one core in codemother queueme -> constrain -> tester run_proof for minutes after reach timed out at 120 s; later codemother requests starved",
+      "how": "py-spy dump on akiendelllinux, relayed by the orchestrator"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "bus: took over 2 unanswered ask(s) as given up, after a replace",
+      "how": "bus log on the home box, recorded in ticket 1029d5146152's why"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "request()'s deadline adds the id to _abandoned, which receipts a late reply only; the request envelope stays in _pending for delivery",
+      "how": "read cairn/devices/cairn/machines/bus/bus.py request() and the _abandoned comment, ticket cd2d27fe3261"
+    }
+  ]
+}
