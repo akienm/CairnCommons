@@ -1,0 +1,64 @@
+{
+  "id": "3a38e2e1cfe0",
+  "title": "the web-server shim proof stops the listener it started on Windows, so its scratch dir can be removed",
+  "owning_intention": "cairn/devices/web_server/intention+why.json",
+  "intention": "the web-server shim proof's teardown ends the whole listener process tree on Windows (taskkill /T), where it ended nothing, so the scratch dir it made is removable.",
+  "why": "Measured 2026-11-12 on akiendell: two listener.py --port 42299 processes (pids 29384 and its child 14384) outlived their dead parent 28712 and held web_server.log in ws-shim-pulse-scratch.0-28712-*, read from Win32_Process",
+  "traces_to": "Law 3: the leak was measured as two orphan processes; Law 7: the sweep said so loudly, and the proof that left it is the writer to fix, not the sweep.",
+  "how": "In cairn/devices/web_server/proofs/test_web_server_shim.py the finally of test_the_pulse_holds_the_port_on_the_home_only calls a small _stop_tree(pid) defined in the proof: on nt it runs taskkill /F /T /PID with a hidden window, otherwise os.killpg as now. Red-first proof cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py scans that file's source with ast: no bare os.killpg inside a finally that has no nt branch, and a taskkill call exists. No process is spawned by the new proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the source of test_web_server_shim.py contains a taskkill tree-stop for nt and no killpg without an nt branch, where the unedited file has a bare killpg"
+      },
+      {
+        "n": 2,
+        "claim": "after the shim proof runs on Windows no process of listener.py --port <its port> remains"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/web_server/proofs/test_web_server_shim.py, cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py",
+      "writes_to": [
+        "cairn/devices/web_server/proofs/test_web_server_shim.py",
+        "cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py"
+      ],
+      "reads": [
+        "cairn/devices/web_server/proofs/test_web_server_shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/web_server/proofs/test_web_server_shim.py",
+      "cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py",
+      "cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "two listener.py --port 42299 processes (pids 29384 and its child 14384) outlived their dead parent 28712 and held web_server.log in ws-shim-pulse-scratch.0-28712-*, read from Win32_Process",
+      "how": "Get-CimInstance Win32_Process filtered on listener.py, plus Get-Content of the log"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "26 of the 27 group-C proofs fail on their own assertions and only print the one scratch sweep warning",
+      "how": "census_out6/full/*.txt read by showC2.py"
+    }
+  ]
+}
