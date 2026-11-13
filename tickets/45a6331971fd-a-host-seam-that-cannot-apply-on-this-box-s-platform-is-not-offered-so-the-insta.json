@@ -1,0 +1,61 @@
+{
+  "id": "45a6331971fd",
+  "title": "a host seam that cannot apply on this box's platform is not offered, so the install gate can reach green on Windows",
+  "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
+  "intention": "cairn install does not offer a host seam that declares it applies only to another platform, so on Windows the gate reads green once every seam that can apply here has verified.",
+  "why": "Measured 2026-11-12 on akiendell: on akiendell the installer dry-run check prints [OFFERED] usage-widget-hook and exits 1; gather_host_seams returns one seam; run_verify(seam) returns (False, '/usr/bin/bash: line 1: jq: command not found'); ~/.claude/usage-cache.json is absent; installer.py install() reads no platform field",
+  "traces_to": "Law 4: the gate is physics only if it can be satisfied where it runs; Law 3: the offer was measured on the box, not assumed; Law 7: the skip carries a named reason.",
+  "how": "Give a host-seam intention an optional platforms declaration (the platforms it applies to; absent means every platform), have install() in the installer skip, with status skipped and a named reason, a seam whose platforms exclude this box's, and declare usage-widget-hook as linux only. The proof drives install(dry_run=True) over a scratch intentions dir holding one seam for another platform and one for this platform. Red first: the proof is red on HEAD because the other-platform seam reads offered.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a host seam that declares another platform is reported skipped with the platform named, never offered, and its verify is not run"
+      },
+      {
+        "n": 2,
+        "claim": "a seam with no platforms declaration, and one declaring this platform, are offered or verified exactly as before"
+      },
+      {
+        "n": 3,
+        "claim": "on akiendell the installer's dry-run check no longer lists usage-widget-hook as a red"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/recovery/machines/installer/installer.py",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_a_host_seam_for_another_platform_is_not_offered.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "on akiendell the installer dry-run check prints [OFFERED] usage-widget-hook and exits 1; gather_host_seams returns one seam; run_verify(seam) returns (False, '/usr/bin/bash: line 1: jq: command not found'); ~/.claude/usage-cache.json is absent; installer.py install() reads no platform field",
+      "how": "ran the installer with --dry-run --check via the venv python; ran gather_host_seams and run_verify directly; read installer.py install() lines 468-544"
+    }
+  ]
+}
