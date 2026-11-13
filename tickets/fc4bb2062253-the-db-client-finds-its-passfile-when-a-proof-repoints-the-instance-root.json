@@ -53,5 +53,153 @@
       "saw": "test_charter_held.py tooth test_the_backpack_receives_and_reads_back_feedback fails on akiendell with OperationalError: connection to server at 127.0.0.1, port 5432 failed: fe_sendauth: no password supplied; the proof sets address.ROOTS['instance'] to a scratch dir and store._conn_args() takes passfile from instance_path('db_domain', 0)",
       "how": "ran the census proof on akiendell (full output census_out5) and read store.py _conn_args and the proof's _scratch_roots"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "fc4bb2062253: the db client finds its passfile when a proof repoints the instance root (cairn/devices/db_domain/tools/client/store.py)",
+      "intent": "store._conn_args() falls back to the pgpass under the box's own instance root when the current (repointed) root holds none, so a proof that repoints ROOTS['instance'] still reaches 5432 over TCP on a box with no unix socket.",
+      "scope": "store._conn_args and one new proof beside the client's test_client.py; no other db_domain code, no proof that repoints the root is edited",
+      "unknowns": [
+        "the fallback is the box default Path.home()/.cairn, not a per-process captured root, so a process launched with a different HOME and a repointed root reads that HOME's pgpass"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/db_domain/tools/client/store.py",
+          "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base/address.py",
+          "cairn/devices/codemother/proofs/test_charter_held.py"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how _conn_args builds the passfile",
+        "which proof repoints ROOTS['instance']"
+      ],
+      "holdings": [
+        {
+          "what": "the db client's connection chooser",
+          "address": "cairn/devices/db_domain/tools/client/store.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a passfile fallback for a repointed instance root",
+          "measure": "read store._conn_args on akiendell 2026-11-12: one instance_path lookup and no fallback; test_charter_held backpack tooth failed with no password supplied"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a fallback to the box's pgpass in _conn_args, and a two-tooth proof",
+          "why": "the passfile is a host credential, not scratch state",
+          "kind": "build",
+          "fills": "a passfile fallback for a repointed instance root",
+          "uses": [
+            "cairn/devices/db_domain/tools/client/store.py"
+          ],
+          "writes_to": [
+            "cairn/devices/db_domain/tools/client/store.py",
+            "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a fallback to the box's pgpass in _conn_args, and a two-tooth proof",
+          "why_now": "built; proof red first on tooth 1, green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a fallback to the box's pgpass in _conn_args, and a two-tooth proof",
+          "expect": "passfile names an existing file under a repointed root; unchanged under the live root",
+          "falsifier": "the passfile names a missing file under a repointed root, or the live root's own pgpass loses",
+          "instrument": "python3 cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the passfile proof pass",
+          "instrument": "python3 cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py",
+          "timeout_s": 300,
+          "covers": [
+            "a fallback to the box's pgpass in _conn_args, and a two-tooth proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
