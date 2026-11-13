@@ -4,7 +4,7 @@
 
 ## Intention
 
-A **cognition domain** is a machine that sits above `inference_domain` and below the
+A **cognition domain** is a machine that sits above `inferenceproxy` and below the
 devices: it carries the *getting* rules for one kind of thinking — what content dresses an
 ask, which rungs the escalation walk may dial, which models it prefers — and a device
 **composes** one or more of them. Three domains stand today, authored as rows, never as
@@ -29,10 +29,10 @@ DEFAULT, and the device overrides when it must.
 ## How it is, measured
 
 - **A domain is a row, composed by a call.** The domains stack
-  `cairn/devices/inference_domain/machines/route/stacks/domains.json` holds `general`
+  `cairn/devices/inferenceproxy/machines/route/stacks/domains.json` holds `general`
   (`default: true`), `coding` and `research`; each row carries `why`, `prompts`,
   `escalation` and `prefers`. `domain.resolve()` dresses a request through
-  `_domain_dressed` (`cairn/devices/inference_domain/domain.py:381`): the row is looked up
+  `_domain_dressed` (`cairn/devices/inferenceproxy/domain.py:381`): the row is looked up
   by name from `route.domain_rows` (`machines/route/route.py:118`), an unknown name refuses
   loudly, a bare request rides the default row. There is no class hierarchy to belong to —
   a device names a domain per ask, so it can name a different one on the next ask.
@@ -67,7 +67,7 @@ generator. Each is checkable against the files named above.
 
 ## What is built and what is red
 
-Built and proved: the rows and the dressing seam (`inference_domain`, its route machine and
+Built and proved: the rows and the dressing seam (`inferenceproxy`, its route machine and
 their validations); the embeddings generator's `(question, owner)` registry. Red: no device
 yet composes TWO domains in one process, so the mixing claim is a labelled hypothesis (Law 3)
 until a device does it and its meter shows the small asks staying small. The children the
