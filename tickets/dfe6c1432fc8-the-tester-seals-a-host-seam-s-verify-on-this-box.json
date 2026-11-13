@@ -1,0 +1,95 @@
+{
+  "id": "dfe6c1432fc8",
+  "title": "the tester seals a host-seam's verify on this box",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "cairn test --host-seam <intention> --seal runs a host-seam intention's verify.command and seals one VALIDATION for this box through the store's door, and standing() reads a host-seam as proven only from this box's own green record whose host facts and intention still match.",
+  "why": "Measured 2026-11-13 by the orchestrator on b1f182b6b818 and 496dcbeba174: clearance refuses every host-seam crossing with \"the crossing names no proof at all\", because nothing turns a verify into a sealed validation. installer.run_verify runs the command and leaves no record; node_classes/host-seam.json's prove_gate reads \"the tester (IOU: hand-run until built)\".",
+  "traces_to": "Law 8 and Law 3; outline 6.3.5.",
+  "how": "D1 validation_store: host_name(), host_facts(), validations_path_for_host_seam(), a host_seam_path door kwarg, and a host-seam branch in standing(). D2 tester cli: --host-seam PATH runs the verify and, with --seal, persists. D3 validation_store charter records that a host-seam seal is box-local. D4 one red-first proof over a scratch fixture intention.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn test --host-seam <fixture verify true> --seal exits 0, lands validations/<stem>/<host>.json green carrying hostname, os id, os version and kernel, and standing(fixture) is proven; the same run without --seal lands nothing"
+      },
+      {
+        "n": 2,
+        "claim": "a fixture with verify false exits 1, lands a red record, and standing is not proven"
+      },
+      {
+        "n": 3,
+        "claim": "after a green seal, a changed host fact reads not proven and the why names the fact that moved"
+      },
+      {
+        "n": 4,
+        "claim": "a green record under another hostname, with none for this box, reads not proven here"
+      },
+      {
+        "n": 5,
+        "claim": "after a green seal, an edit to the intention reads not proven"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: validation_store adds host_name() (socket.gethostname() short, lowercased), host_facts() (hostname, os_id, os_version_id from /etc/os-release or 'windows'/platform.version(), kernel platform.release()), validations_path_for_host_seam(path, host) -> <dir>/validations/<stem>/<host>.json, a host_seam_path kwarg on persist_validation (exactly one of the three), and standing() branching on node_class host-seam to read only this box's file, compare host_facts and the intention's artifact_fingerprint.",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: tester cli --host-seam PATH runs [bash_exe(), -c, verify.command] with timeout 30 as installer.run_verify does, prints green/red, and with --seal persists claim=verify.green, method=verify.command, horizon=verify.horizon, caller tester; exit 0 green, 1 red, 2 not a host-seam.",
+      "writes_to": [
+        "cairn/devices/tester/cli.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/cli.py",
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the validation_store charter records that a PROVED crossing for a host-seam means proven on the crossing box, and every other box reads not proven until it seals its own.",
+      "writes_to": [
+        "cairn/tools/validation_store/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/intention+why.json"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: one proof drives cli.main over scratch fixture intentions, one tooth per clause; host facts are faked by wrapping validation_store.host_facts and restoring it.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_host_seam_seals_on_this_box_only.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/devices/tester/cli.py",
+      "cairn/tools/validation_store/intention+why.json",
+      "cairn/devices/tester/proofs/test_a_host_seam_seals_on_this_box_only.py"
+    ],
+    "out": [
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/codemother/machines/clearance/clearance.py",
+      "every code-seal record's shape and address (Q#90)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "clearance refuses a host-seam crossing: the crossing names no proof at all; installer.run_verify writes no record",
+      "how": "the orchestrator's crossings of b1f182b6b818 and 496dcbeba174 on Linux; reading installer.py:49-65"
+    }
+  ]
+}
