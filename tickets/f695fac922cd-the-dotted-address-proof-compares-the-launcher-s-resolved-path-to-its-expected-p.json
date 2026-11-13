@@ -1,0 +1,57 @@
+{
+  "id": "f695fac922cd",
+  "title": "the dotted-address proof compares the launcher's resolved path to its expected path as POSIX on both sides, so it and the launcher proof pass on Windows",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "The dotted-address proof spells its expected path with as_posix() and compares the launcher's output after turning backslashes into slashes, so the comparison holds on Windows and is unchanged on POSIX.",
+  "why": "Measured 2026-11-12 on akiendell: the edited proof printed GREEN on Windows (26 mirrored devices, every clause ok) where the unedited one is RED in 4 teeth; the launcher proof that runs it reds only on this proof",
+  "traces_to": "Law 3: the green was measured by running the edited proof; Law 8: reverting the edit reds both ast teeth on Linux; Law 4: held by a scan, not remembered.",
+  "how": "In bin/proofs/test_cairn_instance_address.py add a _posix(s) helper, change the five `want = str(root / ...)` lines to `(root / ...).as_posix()` and the five `r.stdout == want + ...` asserts to `_posix(r.stdout) == want + ...`. Red-first proof bin/proofs/test_the_instance_address_proof_compares_posix.py holds both with ast teeth that red on Linux.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the five expected paths in _clause_a, _clause_b and _fold_before_split are spelled with as_posix(), so test_cairn_instance_address.py passes on Windows"
+      },
+      {
+        "n": 2,
+        "claim": "the five stdout compares in those functions go through _posix(), so test_the_launcher_reads_the_bin_beside_the_code, which runs it, passes on Windows"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at bin/proofs/test_cairn_instance_address.py",
+      "writes_to": [
+        "bin/proofs/test_cairn_instance_address.py"
+      ],
+      "reads": [
+        "bin/proofs/test_cairn_instance_address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "bin/proofs/test_the_instance_address_proof_compares_posix.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/proofs/test_cairn_instance_address.py",
+      "bin/proofs/test_the_instance_address_proof_compares_posix.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "the edited proof printed GREEN on Windows (26 mirrored devices, every clause ok) where the unedited one is RED in 4 teeth; the launcher proof that runs it reds only on this proof",
+      "how": "bin/proofs/test_cairn_instance_address.py run before and after the as_posix edit; bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py rerun"
+    }
+  ]
+}
