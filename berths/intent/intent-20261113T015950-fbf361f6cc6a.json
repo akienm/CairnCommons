@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked: the smallest fix at the named site is the plain fix; no smaller route.",
+      "hidden_assumption": "That the cause is the site grep found; the ticket's measured field says which part is hypothesis and the proof settles it.",
+      "prior_art": "In-house: tickets a9709b744bf5 (trace names) and 0156856b1fae (windows spawns) came from the same box; git grep over the named files found the sites. Field: none needed.",
+      "real_collision": "None found: no charter requires the current behaviour."
+    },
+    "exit": "routed_forward",
+    "falsifier": "importing cairn.devices.inference_domain.host and cairn.devices.cairn.metrics succeeds in a subprocess where sys.modules['fcntl'] is None, where the unedited modules raise ModuleNotFoundError ; a non-blocking exclusive take on a file another descriptor holds raises BlockingIOError, and the same take succeeds once the holder unlocks ; neither host.py nor metrics.py has a module-level import fcntl",
+    "from_idea": "2026-11-13-orchestrator-step-3-group-a-first-half",
+    "how": "Add cairn/tools/base/flock.py with lock(fd_or_file, exclusive=True, block=True) and unlock(fd_or_file). On POSIX it is fcntl.flock with LOCK_EX or LOCK_SH, plus LOCK_NB when block is false; on nt it is msvcrt.locking on byte 0 (LK_LOCK/LK_NBLCK). A contended non-blocking take raises BlockingIOError on both. fcntl and msvcrt are imported inside the branch for the host OS, never at module top for the other. host.py and metrics.py replace their fcntl.flock calls and drop import fcntl. Red-first proof cairn/tools/base/proofs/test_flock_stands_for_fcntl.py: (1) with sys.modules['fcntl'] set to None in a subprocess, host.py and metrics.py import, which reds on Linux against the unedited modules; (2) an ast scan finds no top-level import fcntl in those two files; (3) two descriptors on one file: the second non-blocking exclusive take raises BlockingIOError, and succeeds after unlock. The four modules that already carry an inline branch are not touched.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "title": "one file-lock helper in tools/base stands for fcntl.flock, so the inference host, the metrics collector and their proofs import on Windows",
+    "traces_to": "Law 4: the import scan is the physics that keeps a bare import fcntl out of the two modules; Law 3: the failure was measured as ModuleNotFoundError at the import line in thirteen proofs.",
+    "what": "a single helper cairn/tools/base/flock.py takes and releases an advisory file lock the same way on POSIX (fcntl.flock) and Windows (msvcrt.locking on one byte), and host.py and metrics.py take their locks through it, so both import and lock on Windows and are unchanged on POSIX."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "found on akiendell only; reported by the orchestrator"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "57abf5339c2a",
+  "skill": "intent",
+  "title": "one file-lock helper in tools/base stands for fcntl.flock, so the inference host, the metrics collector and their proofs import on Windows",
+  "trace_id": "e6e1cf7f65c8",
+  "when": "2026-11-13T01:59:50.465706"
+}

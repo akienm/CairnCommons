@@ -1,0 +1,236 @@
+{
+  "id": "5a37dd56fa45",
+  "title": "one file-lock helper in tools/base stands for fcntl.flock, so the inference host, the metrics collector and their proofs import on Windows",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "a single helper cairn/tools/base/flock.py takes and releases an advisory file lock the same way on POSIX (fcntl.flock) and Windows (msvcrt.locking on one byte), and host.py and metrics.py take their locks through it, so both import and lock on Windows and are unchanged on POSIX.",
+  "why": "Measured 2026-11-12 on akiendell: 13 proofs raise ModuleNotFoundError: No module named fcntl, eleven of them through inference_domain/host.py:64 and the rest through cairn/metrics.py:12",
+  "traces_to": "Law 4: the import scan is the physics that keeps a bare import fcntl out of the two modules; Law 3: the failure was measured as ModuleNotFoundError at the import line in thirteen proofs.",
+  "how": "Add cairn/tools/base/flock.py with lock(fd_or_file, exclusive=True, block=True) and unlock(fd_or_file). On POSIX it is fcntl.flock with LOCK_EX or LOCK_SH, plus LOCK_NB when block is false; on nt it is msvcrt.locking on byte 0 (LK_LOCK/LK_NBLCK). A contended non-blocking take raises BlockingIOError on both. fcntl and msvcrt are imported inside the branch for the host OS, never at module top for the other. host.py and metrics.py replace their fcntl.flock calls and drop import fcntl. Red-first proof cairn/tools/base/proofs/test_flock_stands_for_fcntl.py: (1) with sys.modules['fcntl'] set to None in a subprocess, host.py and metrics.py import, which reds on Linux against the unedited modules; (2) an ast scan finds no top-level import fcntl in those two files; (3) two descriptors on one file: the second non-blocking exclusive take raises BlockingIOError, and succeeds after unlock. The four modules that already carry an inline branch are not touched.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "importing cairn.devices.inference_domain.host and cairn.devices.cairn.metrics succeeds in a subprocess where sys.modules['fcntl'] is None, where the unedited modules raise ModuleNotFoundError"
+      },
+      {
+        "n": 2,
+        "claim": "a non-blocking exclusive take on a file another descriptor holds raises BlockingIOError, and the same take succeeds once the holder unlocks"
+      },
+      {
+        "n": 3,
+        "claim": "neither host.py nor metrics.py has a module-level import fcntl"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/base/flock.py, cairn/devices/inference_domain/host.py, cairn/devices/cairn/metrics.py, cairn/tools/base/proofs/test_flock_stands_for_fcntl.py",
+      "writes_to": [
+        "cairn/tools/base/flock.py",
+        "cairn/devices/inference_domain/host.py",
+        "cairn/devices/cairn/metrics.py",
+        "cairn/tools/base/proofs/test_flock_stands_for_fcntl.py"
+      ],
+      "reads": [
+        "cairn/tools/base/singleton.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_flock_stands_for_fcntl.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/flock.py",
+      "cairn/devices/inference_domain/host.py",
+      "cairn/devices/cairn/metrics.py",
+      "cairn/tools/base/proofs/test_flock_stands_for_fcntl.py",
+      "cairn/tools/base/proofs/test_flock_stands_for_fcntl.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "13 proofs raise ModuleNotFoundError: No module named fcntl, eleven of them through inference_domain/host.py:64 and the rest through cairn/metrics.py:12",
+      "how": "census_out6 tails read by showA.py"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "four modules already branch on os.name for this lock (singleton.py, trouble/shim.py, artifact.py, bus/server.py)",
+      "how": "Grep fcntl over cairn/**/*.py"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "Give host.py:64 and metrics.py:12, which import fcntl unconditionally, one lock helper in cairn/tools/base that works on Windows and POSIX; see cairn/tools/base/singleton.py:33 for the existing nt branch",
+      "intent": "one tools/base file-lock helper stands for fcntl.flock, and the inference host and the metrics collector take their locks through it",
+      "scope": "in: cairn/tools/base/flock.py, cairn/devices/inference_domain/host.py, cairn/devices/cairn/metrics.py, cairn/tools/base/proofs/test_flock_stands_for_fcntl.py; out: singleton.py, trouble/shim.py, artifact.py and bus/server.py, which already branch on os.name",
+      "unknowns": [
+        "msvcrt.locking is mandatory-style on one byte where flock is advisory; the proof measures contention between two descriptors on the host OS only"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/base/flock.py",
+          "cairn/devices/inference_domain/host.py",
+          "cairn/devices/cairn/metrics.py",
+          "cairn/tools/base/proofs/test_flock_stands_for_fcntl.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base/singleton.py",
+          "cairn/devices/trouble/shim.py",
+          "cairn/tools/artifact/artifact.py",
+          "cairn/devices/cairn/machines/bus/server.py"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "every module that imports fcntl",
+        "an existing nt/posix lock branch to mirror"
+      ],
+      "holdings": [
+        {
+          "what": "the existing nt/posix lock branch in singleton",
+          "address": "cairn/tools/base/singleton.py"
+        },
+        {
+          "what": "the inference host's slot lock",
+          "address": "cairn/devices/inference_domain/host.py"
+        },
+        {
+          "what": "the metrics collector's lock",
+          "address": "cairn/devices/cairn/metrics.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a single cross-platform file-lock helper in tools/base",
+          "measure": "Grep of cairn/tools/base for a flock helper found none; four modules inline their own branch"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a flock helper in tools/base, taken by host.py and metrics.py, held by an import scan and a contention tooth",
+          "why": "an unconditional import fcntl raises ModuleNotFoundError on Windows in 13 proofs",
+          "kind": "build",
+          "fills": "a single cross-platform file-lock helper in tools/base",
+          "uses": [
+            "cairn/devices/inference_domain/host.py",
+            "cairn/devices/cairn/metrics.py",
+            "cairn/tools/base/singleton.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/flock.py",
+            "cairn/devices/inference_domain/host.py",
+            "cairn/devices/cairn/metrics.py",
+            "cairn/tools/base/proofs/test_flock_stands_for_fcntl.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a flock helper in tools/base, taken by host.py and metrics.py, held by an import scan and a contention tooth",
+          "why_now": "ordered by the orchestrator 2026-11-13"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a flock helper in tools/base, taken by host.py and metrics.py, held by an import scan and a contention tooth",
+          "expect": "host.py and metrics.py import with fcntl hidden, and a contended non-blocking take raises BlockingIOError",
+          "falsifier": "a subprocess with sys.modules['fcntl']=None cannot import host.py or metrics.py, or two descriptors both hold the lock",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_flock_stands_for_fcntl.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "all three teeth of the proof pass",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_flock_stands_for_fcntl.py",
+          "timeout_s": 300,
+          "covers": [
+            "a flock helper in tools/base, taken by host.py and metrics.py, held by an import scan and a contention tooth"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
