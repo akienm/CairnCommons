@@ -1,0 +1,51 @@
+{
+  "id": "91ec21c6792c",
+  "title": "recovery's run-unit proof drives superclaude with no far-box env",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "recovery's run-unit proof drives superclaude under a scratch HOME with no far-box env, so its web tooth reads the same on a box whose session names another box as the cairn home.",
+  "why": "Measured 2026-11-13 on akienasus: test_a_failed_unit_of_a_run_collects_itself reds 'web launched=False' because _drive copies os.environ, so CAIRN_HOME_HOST=akiendelllinux.local reaches superclaude, whose _sc_is_cairn_home (cairn/devices/cc/superclaude:14-20) then skips the web_server. With CAIRN_HOME_HOST and CAIRN_BUS_HOME unset the proof is green. A run also takes about 2 min, over the tester's 120 s default.",
+  "traces_to": "Law 8 (a proof reads the same on every box) and CP6; d66f2e18fc5c's far-box-env shape.",
+  "how": "Add _scratch_env(environ) returning environ minus TEST_ID_ENV, CAIRN_HOME_HOST and every key starting CAIRN_BUS_; _drive builds its env from _scratch_env(os.environ). A tooth hands _scratch_env an env naming a far box and asserts none of those names survive. Declare PROOF_TIMEOUT_S = 600 at top level.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/devices/recovery/proofs/test_a_unit_a_test_run_starts_is_the_runs.py is green on akienasus under the session env, which names akiendelllinux.local as the cairn home"
+      },
+      {
+        "n": 2,
+        "claim": "the env tooth reds when _scratch_env keeps CAIRN_HOME_HOST"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: one helper drops the test id, CAIRN_HOME_HOST and CAIRN_BUS_*; _drive uses it; a tooth proves it; PROOF_TIMEOUT_S = 600.",
+      "writes_to": [
+        "cairn/devices/recovery/proofs/test_a_unit_a_test_run_starts_is_the_runs.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/proofs/test_a_unit_a_test_run_starts_is_the_runs.py",
+        "cairn/devices/cc/superclaude"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/proofs/test_a_unit_a_test_run_starts_is_the_runs.py"
+    ],
+    "out": [
+      "cairn/tools/scratch (home_env not edited)",
+      "cairn/devices/cc/superclaude",
+      "every other proof"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "120 s timeout; at --timeout 600: test_a_failed_unit_of_a_run_collects_itself FAIL web launched=False state=('not-found', 'inactive'); unset CAIRN_BUS_HOME alone still red; unset both 1 green",
+      "how": "bin/cairn test --timeout 600 over the proof on akienasus, with and without (unset CAIRN_HOME_HOST CAIRN_BUS_HOME)"
+    }
+  ]
+}
