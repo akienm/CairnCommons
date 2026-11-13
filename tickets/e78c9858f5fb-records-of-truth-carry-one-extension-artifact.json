@@ -3,8 +3,87 @@
   "title": "records-of-truth-carry-one-extension-artifact",
   "owning_intention": "cairn/tools/artifact/intention+why.json",
   "intention": "Every record of truth carries one extension, .artifact, so that 'is this a record?' is answerable from the filename alone and the jurisdiction, the PreToolUse gate and the commit question each collapse to one rule instead of a list of directories and basenames.",
-  "why": "Law 1 (one spelling of the record set instead of a directory list re-derived by three readers), Law 4 (the deny rule becomes one line of physics — Akien: 'then we only disallow one extension'), Law 6 (the door stays the one gate; the rename is its first bulk write and proves it under load)",
-  "how": "The rename is the door's first bulk write: `cairn artifact rename` per record through the door (old path absent, new path chained), readers rewritten behind a both-extensions flag first, rehearsed in a scratch clone, then one journaled act per repo committed under the hook; jurisdiction.json and bin/cmd/artifactgate collapse to one *.artifact rule; the flag is removed last.",
-  "falsifier": "DONE when, measured by cairn/tools/artifact/proofs/test_artifact_rename.py and the live corpus: (1) zero files under CairnCommons/{tickets,troubles,decisions,slates,ideas,questions,adjudications} end in .json, and zero state/history/intention+why/validation files under cairn end in .json (find + count, both zero); (2) jurisdiction.json carries one rule per root — {\"name\": \"*.artifact\"} — and locate() answers yes for every renamed file and no for the lab, node_classes, notes; (3) both journals verify from genesis with every rename journaled (old path's last entry absent, new path chained from it) and `cairn artifact check` passes both roots; (4) every reader in the 127-file / 322-site census (measured 2026-09-13) reads .artifact: the ticket inspector, the harbor's clearance, the review queue, the session-open banner, the chart doors, the sorted/saveslate/idea doors all run green on the renamed corpus; (5) a Write/Edit/Bash redirect aimed at any *.artifact is refused at PreToolUse by one extension check. WRONG INTENT if a reader outside our repos needs .json — then the extension carried information and the rule is a directory rule. HORIZON: the outside-readers census is the first piece; if it reds, this ticket routes back before any file moves.",
-  "traces_to": "Law 1 (one spelling of the record set instead of a directory list re-derived by three readers), Law 4 (the deny rule becomes one line of physics — Akien: 'then we only disallow one extension'), Law 6 (the door stays the one gate; the rename is its first bulk write and proves it under load)"
+  "why": "Law 1 (one spelling of the record set instead of a directory list re-derived by three readers), Law 4 (the deny rule becomes one line of physics \u2014 Akien: 'then we only disallow one extension'), Law 6 (the door stays the one gate; the rename is its first bulk write and proves it under load)",
+  "how": "Re-cast 2026-11-13 into children, one per reader group, with the outside-readers census as child 1 (46851816800f, read-only, the only child built now). The moving children stay at TICKETME until the orchestrator calls a quiet window across all boxes. Each re-measures its group's readers first, then rewrites them to read both extensions behind a flag. Then the bulk rename runs through `cairn artifact rename` in that window, one journaled act per repo committed under the hook. Last, jurisdiction.json and bin/cmd/artifactgate collapse to one *.artifact rule and the flag is removed.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "zero files under CairnCommons/{tickets,troubles,decisions,slates,ideas,questions,adjudications} end in .json, and zero state/history/intention+why/validation files under cairn end in .json (find + count, both zero)"
+      },
+      {
+        "n": 2,
+        "claim": "jurisdiction.json carries one rule per root, {\"name\": \"*.artifact\"}, and locate() answers yes for every renamed file and no for the lab, node_classes and notes"
+      },
+      {
+        "n": 3,
+        "claim": "both journals verify from genesis with every rename journaled (the old path's last entry absent, the new path chained from it), and `cairn artifact check` passes both roots"
+      },
+      {
+        "n": 4,
+        "claim": "every reader in a fresh reader census reads .artifact: the ticket inspector, the harbor's clearance, the review queue, the session-open banner, the chart doors and the sorted/saveslate/idea doors run green on the renamed corpus"
+      },
+      {
+        "n": 5,
+        "claim": "a Write/Edit/Bash redirect aimed at any *.artifact is refused at PreToolUse by one extension check"
+      },
+      {
+        "n": 6,
+        "claim": "WRONG INTENT if the outside-readers census (child 1, 46851816800f) finds a code reader outside our repos that needs .json: then the extension carries information and the rule is a directory rule, and this ticket routes back before any file moves"
+      }
+    ]
+  },
+  "traces_to": "Law 1 (one spelling of the record set instead of a directory list re-derived by three readers), Law 4 (the deny rule becomes one line of physics \u2014 Akien: 'then we only disallow one extension'), Law 6 (the door stays the one gate; the rename is its first bulk write and proves it under load)",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: child 1 (46851816800f) builds the outside-readers census, read-only, and its finding is recorded on this ticket's log before any child moves a file.",
+      "writes_to": [
+        "cairn/tools/artifact/outside_readers.py",
+        "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/jurisdiction.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the moving children (four reader groups, the bulk rename, the rule collapse) stay at TICKETME until the orchestrator calls a quiet window across all boxes. Each is cast then with its own bounds and its own fresh census. This ticket writes nothing of theirs.",
+      "writes_to": [],
+      "reads": [
+        "cairn/tools/artifact/jurisdiction.json",
+        "bin/cmd/artifactgate"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/outside_readers.py",
+      "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py"
+    ],
+    "out": [
+      "every record of truth (nothing renames before the quiet window)",
+      "every reader in cairn and CairnCommons",
+      "cairn/tools/artifact/jurisdiction.json",
+      "bin/cmd/artifactgate",
+      "the moving children's work"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "3,070 *.json records under CairnCommons/{tickets,decisions,slates,ideas,questions,adjudications}; 3,079 on a re-measure an hour later (troubles/ is no longer in the commons)",
+      "how": "find tickets troubles decisions slates ideas questions adjudications -name '*.json' | wc -l in CairnCommons, akienasus"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "971 tracked state/history/intention+why/validation *.json files in cairn; 975 on the re-measure",
+      "how": "git ls-files | grep -cE '(^|/)(state|history|intention\\+why)\\.json$|/validations/[^/]*\\.json$' in cairn, akienasus"
+    },
+    {
+      "when": "2026-09-13",
+      "saw": "127 reader files, 322 sites reading records by their .json name",
+      "how": "the reader census taken at this ticket's first cast, recorded in its falsifier clause 4 (old shape); stale, so each reader-group child re-measures its own"
+    }
+  ]
 }
