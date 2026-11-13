@@ -1,0 +1,57 @@
+{
+  "id": "1bf20054b165",
+  "title": "the installer-lives-in-recovery proof counts tracked files at the old address and runs install through bash_script_argv",
+  "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
+  "intention": "The proof's files-are-home tooth counts tracked files at the old address (git ls-files), and its install tooth runs bin/cmd/install through cairn.tools.base.script_argv.bash_script_argv.",
+  "why": "Measured 2026-11-12 on akiendell: akiendell: cairn/machines/installer holds only __pycache__/ (git ls-files over it is empty) and tooth_files_are_home reds 'still exists'; tooth_install_runs_from_the_new_home reds OSError WinError 193 from subprocess.run([bin/cmd/install]) at proof line 74",
+  "traces_to": "Law 3 and Law 8: a proof red on one box for a stale cache and a launcher, not for the move it measures, is not measuring the component; CP4 resolves the chafe.",
+  "how": "In tooth_files_are_home replace the .exists() check with git ls-files over the old address returning nothing; in tooth_install_runs_from_the_new_home build the argv with bash_script_argv(ROOT/bin/cmd/install) + ['--dry-run']. The proof stays one file; red first is the existing proof red on akiendell HEAD.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with only an untracked __pycache__ at cairn/machines/installer, tooth_files_are_home is green; a tracked file there still reds it"
+      },
+      {
+        "n": 2,
+        "claim": "tooth_install_runs_from_the_new_home is green on a Windows box and stays green on a posix box"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+      ],
+      "reads": [
+        "cairn/tools/base/script_argv.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_installer_lives_in_recovery.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akiendell: cairn/machines/installer holds only __pycache__/ (git ls-files over it is empty) and tooth_files_are_home reds 'still exists'; tooth_install_runs_from_the_new_home reds OSError WinError 193 from subprocess.run([bin/cmd/install]) at proof line 74",
+      "how": "ran the proof with the venv python; ls and git ls-files over cairn/machines/installer; read proof lines 52-79"
+    }
+  ]
+}
