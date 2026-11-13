@@ -1,0 +1,208 @@
+{
+  "id": "daaf7ac3e4ec",
+  "title": "the tracked pre-commit hook source checks out LF on every box",
+  "owning_intention": "cairn/tools/validation_store/intention+why.json",
+  "intention": "cairn/.gitattributes pins cairn/devices/tester/hooks/pre-commit to eol=lf, so the tracked hook source checks out LF on every box.",
+  "why": "Measured 2026-11-12 on akiendell: git check-attr eol for cairn/devices/tester/hooks/pre-commit reads unspecified under the current .gitattributes",
+  "traces_to": "Law 3: one tracked source has to be the same bytes on every box; Law 4: enforced by git's attributes, not by the installer happening to normalise.",
+  "how": "Add `cairn/devices/tester/hooks/pre-commit text eol=lf` to .gitattributes beside the other shell-script pins. Proof in a new file beside the 88e30cde9bd4 proof, same pattern: copy the real .gitattributes into a scratch git repo and read git check-attr eol for that path (lf) and for a neighbour path in hooks/ that is not the hook (not widened). The 88e3 proof is not edited. No tester code changes.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "git check-attr eol reads lf for cairn/devices/tester/hooks/pre-commit under the repo's .gitattributes, where it read unspecified before"
+      },
+      {
+        "n": 2,
+        "claim": "the pin names the one file: a sibling path under hooks/ still reads unspecified"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at .gitattributes, cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py",
+      "writes_to": [
+        ".gitattributes",
+        "cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      ".gitattributes",
+      "cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py",
+      "cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "git check-attr eol for cairn/devices/tester/hooks/pre-commit reads unspecified under the current .gitattributes",
+      "how": "git check-attr eol -- cairn/devices/tester/hooks/pre-commit in the live tree on akiendell"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "daaf7ac3e4ec: the tracked pre-commit hook source checks out LF on every box",
+      "intent": "cairn/.gitattributes pins cairn/devices/tester/hooks/pre-commit to eol=lf, so the tracked hook source the reseal door installs checks out LF on every box; no tester code changes.",
+      "scope": ".gitattributes and one new proof beside the 88e30cde9bd4 proof; tester code, the 88e3 proof and the other pins are not changed",
+      "unknowns": [
+        "a checkout made before the pin stays CRLF until re-checked-out; the live tree's copy is re-checked-out by hand after the push",
+        "the posix side was not run by me: on Linux the pin changes nothing a checkout does"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          ".gitattributes",
+          "cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py"
+        ],
+        "out": [
+          "cairn/devices/tester/reseal.py",
+          "cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what .gitattributes says about the hook path",
+        "the hook source's line endings in the index"
+      ],
+      "holdings": [
+        {
+          "what": "the validation store's fingerprint",
+          "address": "cairn/tools/validation_store/validation_store.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a line-ending pin for the tracked pre-commit hook source",
+          "measure": "git check-attr eol read unspecified for cairn/devices/tester/hooks/pre-commit under the old .gitattributes on akiendell 2026-11-12"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "one pin line in .gitattributes with a why-comment, and a check-attr proof",
+          "why": "an extensionless shell script in hooks/ is reached by none of the existing globs",
+          "kind": "build",
+          "fills": "a line-ending pin for the tracked pre-commit hook source",
+          "uses": [
+            "cairn/tools/validation_store/validation_store.py"
+          ],
+          "writes_to": [
+            ".gitattributes",
+            "cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "one pin line in .gitattributes with a why-comment, and a check-attr proof",
+          "why_now": "built; proof red first (unspecified), green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "one pin line in .gitattributes with a why-comment, and a check-attr proof",
+          "expect": "git check-attr eol reads lf for the hook and unspecified for a sibling",
+          "falsifier": "the hook reads other than lf, or the sibling reads other than unspecified",
+          "instrument": "python3 cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the hook-pin proof pass",
+          "instrument": "python3 cairn/tools/validation_store/proofs/test_the_hook_source_checks_out_lf.py",
+          "timeout_s": 300,
+          "covers": [
+            "one pin line in .gitattributes with a why-comment, and a check-attr proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
