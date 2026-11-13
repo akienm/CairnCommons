@@ -1,0 +1,223 @@
+{
+  "id": "3195b3b834bc",
+  "title": "a far bus handle's flush answers without asking the LAN door for an op it refuses",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "RemoteBus.flush() on a far home sends nothing and answers that the ring belongs to the far box's bus process; on a local home it still sends op flush.",
+  "why": "Measured 2026-11-12 from akienasus (CAIRN_BUS_HOME on akiendelllinux): each bin/cairn test --seal printed \"'flush' is not open across the LAN\" and 'the crossings they would have fired did not', yet all 12 tester->codemother sealed posts were in her channel and her sealed replies came back accepted:true. The post rides op call and her hook runs in the far bus process; only the trailing flush, an op the LAN door refuses by design (Law 6), raised, and the tester reported a failure that did not happen.",
+  "traces_to": "Law 7 (a diagnostic surface may not report a failure that did not happen) and Law 6 (the far ring is its own box's process to flush; server.py LAN_OPS).",
+  "how": "In RemoteBus.flush (cairn/tools/bus_client/remote.py): when self._far is not None return {'flushed': 0, 'receipts': 0, 'far': 'host:port', 'why': ...} and send nothing; otherwise send op flush as now. Red-first proof replacing remote.exchange, as test_a_far_client_reaches_without_hold.py does, LAN_OPS restated.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a far home, RemoteBus.flush() sends no request and returns a dict carrying flushed 0, far naming host:port, and a non-empty why"
+      },
+      {
+        "n": 2,
+        "claim": "with a far home, a post followed by flush sends only ops in ('call','stats','verbs')"
+      },
+      {
+        "n": 3,
+        "claim": "with a local home, flush() still sends exactly one op flush"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: RemoteBus.flush answers a far home without an op; a local home is unchanged.",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, with remote.exchange replaced so nothing dials.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py"
+    ],
+    "out": [
+      "cairn/devices/tester (cc_0 holds it)",
+      "cairn/devices/cairn/machines/bus/server.py LAN_OPS",
+      "the Dell beat's ring flush",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "tester seal from akienasus printed 'flush' is not open across the LAN and that the crossings did not fire",
+      "how": "bin/cairn test --seal over the 8e73 proofs with CAIRN_BUS_HOME on akiendelllinux"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "12 tester->codemother sealed posts in her channel; her sealed replies to tester accepted:true; Dell bus stats posted 87 ring_depth 87",
+      "how": "reach().read(to='codemother'|'tester', channel='personal') and stats() from akienasus"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "3195b3b834bc: a far bus handle's flush answers without asking the LAN door for an op it refuses (cairn/tools/bus_client/remote.py)",
+      "intent": "RemoteBus.flush() on a far home sends nothing and answers that the ring belongs to the far box's bus process; on a local home it still sends op flush.",
+      "scope": "the ticket's bounds: cairn/tools/bus_client/remote.py, cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Law 7 (a diagnostic surface may not report a failure that did not happen) and Law 6 (the far ring is its own box's process to flush; server.py LAN_OPS).",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/bus_client/remote.py",
+          "cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py"
+        ],
+        "out": [
+          "cairn/devices/tester (cc_0 holds it)",
+          "cairn/devices/cairn/machines/bus/server.py LAN_OPS",
+          "the Dell beat's ring flush",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where cairn/tools/bus_client/remote.py does what the ticket changes"
+      ],
+      "holdings": [
+        {
+          "what": "read by the build: cairn/tools/bus_client/remote.py",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "read by the build: cairn/devices/cairn/machines/bus/server.py",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "read by the build: cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py",
+          "address": "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a far bus handle's flush answers without asking the LAN door for an op it refuses",
+          "measure": "2026-11-12: tester seal from akienasus printed 'flush' is not open across the LAN and that the crossings did not fire; 2026-11-12: 12 tester->codemother sealed posts in her channel; her sealed replies to tester accepted:true; Dell bus stats posted 87 ring_depth 87"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a far bus handle's flush answers without asking the LAN door for an op it refuses",
+          "why": "Measured 2026-11-12 from akienasus (CAIRN_BUS_HOME on akiendelllinux): each bin/cairn test --seal printed \"'flush' is not open across the LAN\" and 'the crossings they would have fired did not', yet all 12 tester->codemother sealed posts were in her channel and her sealed replies came back accepted:t",
+          "kind": "build",
+          "fills": "a far bus handle's flush answers without asking the LAN door for an op it refuses",
+          "uses": [
+            "cairn/tools/bus_client/remote.py",
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/remote.py",
+            "cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a far bus handle's flush answers without asking the LAN door for an op it refuses",
+          "why_now": "Measured 2026-11-12 from akienasus (CAIRN_BUS_HOME on akiendelllinux): each bin/cairn test --seal printed \"'flush' is not open across the LAN\" and 'the crossings they would have fired did not', yet al"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a far bus handle's flush answers without asking the LAN door for an op it refuses",
+          "expect": "1 proof(s) green twice",
+          "falsifier": "with a far home, RemoteBus.flush() sends no request and returns a dict carrying flushed 0, far naming host:port, and a non-empty why; with a far home, a post followed by flush sends only ops in ('call','stats','verbs'); with a local home, flush() still sends exactly one op flush",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier holds: test_a_far_flush_asks_for_no_op_the_lan_refuses",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_far_flush_asks_for_no_op_the_lan_refuses.py",
+          "timeout_s": 600,
+          "covers": [
+            "a far bus handle's flush answers without asking the LAN door for an op it refuses"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
