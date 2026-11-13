@@ -1,0 +1,65 @@
+{
+  "id": "ea6e465680a3",
+  "title": "the base shim proof leaves no scratch process behind it",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A tools/base shim proof that starts a ground loop under a scratch HOME leaves no process of that scratch behind it, on a box with systemd-run or without it.",
+  "why": "Measured 2026-11-12: akiendell (Windows) counted 56 cascade reds from orphaned web_server listener children left by a shim proof. Reproduced on akienasus with systemd-run off PATH and CAIRN_HOME_HOST unset. The shim spawned the scratch loop with setsid; the loop's web_server pulse logged 'systemd-run absent: started the shim detached' and ran cairn/devices/web_server/listener.py, which woke a scratch bus (python3 -m cairn.devices.cairn.machines.bus serve --home <scratch>). After the proof's teardown both still stood, re-parented to the user manager, because _kill_setsid_children kills only ground_loop cmdlines. The systemd unit path is clean on Linux: systemctl stop kills the unit's cgroup.",
+  "traces_to": "CP6 (what a proof leaves running accumulates unseen and reds its peers) and Law 8 (a peer leans on a green, so a proof's residue spoils greens that are not its own).",
+  "how": "In cairn/tools/base/proofs/test_shim_starts_the_loop.py: (1) _env passes CAIRN_HOME_HOST='not-this-box.invalid' to home_env, so cairn/devices/web_server/groundloop/pulse.py's is_cairn_home reads false and no listener starts under a scratch loop, on any OS. (2) _kill_setsid_children reaps every /proc process whose environ holds HOME=<scratch>, with no cmdline filter, and returns the pids it signalled. (3) New red-first tooth test_the_setsid_path_leaves_no_scratch_process. It builds a scratch PATH dir holding python3 (an exec wrapper to sys.executable; a bare symlink loses the venv's site-packages), systemctl, git, env, sh and bash, and no systemd-run. It constructs TesterShim under a scratch HOME with that PATH and CAIRN_WEB_SERVER_PORT unused, waits for the beat, sleeps 15 s so the beat's pulses act, runs the teardown, waits 3 s, then asserts that no /proc process carries HOME=<scratch> and that the scratch .cairn/logs/web_server/0/web_server.log holds no 'started the shim' line. Its own finally reaps anything left before rmtree. Builds after 3301915df481 lands (it also edits _env). Proofs-only build: the ticket carries a top-level writes_to.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on the setsid path (systemd-run off PATH), after the proof's teardown no process carrying HOME=<scratch> stands"
+      },
+      {
+        "n": 2,
+        "claim": "a scratch loop the proof starts reads itself as not the home host, so the scratch web_server.log records no listener started"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _env pins CAIRN_HOME_HOST='not-this-box.invalid'; _kill_setsid_children reaps by HOME=<scratch> alone.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py",
+        "cairn/devices/web_server/groundloop/pulse.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the tooth test_the_setsid_path_leaves_no_scratch_process joins the same file, PROVES keyed to this ticket's clauses 1 and 2.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+    ],
+    "out": [
+      "cairn/tools/base/shim.py (the spawn is unchanged)",
+      "cairn/devices/web_server (its pulse is unchanged, RULE 1)",
+      "a cross-platform environ read (no psutil in the venv)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "with systemd-run off PATH: before teardown the scratch held ground_loop, listener.py --port 18997, and bus serve --home <scratch>; after the proof's teardown listener.py and the bus still stood (ppid = systemd --user)",
+      "how": "scratchpad orphan_census.py --home-unset --no-systemd: construct TesterShim under scratch_dir with home_env, wait for beat.json, sleep 15, run _stop plus the ground_loop-only kill, list /proc processes whose environ holds HOME=<scratch>"
+    }
+  ],
+  "writes_to": [
+    "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Only pin CAIRN_HOME_HOST: one line, and it stops the listener on every OS. It leaves the teardown blind to any other pulse child, so both changes go in. The reap stays Linux-only, because no psutil means no cross-platform environ read. The pin is what reaches Windows.",
+      "hidden_assumption": "That akiendell's orphans are this proof's. They are measured there as listener children of a shim proof; on Linux the same chain is reproduced here only with systemd-run off PATH. The Windows count is akiendell's measurement, not mine.",
+      "prior_art": "_scratch_loops / _is_scratch_loop in the same proof already find loops by HOME env. cairn/tools/scratch/scratch.py home_env (ticket 3301915df481) is the scratch-env door, and this ticket composes on it.",
+      "real_collision": "None. 3301915df481's local build also edits _env in this file, so this build lands after 3301's, a sequencing note and not a conflict."
+    },
+    "exit": "routed_forward",
+    "falsifier": "RED if, after test_dead_to_live_one_shim's teardown on the setsid path, any process carrying HOME=<scratch> stands, or the scratch web_server.log says the pulse started the shim.",
+    "from_idea": "none, because it was measured 2026-11-12 over cairn/tools/base/proofs/test_shim_starts_the_loop.py: with no systemd-run on PATH, the scratch loop's web_server pulse started listener.py and the listener woke a scratch bus, and both outlived the proof's teardown",
+    "how": "Two changes in cairn/tools/base/proofs/test_shim_starts_the_loop.py. (1) _env pins CAIRN_HOME_HOST to a name that is not this box, so a scratch loop never reads itself as the home host and its web_server pulse starts no listener. (2) _kill_setsid_children reaps every process whose environ carries HOME=<scratch>, not only ground_loop cmdlines. A red-first tooth runs the construct with systemd-run off PATH and counts the scratch-HOME processes left after the teardown.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "CP6 (what a proof leaves running accumulates unseen: akiendell measured 56 cascade reds from orphaned listeners) and Law 8 (a proof's own residue makes peers' greens untrustworthy).",
+    "what": "A tools/base shim proof that starts a ground loop under a scratch HOME leaves no process of that scratch behind it, on a box with systemd-run or without it."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "On Linux the systemd unit path is clean: systemctl stop kills the unit's cgroup, listener included. Only the setsid fall-through (Windows, or no systemd-run) orphans listener.py and the scratch bus it wakes."
+    },
+    {
+      "stratum": "code",
+      "text": "A systemd-run scratch loop takes the user MANAGER's env, so it carries CAIRN_BUS_HOME and CAIRN_HOME_HOST from systemctl --user show-environment whatever home_env stripped."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "f6960b3879b3",
+  "skill": "intent",
+  "title": "A tools/base shim proof that starts a ground loop under a scratch HOME leaves no process of that scratch behind it, on a",
+  "trace_id": "0b9ba010f6d4",
+  "when": "2026-11-12T22:28:22.026594"
+}
