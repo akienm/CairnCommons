@@ -1,0 +1,82 @@
+{
+  "id": "59f7456dd9f5",
+  "title": "a bare call is a BaseShim hook, so the librarian wakes without overriding the root-verb resolver",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A device's answer to a bare call is a hook on BaseShim (_bare), so the librarian wakes on a bare `cairn librarian` without overriding _resolve, which every roster device must inherit.",
+  "why": "Measured 2026-11-12: test_root_verb_vocabulary.py's test_every_roster_device_inherits_the_root_verbs reds over cairn/devices/librarian/shim.py:62, where LibrarianShim._resolve (commit 1cccda9b5, ticket d832a24e5144, PROVED) overrides BaseShim._resolve to wake the librarian on a bare call (Q#30). The tools/base commit-hook reseal sealed that red on the Dell, with its two dependents, and it blocks d692ef650534's PROVED. The override is legitimate in what it does and only wrong in where: it passes every other argv to super.",
+  "traces_to": "Law 4 (the root vocabulary is physics in test_root_verb_vocabulary; an override is a device opting out of it) and RULE 1 (a device extends its shim through a declared hook, never by replacing the inherited resolver).",
+  "how": "(a) cairn/tools/base/shim.py: BaseShim._resolve's `if not argv:` returns self._bare(); `_bare(self) -> dict` returns today's answer exactly: {exit 0, text 'device: <dev>\\nclass:  cairn/devices/<dev>/', data None, cached None}. (b) cairn/devices/librarian/shim.py: LibrarianShim._resolve becomes _bare(self): self._ensure_device(), then the chat answer as today; the super() fallthrough goes. (c) Red-first proof cairn/tools/base/proofs/test_a_bare_call_is_a_shim_hook.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "test_root_verb_vocabulary.py::test_every_roster_device_inherits_the_root_verbs passes: no roster shim overrides resolve or _resolve"
+      },
+      {
+        "n": 2,
+        "claim": "a bare `cairn librarian` still wakes the librarian and opens its chat with no URL printed: cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py stays green"
+      },
+      {
+        "n": 3,
+        "claim": "a BaseShim subclass that overrides only _bare answers a bare call with _bare's answer, and BaseShim's default bare answer is today's device/class text"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: BaseShim gains _bare; _resolve's bare branch returns it.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: LibrarianShim overrides _bare and drops its _resolve override.",
+      "writes_to": [
+        "cairn/devices/librarian/shim.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/shim.py",
+        "cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause; clauses 1 and 2 run the two standing proofs as subprocesses (pytest -k for clause 1), clause 3 in-process with a throwaway subclass.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_bare_call_is_a_shim_hook.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_root_verb_vocabulary.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/shim.py",
+      "cairn/devices/librarian/shim.py",
+      "cairn/tools/base/proofs/test_a_bare_call_is_a_shim_hook.py"
+    ],
+    "out": [
+      "cairn/tools/base/proofs/test_root_verb_vocabulary.py (no tooth changes)",
+      "test_get_status_is_uniform_across_the_roster (a separate red on akienasus)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "test_every_roster_device_inherits_the_root_verbs FAILED: librarian's shim overrides _resolve",
+      "how": "bin/cairn test cairn/tools/base/proofs/test_root_verb_vocabulary.py on akienasus at main"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "test_a_bare_librarian_opens_its_chat.py green",
+      "how": "bin/cairn test cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py on akienasus at main"
+    }
+  ]
+}
