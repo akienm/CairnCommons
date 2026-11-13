@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked: bash's own parser is the precise judge, but proofgate has no bash AST and adding one is a dependency. Lifting heredoc bodies by delimiter is the smallest correct cut for the spellings measured.",
+      "hidden_assumption": "That a heredoc fed to a non-shell runs no proof. `python3 - <<EOF` with runpy over a proof would; that is today unjudged in any spelling and is not made worse here.",
+      "prior_art": "proofgate already judges `bash -c`/`sh -c`/`eval` strings as the command they are (72a37498c601); this applies the same rule to a heredoc fed to a shell.",
+      "real_collision": "None: proofgate and its proof only; dda0's heredoc clause stays green, measured by its census."
+    },
+    "exit": "routed_forward",
+    "falsifier": "`cat > f <<'EOF'` with a `python3 <proof>` body line passes unrewritten; `bash <<'EOS'` with the same body is rewritten; `bash <<-EOS` (tab-stripped) is rewritten; the existing 18 teeth stay green.",
+    "from_idea": "2026-11-13-audit-of-cairn-devices-proofs-on-akienasus",
+    "how": "Before cutting segments, proofgate lifts every heredoc body out of the command text. When the heredoc's command word is a shell (bash, sh, zsh, dash), the body is judged as the command it is, as `bash -c` already is; otherwise the body is data and is not judged. Teeth in bin/proofs/test_proof_gate.py.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 4 (the seal is physics, and a gate that fires on data teaches the hand to route around it) and Law 8; dda0e72b9c67's census, whose heredoc spelling must stay rewritten.",
+    "what": "proofgate judges a heredoc's body as commands only when the heredoc feeds a shell, so writing a script that names a proof to a file (cat > f <<EOF) passes unrewritten, while a heredoc fed to bash is still rewritten."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "measured 2026-11-13 on akienasus: `cat > $S/rec_ts.sh <<'EOF' ... python3 -u <proof> ... EOF` was rewritten to `cairn test --exec`, so a script write ran double-sealed"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "ecd3adcafe4c",
+  "skill": "intent",
+  "title": "proofgate judges a heredoc's body as commands only when the heredoc feeds a shell, so writing a script that names a proo",
+  "trace_id": "c658ed60294c",
+  "when": "2026-11-13T07:12:21.649146"
+}

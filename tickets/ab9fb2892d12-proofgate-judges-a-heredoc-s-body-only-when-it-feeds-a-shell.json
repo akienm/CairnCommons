@@ -1,0 +1,61 @@
+{
+  "id": "ab9fb2892d12",
+  "title": "proofgate judges a heredoc's body only when it feeds a shell",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "proofgate judges a heredoc's body as commands only when the heredoc feeds a shell, so writing a script that names a proof to a file passes unrewritten, while a heredoc fed to bash is still rewritten.",
+  "why": "Measured 2026-11-13 on akienasus: `cat > $S/rec_ts.sh <<'EOF' ... timeout 900 python3 -u <proof> ... EOF; bin/cairn test --exec \"$S/rec_ts.sh\"` was rewritten to `cairn test --exec '<whole command>'`, because _segments cuts at newlines and judges the heredoc's body lines as shell segments. Writing a file runs nothing; the run went double-sealed.",
+  "traces_to": "Law 4 (a gate that fires on data teaches the hand to route around it) and Law 8; dda0e72b9c67's census, whose heredoc spelling must stay rewritten.",
+  "how": "In _verdict, before _segments, lift every heredoc body out of the command text: a line holding <<WORD / <<'WORD' / <<\"WORD\" / <<-WORD opens a body that runs to the line equal to WORD (tabs stripped for <<-), or to the end. The heredoc's command word is _command_word over the last segment of the text before << on its line. A shell word (SHELLS) judges the body by a nested _verdict at depth+1, as bash -c is; any other word leaves the body unjudged. Two teeth under this ticket's PROVES key, appended to _main.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "`cat > f <<'EOF'` and `tee f <<EOF` whose body holds a `python3 <proof>` line are judged None"
+      },
+      {
+        "n": 2,
+        "claim": "`bash <<'EOS'`, `sh <<EOS` and `bash <<-EOS` with a `python3 <proof>` body are judged rewrite, and `bash <<EOF` with a `pytest` body is refused"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _verdict lifts heredoc bodies before cutting segments; a body feeding a shell is judged nested, any other body is data.",
+      "writes_to": [
+        "bin/cmd/proofgate"
+      ],
+      "reads": [
+        "bin/cmd/proofgate"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: two teeth, one per clause, under this ticket's PROVES key in the gate's proof, appended to _main.",
+      "writes_to": [
+        "bin/proofs/test_proof_gate.py"
+      ],
+      "reads": [
+        "bin/proofs/test_proof_gate.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cmd/proofgate",
+      "bin/proofs/test_proof_gate.py"
+    ],
+    "out": [
+      "the tester's seal (2c9eeab2da87's)",
+      "dda0e72b9c67's census proof and its script-file spelling (open-49fc67a40ede)",
+      "every other proof"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "a cat-to-file heredoc naming `python3 -u <proof>` in its body was rewritten to `cairn test --exec`",
+      "how": "the PreToolUse hook's additionalContext on this session's Bash call that wrote scratchpad/rec_ts.sh"
+    }
+  ]
+}
