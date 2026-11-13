@@ -68,5 +68,158 @@
       "saw": "bootstrap.sh line 282 runs pip install --editable on the repo with no extra",
       "how": "grep -n 'pip install' cairn/devices/recovery/bootstrap.sh"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "b3ecebdf9695: the venv carries the dev extra (cairn/devices/recovery/machines/installer)",
+      "intent": "The installer's ensure_dev_extra measures that ~/.cairn/venv imports every module in pyproject's dev extra, offers the lack on a dry run, and otherwise installs '<repo>[dev]' through the venv's own pip and measures again.",
+      "scope": "ensure_dev_extra in installer.py, its registration in installer.main(), and one proof; the install inspector's own logic, bootstrap.sh and pyproject.toml are out",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "every component talks to every other only through its public interface",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/recovery/machines/installer/installer.py",
+          "cairn/devices/recovery/machines/installer/proofs/test_install_carries_the_dev_extra.py"
+        ],
+        "out": [
+          "cairn/devices/recovery/bootstrap.sh",
+          "pyproject.toml",
+          "the install inspector's own logic (bdd0ed77930f)",
+          "every other device"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "an existing dev-extra probe in the installer",
+        "the dev extra's declaration",
+        "a runner seam a proof can stub"
+      ],
+      "holdings": [
+        {
+          "what": "the installer's step shape {id,status,detail} (ensure_journal_merge_driver)",
+          "address": "cairn/devices/recovery/machines/installer/installer.py"
+        },
+        {
+          "what": "the dev extra declaration",
+          "address": "pyproject.toml"
+        }
+      ],
+      "absences": [
+        {
+          "what": "ensure_dev_extra",
+          "measure": "git show 8864de079^:cairn/devices/recovery/machines/installer/installer.py | grep -c ensure_dev_extra answers 0 (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "ensure_dev_extra step and its proof",
+          "why": "a venv that cannot import pytest cannot run cairn test, so it proves nothing (akienasus, 2026-11-12)",
+          "kind": "build",
+          "fills": "ensure_dev_extra",
+          "uses": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "pyproject.toml"
+          ],
+          "writes_to": [
+            "cairn/devices/recovery/machines/installer/installer.py",
+            "cairn/devices/recovery/machines/installer/proofs/test_install_carries_the_dev_extra.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "ensure_dev_extra step and its proof",
+          "why_now": "the install inspector (bdd0ed77930f) registers it as a check; built and pushed at 8864de079"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "ensure_dev_extra step and its proof",
+          "expect": "three teeth green, one per falsifier clause, nothing spawned",
+          "falsifier": "a missing module is not offered, a run installs without the venv's pip, or a complete venv invokes pip",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_install_carries_the_dev_extra.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the falsifier holds as named teeth",
+          "instrument": "bin/cairn test cairn/devices/recovery/machines/installer/proofs/test_install_carries_the_dev_extra.py",
+          "timeout_s": 900,
+          "covers": [
+            "ensure_dev_extra step and its proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
