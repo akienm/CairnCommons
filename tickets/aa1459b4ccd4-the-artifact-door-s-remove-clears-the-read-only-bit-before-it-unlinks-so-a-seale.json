@@ -1,0 +1,208 @@
+{
+  "id": "aa1459b4ccd4",
+  "title": "the artifact door's remove clears the read-only bit before it unlinks, so a sealed validation can be removed on Windows",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "artifact.remove clears the read-only bit before it unlinks, so a read-only record such as a sealed validation is removed through the door on Windows as on Linux, journaled with sha_after absent.",
+  "why": "Measured 2026-11-12 on akiendell: artifact remove on bin/validations/test_cairn_resolves_from_powershell.json raised PermissionError [WinError 5] at artifact.py:662 p.unlink(); ls -l showed the file -r--r--r-- while its neighbours were -rw-r--r--",
+  "traces_to": "Law 7: a door that cannot do its one job on a platform fails loudly but leaves the record stuck; Law 4: removal goes through the door, so the door must work where it runs.",
+  "how": "In remove() in cairn/tools/artifact/artifact.py, after the jurisdiction check and the journal entry is built, os.chmod(p, stat.S_IWRITE | stat.S_IREAD) when the file is not writable, then unlink. The store's mode for new seals is untouched. Proof in scratch roots: write a record with mode 0o444 through the door, remove it through the door, assert the file is gone and a remove entry with sha_after absent was journaled, and that a writable record still removes.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a record written read-only through the door is removed through the door: the file is gone and a remove entry is journaled"
+      },
+      {
+        "n": 2,
+        "claim": "a writable record still removes as before, and the door still writes seals read-only"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/artifact/artifact.py",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "artifact remove on bin/validations/test_cairn_resolves_from_powershell.json raised PermissionError [WinError 5] at artifact.py:662 p.unlink(); ls -l showed the file -r--r--r-- while its neighbours were -rw-r--r--",
+      "how": "ran bin/cairn artifact remove on akiendell on the two untracked seals and read the traceback and the file modes"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "aa1459b4ccd4: the artifact door's remove clears the read-only bit before it unlinks, so a sealed validation can be removed on Windows",
+      "intent": "artifact.remove clears the read-only bit before it unlinks, so a read-only record such as a sealed validation is removed through the door on every OS, journaled with sha_after absent.",
+      "scope": "remove() in cairn/tools/artifact/artifact.py and its proof; the validation store's read-only mode for new seals is not changed",
+      "unknowns": [
+        "the posix side was not run by me: on posix unlink of a read-only file in a writable directory succeeds, so tooth 1 passes there by construction"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/artifact/artifact.py",
+          "cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py"
+        ],
+        "out": [
+          "the validation store's seal mode",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where remove() unlinks",
+        "how the store writes seals read-only"
+      ],
+      "holdings": [
+        {
+          "what": "the artifact door's remove",
+          "address": "cairn/tools/artifact/artifact.py"
+        },
+        {
+          "what": "the pattern proof for artifact-door teeth",
+          "address": "cairn/tools/artifact/proofs/test_an_append_keeps_what_was_there.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a remove that works on a read-only record on Windows",
+          "measure": "bin/cairn artifact remove raised PermissionError WinError 5 at artifact.py p.unlink() on two read-only seals on akiendell 2026-11-12"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "remove() clears the read-only bit before unlinking",
+          "why": "Windows will not unlink a read-only file and the store writes seals read-only",
+          "kind": "build",
+          "fills": "a remove that works on a read-only record on Windows",
+          "uses": [
+            "cairn/tools/artifact/artifact.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/artifact.py",
+            "cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "remove() clears the read-only bit before unlinking",
+          "why_now": "built; proof red first on Windows (WinError 5), green twice after"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "remove() clears the read-only bit before unlinking",
+          "expect": "a read-only record is removed and journaled; a writable one still removes",
+          "falsifier": "the read-only record survives remove or the door raises, or a seal is no longer written read-only",
+          "instrument": "python3 cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the remove-read-only proof pass",
+          "instrument": "python3 cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py",
+          "timeout_s": 300,
+          "covers": [
+            "remove() clears the read-only bit before unlinking"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
