@@ -1,0 +1,64 @@
+{
+  "id": "9f4442c932da",
+  "title": "a seal's closure owner filter walks the component tree once",
+  "owning_intention": "cairn/tools/validation_store/intention+why.json",
+  "intention": "_owned_by_the_proofs_component looks every closure path's owner up with one address.components_of call, so filtering a closure walks the component tree once.",
+  "why": "Measured 2026-11-12: the home bus wedged at 100% of one core in this function, one component_of (~8.5 ms) per closure file, under codemother's shim lock; 2.66 s over 300 files.",
+  "traces_to": "Law 1 (the settled component set re-derived per file is a defect) and the bus intention (a wake never takes more than 60 s).",
+  "how": "Call components_of once over the proof plus the other rels and read each owner from the dict. Red-first proof counts component_dirs calls and checks the answer against a per-path filter.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_owned_by_the_proofs_component over 40 closure paths calls address.component_dirs exactly once"
+      },
+      {
+        "n": 2,
+        "claim": "its answer equals the per-path filter: the proof's own file, and each other rel whose component_of is the proof's owner"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _owned_by_the_proofs_component calls components_of once over the proof and the other rels.",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/validation_store/proofs/test_a_closure_owner_filter_walks_once.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/tools/validation_store/proofs/test_a_closure_owner_filter_walks_once.py"
+    ],
+    "out": [
+      "cairn/tools/base/address.py (82d203c11015)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "home bus pid 1881010 at 100% of one core in validation_store._owned_by_the_proofs_component -> address.component_of -> component_dirs under codemother's queueme; reach timed out at 120 s",
+      "how": "py-spy dump on akiendelllinux, relayed by the orchestrator"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "_owned_by_the_proofs_component over 300 repo files: 2.66 s; address.components_of over 300 paths: 0.03 s",
+      "how": "python3 timing on akienasus, after 82d203c11015 was built (commit daf9c392a)"
+    }
+  ]
+}

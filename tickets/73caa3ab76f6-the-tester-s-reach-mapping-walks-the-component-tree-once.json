@@ -1,0 +1,66 @@
+{
+  "id": "73caa3ab76f6",
+  "title": "the tester's reach mapping walks the component tree once",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "_reached maps a proof's reach with one address.components_of call, so the mapping walks the component tree once however many files a run touched.",
+  "why": "Measured 2026-11-12: component_of re-walks the tree each call (~8.5 ms); _reached calls it once per distinct file, and a sibling call site doing the same wedged the home bus at 100% of one core.",
+  "traces_to": "Law 1 (the settled component set re-derived per file is a defect).",
+  "how": "Collect distinct real paths as now, then one components_of over the proof and those paths. aa7a1d7fa671's tooth 1 counts component_dirs walks (want 1) instead of component_of calls (want 3).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_reached over 1,200 entries naming two distinct files walks component_dirs exactly once"
+      },
+      {
+        "n": 2,
+        "claim": "the map it returns equals the map over the two files given once each"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _reached calls components_of once over the proof and the distinct real paths under pkg.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: aa7a1d7fa671's tooth 1 counts address.component_dirs walks and wants 1 (was component_of calls, want 3: three walks), a stricter bound on the same property; PROVES maps this ticket's keys to the existing teeth.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_reach_mapping_walks_each_file_once.py"
+    ],
+    "out": [
+      "cairn/tools/base/address.py (82d203c11015)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "component_of ~8.5 ms a call, 20 calls 171.4 ms; components_of 300 paths 0.03 s",
+      "how": "python3 timing over cairn.tools.base.address on akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "home bus pid 1881010 at 100% of one core in validation_store._owned_by_the_proofs_component -> address.component_of -> component_dirs under codemother's queueme; reach timed out at 120 s",
+      "how": "py-spy dump on akiendelllinux, relayed by the orchestrator"
+    }
+  ]
+}
