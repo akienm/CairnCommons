@@ -1,0 +1,240 @@
+{
+  "id": "b0e65cf8a77e",
+  "title": "a reseal that cannot run raises a trouble, and the commit still lands",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A pre-commit reseal that crashes raises a trouble carrying the error, and the commit still lands.",
+  "why": "Measured 2026-11-12: a full /tmp crashed cairn test --reseal --stage at tester/cli.py:712 inside the pre-commit hook; the hook's || true swallowed it and the commit landed rc 0 with no seals staged and nothing recorded.",
+  "traces_to": "Law 7 (an error is permanent in a record of truth) and the 2026-09-30 ruling that the hook never blocks.",
+  "how": "reseal.run_or_record(run, *, raiser=None, standing=None) runs the ladder; on an Exception it prints the traceback, raises trouble tester-reseal-could-not-run (error, message, traceback tail) and returns 3; on completion it clears that trouble if it stands. cli._reseal_run wraps the renamed _reseal_ladder through it. KeyboardInterrupt and SystemExit pass through. The hook is unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a run raising OSError(ENOSPC) returns 3 and raises exactly one trouble under tester-reseal-could-not-run, carrying the error and the traceback tail"
+      },
+      {
+        "n": 2,
+        "claim": "a run that completes returns its own code and clears that trouble only when it stands"
+      },
+      {
+        "n": 3,
+        "claim": "a KeyboardInterrupt passes through and raises nothing"
+      },
+      {
+        "n": 4,
+        "claim": "cli._reseal_run goes through the door (a staged-file read failing with ENOSPC yields 3 and the trouble), and the hook still runs the reseal under || true and exits 0"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: run_or_record and RUN_CRASH_IDENTITY join reseal.py above reseal_all, reusing _raise, CLEARS_FOR and CALLER.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cli._reseal_run becomes a wrapper over the renamed _reseal_ladder through run_or_record.",
+      "writes_to": [
+        "cairn/devices/tester/cli.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/cli.py",
+        "cairn/devices/tester/hooks/pre-commit"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof holds one tooth per clause, fake raisers only.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_raises_a_trouble.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/cli.py",
+      "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_raises_a_trouble.py"
+    ],
+    "out": [
+      "cairn/devices/tester/hooks/pre-commit",
+      "every other component",
+      "what a red blocks"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "the reseal crashed on a full /tmp at tester/cli.py:712 and the commit landed rc 0 with no seals and no record",
+      "how": "the pre-commit output of a commit that night, recorded in CC memory commit-paths-leaves-hook-residue"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "b0e65cf8a77e: a reseal that cannot run raises a trouble, and the commit still lands, in cairn/devices/tester/reseal.py and cairn/devices/tester/cli.py",
+      "intent": "reseal.run_or_record runs the reseal ladder; an Exception prints its traceback, raises trouble tester-reseal-could-not-run and returns 3; a completed run clears that trouble if it stands; KeyboardInterrupt passes through. cli._reseal_run goes through it. The hook keeps || true and exit 0.",
+      "scope": "the three tester files named in bounds.in",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "the hook never blocks a commit (2026-09-30)",
+          "source": "CairnCommons/tickets/b0e65cf8a77e-a-reseal-that-cannot-run-raises-a-trouble-and-the-commit-still-lands.json",
+          "kind": "law"
+        },
+        {
+          "text": "a crash is permanent in a record of truth (Law 7)",
+          "source": "CairnCommons/tickets/b0e65cf8a77e-a-reseal-that-cannot-run-raises-a-trouble-and-the-commit-still-lands.json",
+          "kind": "law"
+        },
+        {
+          "text": "a kill stays 143e3974647b's; staging stays 357c402172ca's",
+          "source": "CairnCommons/tickets/b0e65cf8a77e-a-reseal-that-cannot-run-raises-a-trouble-and-the-commit-still-lands.json",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/reseal.py",
+          "cairn/devices/tester/cli.py",
+          "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_raises_a_trouble.py"
+        ],
+        "out": [
+          "cairn/devices/tester/hooks/pre-commit",
+          "every other component",
+          "what a red blocks"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "the reseal run entry and its trouble raiser",
+        "the hook's call"
+      ],
+      "holdings": [
+        {
+          "what": "the reseal door and its _raise/CLEARS_FOR/CALLER",
+          "address": "cairn/devices/tester/reseal.py"
+        },
+        {
+          "what": "the CLI reseal entry",
+          "address": "cairn/devices/tester/cli.py"
+        },
+        {
+          "what": "the pre-commit hook",
+          "address": "cairn/devices/tester/hooks/pre-commit"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a record of a reseal run that crashed",
+          "measure": "2026-11-12: a full /tmp crashed the reseal at tester/cli.py:712; the commit landed rc 0, no seals, no trouble"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "run_or_record in reseal.py, cli._reseal_run through it, and its proof",
+          "why": "a crash swallowed by || true leaves stale seals and no record (Law 7)",
+          "kind": "build",
+          "fills": "a record of a reseal run that crashed",
+          "uses": [
+            "cairn/devices/tester/reseal.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/reseal.py",
+            "cairn/devices/tester/cli.py",
+            "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_raises_a_trouble.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "run_or_record in reseal.py, cli._reseal_run through it, and its proof",
+          "why_now": "measured today on a full /tmp"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "run_or_record in reseal.py, cli._reseal_run through it, and its proof",
+          "expect": "the new proof green on 4 teeth and test_reseal_door green",
+          "falsifier": "a crash returns other than 3 or raises no trouble, a completed run clears a trouble that does not stand, a kill is swallowed, or the hook loses || true / exit 0",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_raises_a_trouble.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-4 hold and the reseal door proof stays green",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_raises_a_trouble.py cairn/devices/tester/proofs/test_reseal_door.py",
+          "timeout_s": 600,
+          "covers": [
+            "run_or_record in reseal.py, cli._reseal_run through it, and its proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
