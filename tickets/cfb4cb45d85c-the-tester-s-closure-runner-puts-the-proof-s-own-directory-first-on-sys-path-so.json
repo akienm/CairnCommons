@@ -1,0 +1,57 @@
+{
+  "id": "cfb4cb45d85c",
+  "title": "the tester's closure runner puts the proof's own directory first on sys.path, so a proof imports its own checkout whatever the caller's cwd",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "TesterDevice's _CLOSURE_RUNNER replaces a leading empty sys.path entry with the proof's directory, as running the proof as a script would, so the pinned checkout wins on every host and from every cwd.",
+  "why": "Measured 2026-11-12 on akiendell: run_proof from cwd=live root printed sys.path[0]=='' and imported the live cairn; test_hollow's worktree tooth red on Windows; with the 4-line edit sys.path[0] is the proof dir and that tooth is ok. Linux test_hollow reads 29/29 green (reseal 05:19), so the cwd there is not the live root",
+  "traces_to": "Law 3: the cause was measured (cwd live root gives the live cairn, cwd proofs dir gives the worktree); Law 8: the proof reds on the unedited runner on any host; CP: a hollow run measures the tree it says it measures.",
+  "how": "In cairn/devices/tester/device.py _CLOSURE_RUNNER, after sys.argv is set: if sys.path and sys.path[0] == '' then sys.path[0] = os.path.dirname(os.path.abspath(_proof)). Red-first proof cairn/devices/tester/proofs/test_the_closure_runner_puts_the_proofs_dir_first.py runs run_proof for real from a foreign cwd, so it reds on Linux too.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with the caller's cwd set to the live repo root, the probe's sys.path[0] is the proof's own directory"
+      },
+      {
+        "n": 2,
+        "claim": "a module beside the proof beats a same-named module in the caller's cwd"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/tester/device.py",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_closure_runner_puts_the_proofs_dir_first.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_the_closure_runner_puts_the_proofs_dir_first.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "run_proof from cwd=live root printed sys.path[0]=='' and imported the live cairn; test_hollow's worktree tooth red on Windows; with the 4-line edit sys.path[0] is the proof dir and that tooth is ok. Linux test_hollow reads 29/29 green (reseal 05:19), so the cwd there is not the live root",
+      "how": "run_proof probes and test_hollow.py run before and after the edit"
+    }
+  ]
+}
