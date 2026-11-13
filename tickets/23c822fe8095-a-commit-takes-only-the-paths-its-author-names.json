@@ -39,5 +39,162 @@
       "how": "reasoned from the shipped seam: after a -- <paths> commit the shared index keeps stale blobs for hook-added paths; refreshing needs post-commit",
       "saw": "T3 NOT BUILT: it collides with Q#60 (nothing hangs off the git post-commit hook), which is Akien's answer to rule on; alternative is to drop T3 and keep the `git reset -q -- <paths>` residue rule."
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "23c822fe8095: a commit takes only the paths its author names in cairn/tools/artifact/artifact.py",
+      "intent": "A commit carries only the paths its author named; another session's staged work in the shared index never rides it, and the shared index is left telling the truth afterwards.",
+      "scope": "cairn/tools/artifact: artifact.py, __main__.py, the new proof test_a_commit_takes_only_the_paths_its_author_names.py, and test_artifact_door.py's hook commits",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Law 6 (each session owns its own writes; a commit carries only its owner's work); Law 7 (a commit is a record of truth, and one carrying another's change under its message is a permanent mis-record); RULE 1 (the check lives in cairn/tools/artifact, the commit question both repos' hooks already ask); Q#60 (nothing hangs off post-commit).",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/artifact/artifact.py",
+          "cairn/tools/artifact/__main__.py",
+          "cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py",
+          "cairn/tools/artifact/proofs/test_artifact_door.py"
+        ],
+        "out": [
+          "the tester's reseal hook (cairn/devices/tester)",
+          "cairn/tools/post_commit (no post-commit hook, Q#60)",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where cairn/tools/artifact/artifact.py's check_staged runs inside the pre-commit hook"
+      ],
+      "holdings": [
+        {
+          "what": "check_staged and the artifact journal staging it already does",
+          "address": "cairn/tools/artifact/artifact.py"
+        },
+        {
+          "what": "the check verb the hooks call",
+          "address": "cairn/tools/artifact/__main__.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a commit takes only the paths its author names",
+          "measure": "2026-11-12: the pre-commit hook's GIT_INDEX_FILE is .git/index for a plain commit and --amend, .git/index.lock for -a, .git/next-index-<pid>.lock for commit -- <paths>; before cairn 3ee9a39eb nothing refused a shared-index commit. 2026-11-13: T1 and T3 red at the parent, all four teeth green twice with the build"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a commit takes only the paths its author names",
+          "why": "Measured 2026-10-13: a builder's commit swept CC's staged edit under the builder's ticket message, so history attributed work to the wrong ticket.",
+          "kind": "build",
+          "fills": "a commit takes only the paths its author names",
+          "uses": [
+            "cairn/tools/artifact/artifact.py",
+            "cairn/tools/artifact/__main__.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/artifact.py",
+            "cairn/tools/artifact/__main__.py",
+            "cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py",
+            "cairn/tools/artifact/proofs/test_artifact_door.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a commit takes only the paths its author names",
+          "why_now": "every shared-tree commit across the fleet is exposed until it lands"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a commit takes only the paths its author names",
+          "expect": "T1-T4 green twice; the door proof green with named-path commits",
+          "falsifier": "(T1) a plain git commit and git commit -a are refused naming git commit -m ... -- <paths>; (T2) git commit -- a with b staged by another session commits a plus the hook-staged journal and leaves b staged and uncommitted; (T3) after T2 the shared index holds no stale pre-commit blob for any path the commit wrote, and b's staged blob is byte-identical; (T4) a commit with MERGE_HEAD present is not refused",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier holds: test_a_commit_takes_only_the_paths_its_author_names",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py",
+          "timeout_s": 600,
+          "covers": [
+            "a commit takes only the paths its author names"
+          ]
+        },
+        {
+          "claim": "the artifact door's hook teeth hold with named-path commits",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_artifact_door.py",
+          "timeout_s": 600,
+          "covers": [
+            "a commit takes only the paths its author names"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
