@@ -1,0 +1,57 @@
+{
+  "id": "fc4bb2062253",
+  "title": "the db client finds its passfile when a proof repoints the instance root",
+  "owning_intention": "cairn/devices/db_domain/tools/client/intention+why.json",
+  "intention": "store._conn_args() returns a passfile that exists whenever the startup instance root holds one, even if a proof has repointed ROOTS['instance'] at a scratch dir.",
+  "why": "Measured 2026-11-12 on akiendell: test_charter_held.py tooth test_the_backpack_receives_and_reads_back_feedback fails on akiendell with OperationalError: connection to server at 127.0.0.1, port 5432 failed: fe_sendauth: no password supplied; the proof sets address.ROOTS['instance'] to a scratch dir and store._conn_args() takes passfile from instance_path('db_domain', 0)",
+  "traces_to": "Law 3: the proof world must be able to reach the one door to 5432 the same way on every box; Law 4: found by the client, not by each proof remembering to copy a credential.",
+  "how": "In cairn/devices/db_domain/tools/client/store.py, when instance_path('db_domain', 0)/pgpass is absent, fall back to the pgpass under the instance root the process started with (address's startup root); an existing file under the current root still wins. Red-first proof repoints ROOTS['instance'] at an empty temp dir and asserts the passfile names an existing file.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with ROOTS['instance'] repointed at an empty scratch dir and no unix socket, _conn_args()['passfile'] names a file that exists, where it named a missing one before"
+      },
+      {
+        "n": 2,
+        "claim": "with ROOTS['instance'] untouched, _conn_args()['passfile'] is still instance_path('db_domain', 0)/pgpass"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/db_domain/tools/client/store.py",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "test_charter_held.py tooth test_the_backpack_receives_and_reads_back_feedback fails on akiendell with OperationalError: connection to server at 127.0.0.1, port 5432 failed: fe_sendauth: no password supplied; the proof sets address.ROOTS['instance'] to a scratch dir and store._conn_args() takes passfile from instance_path('db_domain', 0)",
+      "how": "ran the census proof on akiendell (full output census_out5) and read store.py _conn_args and the proof's _scratch_roots"
+    }
+  ]
+}
