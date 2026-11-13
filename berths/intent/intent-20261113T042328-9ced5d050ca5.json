@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Passing the venv bin on PATH into systemd-run only moves the dependency; the Windows path already settled on the caller's interpreter.",
+      "hidden_assumption": "That sys.executable in the caller is always a python that has the bus's imports. It is, for every caller that already imported remote.py from the repo.",
+      "prior_art": "0156856b1fae / background_python (windowless_spawn.py:32) measured the same psycopg2 death on Windows 2026-11-12. 404f193284ac is the install-time check, a different seam.",
+      "real_collision": "None; it extends background_python's settled why to Linux."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Under PATH=/usr/bin:/bin a scratch bus spawned through both paths comes up and imports psycopg2; the argv tooth reds when 'python3' is restored. Wrong intent if a systemd unit must not run a venv interpreter.",
+    "from_idea": "2026-11-13-cairn-tools-bus-client-remote-py-214",
+    "how": "remote.py _spawn (:214) and _setsid (:276) take background_python() (sys.executable) in place of 'python3', as _detached (:262) already does. A proof captures the argv each path would run, with the subprocess calls stubbed, and asserts argv[0] is the caller's interpreter under a PATH that holds no python3.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 3 (measured: 29 'no bus' reds under a stripped PATH) and CP6 (safety built, not assumed from PATH).",
+    "what": "The Linux bus spawn runs the caller's own interpreter, so a bus never dies because PATH found a different python3."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "a bus spawn failure shows only in bus.log; the caller sees FileNotFoundError on bus.sock"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "9a83142aee53",
+  "skill": "intent",
+  "title": "The Linux bus spawn runs the caller's own interpreter, so a bus never dies because PATH found a different python3.",
+  "trace_id": "f5c1d14f28ac",
+  "when": "2026-11-13T04:23:28.117989"
+}

@@ -1,0 +1,232 @@
+{
+  "id": "5370ad4f474d",
+  "title": "the Linux bus spawn runs the caller's own interpreter",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+  "why": "Measured 2026-11-13 (Linux census): under PATH=/usr/bin:/bin the bare 'python3' at remote.py:214 found the system python, the bus died at bus.py:73 -> store.py:55 import psycopg2 (bus.log), and 29 proofs read 'no bus'.",
+  "traces_to": "Law 3 (measured, 29 reds) and CP6 (the spawn's safety is built, not borrowed from PATH).",
+  "how": "remote.py:214 (_spawn) and :276 (_setsid) take windowless_spawn.background_python() for argv[0], bound at call time like _detached (:262). A new proof stubs systemd-run/Popen, captures argv from both paths under a PATH with no python3, and asserts argv[0] == sys.executable.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_spawn's systemd-run argv runs sys.executable, not 'python3', under a PATH holding no python3"
+      },
+      {
+        "n": 2,
+        "claim": "_setsid's Popen argv runs sys.executable under the same PATH"
+      },
+      {
+        "n": 3,
+        "claim": "the tooth reds when either path's argv[0] is put back to 'python3'"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py",
+      "cairn/tools/bus_client/remote.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "bus.log: ModuleNotFoundError psycopg2 at store.py:55; 29 proofs 'no bus'; all green with the venv first on PATH",
+      "how": "Linux census passes 2 and 3 under a scratch HOME, env -i PATH=/usr/bin:/bin then venv-first"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "5370ad4f474d: the Linux bus spawn runs the caller's own interpreter in cairn/tools/bus_client/remote.py",
+      "intent": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+      "scope": "in: cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py, cairn/tools/bus_client/remote.py; out: every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py",
+          "cairn/tools/bus_client/remote.py"
+        ],
+        "out": [
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what cairn/tools/bus_client/remote.py does today against the ticket's measurement"
+      ],
+      "holdings": [
+        {
+          "what": "the standing code the build reads: remote.py",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "the standing code the build reads: windowless_spawn.py",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+          "measure": "bus.log: ModuleNotFoundError psycopg2 at store.py:55; 29 proofs 'no bus'; all green with the venv first on PATH (Linux census passes 2 and 3 under a scratch HOME, env -i PATH=/usr/bin:/bin then venv-first)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1: remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
+          "why": "Measured 2026-11-13 (Linux census): under PATH=/usr/bin:/bin the bare 'python3' at remote.py:214 found the system python, the bus died at bus.py:73 -> store.py:55 import psycopg2 (bus.log), and 29 proofs read 'no bus'.",
+          "kind": "build",
+          "fills": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+          "uses": [
+            "cairn/tools/bus_client/remote.py",
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/remote.py"
+          ]
+        },
+        {
+          "what": "D2: proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started.",
+          "why": "Measured 2026-11-13 (Linux census): under PATH=/usr/bin:/bin the bare 'python3' at remote.py:214 found the system python, the bus died at bus.py:73 -> store.py:55 import psycopg2 (bus.log), and 29 proofs read 'no bus'.",
+          "kind": "build",
+          "fills": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+          "uses": [
+            "cairn/tools/bus_client/remote.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1: remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
+          "why_now": "cast from the 2026-11-13 Linux census; built in a worktree, the proof red-first then green"
+        },
+        {
+          "what": "D2: proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started.",
+          "why_now": "cast from the 2026-11-13 Linux census; built in a worktree, the proof red-first then green"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1: remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
+          "expect": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+          "falsifier": "(1) _spawn's systemd-run argv runs sys.executable, not 'python3', under a PATH holding no python3; (2) _setsid's Popen argv runs sys.executable under the same PATH; (3) the tooth reds when either path's argv[0] is put back to 'python3'",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py"
+        },
+        {
+          "piece": "D2: proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started.",
+          "expect": "remote.py's systemd-run and setsid spawns start the bus with background_python(), the caller's own interpreter, as the Windows spawn already does.",
+          "falsifier": "(1) _spawn's systemd-run argv runs sys.executable, not 'python3', under a PATH holding no python3; (2) _setsid's Popen argv runs sys.executable under the same PATH; (3) the tooth reds when either path's argv[0] is put back to 'python3'",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_the_linux_bus_spawn_runs_the_callers_interpreter.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
+            "D2: proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started."
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
