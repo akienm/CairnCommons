@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each measured or read. (1) Measured on akiendelllinux, 2026-11-12 (orchestrator py-spy and the run_cache census): b0e65cf8a77e's constrain ran 44 tester proofs serially inside StageGate.queueme. That was 1858 s, all green, matching the 18:36 to 19:07 wall clock, and codemother answered nothing else meanwhile. Only 6 of 50 tester runs came from a standing seal; at 473aa8ceb 54 of the tester's 61 proofs have none. (2) Read cairn/tools/base/shim.py deliver: the shim posts a reply (reply_to = the envelope id) only when the handler returns a dict, and a None return posts nothing. (3) Read cairn/devices/cairn/machines/bus/bus.py request: the asker reads its reply by reply_to until its own deadline, so a reply posted later by another thread is taken the same way. (4) Read cairn/devices/cairn/machines/bus/server.py: one RLock per shim, held while that shim's poke runs. So the lock is released when queueme returns, and the callers (Ticket.queueme, sail.py chart/cross/verdict, skills/chart/live.py) need no change.",
+    "builder_check": "A builder needs three things, all in the ticket's how and decisions: (1) where the worker lives: StageGate, one thread-backed FIFO per gate, started lazily; (2) how the reply is posted: self._participant.post(to=envelope sender, reply_to=envelope id, body = the dict queueme returns today); (3) how the proof holds a stage open: StageGate's existing seam for a door, plus the published scratch bus that test_codemother_proofs_ride_the_published_scratch_bus.py rides. Does Voice.post accept reply_to? The builder checks cairn/devices/codemother/machines/watchme/gate.py first, and widening it is in bounds.",
+    "children": "none, because the change is codemother's alone; callers read the same reply by reply_to (cairn/machines/ticket/ticket.py queueme)",
+    "collision_check": "Outline 9.6 ('each chart stage ... answers queueme <fileref>'): it still answers, later. 3.3.4.3: the gate-side ticket instance processes pass or fail, unchanged. Bus decision 8, one lock per shim: kept. c2036433beaf and 445e66f32ba0 fixed deadlocks on that lock, and this fixes a long hold on it. b0e608f34ccb kept parallel runs as a fallback, and this adds none. These are distinctions, not collisions. The worker is the shim's own thread, alive only while the shim is, so it is not a daemon.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) while one ticket's stage is held open (a fixture door that blocks until the proof releases it), a second request to codemother (a deposit) is answered within 10 s; (2) the held stage, once released, still replies to its asker by reply_to with passed and berth, and the berth is recorded on the ticket; (3) a stage whose door raises still replies, with passed false and the lack named, and the ticket fails at that gate; (4) two tickets queued at one gate run one after the other, never at once. Horizon: PROVEME.",
+    "gates_bound": "code-seam prove_gate: a proof under cairn/devices/codemother/proofs/, one tooth per clause, red-first on today's synchronous queueme. Feeds back to origin through FIXME (Laws 3 and 8).",
+    "missing_check": "Wrapped, with two edges named for the builder. (a) constrain's re-entry guard is os.environ CAIRN_CONSTRAIN_FLOOR_RUNNING, which is process-global. Two stage runs at once in one process would read each other's guard as 'not-run', so each gate runs its stage on ONE worker, in arrival order. (b) The asker's own timeout (sail.py CHART_TIMEOUT_S 890 s) is shorter than a 1858 s constrain. That asker still times out, but nothing else waits behind it, and the gate's berthed or failed write on the ticket stands either way. Chart latency itself is out of this ticket's bounds.",
+    "node_class": "code-seam",
+    "questions": "none, because outline 3.3.4.3 and 5.5.3.3 settle the design choice; see press_office/CairnComponentOutline.txt",
+    "task_or_ticket": "ticket",
+    "title": "a slow chart stage never holds codemother's lock",
+    "watchme": "none, because its proof (to be written beside cairn/devices/codemother/intention+why.json) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A handler that returns None posts no reply, and the asker reads its reply by reply_to, so the bus already lets a gate answer later. Taking the stage off codemother's lock needs no caller change."
+    },
+    {
+      "stratum": "code",
+      "text": "constrain's re-entry guard is a process-global env var, so stages must not run concurrently in one process; one worker per gate."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "241379989132",
+  "skill": "sorted",
+  "title": "a slow chart stage never holds codemother's lock",
+  "trace_id": "8178f6c55089",
+  "when": "2026-11-12T19:10:37.170514"
+}

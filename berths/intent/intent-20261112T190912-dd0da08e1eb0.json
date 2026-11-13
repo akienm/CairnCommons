@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Three other options, each measured against the stall. (1) Cap the instrument budget per chart: lossy. 44 of 44 tester runs were green and useful, and a cap reports some as not-run while still holding the lock for the capped time. (2) Run instruments at seal time instead of chart time: this removes constrain's job, which is to tell the builder which checks refuse the build before it starts (constrain.instrument_constraints docstring). (3) Parallel runs: they shorten the 31 minutes but still hold the lock, and b0e608f34ccb already ruled parallel 'not the lead design'. Only taking the stage off the lock fixes the measured harm, which is the other boxes timing out.",
+      "hidden_assumption": "That nothing depends on queueme's reply carrying the berth. Ticket.chart reads reply.passed today, and sail.py's chart path and the clearance gate need a census at /sorted. It also assumes a gate-side worker is not a daemon: it is the shim's own thread, alive only while the shim is, and a restart re-queues from the ticket's journal (memory: reaching-for-daemons-is-drift).",
+      "prior_art": "In house: c2036433beaf (a poke never waits on another shim's lock: it queues and returns) and 445e66f32ba0 (a wake never waits on a shim lock) solved the deadlock, not a long hold. 070c5fc9624c's run_cache only helps repeats (2222 entries; the b0e6 runs were first reads). b0e608f34ccb bounded discovery to one component, and the tester has 61 proofs on its own. 2b0630f07651 (a request whose client has gone is not run to its end) is about abandoned asks, not held ones. Nothing in tickets or the congruency lab makes queueme asynchronous.",
+      "real_collision": "Outline 9.6 says each stage 'answers queueme <fileref>'. An immediate 'queued' answer is still that answer, and 3.3.4.3 has the gate-side ticket process pass or fail itself, so this is a distinction, not a collision. Bus decision 8, one lock per shim, stands: this keeps a single handler from holding it for minutes."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when, while a stage's instrument run is held open (a fixture instrument that sleeps), a second request to codemother (a deposit, and queueme at another ticket's gate) is answered within seconds, and the slow stage still berths and is recorded on its ticket. Wrong intent if Akien rules that a chart stage's ask must block until its berth is written.",
+    "from_idea": "none, because the orchestrator relayed it from a measured stall: py-spy and the run_cache census on akiendelllinux, 2026-11-12, against cairn/devices/codemother/machines/chart_gate/gate.py StageGate.queueme",
+    "how": "StageGate.queueme answers at once with {accepted, queued, stage} and hands the stage's door run to a gate-side worker (one at a time per gate, in arrival order). The worker does what queueme does now: berthed or failed on the gate-side ticket instance, then deposit. On a pass, the gate-side ticket queues itself at the next stage (outline 3.3.4.3: 'on a pass it goes on to the next step'). Ticket.chart stops waiting on each stage's reply and reads its chart_claim and journal instead. The rider: bus.request's timeout bounds nothing when the handler runs inside post()'s poke chain (581.7 s answered under 180 s). It is a separate ticket on cairn/devices/cairn/machines/bus.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Outline 3.3.4.3 (the gate queues the ticket; the gate-side instance processes the pass or fail and goes on itself) and 5.5.3.3 (Send is asynchronous). Telos: work proceeds across boxes at once (5.5.3.8, 'so the instance can run several heavy tasks at once across boxes'). Law 1: the instruments' 31 minutes are spent once, not again by every caller that timed out behind them.",
+    "what": "A chart or verdict stage whose instruments run for minutes never holds codemother's one shim lock while they run, so every other ticket's deposit, chart stage and verdict is answered meanwhile."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured on akiendelllinux, 2026-11-12: b0e65cf8a77e's constrain ran 44 tester proofs serially, 1858 s, all green, matching the 18:36 to 19:07 wall clock. Only 6 of 50 tester proofs read from a standing seal, so codemother answered nobody else for 31 minutes."
+    },
+    {
+      "stratum": "code",
+      "text": "bus.request(timeout=180) returned a 581.7 s run green. In process, the target's handler runs inside post() before the deadline loop starts, so the timeout bounds nothing there. That is a separate ticket."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "ae56e0d52359",
+  "skill": "intent",
+  "title": "A chart or verdict stage whose instruments run for minutes never holds codemother's one shim lock while they run, so eve",
+  "trace_id": "27f9566b9051",
+  "when": "2026-11-12T19:09:12.324314"
+}
