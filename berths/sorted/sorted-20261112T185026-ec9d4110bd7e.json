@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each measured. (1) akienasus 2026-11-12: /proc/sys/kernel/apparmor_restrict_unprivileged_userns read 1, and `cairn test --exec` refused because bwrap could not build the seal (cairn/devices/tester/isolation.py:247 reads that key). (2) akiendelllinux reads 0 from /etc/sysctl.d/60-uu-userns.conf, a UU-era file that nothing in either repo installs. (3) After applying the same file on akienasus, test_deposit is green and `bin/cairn test --exec true --timeout 30` exits 0.",
+    "builder_check": "A builder on a bare box needs only the node's apply block (sudo tee the file, sysctl -p, apt-get install bubblewrap) and its verify command, both written out in full in the intention.",
+    "children": "none, because it is one sysctl file per box, recorded in CairnCommons/intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json",
+    "collision_check": "The tester's isolation.py already names the fix in its refusal text ('fix: sysctl -w kernel.apparmor_restrict_unprivileged_userns=0'), which is live-only and is lost at reboot. This node persists it, so it is a distinction, not a collision. The cost (a wider unprivileged attack surface, the kernel's pre-24.04 default) is recorded in the node and matches the Dell since UU.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) the verify command in intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json exits 0 on akienasus; (2) it exits 0 on akiendelllinux. Horizon: re-run after every reinstall or release upgrade; the seal expires by class.",
+    "gates_bound": "host-seam prove_gate: run the verify command on each box, compare against the claim, seal; REBUILD gate: the apply block alone brings a bare box there; RE-VERIFY gate on the stated horizon. Feeds back on a red verify: wrong recipe routes to POCME, host drift routes to apply.",
+    "missing_check": "Wrapped. The apply recipe covers persistence, the live value, bwrap's install, and a kernel with no such key. Wiring the verify into a box's first cairn start is not claimed here; the horizon names it as when the verify is re-run by hand.",
+    "node_class": "host-seam",
+    "questions": "none, because the orchestrator chose to persist it and the Dell has held the same setting since UU (CairnCommons/intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json)",
+    "task_or_ticket": "ticket",
+    "title": "every box that runs the tester allows unprivileged user namespaces",
+    "watchme": "none, because the node's verify command in CairnCommons/intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json is the whole of its correctness, re-run on its horizon",
+    "workflow": "host-seam@v1: THINKME -> [TICKETME:waiting] -> RESEARCHME -> POCME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A host setting that only one disk remembered (the Dell's UU-era sysctl file) was lost at a reinstall and read as red proofs on the other box. It is now a host-seam with apply and verify."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "70f35f487180",
+  "skill": "sorted",
+  "title": "every box that runs the tester allows unprivileged user namespaces",
+  "trace_id": "6cd0b895d9bd",
+  "when": "2026-11-12T18:50:26.229386"
+}

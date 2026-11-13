@@ -1,0 +1,28 @@
+{
+ "id": "host-unprivileged-userns-for-the-tester-seal",
+ "date": "2026-11-12",
+ "owner": "CC — CC gates writes to this intention; the host setting is the box's, applied by sudo.",
+ "intention": "Every Linux box that runs cairn's tester allows unprivileged user namespaces under AppArmor (kernel.apparmor_restrict_unprivileged_userns=0, persisted in /etc/sysctl.d/60-uu-userns.conf), so bwrap can build the tester's instance seal and `cairn test --exec` runs instead of refusing.",
+ "why": "Measured 2026-11-12 on akienasus after its reinstall: `cairn test --exec` refused 'the instance seal is not confirmed ... kernel.apparmor_restrict_unprivileged_userns=1 ... bwrap cannot build a sandbox', so every proof that re-runs an instrument under the seal (codemother's verdict re-run in test_deposit, and clause_6 of 2b3d842bc118) read red on this box and green on akiendelllinux. The Dell held /etc/sysctl.d/60-uu-userns.conf from the UU era; the reinstall dropped it, and nothing in either repo installs it, so the knowledge lived only on one disk. Ubuntu 24.04+ ships the restriction at 1 by default.",
+ "traces_to": "Law 8 (nothing is proved without the seal a hollow build cannot pass, and the seal needs this host setting) and the host-seam class's reason to exist: the intentions folder is the seed a bare box regrows from.",
+ "node_class": "host-seam",
+ "ticket": "see CairnCommons/tickets/ (cast 2026-11-12, title 'every box that runs the tester allows unprivileged user namespaces')",
+ "cost": "Lifting the AppArmor restriction lets any unprivileged process create a user namespace again, which is the kernel's pre-24.04 default. Ubuntu added the restriction to narrow the kernel attack surface reachable from an unprivileged user. Accepted on the house boxes, matching akiendelllinux since UU.",
+ "apply": {
+  "note": "Complete recipe. A mind on a fresh Ubuntu box needs nothing from either repo but this block. Needs sudo.",
+  "1_persist": "echo 'kernel.apparmor_restrict_unprivileged_userns=0' | sudo tee /etc/sysctl.d/60-uu-userns.conf",
+  "2_now": "sudo sysctl -p /etc/sysctl.d/60-uu-userns.conf",
+  "3_bwrap": "bwrap must be installed (sudo apt-get install -y bubblewrap); the tester's seal shells out to it.",
+  "absent_key": "On a kernel with no /proc/sys/kernel/apparmor_restrict_unprivileged_userns (pre-24.04, or AppArmor off) nothing restricts userns and steps 1-2 are skipped; sysctl -p would otherwise print an unknown-key error."
+ },
+ "verify": {
+  "command": "test \"$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || echo 0)\" = 0 && grep -qx 'kernel.apparmor_restrict_unprivileged_userns=0' /etc/sysctl.d/60-uu-userns.conf && cd ~/dev/src/cairn && bin/cairn test --exec true --timeout 30",
+  "green": "exit 0: the live value is 0, the persisted file holds the line, and the tester's sealed exec runs a command",
+  "horizon": "after every OS reinstall or release upgrade, and at a box's first cairn start; a reinstall is the measured drift that bore this node"
+ },
+ "measured": [
+  {"when": "2026-11-12", "saw": "akienasus: /proc/sys/kernel/apparmor_restrict_unprivileged_userns = 1, /etc/sysctl.d held only 99-zram.conf and README.sysctl; `cairn test --exec` refused for want of bwrap's sandbox", "how": "cat the proc key, ls /etc/sysctl.d, bin/cairn test cairn/devices/codemother/proofs/test_deposit.py"},
+  {"when": "2026-11-12", "saw": "akiendelllinux: the key reads 0, set by /etc/sysctl.d/60-uu-userns.conf", "how": "ssh akiendelllinux.local cat the proc key and grep -r userns /etc/sysctl.d"},
+  {"when": "2026-11-12", "saw": "after apply on akienasus: the key reads 0, test_deposit green, `bin/cairn test --exec true --timeout 30` exit 0", "how": "the verify command above, run on akienasus"}
+ ]
+}

@@ -1,0 +1,59 @@
+{
+  "id": "496dcbeba174",
+  "title": "every box that runs the tester allows unprivileged user namespaces",
+  "owning_intention": "CairnCommons/intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json",
+  "intention": "Every Linux box that runs cairn's tester persists kernel.apparmor_restrict_unprivileged_userns=0 in /etc/sysctl.d/60-uu-userns.conf, so bwrap builds the tester's instance seal and `cairn test --exec` runs instead of refusing.",
+  "why": "Measured 2026-11-12: after its reinstall, akienasus read the key as 1, so `cairn test --exec` refused and the codemother proofs that re-run an instrument under the seal read red here and green on akiendelllinux. The Dell's UU-era /etc/sysctl.d/60-uu-userns.conf was the only record of the setting, and nothing installs it.",
+  "traces_to": "Law 8 (the seal a hollow build cannot pass needs this host setting) and the host-seam class: the intentions folder is the seed a bare box regrows from.",
+  "how": "The host-seam intention carries an apply block (tee the sysctl.d file, sysctl -p, install bubblewrap) and a verify command (the live key is 0, the file holds the line, and `bin/cairn test --exec true --timeout 30` exits 0). Applied on akienasus 2026-11-12; prove by running the verify on each box.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the intention's verify command exits 0 on akienasus"
+      },
+      {
+        "n": 2,
+        "claim": "the intention's verify command exits 0 on akiendelllinux"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the host-seam intention, with its apply, verify, horizon and the cost of lifting the restriction, berths in intentions-not-beside-code.",
+      "writes_to": [
+        "CairnCommons/intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "CairnCommons/intentions-not-beside-code/host-unprivileged-userns-for-the-tester-seal.json"
+    ],
+    "out": [
+      "cairn/devices/tester (its refusal text already names the live fix; not changed)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus: the key read 1; /etc/sysctl.d held only 99-zram.conf and README.sysctl; `cairn test --exec` refused for want of bwrap's sandbox",
+      "how": "cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns; ls /etc/sysctl.d; bin/cairn test cairn/devices/codemother/proofs/test_deposit.py"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "akiendelllinux: the key reads 0, from /etc/sysctl.d/60-uu-userns.conf",
+      "how": "ssh akiendelllinux.local; grep -r userns /etc/sysctl.d"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "akienasus after apply: verify exit 0, test_deposit green",
+      "how": "the intention's verify command; bin/cairn test cairn/devices/codemother/proofs/test_deposit.py"
+    }
+  ]
+}
