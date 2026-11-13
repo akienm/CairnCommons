@@ -89,5 +89,188 @@
       "saw": "every gate reply, refusals included, is appended by append_log(kind gate_dialog, actor=<ticket>) with a journal line naming the log path",
       "how": "read cairn/machines/ticket/ticket.py:215, cairn/tools/base/ticket_log.py:104 and the tail of CairnCommons/.artifact-journal.jsonl"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "3ba20f30a585: a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross (cairn/machines/build_inspector/inspector.py)",
+      "intent": "working_tree_clean, judged for a crossing of ticket T, does not count dirt made only of T's own appended gate_dialog lines (in T's log.jsonl) and the artifact-journal lines that name T's log; everything else still refuses.",
+      "scope": "the ticket's bounds: cairn/machines/build_inspector/inspector.py, cairn/tools/base/transitions.py, cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Law 8 (a crossing still refuses over loose code or work: only the gate's own dialog is excused) and Law 1 (a commit between a refusal and its re-cross records nothing new and costs a gate round per refusal).",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/machines/build_inspector/inspector.py",
+          "cairn/tools/base/transitions.py",
+          "cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py"
+        ],
+        "out": [
+          "another ticket's records (ticket 12443bcc113f, Q#94)",
+          "cairn/machines/ticket/ticket.py gate_dialog logging",
+          "cairn/tools/base/ticket_log.py",
+          "the_stones_are_pushed exit lane",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where cairn/machines/build_inspector/inspector.py does what the ticket changes"
+      ],
+      "holdings": [
+        {
+          "what": "read by the build: cairn/machines/build_inspector/inspector.py",
+          "address": "cairn/machines/build_inspector/inspector.py"
+        },
+        {
+          "what": "read by the build: cairn/tools/base/ticket_log.py",
+          "address": "cairn/tools/base/ticket_log.py"
+        },
+        {
+          "what": "read by the build: cairn/machines/ticket/ticket.py",
+          "address": "cairn/machines/ticket/ticket.py"
+        },
+        {
+          "what": "read by the build: cairn/tools/base/transitions.py",
+          "address": "cairn/tools/base/transitions.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross",
+          "measure": "2026-11-12: 3195b3b834bc PROVED refused 21:21:33 (not pushed), re-cross refused 21:22:02 on working_tree_clean over the refusal's own log line and journal line, crossed 21:22:29 after a commit; 2026-11-12: every gate reply, refusals included, is appended by append_log(kind gate_dialog, actor=<ticket>) with a journal line naming the log path"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "thread the crossing ticket to working_tree_clean (shared step: 12443bcc113f and 3ba20f30a585)",
+          "why": "Both tickets judge dirt relative to the crossing ticket, and the PROVED refusal comes from _build_gate -> inspect_build -> inspect(), not only the PROVEME clean-tree seat, so the ticket must reach the sieve on both paths. Whichever of 12443bcc113f / 3ba20f30a585 lands SECOND composes on the first: it finds this threading already on main, reuses it unchanged, and writes only its own drop rule.",
+          "kind": "build",
+          "fills": "the crossing ticket reaches working_tree_clean on both gate paths",
+          "uses": [
+            "cairn/tools/base/transitions.py",
+            "cairn/machines/build_inspector/inspector.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/transitions.py",
+            "cairn/machines/build_inspector/inspector.py"
+          ]
+        },
+        {
+          "what": "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross",
+          "why": "Measured 2026-11-12 on akiendelllinux, 3195b3b834bc's log: at 21:21:33 PROVED was refused (ExitGateRed the_stones_are_pushed, cairn 2 ahead, commons 3 ahead); the re-cross at 21:22:02 was refused by BuildGateRed working_tree_clean, dirty_count 2, both in CairnCommons: .artifact-journal.jsonl and tic",
+          "kind": "build",
+          "fills": "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross",
+          "uses": [
+            "cairn/machines/build_inspector/inspector.py",
+            "cairn/tools/base/ticket_log.py",
+            "cairn/machines/ticket/ticket.py"
+          ],
+          "writes_to": [
+            "cairn/machines/build_inspector/inspector.py",
+            "cairn/tools/base/transitions.py",
+            "cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "thread the crossing ticket to working_tree_clean (shared step: 12443bcc113f and 3ba20f30a585)",
+          "why_now": "the drop rule has nothing to compare against until the sieve knows which ticket is crossing"
+        },
+        {
+          "what": "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross",
+          "why_now": "composes on the shared threading step (piece 1); whichever of 12443bcc113f / 3ba20f30a585 lands second finds the threading on main"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "thread the crossing ticket to working_tree_clean (shared step: 12443bcc113f and 3ba20f30a585)",
+          "expect": "inspect(root, component, ticket=T) stamps row['crossing_ticket']=T on every row it shakes, SIEVES keep their (row, comp_dir) signature; inspect_build(history_path, ticket=None) and _build_gate(history_path, ticket=None) pass it to inspect; inspect_clean_tree(comp_dir, ticket=None) and _clean_tree_gate(comp_dir, ticket=None) pass {'component': name, 'crossing_ticket': ticket} as the row; emit passes journal_extra.get('ticket') at both call sites (the PROVEME build gate ~1439 and the clean-tree seat ~1519). With no ticket, behaviour is unchanged.",
+          "falsifier": "a crossing with a ticket reaches working_tree_clean with row['crossing_ticket'] set on both the build-gate and clean-tree paths; a ticketless crossing reaches it with crossing_ticket None and refuses as today",
+          "instrument": "bin/cairn test cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py"
+        },
+        {
+          "piece": "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross",
+          "expect": "working_tree_clean drops T's log.jsonl and the commons .artifact-journal.jsonl only when git show HEAD:<rel> is a line-boundary prefix of the working copy and every appended line is gate_dialog with actor T (log) or names T's log path (journal); history_integrity at inspector.py:3709 is the HEAD-compare pattern; the proof green twice, red first against main",
+          "falsifier": "a commons whose only dirt is appended gate_dialog lines with actor T in T's log, plus appended journal lines naming that log, gives no working_tree_clean finding for a row whose crossing_ticket is T; the same dirt judged for a row whose crossing_ticket is another ticket U, or none, still gives a working_tree_clean finding naming both paths; an appended line of another kind or another actor, or a r",
+          "instrument": "bin/cairn test cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier holds: test_a_refusals_own_dialog_does_not_refuse_its_recross",
+          "instrument": "bin/cairn test cairn/machines/build_inspector/proofs/test_a_refusals_own_dialog_does_not_refuse_its_recross.py",
+          "timeout_s": 600,
+          "covers": [
+            "thread the crossing ticket to working_tree_clean (shared step: 12443bcc113f and 3ba20f30a585)",
+            "a refused crossing's own gate-dialog record does not refuse the same ticket's re-cross"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
