@@ -1,0 +1,75 @@
+{
+  "id": "8bb8b4729f17",
+  "title": "a ticket queues itself at a far box's gate by its id, not this box's path",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "Ticket.queueme names the ticket to the gate by its id, so a gate on another box resolves it from that box's own commons; a doc with no id still sends its path.",
+  "why": "Measured 2026-11-12: sail.py chart ee88c2126abc on akienasus, its bus home on akiendelllinux, was refused 'codemother verb machines/orient/queueme handler raised NotImplementedError: Non-relative patterns are unsupported': the ticket sent akienasus's absolute plan path, the far box could not open it, and find_ticket globbed it.",
+  "traces_to": "The ticket intention (outline 3.3.4.3: a ticket crosses a gate by sending its fileref; the gate instantiates the ticket on its own side) and Law 1 (a crossing lane that only works on one box re-derives nothing but costs a lane).",
+  "how": "ticket.py queueme sends {'fileref': self.id or self.fileref}. 152d76785229's tooth 1 expects the id. A red-first proof captures the body through a spy and resolves it with Ticket.at in a scratch far store after the sender's store is gone.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "Ticket.queueme's request body is {'fileref': <the ticket's id>}, never a path"
+      },
+      {
+        "n": 2,
+        "claim": "on a far box, where the sender's absolute plan path does not exist and the far store holds a copy of the plan, Ticket.at over what queueme sent resolves to the far copy with the same id"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: queueme sends the ticket's id as the fileref, falling back to the plan path when the doc carries no id.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: 152d76785229's tooth test_queueme_asks_codemother_with_the_fileref_and_logs_it expects the id in the body (an id is a fileref: the gate's own refusal text says 'the ticket's plan path or id').",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof, one tooth per clause, in scratch sender and far stores.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_by_its_id.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/ticket.py",
+      "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_at_a_gate.py",
+      "cairn/machines/ticket/proofs/test_a_ticket_queues_itself_by_its_id.py"
+    ],
+    "out": [
+      "cairn/tools/base/ticket_file.py (find_ticket's absolute-name crash is not this ticket's)",
+      "cairn/devices/codemother",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "refused at orient: codemother verb 'machines/orient/queueme' handler raised NotImplementedError: Non-relative patterns are unsupported",
+      "how": "python3 cairn/devices/cc/scripts/sail.py chart ee88c2126abc on akienasus, CAIRN_BUS_HOME=akiendelllinux.local:7419; the gate_dialog line in that ticket's log.jsonl (commons b2c92989)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "queueme sends {'fileref': self.fileref}, the absolute plan path; find_ticket globs f'*-{name}.json'",
+      "how": "read cairn/machines/ticket/ticket.py:182 and cairn/tools/base/ticket_file.py:27"
+    }
+  ]
+}

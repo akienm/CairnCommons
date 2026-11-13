@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each measured or read. (1) Measured 2026-11-12 on akienasus: sail.py chart ee88c2126abc, with CAIRN_BUS_HOME=akiendelllinux.local:7419, was refused 'codemother verb machines/orient/queueme handler raised NotImplementedError: Non-relative patterns are unsupported' (logged in the ticket's log.jsonl, commons b2c92989). (2) Read cairn/machines/ticket/ticket.py:182: queueme sends {'fileref': self.fileref}, this box's absolute plan path. (3) Read ticket.py:78: Ticket.at on the receiving side tries Path(ref).is_file() and otherwise find_ticket(ref). (4) Read cairn/tools/base/ticket_file.py:27: find_ticket globs f'*-{name}.json', and pathlib raises NotImplementedError for an absolute pattern. The id resolves on any box whose commons holds the ticket, which the gates already assume (the store is the pushed commons).",
+    "builder_check": "A builder needs: the one-line change at ticket.py:182 (send self.id, falling back to self.fileref when the doc has no id); the 152d tooth's expected body updated to the id; and the new proof cairn/machines/ticket/proofs/test_a_ticket_queues_itself_by_its_id.py, which builds a scratch sender store and a scratch far store holding a copy of the plan, lets a spy capture the body, removes the sender store to stand for 'not on this box', then resolves with Ticket.at(body['fileref'], tickets_dir=far_store). The ticket already carries everything else.",
+    "children": "none, because it is one line in cairn/machines/ticket/ticket.py",
+    "collision_check": "Ticket 152d76785229 clause 1 reads 'queueme asks codemother with the fileref'; its tooth asserts the body is the plan path. The gate's own reply says a fileref is 'the ticket's plan path or id' (chart_gate/gate.py queueme), so an id IS a fileref; the why of 152d (the gate instantiates the ticket on its own side) is served better by an id. That tooth's expected body moves to the id in the same act, a distinction recorded, not a collision. RULE 1: inside cairn/machines/ticket.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) Ticket.queueme's request body is {'fileref': <the ticket's id>}, never a path; (2) on a far box, where the sender's absolute path does not exist and the far store holds a copy of the plan, Ticket.at over what queueme sent resolves to the far copy with the same id (today: NotImplementedError from find_ticket). Horizon: the proof at PROVEME, in scratch stores.",
+    "gates_bound": "code-seam prove_gate: a red-first proof at cairn/machines/ticket/proofs/test_a_ticket_queues_itself_by_its_id.py, one tooth per clause; each fails today because the body carries the absolute path. Feeds back to origin on failure through FIXME (Laws 3 and 8).",
+    "missing_check": "Wrapped. A ticket doc with no id still sends its path (the fallback), so nothing that worked before stops working. find_ticket's absolute-name crash stays as it is: the orchestrator chose fix (a), and tools/base is out of bounds.",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator chose fix (a) and nothing in cairn/machines/ticket/ticket.py is left to his head",
+    "task_or_ticket": "ticket",
+    "title": "a ticket queues itself at a far box's gate by its id, not this box's path",
+    "watchme": "none, because its proof (to be written beside cairn/machines/ticket/ticket.py) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A ticket crossing a gate on another box sent this box's absolute path; the far box globbed it and crashed. The id is the only name both boxes share."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "69cf8f0f5df1",
+  "skill": "sorted",
+  "title": "a ticket queues itself at a far box's gate by its id, not this box's path",
+  "trace_id": "090935ac4750",
+  "when": "2026-11-12T18:15:58.465512"
+}
