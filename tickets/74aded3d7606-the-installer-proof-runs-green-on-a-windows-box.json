@@ -1,0 +1,59 @@
+{
+  "id": "74aded3d7606",
+  "title": "the installer proof runs green on a Windows box",
+  "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
+  "intention": "test_installer.py is green on a Windows box, and where it is not, it names the Windows fact that blocks it.",
+  "why": "Measured 2026-11-12 on akiendell: test_installer.py is red on a clean HEAD worktree: [ask_yn] expected 'no-branch' got '', [ask_yn] exit 127, [applied] expected applied got failed",
+  "traces_to": "Law 3 and Law 8: a proof red on one box for a platform reason is not measuring the component; CP4 resolves the chafe.",
+  "how": "Measure why bash runs ask_user.sh and the seam verify commands to exit 127 under this venv's python on Windows (candidate: the PATH bash or its sub-shell lacks a command the fixtures use); then fix the proof's or the installer's invocation. The red-first tooth is the existing proof, red on HEAD.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "test_installer.py's ask_yn and applied teeth are green on a Windows box"
+      },
+      {
+        "n": 2,
+        "claim": "the same proof stays green on a posix box"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/recovery/machines/installer/installer.py, cairn/devices/recovery/machines/installer/proofs/test_installer.py",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py",
+        "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/ask_user.sh"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_installer.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "test_installer.py is red on a clean HEAD worktree: [ask_yn] expected 'no-branch' got '', [ask_yn] exit 127, [applied] expected applied got failed",
+      "how": "ran the proof in a detached git worktree at HEAD with the venv python; shutil.which('bash') is Git's bash and echo hi returns 0 there, so the cause is HYPOTHESIS"
+    }
+  ]
+}

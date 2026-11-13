@@ -5,7 +5,7 @@
   "intention": "A box's install is measured, not remembered. Recovery's bootstrap brings up python and the venv only. One install-inspector call measures every other install fact and reds each lack, and an install gate, asked rather than called, refuses to call the box installed while any red stands.",
   "why": "Akien, 2026-11-12, verbatim: \"i would say we need an install inspector and gate. then we can set up python, and once it's set up use that to detect what else with just a tool call. part of recovery and install\". Measured the same day: akienasus had none of the 15 skills and no pytest, akiendell none of the 16 skills, and each was fixed by hand, because a box gets only what someone remembered to add and nothing reads what is missing.",
   "traces_to": "Law 3: an install is not known until measured. Law 4: install facts are enforced by an inspector and gate, not remembered. Law 1: each hand-fix becomes a registered check.",
-  "how": "inspector.py in Recovery: CHECKS lists 'module:function' step functions shaped {id,status,detail}; inspect() runs each with dry_run=True and reds every status but already_applied (a raise is a red); installed() returns (ok, reds). installer.main() becomes inspect, then fix the reds with dry_run=False, then ask installed(), exiting 0 only when it is ok; --check prints the reds and writes nothing. Children prove first: ce1d61032eff (the move), 53e7979f76e7 (skill links), b3ecebdf9695 (dev extra, re-shaped into a check). The commons root joins when akiendell_cc_0 casts its resolver.",
+  "how": "inspector.py in Recovery: CHECKS lists 'module:function' step functions shaped {id,status,detail}; inspect() runs each with dry_run=True and reds every status but already_applied (a raise is a red); installed() returns (ok, reds). installer.main() becomes ask_cairn_home and ask_box_identity (human questions, outside CHECKS), then inspect, then fix_reds(checks) over the reds with dry_run=False, then ask installed(), exiting 0 only when it is ok; --check prints the reds and writes nothing. Children prove first: ce1d61032eff (the move), b3ecebdf9695 (dev extra, re-shaped into a check). 53e7979f76e7 (skill links) registers ensure_skill_links into CHECKS when it lands. The commons root joins when akiendell_cc_0 casts its resolver.",
   "falsifier": {
     "clauses": [
       {
@@ -29,7 +29,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: inspector.py holds CHECKS (module:function strings), inspect(checks=None) -> list[dict], and installed(checks=None) -> tuple[bool, list[dict]]. A check returning a list (the host-seam install()) yields one entry per item. The first CHECKS are the installer's install, ensure_journal_merge_driver and ensure_skill_links, and the dev-extra check.",
+      "text": "D1: inspector.py holds CHECKS (module:function strings), inspect(checks=None) -> list[dict], and installed(checks=None) -> tuple[bool, list[dict]]. A check is a 'module:function' string or a callable (functools.partial included), so a proof can aim one at a scratch repo. A check returning a list (the host-seam install()) yields one entry per item. The first CHECKS are the installer's install, ensure_journal_merge_driver and ensure_dev_extra. Only checks that exist are registered: ensure_skill_links is built by ticket 53e7979f76e7, which registers it into CHECKS when it lands.",
       "writes_to": [
         "cairn/devices/recovery/machines/install_inspector/inspector.py"
       ],
@@ -50,7 +50,7 @@
     },
     {
       "n": 3,
-      "text": "D3: installer.main() (at its post-ce1d61032eff address) builds its results as inspect, then the fix pass over the reds, then installed(); --check prints the reds and exits 1 if any stand. bin/cmd/install passes --check through unchanged.",
+      "text": "D3: the named seam fix_reds(checks=None, *, run_checks=None) -> list[dict] in the installer, which main() calls: it inspects, then calls each red check once with dry_run=False and no green check, and returns their results. ask_cairn_home and ask_box_identity stay outside CHECKS: they ask the human, and the gate measures the box. Clause 4's tooth drives fix_reds with fake checks.",
       "writes_to": [
         "cairn/devices/recovery/machines/installer/installer.py"
       ],
@@ -60,7 +60,17 @@
     },
     {
       "n": 4,
-      "text": "D4: the proof drives injected fake checks and the real ensure_journal_merge_driver over a scratch git repo, one tooth per clause (PROVES 1-4).",
+      "text": "D4: installer.main() (at its post-ce1d61032eff address) runs ask_cairn_home and ask_box_identity, then inspect, then fix_reds over the reds, then installed(); --check prints the reds and exits 1 if any stand. bin/cmd/install passes --check through unchanged.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: the proof drives injected fake checks and the real ensure_journal_merge_driver over a scratch git repo, one tooth per clause (PROVES 1-4).",
       "writes_to": [
         "cairn/devices/recovery/machines/install_inspector/proofs/test_the_install_gate_refuses_a_lack.py"
       ],
@@ -79,7 +89,8 @@
     "out": [
       "each check's own logic (its child's ticket)",
       "bootstrap.sh",
-      "every other device"
+      "every other device",
+      "the spawn-interpreter check (ticket 404f193284ac)"
     ]
   },
   "measured": [
@@ -95,7 +106,7 @@
     },
     {
       "when": "2026-11-12",
-      "saw": "A spawn's interpreter must import the parent's packages. cairn.tools.windowless_spawn.background_python() returned the base interpreter (sys.prefix C:\\Users\\akien\\AppData\\Local\\Python\\pythoncore-3.14-64), not the venv (C:\\Users\\akien\\.cairn\\venv); a child spawned through it died at import psycopg2 (ModuleNotFoundError, bus.log) while the venv itself imports psycopg2 2.9.13. Fixed in bfbfe42a7; its tooth 1 now compares the child's sys.prefix to the parent's. An install check could catch the class: a spawn interpreter whose site-packages differ from the caller's.",
+      "saw": "A spawn's interpreter must import the parent's packages. cairn.tools.windowless_spawn.background_python() returned the base interpreter (sys.prefix C:\\Users\\akien\\AppData\\Local\\Python\\pythoncore-3.14-64), not the venv (C:\\Users\\akien\\.cairn\\venv); a child spawned through it died at import psycopg2 (ModuleNotFoundError, bus.log) while the venv itself imports psycopg2 2.9.13. Fixed in bfbfe42a7; its tooth 1 now compares the child's sys.prefix to the parent's. An install check could catch the class: a spawn interpreter whose site-packages differ from the caller's. The spawn-interpreter install check is the follow-up ticket 404f193284ac, not part of this one.",
       "how": "background_python() run with -c 'import sys; print(sys.prefix)' and compared with the venv's sys.prefix; bus.log tail; python -c 'import psycopg2' in the venv python"
     }
   ]

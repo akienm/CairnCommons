@@ -1,0 +1,57 @@
+{
+  "id": "404f193284ac",
+  "title": "an install check measures that a spawn interpreter imports what its caller imports",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "A registered install-inspector check reds a box whose spawn interpreter (background_python()) does not share its caller's site-packages, naming the interpreter and the prefix each reports.",
+  "why": "Measured 2026-11-12 on akiendell: background_python() returned the base interpreter, not the venv, and a child died at import psycopg2 (bus.log); fixed in bfbfe42a7",
+  "traces_to": "Law 3: an install is not known until measured. Law 4: install facts are enforced by an inspector, not remembered.",
+  "how": "Once the install inspector exists (bdd0ed77930f), add check_spawn_interpreter(dry_run) in the Recovery installer shaped {id,status,detail}: run background_python() with -c 'import sys; print(sys.prefix)' and compare with sys.prefix; register it in CHECKS. The red-first proof feeds a runner stub that reports a different prefix.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a stub spawn interpreter reporting a prefix different from the caller's makes the check return offered, naming both prefixes"
+      },
+      {
+        "n": 2,
+        "claim": "a spawn interpreter reporting the caller's own prefix returns already_applied"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/recovery/machines/installer/installer.py",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_install_checks_the_spawn_interpreter.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "background_python() returned the base interpreter, not the venv, and a child died at import psycopg2 (bus.log); fixed in bfbfe42a7",
+      "how": "background_python() run with -c 'import sys; print(sys.prefix)' compared with the venv's sys.prefix; recorded in ticket bdd0ed77930f's measured"
+    }
+  ]
+}
