@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing, each read. (1) Read cairn/machines/ticket/ticket.py queueme: a TimeoutError becomes {error}, queued False, and ticket-unqueued-<id>-at-<gate> is raised. (2) Read chart_gate/gate.py at 385638cd8: a deferred gate queues the ticket, returns None, and replies by reply_to after the stage, writing the berth through ticket.berthed or the refusal through ticket.failed (raise ticket-refused-<id>-at-<gate>, fixme on the plan). (3) Read sail.py chart/verdict (890 s) and live.py queue (120 s): each reaches codemother through the bus client. (4) The record the gate writes is the ticket's own plan/state and its own diagnostic trail, both readable by Ticket on the asker's side when the boxes share a commons.",
+    "builder_check": "A builder needs: where the gate writes the berth (Ticket.berthed -> chart_claim.<stage>_berth) and the refusal (Ticket.failed -> fixme + raise ticket-refused), how to tell new from stale (snapshot before asking), the poll (0.2 s, bounded by settle), and the fixture (test_a_ticket_charts_itself_stage_by_stage.py's scratch store). All are in the ticket's how and decisions.",
+    "children": "none, because the three askers share one change in Ticket.queueme; see cairn/machines/ticket/intention+why.json",
+    "collision_check": "queueme's docstring ('a timeout means no handler answered') stops being true after e4714e460e32; this rewrites it. 4d597cac9f5d bounds the bus wait; this makes a bounded wait correct. Clearance (d) and the 30 s defaults (e) are untouched by ruling. Distinctions, not collisions.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) live.py queue: the reply times out and constrain's berth lands after the timeout; queue exits 0 printing that berth and raises no ticket-unqueued; a refusal written after the timeout exits 1 naming its lack, still raising no ticket-unqueued. (2) sail.py chart: constrain's reply times out and its berth lands after; the chart goes on to survey by itself and charts all seven stages, raising no ticket-unqueued. (3) sail.py verdict: the verdict's reply times out and its berth lands after; verdict exits 0 printing that berth. Horizon: PROVEME of this ticket.",
+    "gates_bound": "code-seam prove_gate: one proof under cairn/machines/ticket/proofs/, one tooth per asker, red-first on today's queueme. Feeds back to origin through FIXME (Laws 3 and 8).",
+    "missing_check": "Wrapped. The budget is one number, STAGE_BUDGET_S = 3600 s in ticket.py (the measured constrain ran 1858 s), passed by the three askers. Cross-box (the gate on another box, the record reaching here only through the commons) is a recorded limit, not built.",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator ruled the design 2026-11-12 (wait on the berth, stage budget, clearance at 120 s, defaults untouched); see cairn/machines/ticket/intention+why.json",
+    "task_or_ticket": "ticket",
+    "title": "a ticket waits on its own berth past a stage's reply timeout",
+    "watchme": "none, because its proof (to be written beside cairn/machines/ticket/intention+why.json) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A ticket that times out at a deferred gate now reads its own record for the stage's budget, so a 31-minute constrain passes the ticket and the chart goes on to survey instead of raising a false ticket-unqueued."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "9dda64a813c8",
+  "skill": "sorted",
+  "title": "a ticket waits on its own berth past a stage's reply timeout",
+  "trace_id": "808850a67add",
+  "when": "2026-11-12T19:34:30.820228"
+}

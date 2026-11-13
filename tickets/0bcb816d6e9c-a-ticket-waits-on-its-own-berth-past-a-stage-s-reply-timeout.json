@@ -1,0 +1,99 @@
+{
+  "id": "0bcb816d6e9c",
+  "title": "a ticket waits on its own berth past a stage's reply timeout",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "A ticket queued at a chart or verdict gate whose reply times out waits on its own record for that stage (the berth the gate writes, or the refusal it raises) up to the stage's budget, so a stage that outlasts the reply timeout still passes or fails the ticket, and only silence through the whole budget raises ticket-unqueued.",
+  "why": "After e4714e460e32 (385638cd8) a deferred chart gate queues the ticket and answers by reply_to after the stage, so its reply comes after an asker's timeout whenever the stage is slow. Measured 2026-11-12 on akiendelllinux: b0e65cf8a77e's constrain ran 1858 s; live.py queue waits 120 s and sail.py chart and verdict 890 s, so each would raise ticket-unqueued (Ticket.queueme on TimeoutError) while the gate still berths the stage, and sail chart would stop before survey. Census cast on 4d597cac9f5d, askers (a) to (c).",
+  "traces_to": "Outline 3.3.4.3 (the gate queues the ticket and the ticket goes on itself; its life is data on disk); Law 7 (ticket-unqueued is a record of truth); CP1.",
+  "how": "Design ruled by the orchestrator 2026-11-12: (a) live.py queue, (b) sail.py chart and (c) sail.py verdict wait on the berth (Ticket.berth(stage) or the refusal the gate raises), with the stage's own budget, not on the reply; (b) after a constrain berths past the reply timeout the chart goes on to survey by itself; (d) clearance stays at 120 s; (e) the 30 s defaults are untouched. Ticket.queueme gains settle (default 0, today's behaviour): before asking it notes berth(gate) and the newest ticket-refused-<id>-at-<gate> raise on its trail; on TimeoutError with settle > 0 it re-reads its record every 0.2 s until berth(gate) differs (queued, passed, reply {passed, berth, ticket, stage, settled_by: berth}), or a newer refusal raise stands (queued, not passed, reply {passed False, lacks from the plan's fixme, settled_by: refusal}), or settle runs out (unqueued, the trouble as today). Ticket.chart passes settle to each stage. STAGE_BUDGET_S = 3600.0 lives in ticket.py and the three askers pass it. Limit recorded: across boxes the gate's record reaches the asker only through the commons.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "live.py queue: the reply times out and constrain's berth lands after the timeout; queue exits 0 printing that berth and raises no ticket-unqueued; a refusal written after the timeout exits 1 naming its lack, still raising no ticket-unqueued"
+      },
+      {
+        "n": 2,
+        "claim": "sail.py chart: constrain's reply times out and its berth lands after the timeout; the chart goes on to survey by itself and charts all seven stages, raising no ticket-unqueued"
+      },
+      {
+        "n": 3,
+        "claim": "sail.py verdict: the verdict's reply times out and its berth lands after the timeout; verdict exits 0 printing that berth, raising no ticket-unqueued"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: Ticket.queueme and Ticket.chart take settle; STAGE_BUDGET_S in ticket.py.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: live.py queue passes settle=STAGE_BUDGET_S.",
+      "writes_to": [
+        "skills/chart/live.py"
+      ],
+      "reads": [
+        "skills/chart/live.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: sail.py chart and verdict pass settle=STAGE_BUDGET_S; clearance unchanged.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/sail.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/sail.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof, one tooth per asker, red-first on today's queueme, over the scratch store of test_a_ticket_charts_itself_stage_by_stage.py with a participant whose request times out while a thread berths the stage after the timeout.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_ticket_waits_on_its_berth_past_the_reply_timeout.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/proofs/test_a_ticket_charts_itself_stage_by_stage.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/ticket.py",
+      "skills/chart/live.py",
+      "cairn/devices/cc/scripts/sail.py",
+      "cairn/machines/ticket/proofs/test_a_ticket_waits_on_its_berth_past_the_reply_timeout.py"
+    ],
+    "out": [
+      "cairn/devices/tester (cc_0 holds it)",
+      "cairn/devices/codemother",
+      "cairn/devices/cairn/machines/bus (4d597cac9f5d)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "constrain ran 44 tester proofs serially, 1858 s total, inside queueme",
+      "how": "orchestrator's read-only census of ~/.cairn/devices/codemother/0/machines/constrain/run_cache on akiendelllinux"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "Ticket.queueme turns TimeoutError into queued False and raises ticket-unqueued-<id>-at-<gate>; live.py queue waits 120 s, sail.py chart and verdict 890 s",
+      "how": "read cairn/machines/ticket/ticket.py queueme; grep -n TIMEOUT_S skills/chart/live.py cairn/devices/cc/scripts/sail.py"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "a deferred StageGate returns None from queueme and replies by reply_to after the stage, writing ticket.berthed or ticket.failed",
+      "how": "read cairn/devices/codemother/machines/chart_gate/gate.py at 385638cd8"
+    }
+  ]
+}
