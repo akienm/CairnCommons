@@ -53,5 +53,160 @@
       "saw": "on Windows (repo at C:\\automation\\local\\cairn) inspect_ticket reported owning_intention_resolves for cairn/tools/ticket_inspector/intention+why.json under a scratch HOME; with CAIRN_ROOT = ROOTS['repo'] it reports none, and a missing path is still reported",
       "how": "inspect_ticket run in a child with HOME and USERPROFILE set to an empty scratch dir, before and after the one-line edit"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "06f4cff87495: ticket_inspector resolves an owning intention against the repo it stands in, not against ~/dev/src/cairn",
+      "intent": "ticket_inspector's CAIRN_ROOT is ROOTS['repo'] from cairn.tools.base.address, so owning_intention_resolves reads true for an intention that exists wherever the repo is kept, and still reds one that does not exist.",
+      "scope": "cairn/tools/ticket_inspector/inspector.py line 27 and one proof; the other two candidate roots in the check, the other inspector checks and every other component are not changed",
+      "unknowns": [
+        "the inspector's second candidate (~/dev/src/<oi>) is left as written: it is a second spelling of a path the repo's address no longer needs, but removing it is a separate decision",
+        "the posix side was not run by me: on a box with the repo at ~/dev/src/cairn both spellings agree, and the proof's child HOME is a scratch dir there too"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "domain": "tools/ticket_inspector (a tool: the ticket inspector and its proofs)"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/ticket_inspector/inspector.py",
+          "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+        ],
+        "out": [
+          "cairn/tools/base/address.py",
+          "every other inspector check",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where ticket_inspector spells the repo's address",
+        "whether ROOTS is already imported there"
+      ],
+      "holdings": [
+        {
+          "what": "the ticket inspector's owning_intention_resolves check",
+          "address": "cairn/tools/ticket_inspector/inspector.py"
+        },
+        {
+          "what": "the repo's one address table",
+          "address": "cairn/tools/base/address.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "an owning-intention check that resolves against the repo wherever it is kept",
+          "measure": "the red-first proof, run 2026-11-13 under a scratch HOME on Windows: tooth 1 red on the unedited inspector"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "CAIRN_ROOT = ROOTS['repo'] in inspector.py, with a behavioral proof run under a scratch HOME",
+          "why": "the repo has one address; a second hardcoded spelling of it made a real intention read unresolved",
+          "kind": "build",
+          "fills": "an owning-intention check that resolves against the repo wherever it is kept",
+          "uses": [
+            "cairn/tools/ticket_inspector/inspector.py",
+            "cairn/tools/base/address.py"
+          ],
+          "writes_to": [
+            "cairn/tools/ticket_inspector/inspector.py",
+            "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "CAIRN_ROOT = ROOTS['repo'] in inspector.py, with a behavioral proof run under a scratch HOME",
+          "why_now": "built; proof red first (tooth 1), green after the one-line edit"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "CAIRN_ROOT = ROOTS['repo'] in inspector.py, with a behavioral proof run under a scratch HOME",
+          "expect": "no owning_intention_resolves finding for an existing intention under a scratch HOME, and one for a missing intention",
+          "falsifier": "the existing intention is still reported unresolved, or the missing one is not",
+          "instrument": "bin/cairn test cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "an existing owning intention raises no owning_intention_resolves finding when HOME holds no repo, and a missing one still does",
+          "instrument": "bin/cairn test cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py",
+          "timeout_s": 300,
+          "covers": [
+            "CAIRN_ROOT = ROOTS['repo'] in inspector.py, with a behavioral proof run under a scratch HOME"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
