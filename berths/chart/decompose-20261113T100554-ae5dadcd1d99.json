@@ -1,0 +1,38 @@
+{
+  "confidence": 0.85,
+  "provenance": {
+    "sub_problems": "claude",
+    "survey_ref": "floor",
+    "unknowns": "claude"
+  },
+  "sub_problems": [
+    {
+      "fills": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+      "kind": "build",
+      "uses": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "what": "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+      "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "fills": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+      "kind": "build",
+      "uses": [
+        "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+      ],
+      "what": "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit.",
+      "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+        "cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json"
+      ]
+    }
+  ],
+  "survey_ref": "/home/akien/.cairn/devices/chart/0/packets/survey-20261113T100553-863d9b350f71.json",
+  "ticket": "0f8aefbba1d0",
+  "unknowns": []
+}

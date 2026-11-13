@@ -60,5 +60,197 @@
       "saw": "git stash replaced the journal's inode under an open a+ handle; the line written through the handle was missing from the journal at the path after the pop, while the state file kept its new bytes",
       "how": "scratch repro repro_inode.py (inode replaced: True; st: s1; journal: [base, earlier_uncommitted]), and the live f695fac922cd state.json at 418522b68877 with no journal line, inside the commons reflog's 16:29:58-16:30:28Z pull --rebase --autostash"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "0f8aefbba1d0: a journal line lands in the file at the path, even when git replaced it under the open handle, in cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+      "intent": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+      "scope": "in: cairn/tools/artifact/artifact.py, cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py, cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json; out: the journal merge driver (merge_journals), close.sh's silenced output, a verb that journals standing bytes (idea 2026-11-13-a-record-whose-bytes-landed-but-whose), every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Errors are loud at diagnostic surfaces and permanent in records of truth.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/artifact/artifact.py",
+          "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+          "cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json"
+        ],
+        "out": [
+          "the journal merge driver (merge_journals)",
+          "close.sh's silenced output",
+          "a verb that journals standing bytes (idea 2026-11-13-a-record-whose-bytes-landed-but-whose)",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "the window in which git replaces the journal file under _append's open handle, and where the line lands"
+      ],
+      "holdings": [
+        {
+          "what": "the standing code the build reads: artifact.py (_append)",
+          "address": "cairn/tools/artifact/artifact.py"
+        },
+        {
+          "what": "the neighbouring proof whose scratch-git shape the new proof borrows",
+          "address": "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+          "measure": "repro_inode.py in a scratch git repo, 2026-11-13: inode replaced True, state file kept s1, journal held [base, earlier_uncommitted] with the appended line missing"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+          "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+          "kind": "build",
+          "fills": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+          "uses": [
+            "cairn/tools/artifact/artifact.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/artifact.py"
+          ]
+        },
+        {
+          "what": "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit.",
+          "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+          "kind": "build",
+          "fills": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+          "uses": [
+            "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+            "cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+          "why_now": "cast 2026-11-13 at the orchestrator's ask, ahead of the batches: it loses records silently; built in a worktree, the proof red-first then green"
+        },
+        {
+          "what": "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit.",
+          "why_now": "cast 2026-11-13 at the orchestrator's ask, ahead of the batches: it loses records silently; built in a worktree, the proof red-first then green"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+          "expect": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+          "falsifier": "(1) a line appended while git stash replaces the journal under _append's open handle is in the journal at the path after the stash pops, exactly once, and verify_chain over that journal returns []; (2) an append with no rewrite writes exactly one line, chained on the prior tail",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py"
+        },
+        {
+          "piece": "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit.",
+          "expect": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+          "falsifier": "(1) a line appended while git stash replaces the journal under _append's open handle is in the journal at the path after the stash pops, exactly once, and verify_chain over that journal returns []; (2) an append with no rewrite writes exactly one line, chained on the prior tail",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_a_journal_line_survives_a_git_rewrite.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+            "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit."
+          ]
+        },
+        {
+          "claim": "the artifact door proof stays green",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_artifact_door.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+            "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit."
+          ]
+        },
+        {
+          "claim": "the journals-meet proof stays green",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss.",
+            "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit."
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }

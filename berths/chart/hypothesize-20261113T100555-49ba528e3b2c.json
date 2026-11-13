@@ -1,0 +1,25 @@
+{
+  "confidence": 0.85,
+  "hypotheses": [
+    {
+      "expect": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+      "falsifier": "(1) a line appended while git stash replaces the journal under _append's open handle is in the journal at the path after the stash pops, exactly once, and verify_chain over that journal returns []; (2) an append with no rewrite writes exactly one line, chained on the prior tail",
+      "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+      "piece": "D1: _append gains the lock-time and after-write handle checks. Same file means equal (st_dev, st_ino). On a lock-time mismatch it re-opens and re-locks, at most 5 tries, then raises OSError naming the path. On an after-write mismatch it opens the path a+, locks, scans for the entry id, and if absent sets prev from that file's tail, recomputes the entry id, and appends. On nt, a zero st_ino skips the check. The docstring names this ticket and the measured loss."
+    },
+    {
+      "expect": "The artifact door's journal append lands its line in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle.",
+      "falsifier": "(1) a line appended while git stash replaces the journal under _append's open handle is in the journal at the path after the stash pops, exactly once, and verify_chain over that journal returns []; (2) an append with no rewrite writes exactly one line, chained on the prior tail",
+      "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+      "piece": "D2: the proof builds a scratch git repo with a journal (two prior entries, one uncommitted) and a state file, points the door's root at it with set_diagnostic_roots, and wraps the journal open so the first open runs `git stash push` right after it returns. It then calls the door's write on the state file, pops the stash, and asserts the line is present once and verify_chain is clean (tooth 1). A second write with no stash yields exactly one new line chained on the tail (tooth 2). PROVES names this ticket's clauses 1 and 2. It is sealed in the same commit."
+    }
+  ],
+  "provenance": {
+    "hypotheses": "claude",
+    "triage_ref": "floor",
+    "unknowns": "claude"
+  },
+  "ticket": "0f8aefbba1d0",
+  "triage_ref": "/home/akien/.cairn/devices/chart/0/packets/triage-20261113T100555-4159743384b5.json",
+  "unknowns": []
+}
