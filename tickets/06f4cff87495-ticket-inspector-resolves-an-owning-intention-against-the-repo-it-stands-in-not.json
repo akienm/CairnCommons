@@ -1,0 +1,57 @@
+{
+  "id": "06f4cff87495",
+  "title": "ticket_inspector resolves an owning intention against the repo it stands in, not against ~/dev/src/cairn",
+  "owning_intention": "cairn/tools/ticket_inspector/intention+why.json",
+  "intention": "ticket_inspector's CAIRN_ROOT is the repo's own address, ROOTS['repo'] from cairn.tools.base.address, so owning_intention_resolves reads true for an intention that exists wherever the repo is kept.",
+  "why": "Measured 2026-11-12 on akiendell: on Windows (repo at C:\\automation\\local\\cairn) inspect_ticket reported owning_intention_resolves for cairn/tools/ticket_inspector/intention+why.json under a scratch HOME; with CAIRN_ROOT = ROOTS['repo'] it reports none, and a missing path is still reported",
+  "traces_to": "Law 3: measured, an existing intention was reported unresolved from a HOME that does not hold the repo; Law 8: the proof reds on the unedited inspector on any host; Law 1: the repo has one address, ROOTS, and a second spelling of it is a defect.",
+  "how": "In cairn/tools/ticket_inspector/inspector.py replace CAIRN_ROOT = Path(os.path.expanduser('~/dev/src/cairn')) with ROOTS['repo'] (ROOTS is already imported there). Red-first proof cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py runs inspect_ticket in a child whose HOME is an empty scratch dir, so it reds on every host.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with HOME an empty directory, an owning intention that exists in the repo raises no owning_intention_resolves finding"
+      },
+      {
+        "n": 2,
+        "claim": "an owning intention that does not exist still raises owning_intention_resolves"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/ticket_inspector/inspector.py",
+      "writes_to": [
+        "cairn/tools/ticket_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/tools/ticket_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/ticket_inspector/inspector.py",
+      "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "on Windows (repo at C:\\automation\\local\\cairn) inspect_ticket reported owning_intention_resolves for cairn/tools/ticket_inspector/intention+why.json under a scratch HOME; with CAIRN_ROOT = ROOTS['repo'] it reports none, and a missing path is still reported",
+      "how": "inspect_ticket run in a child with HOME and USERPROFILE set to an empty scratch dir, before and after the one-line edit"
+    }
+  ]
+}
