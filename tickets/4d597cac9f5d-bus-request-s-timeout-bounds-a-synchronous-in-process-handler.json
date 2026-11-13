@@ -80,5 +80,162 @@
       "saw": "e4714e460e32's deposit answered in 0.22 s and 0.03 s while a stage was held, 4/4 twice on Linux",
       "how": "orchestrator: bin/cairn test cairn/devices/codemother/proofs/test_a_slow_stage_never_holds_her_lock.py at 385638cd8"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "4d597cac9f5d: bus.request's timeout bounds a synchronous in-process handler (cairn/devices/cairn/machines/bus/bus.py)",
+      "intent": "bus.request's timeout bounds the asker's wait for a reply even when the target's handler runs synchronously inside post()'s poke chain, so the asker hears TimeoutError at its deadline rather than when the handler ends, and the handler still runs to its end.",
+      "scope": "the ticket's bounds: cairn/devices/cairn/machines/bus/bus.py, cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "CP1 and Law 7 (request's own 'LOUD on timeout'); 5.5.3.3 (Send is asynchronous); Law 3 (an asker's timeout is a claim about how long it waits, unmeasured in process today).",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/bus/bus.py",
+          "cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py"
+        ],
+        "out": [
+          "cairn/machines/ticket (the census's sibling: askers wait on the berth)",
+          "cairn/devices/cc/scripts/sail.py",
+          "skills/chart/live.py",
+          "cairn/devices/codemother",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where cairn/devices/cairn/machines/bus/bus.py does what the ticket changes"
+      ],
+      "holdings": [
+        {
+          "what": "read by the build: cairn/devices/cairn/machines/bus/bus.py",
+          "address": "cairn/devices/cairn/machines/bus/bus.py"
+        },
+        {
+          "what": "read by the build: cairn/devices/cairn/machines/bus/server.py",
+          "address": "cairn/devices/cairn/machines/bus/server.py"
+        },
+        {
+          "what": "read by the build: cairn/devices/cairn/machines/bus/proofs/test_a_reply_after_its_asker_gave_up_is_receipted.py",
+          "address": "cairn/devices/cairn/machines/bus/proofs/test_a_reply_after_its_asker_gave_up_is_receipted.py"
+        },
+        {
+          "what": "read by the build: cairn/devices/cairn/machines/bus/proofs/test_a_requester_takes_its_reply.py",
+          "address": "cairn/devices/cairn/machines/bus/proofs/test_a_requester_takes_its_reply.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "bus.request's timeout bounds a synchronous in-process handler",
+          "measure": "2026-11-12: run_cache: tester n=44 total=1858.0s max=581.7s red=0, each asked with timeout=180; 2026-11-12: request() sets its deadline only after post() returns, and in process post()'s poke chain runs the target's handler; 2026-11-12: chart-stage askers: live.py queue 120 s, sail.py chart 890 s, verdict 890 s, clearance 120 s, Ticket defaults 30 s with no live caller; each reaches codemother via"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "bus.request's timeout bounds a synchronous in-process handler",
+          "why": "Measured 2026-11-12 on akiendelllinux: constrain's reach('tester').request(..., timeout=180) (constrain.py:328), run in the bus process, returned a 581.7 s tester run green (run_cache census, n=44, max 581.7 s). Read bus.py:505-545: request() calls post(), whose poke chain runs the target's handler ",
+          "kind": "build",
+          "fills": "bus.request's timeout bounds a synchronous in-process handler",
+          "uses": [
+            "cairn/devices/cairn/machines/bus/bus.py",
+            "cairn/devices/cairn/machines/bus/server.py",
+            "cairn/devices/cairn/machines/bus/proofs/test_a_reply_after_its_asker_gave_up_is_receipted.py",
+            "cairn/devices/cairn/machines/bus/proofs/test_a_requester_takes_its_reply.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/bus/bus.py",
+            "cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "bus.request's timeout bounds a synchronous in-process handler",
+          "why_now": "Measured 2026-11-12 on akiendelllinux: constrain's reach('tester').request(..., timeout=180) (constrain.py:328), run in the bus process, returned a 581.7 s tester run green (run_cache census, n=44, ma"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "bus.request's timeout bounds a synchronous in-process handler",
+          "expect": "1 proof(s) green twice",
+          "falsifier": "an in-process request to a verb whose handler runs past the timeout raises TimeoutError within timeout + 1 s; a handler that finishes inside the timeout still returns its reply to the asker; the slow handler still runs to its end, and its late reply is receipted as an abandoned ask's, never delivered as fresh mail",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier holds: test_a_request_timeout_bounds_a_synchronous_handler",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/bus/proofs/test_a_request_timeout_bounds_a_synchronous_handler.py",
+          "timeout_s": 600,
+          "covers": [
+            "bus.request's timeout bounds a synchronous in-process handler"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }

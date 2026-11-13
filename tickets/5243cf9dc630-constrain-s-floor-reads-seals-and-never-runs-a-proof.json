@@ -87,5 +87,165 @@
       "saw": "tester _handle_run calls run_proof synchronously; server.py wraps each shim's poke in one RLock",
       "how": "read cairn/devices/tester/device.py:524 and cairn/devices/cairn/machines/bus/server.py _locked_hook"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "5243cf9dc630: constrain's floor reads seals and never runs a proof (cairn/devices/codemother/machines/constrain/constrain.py)",
+      "intent": "constrain's floor reports each instrument's state from its seal (standing) and never runs a proof inside a chart stage, so a floor costs seconds and two firings over the same bytes agree, while a seal that moved rides out as an unknown naming the files that moved.",
+      "scope": "the ticket's bounds: cairn/devices/codemother/machines/constrain/constrain.py, cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py, cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Law 1 (a seal already measured is not re-derived inside a chart stage); Law 3 (an unsealed proof is reported as unmeasured); outline 3.3.4.3.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/constrain/constrain.py",
+          "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py",
+          "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+        ],
+        "out": [
+          "cairn/devices/tester (cc_0 holds it; its shim lock is the reason parallel runs do not pay)",
+          "cairn/tools/base/validation.py (read only)",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where cairn/devices/codemother/machines/constrain/constrain.py does what the ticket changes"
+      ],
+      "holdings": [
+        {
+          "what": "read by the build: cairn/devices/codemother/machines/constrain/constrain.py",
+          "address": "cairn/devices/codemother/machines/constrain/constrain.py"
+        },
+        {
+          "what": "read by the build: cairn/tools/base/validation.py",
+          "address": "cairn/tools/base/validation.py"
+        },
+        {
+          "what": "read by the build: cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py",
+          "address": "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "constrain's floor reads seals and never runs a proof",
+          "measure": "2026-11-12: b0e65 floor: 62 entries, 55 run, 7 from seals, all green, 3389.8 s serial; longest 1040.8, 581.7, 277.8, 258.5, 241.7 s; 2026-11-12: at e1d7881233e6: 54 seals moved-closure, 7 proven; tester/device.py moved 51 of them (fdcf52ae0), hollow.py 23, reseal.py 19, isolation.py 17; 2026-11-12: tester _handle_run calls run_proof synchronously; server.py wraps each shim's poke in one RLock"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "constrain's floor reads seals and never runs a proof",
+          "why": "Measured 2026-11-12 on akiendelllinux: b0e65cf8a77e's floor ran 55 of 62 tester proofs serially for 3389.8 s (18:36-19:32), one of them 1040.8 s. At e1d7881233e6 those 54 seals stood moved-closure and 7 proven, so the changed-subject filter was already in force. The runs came from tester/device.py m",
+          "kind": "build",
+          "fills": "constrain's floor reads seals and never runs a proof",
+          "uses": [
+            "cairn/devices/codemother/machines/constrain/constrain.py",
+            "cairn/tools/base/validation.py",
+            "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/constrain/constrain.py",
+            "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py",
+            "cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "constrain's floor reads seals and never runs a proof",
+          "why_now": "Measured 2026-11-12 on akiendelllinux: b0e65cf8a77e's floor ran 55 of 62 tester proofs serially for 3389.8 s (18:36-19:32), one of them 1040.8 s. At e1d7881233e6 those 54 seals stood moved-closure and"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "constrain's floor reads seals and never runs a proof",
+          "expect": "2 proof(s) green twice",
+          "falsifier": "a proven seal reads green with no tester ask; a moved, red or never-sealed instrument is reported with its standing state (moved naming the changed closure files), asks the tester zero times, and rides out of floor_packet as an unknown; two firings over the same bytes give identical checks, and measured_provenance reproduces them; the floor over cairn/devices/tester at e1d7881233e6 asks the tester",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier holds: test_the_floor_reads_seals_and_never_runs_a_proof",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/constrain/proofs/test_the_floor_reads_seals_and_never_runs_a_proof.py",
+          "timeout_s": 600,
+          "covers": [
+            "constrain's floor reads seals and never runs a proof"
+          ]
+        },
+        {
+          "claim": "falsifier holds: test_chart_constrain",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/constrain/proofs/test_chart_constrain.py",
+          "timeout_s": 600,
+          "covers": [
+            "constrain's floor reads seals and never runs a proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }

@@ -1,0 +1,274 @@
+{
+  "id": "8e73a9efa04a",
+  "title": "a proof puts its own checkout on sys.path, and proof_coverage reds one that does not",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "Every proof puts its own checkout root on sys.path, and proof_coverage reds at PROVEME a proof whose computed sys.path root is inside the repo but not the repo root.",
+  "why": "Measured 2026-11-12: 0d3b8a51c9df's proof at 1bfc8f29f inserted parents[5] (<repo>/cairn, which holds no cairn package), so import cairn fell through to the venv's editable install of the main checkout; run directly in a worktree holding the old outline_check it printed 3/3 green, a hollow green. Under bin/cairn test the tester's PYTHONPATH pin masks it, so no red ever showed on this box. An AST census found six more proofs with the same short root at HEAD.",
+  "traces_to": "Law 8 (a proof a hollow build couldn't pass: a short root reads main's code, so a hollow cannot red it) and Law 4 (the rule becomes a sieve).",
+  "how": "Add misrooted_inserts / misrooted_proofs / proof_roots_its_imports_at_its_checkout to proof_coverage.py (an AST evaluation of each sys.path insert/append argument as a function of __file__: Path(), str(), .resolve(), .parent, .parents[int], / 'str', os.path.dirname/abspath/realpath/normpath, module-level names), wire the sieve into lacks(); a new proof red first against the pre-fix proof_coverage and over 0d3b's proof as committed at 1bfc8f29f; fix the six proofs to the repo root.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the sieve lacks a fixture proof that imports cairn and puts only a short computed root on sys.path, directly or through a module-level name, naming proof and line; it does not lack the same at the right depth, a sys.path.insert inside a fixture source string, an own-dir insert beside the root, or a proof that imports no cairn"
+      },
+      {
+        "n": 2,
+        "claim": "the real case: 0d3b8a51c9df's proof as committed at 1bfc8f29f, read at its own address, is a lack; as committed at 87e4be347 it is not; and lacks() over a ticket naming it carries the finding"
+      },
+      {
+        "n": 3,
+        "claim": "no proofs/test_*.py in the repo is misrooted, and each of the six fixed proofs is green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: proof_coverage.py gets the root sieve, wired into lacks() beside proof_binds_its_subject_at_call_time; an insert it cannot evaluate is left unjudged.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, binding the added functions at call time.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_a_proof_roots_its_imports_at_its_own_checkout.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proofs/test_call_time_binding.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the six proofs root at the repo: bus test_pane_channel_identity.py:14, constrain test_the_floor_discovers_only_the_tickets_own_component.py:28, verdict test_a_live_logs_miss_names_its_cause.py:24, test_the_instrument_is_run.py:42, test_the_verdict_door_refuses_before_it_runs.py:22 (its ROOT also feeds extract_command; each run green), feedback test_feedback.py:45.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_pane_channel_identity.py",
+        "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_discovers_only_the_tickets_own_component.py",
+        "cairn/devices/codemother/machines/verdict/proofs/test_a_live_logs_miss_names_its_cause.py",
+        "cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py",
+        "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_door_refuses_before_it_runs.py",
+        "cairn/tools/feedback/proofs/test_feedback.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: proof_coverage's charter names the new sieve, through the artifact door, model recompiled.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/intention+why.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "cairn/tools/proof_coverage/proofs/test_a_proof_roots_its_imports_at_its_own_checkout.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_pane_channel_identity.py",
+      "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_discovers_only_the_tickets_own_component.py",
+      "cairn/devices/codemother/machines/verdict/proofs/test_a_live_logs_miss_names_its_cause.py",
+      "cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py",
+      "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_door_refuses_before_it_runs.py",
+      "cairn/tools/feedback/proofs/test_feedback.py",
+      "cairn/tools/proof_coverage/intention+why.json"
+    ],
+    "out": [
+      "cairn/devices/tester (cc_0 holds it)",
+      "the 31 proofs that import cairn and insert nothing",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "0d3b's parents[5] proof printed 3/3 ok over a worktree holding the old outline_check; parents[6] reds 3/3",
+      "how": "env -u PYTHONPATH ~/.cairn/venv/bin/python <proof> in a scratch worktree at 1bfc8f29f^ with the proof copied in"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "six proofs at HEAD (seven at 3fff50def) whose only computed sys.path root is <repo>/cairn or one level short",
+      "how": "AST census misrooted_proofs over 657 proofs/test_*.py at 87e4be347"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "8e73a9efa04a: a proof puts its own checkout on sys.path, and proof_coverage reds one that does not (cairn/tools/proof_coverage/proof_coverage.py)",
+      "intent": "proof_coverage reads each proof's sys.path inserts as functions of __file__ and lacks a proof that imports cairn and roots only inside the repo, never at it; the six proofs that do are fixed to the repo root",
+      "scope": "cairn/tools/proof_coverage/proof_coverage.py, its new proof and charter, and the six misrooted proofs",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Law 8: a proof a hollow build couldn't pass; a short root reads the main checkout's code through the editable install",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "RULE 1 and the hold: the tester is cc_0's, so the sieve lives in proof_coverage, not the tester",
+          "source": "cairn/devices/tester/device.py",
+          "kind": "law"
+        },
+        {
+          "text": "a proof binds what its build added at call time, never at import",
+          "source": "cairn/tools/proof_coverage/proofs/test_call_time_binding.py",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/proof_coverage/proof_coverage.py",
+          "cairn/tools/proof_coverage/proofs/test_a_proof_roots_its_imports_at_its_own_checkout.py",
+          "cairn/tools/proof_coverage/intention+why.json",
+          "cairn/devices/cairn/machines/bus/proofs/test_pane_channel_identity.py",
+          "cairn/devices/codemother/machines/constrain/proofs/test_the_floor_discovers_only_the_tickets_own_component.py",
+          "cairn/devices/codemother/machines/verdict/proofs/test_a_live_logs_miss_names_its_cause.py",
+          "cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py",
+          "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_door_refuses_before_it_runs.py",
+          "cairn/tools/feedback/proofs/test_feedback.py"
+        ],
+        "out": [
+          "cairn/devices/tester",
+          "the 31 proofs that import cairn and insert nothing",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where PROVEME's proof-shape sieves live",
+        "how the tester pins a proof's checkout",
+        "which proofs root short"
+      ],
+      "holdings": [
+        {
+          "what": "lacks() and the call-time-binding sieve, the pattern the new sieve follows",
+          "address": "cairn/tools/proof_coverage/proof_coverage.py"
+        },
+        {
+          "what": "_env_pinned_to puts the proof's checkout first on PYTHONPATH, which masks a short root under bin/cairn test",
+          "address": "cairn/devices/tester/device.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a sieve over a proof's own sys.path root",
+          "measure": "2026-11-12: 0d3b's parents[5] proof printed 3/3 green over the old outline_check run directly; six more proofs root short at 87e4be347"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the root sieve in proof_coverage, wired into lacks(), and the six proofs fixed",
+          "why": "a short root is masked under the tester and hollow run any other way",
+          "kind": "build",
+          "fills": "a sieve over a proof's own sys.path root",
+          "uses": [
+            "cairn/tools/proof_coverage/proof_coverage.py",
+            "cairn/devices/tester/device.py"
+          ],
+          "writes_to": [
+            "cairn/tools/proof_coverage/proof_coverage.py",
+            "cairn/tools/proof_coverage/proofs/test_a_proof_roots_its_imports_at_its_own_checkout.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the root sieve in proof_coverage, wired into lacks(), and the six proofs fixed",
+          "why_now": "0d3b's green was hollow and six more proofs carry the same root"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the root sieve in proof_coverage, wired into lacks(), and the six proofs fixed",
+          "expect": "3 teeth green twice, red first on the pre-fix proof_coverage",
+          "falsifier": "a proof rooting only at <repo>/cairn passes, a right-rooted or fixture-string proof is flagged, or a repo proof stays misrooted",
+          "instrument": "bin/cairn test cairn/tools/proof_coverage/proofs/test_a_proof_roots_its_imports_at_its_own_checkout.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "falsifier clauses 1-3 hold",
+          "instrument": "bin/cairn test cairn/tools/proof_coverage/proofs/test_a_proof_roots_its_imports_at_its_own_checkout.py",
+          "timeout_s": 300,
+          "covers": [
+            "the root sieve in proof_coverage, wired into lacks(), and the six proofs fixed"
+          ]
+        },
+        {
+          "claim": "the call-time-binding sieve still holds",
+          "instrument": "bin/cairn test cairn/tools/proof_coverage/proofs/test_call_time_binding.py",
+          "timeout_s": 300,
+          "covers": [
+            "the root sieve in proof_coverage, wired into lacks(), and the six proofs fixed"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
