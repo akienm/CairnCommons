@@ -1,0 +1,73 @@
+{
+  "id": "4fb08cadf1be",
+  "title": "the sudo relay case-fold tooth compares output with the clock removed",
+  "owning_intention": "cairn/tools/system_word/intention+why.json",
+  "intention": "system_word's relay tooth compares `cairn sudorelay --status` against `--STATUS` with every ISO timestamp taken out, so the tooth stops being a coin toss on the second turning over.",
+  "why": "Measured 2026-11-13 by the orchestrator's Linux reseal: test_system_word.py:340 test_sudo_relay_takes_uppercase_status_flag red, outputs stamped 00:29:29 against 00:29:30. This blocks 85848910db3a and 6f2fb0aec8dc.",
+  "traces_to": "Law 3 (a proof that flips on the clock measures the clock, not the fold); Law 8 (a hollow-free green must be repeatable).",
+  "how": "test_system_word.py gains _untimed(text), a regex replacing every ISO timestamp, and test_sudo_relay_takes_uppercase_status_flag compares stdout and stderr through it. A new declaring proof checks _untimed equates clock-only differences and keeps word differences, and that the relay tooth compares through it and passes.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "test_system_word._untimed makes two lines differing only in their ISO timestamp equal, and two lines differing in their words unequal"
+      },
+      {
+        "n": 2,
+        "claim": "test_sudo_relay_takes_uppercase_status_flag compares through _untimed, and run, passes"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _untimed and its regex in test_system_word.py; the relay tooth compares through it.",
+      "writes_to": [
+        "cairn/tools/system_word/proofs/test_system_word.py"
+      ],
+      "reads": [
+        "cairn/tools/system_word/proofs/test_system_word.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the declaring proof, one tooth per clause, loading test_system_word.py by path.",
+      "writes_to": [
+        "cairn/tools/system_word/proofs/test_a_status_compare_ignores_the_clock.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/system_word/proofs/test_a_status_compare_ignores_the_clock.py",
+      "cairn/tools/system_word/proofs/test_system_word.py"
+    ],
+    "out": [
+      "cairn/devices/sudo_relay (its output keeps its stamp)",
+      "every other tooth of test_system_word.py, including the harbor_master one",
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "cairn/tools/system_word/proofs/test_a_status_compare_ignores_the_clock.py",
+    "cairn/tools/system_word/proofs/test_system_word.py"
+  ],
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "relay tooth red, 00:29:29 vs 00:29:30",
+      "how": "the orchestrator's Linux reseal, reported cross-session"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "cairn sudorelay --status prints [sudo_relay] 2026-11-13T00:46:49  no live daemon ...",
+      "how": "ran it on akienasus"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "the declaring proof is red at HEAD on both teeth and green twice with the build",
+      "how": "bin/cairn test on akienasus, build applied then parked"
+    }
+  ]
+}
