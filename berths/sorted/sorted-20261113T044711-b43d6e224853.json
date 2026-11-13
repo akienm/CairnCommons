@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "assumption_check": "Two load-bearing assumptions, both checked: (a) REINDEX DATABASE rebuilds every index from the heap, so indexes sorted under glibc 2.39 are re-sorted under 2.43 and REFRESH then records the truth (postgres's documented fix, the HINT in the warning itself); (b) sudo -u postgres runs without a password on akienasus (passwordless since 2026-11-11), needed for postgres and template1, which the postgres role owns. cairn is owned by akien. REINDEX DATABASE takes locks on each table while it runs; the cairn db is 9.6 MB, so the window is seconds.",
+    "builder_check": "A Haiku builder would ask: which databases? (every one whose datcollversion IS NOT NULL and differs from the actual, listed by one query in the apply); as whom? (the database's owner: psql as the caller for its own, sudo -u postgres psql for the rest); in what order? (REINDEX before REFRESH, never REFRESH alone); and how is green read? (the verify's single query returns zero rows, and a psql connect to cairn prints no 'collation version mismatch'). The intention carries each.",
+    "children": "none, because the apply and verify are one intention file and one host; akiendelllinux is measured by the orchestrator on its own box",
+    "collision_check": "Over the whys: 3ef8654a8027 (remote db sync) is about which rows the db holds, this about its host-level collation record, so they are distinct and do not exclude each other. Outline 11.3.5 says Recovery installs and upgrades postgres; this intention is the recipe an upgrade needs, not a rival owner, and it records that Recovery has no step to run it yet (a distinction, not a collision).",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clause 1: the intention's verify exits 0 on akienasus after the apply. Clause 2: the verify exits non-zero while any database's datcollversion differs from pg_database_collation_actual_version (measured before the apply, 2026-11-13: cairn, postgres and template1 all 2.39 vs 2.43). Horizon: after every OS release upgrade that moves glibc.",
+    "gates_bound": "host-seam's proof gate: run the intention's verify on the host and record the VALIDATION (seal expires: re-verify on the horizon); REBUILD gate: the apply block alone takes a fresh box there; durability: proven and committed. Feeds back to origin on a red verify, split as recipe-wrong vs host-drifted.",
+    "missing_check": "template0 records no datcollversion, so it is skipped by the predicate rather than special-cased. REINDEX DATABASE cannot run inside a transaction block, so each statement is its own psql -c. Nothing else is asserted wrapped that is not.",
+    "node_class": "host-seam",
+    "questions": "none, because press_office/CairnComponentOutline.txt section 11.3.5 holds no open [Q#n] and the recipe is the HINT postgres itself prints, recorded in CairnCommons/intentions-not-beside-code/host-postgres-collation-matches-the-os.json",
+    "task_or_ticket": "ticket",
+    "title": "every postgres database's collation version matches the OS after an upgrade",
+    "watchme": "none, because the verify command in CairnCommons/intentions-not-beside-code/host-postgres-collation-matches-the-os.json is the whole of its correctness, and its horizon names the re-verify trigger",
+    "workflow": "host-seam@v1: THINKME -> [TICKETME:waiting] -> RESEARCHME -> POCME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "the mismatch sits on template1 too, so every db created after an upgrade inherits it until template1 is refreshed"
+    },
+    {
+      "stratum": "tree",
+      "text": "Recovery (outline 6.3.5) has no post-upgrade step; the horizon names a trigger nothing fires yet"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "fc653b826628",
+  "skill": "sorted",
+  "title": "every postgres database's collation version matches the OS after an upgrade",
+  "trace_id": "6976b167f625",
+  "when": "2026-11-13T04:47:11.399989"
+}

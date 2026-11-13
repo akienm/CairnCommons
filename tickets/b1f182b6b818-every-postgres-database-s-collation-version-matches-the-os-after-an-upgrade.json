@@ -1,0 +1,52 @@
+{
+  "id": "b1f182b6b818",
+  "title": "every postgres database's collation version matches the OS after an upgrade",
+  "owning_intention": "CairnCommons/intentions-not-beside-code/host-postgres-collation-matches-the-os.json",
+  "intention": "Every postgres database on a cairn box records the collation version its OS provides, with its indexes rebuilt under that order, so no connect warns of a collation version mismatch.",
+  "why": "Measured 2026-11-13 on akienasus after its release upgrade: every psql connect to cairn warns 'collation version mismatch ... created using collation version 2.39, but the operating system provides version 2.43', and cairn, postgres and template1 all record 2.39 against an actual 2.43. Nothing in either repo carries the fix, and template1 hands the stale version to every new database.",
+  "traces_to": "Law 7 (a standing false alarm at a diagnostic surface buries real errors) and outline 11.3.5 (postgres is a host service upgraded by Recovery); the host-seam class.",
+  "how": "The host-seam intention carries an apply (list each database whose datcollversion differs from pg_database_collation_actual_version; as its owner, REINDEX DATABASE then ALTER DATABASE ... REFRESH COLLATION VERSION, template1 included) and a verify (that list is empty and a psql connect to cairn prints no mismatch warning). Apply on akienasus; the orchestrator measures akiendelllinux.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the intention's verify command exits 0 on akienasus after the apply"
+      },
+      {
+        "n": 2,
+        "claim": "the verify exits non-zero while any database's recorded collation version differs from the OS's (measured exit 1 on akienasus before the apply)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the host-seam intention, with its apply, verify, horizon and cost, berths in intentions-not-beside-code; REINDEX precedes REFRESH, and each runs as the database's owner.",
+      "writes_to": [
+        "CairnCommons/intentions-not-beside-code/host-postgres-collation-matches-the-os.json"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "CairnCommons/intentions-not-beside-code/host-postgres-collation-matches-the-os.json"
+    ],
+    "out": [
+      "cairn/devices/db_domain (no code change)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "akienasus: cairn|2.39|2.43|akien, postgres|2.39|2.43|postgres, template1|2.39|2.43|postgres; every connect warns; verify exit 1",
+      "how": "psql -d postgres -At -c \"select datname, datcollversion, pg_database_collation_actual_version(oid), pg_get_userbyid(datdba) from pg_database\"; the intention's verify"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "akienasus after apply: postgres, cairn and template1 each REINDEX then 'changing version from 2.39 to 2.43'; all three record 2.43; verify exit 0 twice",
+      "how": "the intention's apply (sudo -n -u postgres for postgres and template1), then its verify twice"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked: ALTER ... REFRESH alone silences the warning but leaves indexes sorted under the old glibc order, which can corrupt text-keyed lookups; REINDEX first is postgres's own documented fix, so this is the smallest correct recipe.",
+      "hidden_assumption": "That the 2.39->2.43 glibc change altered no collation order the indexes rely on in a way REINDEX cannot repair; REINDEX rebuilds from the heap, so it holds. Also that sudo -u postgres works for the postgres-owned databases (passwordless sudo since 11-11).",
+      "prior_art": "Consulted intentions-congruency-lab, intentions-not-beside-code and tickets for 'collation': no hit. Outline 11.3.5 names postgres a host service Recovery upgrades; nothing in it covers collation.",
+      "real_collision": "None: 3ef8654a8027 (remote db sync) touches the same db but not its host config; Recovery (6.3.5) owns upgrades in the outline, and this intention is the recipe it will run, not a rival."
+    },
+    "exit": "routed_forward",
+    "falsifier": "the verify exits 0 on akienasus after apply, and exits non-zero on a box whose recorded collation version still differs",
+    "from_idea": "2026-11-13-akienasus-s-postgres-warns-on-every-connect",
+    "how": "A host-seam intention in intentions-not-beside-code carrying an apply (per database whose datcollversion differs from pg_database_collation_actual_version: REINDEX DATABASE then ALTER DATABASE <db> REFRESH COLLATION VERSION, as its owner) and a verify (no database's recorded version differs from the actual one, and a psql connect to cairn prints no mismatch warning). Apply on akienasus now.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 (an error is loud at a diagnostic surface, so a standing warning on every connect is noise that buries real ones) and outline 11.3.5 (postgres is a host service, upgraded by Recovery); the host-seam class: the seed must carry what an upgraded box needs.",
+    "what": "After an OS upgrade moves glibc, every postgres database on the box has its indexes rebuilt and its collation version refreshed, so no connect warns of a collation version mismatch."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "the mismatch is on cairn, postgres AND template1, so a database created after the upgrade inherits the stale version from template1; the apply covers all three"
+    },
+    {
+      "stratum": "tree",
+      "text": "Recovery (6.3.5) has no upgrade step yet that would run this after a release upgrade; the horizon names the trigger, nothing fires it"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "2a0a621b3f24",
+  "skill": "intent",
+  "title": "After an OS upgrade moves glibc, every postgres database on the box has its indexes rebuilt and its collation version re",
+  "trace_id": "119e5b9475de",
+  "when": "2026-11-13T04:46:10.496948"
+}
