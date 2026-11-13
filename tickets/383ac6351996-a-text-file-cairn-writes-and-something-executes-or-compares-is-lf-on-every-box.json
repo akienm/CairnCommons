@@ -1,0 +1,234 @@
+{
+  "id": "383ac6351996",
+  "title": "a text file cairn writes and something executes or compares is LF on every box",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "the installed pre-commit hook and the system_word probe's bash stubs are written with newline='\n', so they are LF bytes on every box; the 46 other production write_text calls are listed in the ticket as measured harmless with the reason and left alone.",
+  "why": "Measured 2026-11-12 on akiendell: 48 production write_text calls without newline= (AST census over tracked .py, proofs and test_ files excluded); none writes through the artifact door; HARMLESS list: HARMLESS, measured by reading each write's reader (none of the 48 goes through the artifact door, which writes bytes; none is fingerprinted, sealed or hashed as a record): (a) json logs and state in instance-space, every reader json.loads or read_text().strip(), both newline-agnostic: bus.py:780, server.py:868, sleep_cycle/idle.py:158,229, sleep_cycle/token.py:102, cc/learning.py:64, cc/shim.py:85, cc/probes/a_restart_leaves_a_slate_behind_it.py:154, codemother/shim.py:476, codemother/watch.py:220, codemother/machines/orient/probes/a_berth_deposits_again.py:236, inference_domain/domain.py:341 (logs tree, read by read_task_tickets via json), librarian/ask.py:117, librarian/harvest_questions.py:145,174, librarian/library.py:77 (manifest read by json; the hash there is of shelved files read rb), sudo_relay/relay.py:169,228,385, tester/notices.py:52,90, trouble/shim.py:154, build_inspector/run_record.py:58, diagnostic_inspector/inspector.py:306, learning_block.py:139 and data_recorder.py:195 (jsonl rewritten and read by splitlines+json.loads), skill_block.py:174, web_operator.py:110, artifact.py:883 (park record, read by json), gate_class.py:162,227 (feedback and sieve json), gate_probes.py:158, breadcrumb_log.py:183, data_recorder.py:109, usage/usage.py:94, codemother/constraint_proof.py:89 and project.py:59,87 (json read back by json.loads); (b) human-read text: tester/runs.py:81,82 (stdout.txt, stderr.txt), tls.py:111 (box.name read .strip()), tls.py:139 (pem, ssl accepts CRLF); (c) python written to scratch and run by python, which accepts CRLF: tester/cli.py:413, tester/isolation.py:233; (d) rehearsal.py:884,888 scratch ticket: drive_a_failed_run ran to its trail on Windows with a CRLF ticket (its ticket_sha256_at_read hashes its own scratch bytes, self-consistent on one box); (e) cc/scripts/memory_link.py:60 writes ~/.claude/settings.json, compared against read_text() (universal newlines) and valid JSON either way. Measured 2026-11-12: Git Bash ran a CRLF sh script with if/fi to completion (rc 0), so a CRLF hook is tolerated on this box; it is still a byte difference from Linux, which is why the hook is fixed rather than listed here.",
+  "traces_to": "Law 3: a file two boxes write from one source has to be the same bytes, measured; Law 4: the line ending is enforced by the write, not by the shell happening to tolerate CRLF.",
+  "how": "Add newline='\n' to reseal.py:959 (dest.write_text(body, encoding='utf-8')) and to his_case_never_bites.py:77 (p.write_text(...)). Red-first proofs: install_hook into a scratch git repo and assert the installed bytes hold no CR and equal the tracked source with line endings normalised; _stub a script into a scratch dir and assert no CR. No change to the door, the other writers or the 1163 proof calls.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "install_hook into a scratch git repo writes a hook with no CR byte, equal to the tracked source with CRLF normalised, on Windows where it wrote CRLF before"
+      },
+      {
+        "n": 2,
+        "claim": "the system_word probe's _stub writes a bash script with no CR byte on Windows, where it wrote CRLF before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/tester/reseal.py, cairn/tools/system_word/probes/his_case_never_bites.py, cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py, cairn/tools/system_word/proofs/test_a_probe_stub_is_lf_on_every_box.py",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/tools/system_word/probes/his_case_never_bites.py",
+        "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py",
+        "cairn/tools/system_word/proofs/test_a_probe_stub_is_lf_on_every_box.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/tools/system_word/probes/his_case_never_bites.py",
+      "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py",
+      "cairn/tools/system_word/proofs/test_a_probe_stub_is_lf_on_every_box.py",
+      "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "48 production write_text calls without newline= (AST census over tracked .py, proofs and test_ files excluded); none writes through the artifact door; HARMLESS list: HARMLESS, measured by reading each write's reader (none of the 48 goes through the artifact door, which writes bytes; none is fingerprinted, sealed or hashed as a record): (a) json logs and state in instance-space, every reader json.loads or read_text().strip(), both newline-agnostic: bus.py:780, server.py:868, sleep_cycle/idle.py:158,229, sleep_cycle/token.py:102, cc/learning.py:64, cc/shim.py:85, cc/probes/a_restart_leaves_a_slate_behind_it.py:154, codemother/shim.py:476, codemother/watch.py:220, codemother/machines/orient/probes/a_berth_deposits_again.py:236, inference_domain/domain.py:341 (logs tree, read by read_task_tickets via json), librarian/ask.py:117, librarian/harvest_questions.py:145,174, librarian/library.py:77 (manifest read by json; the hash there is of shelved files read rb), sudo_relay/relay.py:169,228,385, tester/notices.py:52,90, trouble/shim.py:154, build_inspector/run_record.py:58, diagnostic_inspector/inspector.py:306, learning_block.py:139 and data_recorder.py:195 (jsonl rewritten and read by splitlines+json.loads), skill_block.py:174, web_operator.py:110, artifact.py:883 (park record, read by json), gate_class.py:162,227 (feedback and sieve json), gate_probes.py:158, breadcrumb_log.py:183, data_recorder.py:109, usage/usage.py:94, codemother/constraint_proof.py:89 and project.py:59,87 (json read back by json.loads); (b) human-read text: tester/runs.py:81,82 (stdout.txt, stderr.txt), tls.py:111 (box.name read .strip()), tls.py:139 (pem, ssl accepts CRLF); (c) python written to scratch and run by python, which accepts CRLF: tester/cli.py:413, tester/isolation.py:233; (d) rehearsal.py:884,888 scratch ticket: drive_a_failed_run ran to its trail on Windows with a CRLF ticket (its ticket_sha256_at_read hashes its own scratch bytes, self-consistent on one box); (e) cc/scripts/memory_link.py:60 writes ~/.claude/settings.json, compared against read_text() (universal newlines) and valid JSON either way. Measured 2026-11-12: Git Bash ran a CRLF sh script with if/fi to completion (rc 0), so a CRLF hook is tolerated on this box; it is still a byte difference from Linux, which is why the hook is fixed rather than listed here.",
+      "how": "ast walk of git ls-files *.py for Call(.write_text) with no newline keyword; read each call's reader (json.loads, strip, rb hash, shell, python)"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "Git Bash ran a CRLF sh script with if/fi to completion (rc 0) and drive_a_failed_run ran on Windows with a CRLF scratch ticket: neither CRLF writer is red on this box today",
+      "how": "ran printf-made CRLF scripts under sh, and rehearsal.drive_a_failed_run in a scratch dir"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "383ac6351996: a text file cairn writes and something executes or compares is LF on every box",
+      "intent": "install_hook in the tester's reseal door and the system_word probe's _stub write their shell scripts with newline=\"\\n\", so the installed pre-commit hook and the probe's bash stubs are LF bytes on every box; the 46 other production write_text calls without newline= are measured harmless and left alone.",
+      "scope": "reseal.py:959, his_case_never_bites.py:77 and one proof each; the artifact door, the 46 harmless writers and the 1163 proof-side calls are not changed",
+      "unknowns": [
+        "the tracked hook source cairn/devices/tester/hooks/pre-commit has no eol pin, so a Windows checkout holds it CRLF; the installer now normalises it, the source's own pin is not changed here",
+        "the posix side was not run by me: on Linux newline=\"\\n\" changes nothing"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/reseal.py",
+          "cairn/tools/system_word/probes/his_case_never_bites.py",
+          "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py",
+          "cairn/tools/system_word/proofs/test_a_probe_stub_is_lf_on_every_box.py"
+        ],
+        "out": [
+          "cairn/tools/artifact/artifact.py",
+          "the 46 harmless write_text calls",
+          "every other proof"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which production write_text calls lack newline=",
+        "which of them write a file something executes or compares byte-exact"
+      ],
+      "holdings": [
+        {
+          "what": "the reseal door's install_hook",
+          "address": "cairn/devices/tester/reseal.py"
+        },
+        {
+          "what": "the system_word probe's stub writer",
+          "address": "cairn/tools/system_word/probes/his_case_never_bites.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "LF bytes from the hook installer and the probe stub writer",
+          "measure": "both teeth read CR bytes on akiendell 2026-11-12: installed hook 51 CR, stub 2 CR"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "newline=\"\\n\" on reseal.py:959 and his_case_never_bites.py:77, with a bytes tooth each",
+          "why": "a script a shell runs, copied from one tracked source, should be one byte string on every box",
+          "kind": "build",
+          "fills": "LF bytes from the hook installer and the probe stub writer",
+          "uses": [
+            "cairn/devices/tester/reseal.py",
+            "cairn/tools/system_word/probes/his_case_never_bites.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/reseal.py",
+            "cairn/tools/system_word/probes/his_case_never_bites.py",
+            "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py",
+            "cairn/tools/system_word/proofs/test_a_probe_stub_is_lf_on_every_box.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "newline=\"\\n\" on reseal.py:959 and his_case_never_bites.py:77, with a bytes tooth each",
+          "why_now": "built; proofs red first (CR bytes 51 and 2), green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "newline=\"\\n\" on reseal.py:959 and his_case_never_bites.py:77, with a bytes tooth each",
+          "expect": "no CR byte in the installed hook, which equals the LF-normalised source, and none in the stub",
+          "falsifier": "either file still holds a CR byte on Windows",
+          "instrument": "python3 cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the installed hook holds no CR byte and equals the tracked source with line endings normalised",
+          "instrument": "python3 cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py",
+          "timeout_s": 300,
+          "covers": [
+            "newline=\"\\n\" on reseal.py:959 and his_case_never_bites.py:77, with a bytes tooth each"
+          ]
+        },
+        {
+          "claim": "the probe's bash stub holds no CR byte",
+          "instrument": "python3 cairn/tools/system_word/proofs/test_a_probe_stub_is_lf_on_every_box.py",
+          "timeout_s": 300,
+          "covers": [
+            "newline=\"\\n\" on reseal.py:959 and his_case_never_bites.py:77, with a bytes tooth each"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
