@@ -1,0 +1,203 @@
+{
+  "id": "c603e904432c",
+  "title": "the sudo relay's local executor runs its command under the host's bash, not WSL's",
+  "owning_intention": "cairn/devices/sudo_relay/intention+why.json",
+  "intention": "relay.local_executor spawns shutil.which('bash') on Windows, so its command runs in the box's own shell and sees Windows paths intact.",
+  "why": "Measured 2026-11-12 on akiendell: relay.local_executor('echo hi; uname -a; pwd; echo C:\\\\Users\\\\x') on akiendell returned Linux ... WSL2, /mnt/c/automation/local/cairn and C:Usersx",
+  "traces_to": "Law 3: a spawn is not known to run the intended shell until measured; Law 4: enforced by a scan, not remembered.",
+  "how": "In cairn/devices/sudo_relay/relay.py add a private _bash() returning shutil.which('bash') or 'bash' where os.name is nt, else 'bash'; local_executor uses it. root_executor is unchanged (sudo does not exist on Windows). The red-first proof stubs _run to capture argv and asserts argv[0], plus an AST scan of relay.py that no list literal begins with the bare string bash outside _bash.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on nt, local_executor hands _run an argv whose first element is shutil.which('bash'), where it was the bare word bash"
+      },
+      {
+        "n": 2,
+        "claim": "an AST scan of relay.py finds no list literal starting with the bare string bash outside _bash"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/devices/sudo_relay/relay.py",
+      "writes_to": [
+        "cairn/devices/sudo_relay/relay.py"
+      ],
+      "reads": [
+        "cairn/devices/sudo_relay/relay.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/sudo_relay/proofs/test_the_local_executor_runs_the_hosts_bash.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/sudo_relay/relay.py",
+      "cairn/devices/sudo_relay/proofs/test_the_local_executor_runs_the_hosts_bash.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "relay.local_executor('echo hi; uname -a; pwd; echo C:\\\\Users\\\\x') on akiendell returned Linux ... WSL2, /mnt/c/automation/local/cairn and C:Usersx",
+      "how": "called the function from a python process with HOME at a scratch dir"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "c603e904432c: the sudo relay's local executor runs its command under the host's bash, not WSL's (cairn/devices/sudo_relay/relay.py)",
+      "intent": "relay.local_executor spawns shutil.which('bash') on Windows so its command runs in the box's own shell.",
+      "scope": "relay.py and one new proof; root_executor and the daemon are not changed",
+      "unknowns": [
+        "the Linux side was not run by me: on Linux the helper returns the bare word bash, as before"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/sudo_relay/relay.py",
+          "cairn/devices/sudo_relay/proofs/test_the_local_executor_runs_the_hosts_bash.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/base"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the component builds a bash argv"
+      ],
+      "holdings": [
+        {
+          "what": "the component's executor",
+          "address": "cairn/devices/sudo_relay/relay.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a host-bash lookup for the local executor",
+          "measure": "relay.local_executor('uname -a') on akiendell 2026-11-12 reported Linux ...WSL2 and cwd /mnt/c"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a _bash() helper and a two-tooth proof",
+          "why": "a bare bash resolves to the WSL launcher on Windows",
+          "kind": "build",
+          "fills": "a host-bash lookup for the local executor",
+          "uses": [
+            "cairn/devices/sudo_relay/relay.py"
+          ],
+          "writes_to": [
+            "cairn/devices/sudo_relay/relay.py",
+            "cairn/devices/sudo_relay/proofs/test_the_local_executor_runs_the_hosts_bash.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a _bash() helper and a two-tooth proof",
+          "why_now": "built; proof red first, green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a _bash() helper and a two-tooth proof",
+          "expect": "local_executor argv starts with the host's bash; no bare bash list remains",
+          "falsifier": "local_executor argv starts with the bare word bash on nt, or a bare bash list stands",
+          "instrument": "python3 cairn/devices/sudo_relay/proofs/test_the_local_executor_runs_the_hosts_bash.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the proof pass",
+          "instrument": "python3 cairn/devices/sudo_relay/proofs/test_the_local_executor_runs_the_hosts_bash.py",
+          "timeout_s": 300,
+          "covers": [
+            "a _bash() helper and a two-tooth proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
