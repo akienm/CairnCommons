@@ -1,0 +1,87 @@
+{
+  "id": "e889b197a3f6",
+  "title": "the compile reads a block's engine traces into a deterministic floor",
+  "owning_intention": "cairn/machines/learning_block/intention+why.json",
+  "intention": "cairn.machines.learning_block.compile reads one block's training engine_run traces and emits a floor: data a deterministic Python evaluator runs to reproduce each traced decision (winner or escalation) from the run's recorded input and candidates, with no inference; it refuses, naming every lack, a corpus too thin or too featureless to generalize from.",
+  "why": "Child 2 of d6cacb63868b (infer-compile-reads-the-traces): its cast condition, >=5 training-typed traces for one block, is met (librarian-ask, 7). But measured 2026-11-13, those 7 are one question repeated 4 times plus 3 backfill escalations, and no candidate record carries the provides the constraints judged. A compile over that corpus could only memorize. So the engine must record features first, and the compile must refuse a corpus that only repeats itself.",
+  "traces_to": "Law 1 (the resolver is spent on the novel: a settled block decision compiles to code instead of re-running inference) and Law 8 (a compile that memorizes must not pass for one that learned).",
+  "how": "D1: run_block's candidates_log keeps each candidate's provides. D2: compile.py's compile_floor(block, root=None) reads the block's training engine_run traces, refuses (DoorRefused, every lack) fewer than 5 runs of distinct input or any candidate without provides, and otherwise emits a floor of per-constraint kill rules over provides keys plus the decide-or-escalate order; apply_floor(floor, payload, candidates) evaluates it. The floor berths in instance-space at ~/.cairn/devices/learning_block/0/floors/<block>.json. D3: the proof, over a scratch trace root. Built red-first; held at BUILDME by Q#97 (which corpus the first compile learns from).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch trace root holding >=5 engine runs of one block with distinct inputs, compile_floor emits a floor, and apply_floor reproduces every traced run's outcome (winner name or escalation target) from that run's recorded input and candidates"
+      },
+      {
+        "n": 2,
+        "claim": "two compiles over the same corpus write byte-identical floors, and compile.py imports no inference client"
+      },
+      {
+        "n": 3,
+        "claim": "compile_floor refuses, naming every lack in one refusal, a corpus with fewer than 5 runs of distinct input and a corpus whose candidates carry no provides; a fixture shaped like the live librarian-ask corpus as measured 2026-11-13 is refused on both"
+      },
+      {
+        "n": 4,
+        "claim": "a run_block over a fixture spec writes each candidate's provides into candidates_log, and the existing engine teeth in test_learning_block.py stay green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: engine.py run_block's candidates_log entry gains 'provides': the candidate's provides dict exactly as _satisfies judged it.",
+      "writes_to": [
+        "cairn/machines/learning_block/engine.py"
+      ],
+      "reads": [
+        "cairn/machines/learning_block/engine.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: new compile.py: compile_floor(block, *, root=None) and apply_floor(floor, payload, candidates). Reads training engine_run traces through the engine's trace root; refuses via DoorRefused with every lack; emits per-constraint kill rules keyed on provides values plus the escalation target; writes the floor to instance-space floors/<block>.json, sorted keys, no timestamps in the body.",
+      "writes_to": [
+        "cairn/machines/learning_block/compile.py"
+      ],
+      "reads": [
+        "cairn/machines/learning_block/engine.py",
+        "cairn/machines/learning_block/learning_block.py",
+        "cairn/machines/learning_block/probes/engine_trace_corpus.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: proof test_the_compile_reads_the_traces.py, one tooth per clause, every trace and floor under a scratch root (the world() pattern of test_learning_block.py).",
+      "writes_to": [
+        "cairn/machines/learning_block/proofs/test_the_compile_reads_the_traces.py"
+      ],
+      "reads": [
+        "cairn/machines/learning_block/proofs/test_learning_block.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/learning_block/compile.py",
+      "cairn/machines/learning_block/engine.py",
+      "cairn/machines/learning_block/proofs/test_the_compile_reads_the_traces.py"
+    ],
+    "out": [
+      "every other component",
+      "the floor's deposit into a graph tree (outline 4.3.1.4), cast once a floor exists",
+      "child 3's fresh-task validate (its own ticket)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "librarian-ask holds 7 engine_run training traces; 4 of them are one question ('Is CC allowed to seal concept-pieces on its own?') with one winner, 0:5a34fcee46b7, every time; the other 3 are backfill runs (backfills=3, reason 'learned'), all 3 escalated to the operator, carries_his_answer killing 5, 6 and 5 of their 6 candidates; every candidates_log entry carries only name, outcome, killed_by and outranked_by, no provides",
+      "how": "read ~/.cairn/devices/learning_block/0/traces/librarian-ask.jsonl line by line (Linux, akiendell), and survey_the_corpus() from cairn/machines/learning_block/probes/engine_trace_corpus.py: librarian-ask 7 runs, 7 answer all five; intentions_model_compiler 2 runs"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "engine.py builds candidates_log from name, outcome, killed_by, outranked_by (cairn/machines/learning_block/engine.py run_block); the candidate's provides, the only features _satisfies reads, is dropped from the record",
+      "how": "reading engine.py at origin/main da5ed6849"
+    }
+  ]
+}
