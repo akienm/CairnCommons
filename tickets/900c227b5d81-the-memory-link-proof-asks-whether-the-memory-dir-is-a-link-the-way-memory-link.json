@@ -57,5 +57,155 @@
       "saw": "akiendell: ~/.claude/projects/C--automation-local-cairn/memory is LinkType Junction, Target C:/Users/akien/dev/src/cc-memory; that dir has .git; all 7 project memory dirs are junctions. The proof at HEAD (clean worktree) fails run 2 'is not a link'. memory_link.py:78-86 is_link() accepts a junction via os.readlink; proof line 95 uses Path.is_symlink().",
       "how": "Get-Item -Force over the memory dirs; Test-Path on the clone's .git; the proof run in a git worktree of HEAD; read of memory_link.py 72-90 and the proof 94-96"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "900c227b5d81: the memory-link proof asks whether the memory dir is a link the way memory_link does, so a Windows junction counts",
+      "intent": "The memory-link proof's link check accepts what memory_link.py makes on each OS: a symlink, or on nt a junction, that resolves to the clone; a plain directory or a link elsewhere still reds.",
+      "scope": "the one proof file; memory_link.py is read only",
+      "unknowns": [
+        "the posix side was not run on the Windows box where the fix was built"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/devices/cc/scripts/memory_link.py"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how the proof tests the link",
+        "how memory_link.py tests it"
+      ],
+      "holdings": [
+        {
+          "what": "memory_link.py, whose is_link accepts a junction via os.readlink",
+          "address": "cairn/devices/cc/scripts/memory_link.py"
+        },
+        {
+          "what": "the memory-link proof",
+          "address": "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a junction-aware link check in the proof",
+          "measure": "git show 1403670e5^:cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py | grep -c readlink answers 0 (before the build)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the proof's link check accepts a symlink or an nt junction resolving to the clone, with red teeth for a plain dir and a link elsewhere",
+          "why": "Path.is_symlink() is False for a junction, so the proof reded on a box where memory_link had done its job",
+          "kind": "build",
+          "fills": "a junction-aware link check in the proof",
+          "uses": [
+            "cairn/devices/cc/scripts/memory_link.py",
+            "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the proof's link check accepts a symlink or an nt junction resolving to the clone, with red teeth for a plain dir and a link elsewhere",
+          "why_now": "built and pushed at 1403670e5"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the proof's link check accepts a symlink or an nt junction resolving to the clone, with red teeth for a plain dir and a link elsewhere",
+          "expect": "2 of 2 teeth green twice on Windows",
+          "falsifier": "a junction to the clone reds the link check, or a plain directory or a link to elsewhere passes it",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_memory_link_writes_only_from_a_durable_tree.py is green",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_memory_link_writes_only_from_a_durable_tree.py",
+          "timeout_s": 900,
+          "covers": [
+            "the proof's link check accepts a symlink or an nt junction resolving to the clone, with red teeth for a plain dir and a link elsewhere"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
