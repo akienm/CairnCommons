@@ -1,0 +1,84 @@
+{
+  "id": "12443bcc113f",
+  "title": "another ticket's records do not refuse this ticket's PROVEME crossing",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "working_tree_clean, judged for a crossing ticket, drops each dirty path that artifact.locate assigns as a record of a DIFFERENT ticket; any unclaimed path, any code path and the crossing ticket's own records still refuse.",
+  "why": "Measured 2026-11-12 on akiendelllinux: 3195b3b834bc's PROVEME was refused by WorkingTreeDirtyRed first over 'CairnCommons: .artifact-journal.jsonl, tickets/3195b3b834bc-...log.jsonl' plus proof_coverage history/state, then over '/home/akien/dev/src/CairnCommons: .artifact-journal.jsonl, tickets/d692ef650534-...log.jsonl, tickets/d692ef650534-...state.json', which were d692's chart records, uncommitted by the orchestrator. With peers on one box, one peer's records block every peer's crossing, so peers serialise by hand. The scope was widened to both whole trees by c1cca2e3dc23 on Akien's 8w/F11/8x, and 8u holds that unclaimed dirt refuses; this narrowing is put to him as outline Q#94 (3.3.5).",
+  "traces_to": "Law 6 (another ticket's records are its owner's to commit) and Law 8 (no green leans on code no commit holds: code dirt still refuses).",
+  "how": "(a) working_tree_clean(row, comp_dir, *, repos=None, ticket=None): when ticket is given, a dirty path is dropped if cairn.tools.artifact.artifact.locate(<repo>/<path>) names it a record AND the record's ticket is not ticket (a tickets/<id>-*.{json,state.json,log.jsonl} path carries its id). Unknown or shared records (.artifact-journal.jsonl) stay dirt unless the build measures a claim. (b) inspect_clean_tree and _clean_tree_gate take the crossing ticket and pass it; the caller at transitions.py ~1519 has it. (c) Red-first proof over two scratch repos.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a dirty record that artifact.locate assigns to a ticket other than the crossing one does not refuse the crossing"
+      },
+      {
+        "n": 2,
+        "claim": "a dirty path no record claims still refuses"
+      },
+      {
+        "n": 3,
+        "claim": "a dirty code path still refuses, beside such records"
+      },
+      {
+        "n": 4,
+        "claim": "the crossing ticket's own dirty records still refuse"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: working_tree_clean takes the crossing ticket and drops another ticket's records.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: inspect_clean_tree and _clean_tree_gate thread the crossing ticket to it.",
+      "writes_to": [
+        "cairn/tools/base/transitions.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over scratch repos.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_another_tickets_records_do_not_refuse_this_crossing.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/tools/base/transitions.py",
+      "cairn/machines/build_inspector/proofs/test_another_tickets_records_do_not_refuse_this_crossing.py"
+    ],
+    "out": [
+      "316bdd5b5e62's foreign-build lane",
+      "the artifact door's locate",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "two WorkingTreeDirtyRed refusals of 3195b3b834bc's PROVEME on the Dell over other tickets' records",
+      "how": "cairn/devices/cc/scripts/sail.py cross 3195b3b834bc from akienasus"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "working_tree_clean reds on any dirty path in either repo (inspector.py:4403), called at PROVEME via transitions.py:941/1519",
+      "how": "reading the two files"
+    }
+  ]
+}
