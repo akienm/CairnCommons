@@ -1,0 +1,63 @@
+{
+  "id": "42ddfe3b7256",
+  "title": "a tester proof's run-verb ask reaches a tester on its own box",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The coverage tooth of test_seal_is_never_silently_dropped asks the tester's run verb of a bus on the same box as its fixture, so the run reads the fixture it names whatever CAIRN_BUS_HOME the session carries.",
+  "why": "Measured 2026-11-13 on akienasus: the tooth test_the_guard_covers_every_persisting_caller_not_only_the_flag red 'the run verb returned no record': the reply body was {'refused': \"no proof file at '/tmp/tmp.../somecomp/proofs/test_thing.py'\"}. reach('tester') is a RemoteBus to akiendelllinux.local:7419 (CAIRN_BUS_HOME), so the Dell's tester was asked about akienasus's disk. Red at HEAD too (worktree run). Not a sandbox bind: same mount namespace and /tmp locally.",
+  "traces_to": "Law 3 - a tooth measures the thing it names, not the route to another box; Law 8 - a proof must be runnable on the box that builds it.",
+  "how": "Reading 1's ask moves into a child of the proof (--ask-run <path>) under a scratch HOME built by cairn.tools.scratch.scratch.home_env, which drops every CAIRN_BUS_*; the child's reach('tester') lazy-inits a throwaway-table bus under that HOME; the parent shuts that bus down after.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with the session's CAIRN_BUS_HOME naming another box's bus, the coverage tooth's run-verb ask returns a record for the fixture and the proof is green"
+      },
+      {
+        "n": 2,
+        "claim": "no scratch bus process outlives the proof"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py, _ask_run_on_this_box(proof) runs this file with --ask-run under home_env(scratch_dir('testing-42ddfe3b7256-'), PYTHONPATH=repo), parses the reply from the last stdout line, and in finally shuts down RemoteBus(<home>/.cairn/devices/cairn/machines/bus/0); _ask_run is the child half; the tooth calls _ask_run_on_this_box instead of reach('tester') in-process.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py",
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/base/proofs/test_root_verb_vocabulary.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py"
+    ],
+    "out": [
+      "cairn/tools/bus_client (routing unchanged)",
+      "cairn/devices/tester/device.py (the run verb unchanged)",
+      "every other proof"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "reply body {'refused': \"no proof file at '/tmp/tmpp7vkkzi1/somecomp/proofs/test_thing.py'\"}; reach('tester') = RemoteBus _far=('akiendelllinux.local', 7419); red at HEAD in a worktree",
+      "how": "bin/cairn test cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py; python3 -c reach('tester') vars; git worktree at HEAD"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "ground_loop (pid 24489) and this shell share mnt:[4026531832] and one tmpfs /tmp",
+      "how": "readlink /proc/<pid>/ns/mnt; /proc/<pid>/mountinfo"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "after the fix: green twice, no machines.bus process left",
+      "how": "bin/cairn test x2; ps -eo args | grep machines.bus"
+    }
+  ]
+}
