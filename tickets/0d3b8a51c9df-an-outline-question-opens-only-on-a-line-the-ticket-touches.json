@@ -1,0 +1,92 @@
+{
+  "id": "0d3b8a51c9df",
+  "title": "an outline question opens only on a line the ticket touches",
+  "owning_intention": "cairn/devices/codemother/machines/outline_check/intention+why.json",
+  "intention": "The outline check opens a question on a ticket for an open [Q#n] only when the ticket touches the question's own line or a line beneath it, never for a sibling or parent heading in the same section.",
+  "why": "Measured 2026-11-12: Q#90 (seals per OS, at 9.4.2.3.3) opened on 0bcb816d6e9c, d58e7887cc99 and 446e42bb2b17, none of which reads or writes a seal, because D8 widens every touch to its first two components and 9.4 is all of CodeMother. Over 295 records D8 opened 139 outline questions; the line rule keeps 40.",
+  "traces_to": "Law 1 (a question opened where nothing bears on it spends the resolver on nothing) and Law 3 (the rule is the measured one).",
+  "how": "In outline_check.check, replace the section loop with: an open question at number q is opened when some touched number t equals q or starts with q + '.'; the record's open_questions 'section' field carries the matched touched number. The new proof replays each fixture ticket's recorded touches through a stub reader over a scratch commons with the outline pinned at a63dbc004 (git show). Tooth 4 of the existing proof is rewritten to the line rule. The charter's what and horizon drop the two-component section.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the recorded reads of 0bcb816d6e9c, d58e7887cc99 and 446e42bb2b17 open no question on Q#90"
+      },
+      {
+        "n": 2,
+        "claim": "5243cf9dc630's recorded read, touching 9.4.2.3.3, opens exactly one question on Q#90"
+      },
+      {
+        "n": 3,
+        "claim": "a question on a line beneath a touched line opens; one on the touched line's parent heading or a sibling does not"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the match is line-or-descendant of a touched number, replacing D8's two-component section.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a new proof, one tooth per clause, fixtures frozen from the recorded reads, outline pinned at a63dbc004.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_an_open_question_opens_only_on_a_line_the_ticket_touches.py"
+      ],
+      "reads": [
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the existing proof's tooth 4 follows the line rule; its why (a ticket working where a question stands should not reach a build unnoticed) is kept.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the charter's what and horizon name the line rule, written through the artifact door with recompile_gate.sh poked.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/intention+why.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/outline_check/outline_check.py",
+      "cairn/devices/codemother/machines/outline_check/proofs/test_an_open_question_opens_only_on_a_line_the_ticket_touches.py",
+      "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py",
+      "cairn/devices/codemother/machines/outline_check/intention+why.json"
+    ],
+    "out": [
+      "cairn/devices/codemother/machines/outline_check/prompt.md (the reader is unchanged)",
+      "cairn/devices/tester",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "Q#90 opened on 0bcb816d6e9c (touched 9.4.8), d58e7887cc99 (touched 9.4.2.3.1, 9.4.2.3.4), 446e42bb2b17 (touched 9.4.2); 5243cf9dc630 and 1b5e86aeec14 touched 9.4.2.3.3",
+      "how": "read touches and open_questions in CairnCommons/outline_checks/<id>-*.json"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "295 records: 139 opens under D8, 40 under line-or-descendant",
+      "how": "python over CairnCommons/outline_checks/*.json replaying both predicates on each record's touches"
+    }
+  ]
+}
