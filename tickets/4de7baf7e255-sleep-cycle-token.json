@@ -1,15 +1,131 @@
 {
   "id": "4de7baf7e255",
   "title": "sleep-cycle-token",
-  "owning_intention": "cairn/devices/cairn/intention+why.json",
-  "intention": "A serial token-passing protocol for device maintenance cycles. When the system is idle, the cairn device starts a sleep-cycle token on its announce feed. Every device's probe fires on that message; the device whose turn it is in alpha order (from the ground loop's roster) either runs its sleep cycle and forwards the token, or just forwards immediately if it has no sleep work. The probe is the pattern, not a class — a three-line custom probe (match, decide, forward) is a valid implementation; no shim overhead, no bus routing, no LLM needed. Serial execution is the day-one shape because of measured OOM history (n=3) and because we don't yet know which sleep cycles are independent — parallel is a measured refinement for later.",
-  "why": "Many devices need periodic maintenance — consolidation, learning, question processing, false-positive improvement (the 'overnight run' from the origin idea). Without coordination, N independent maintenance daemons compete for resources (the OOM history) and provide no ordering guarantees. One token rotation replaces N independent sleep daemons — the same move the ground loop made for heartbeats. The idle detection is the '3 hours without a human' screensaver-like trigger Akien named: 'it's not about a specific hour, it's about when other external things won't trouble it.'",
-  "traces_to": "Telos aim 5 (self-improving) — sleep cycles are where learning consolidation and question processing happen. Telos aim 1 (inference compilation) — consolidation compiles accumulated evidence into structure, which is Law 1 at a batch scale. The shrinking-footprint derivation (event-not-poll): one token rotation vs N independent daemons. Law 4 — the token is physics (a message on the bus), not policy (a rule about who runs when).",
+  "owning_intention": "cairn/devices/cairn/machines/sleep_cycle/intention+why.json",
+  "intention": "The cairn device's sleep cycle follows outline 5.3.3: the clock (23:00 local) is sleep's base trigger and measured interaction overrides it, so a pulse that cannot read every activity source sleeps at the clock instead of never; and at its time Cairn runs its own sleep first, then hands the token round the rack (5.3.3.1, 5.7.3.3).",
+  "why": "No sleep cycle has ever completed. The idle trigger (9b6b392ebcfe) holds sleep whenever any of its four activity sources is unread, and on a box where one source is always unread (no web_server or librarian logs folder, a scratch HOME) that is never. Outline 5.3.3.4 makes the clock the base and measurement the override, so an unreadable measurement falls back to the clock rather than to no sleep. And 5.3.3.1 has Cairn sleep first and then hand on, where the code sweeps Cairn's logs at the rotation's close.",
+  "traces_to": "Law 9 (outline 5.3.3.1 and 5.3.3.4 outrank the 08-24 ticket and the charter's 'not an hour of the day'); Law 1 (open-550f6fcd729e answered from 5.3.3.4: clock base, idle overrides); Law 7 (the pulse record names which rule decided).",
   "falsifier": {
-    "proves_green": "code-seam invariants: proved (tester seal, teeth a hollow build could not pass) + feeds back to origin on failure. Dependency: the cairn device must be built (devices/cairn/ with announce-feed capability) before BUILDME can proceed. WATCHME(sleep-rotation-completes): emission gate resolves ARMED from the probe path before the crossing. Children prove first.",
-    "proves_red": "Done-tell: the cairn device can start a sleep token, at least one device can receive and forward it, and the rotation completes back to start with at least one real sleep cycle executed. Wrong-intent tell: devices need to run their maintenance concurrently (measured, not assumed), the idle detection is better located elsewhere than the cairn device, or the token-passing overhead exceeds independent device-level scheduling.",
-    "horizon": "First end-to-end rotation is the first measurement. Three rotations with real sleep work is the watch's enough."
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a source unread, a pulse at 23:10 local is due, its why naming the clock, and asks one mint; a second pulse at 23:40 the same night asks nothing"
+      },
+      {
+        "n": 2,
+        "claim": "with a source unread, a pulse at 12:00 local holds and asks nothing, its why naming the unread source"
+      },
+      {
+        "n": 3,
+        "claim": "with every source read, activity ten minutes old holds a 23:10 pulse, and quiet past the threshold makes a 15:00 pulse due: measurement overrides the clock both ways"
+      },
+      {
+        "n": 4,
+        "claim": "the cairn device's sleep-cycle mint over a one-device roster has swept a 31-day-old log before the first hand is posted, and the sleep-token answer that closes the rotation sweeps nothing (a 40-day-old log planted after the mint survives the close)"
+      },
+      {
+        "n": 5,
+        "claim": "the clock is a parameter: decide with clock_hour 2 is due at 02:10 and not at 23:10 for an unread source, and the device's settings carry sleep_clock 23:00 with provenance naming outline 5.3.3.4"
+      }
+    ]
   },
   "constraints": [],
-  "how": ""
+  "how": "idle.decide gains the clock: with a source unread, a pulse inside the clock hour (23:00 local) is due once per local day, its why naming the clock; outside that hour unread still holds. With every source read, measured quiet past the threshold opens sleep at any hour and measured activity holds it at the clock hour too. clock_hour and tz are parameters of decide and pulse; the cairn device's settings carry the clock with outline 5.3.3.4 as provenance. The device's sleep-cycle mint runs Cairn's own sleep (the 30-day logs sweep) before token.mint posts the first hand; the sleep-token close no longer sweeps. The charter's what restates the trigger. The rotation's record stays the announce feed token.py already writes.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: open-550f6fcd729e answered from outline 5.3.3.4: the clock (2300) is the base trigger, and idle overrides it once recent interaction can be measured. Read here as: every source read means measurement decides both ways; any source unread means the clock decides.",
+      "writes_to": [],
+      "reads": [
+        "press_office/CairnComponentOutline.txt"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: idle.decide(sources, last_activity, now, threshold_s, away, cycle, clock_hour=23, tz=None) adds the clock branch where the unread branch stands; the once-per-spell check uses the night's clock mark (that day's clock_hour:00 local) as its anchor. pulse passes clock_hour and tz through. 23:00 is the box's local time (tz None = local).",
+      "writes_to": [
+        "cairn/devices/cairn/machines/sleep_cycle/idle.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/sleep_cycle/idle.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: CairnDevice._handle_sleep_cycle mint sweeps first (_forget_logs) and then calls token.mint; _handle_sleep_token no longer sweeps at close; settings gain sleep_clock and sleep_clock_provenance from idle. token.py is composed unchanged: its announce feed is the rotation's record (the announce-feed dependency of the 08-24 cast, built by bf146e9e3967).",
+      "writes_to": [
+        "cairn/devices/cairn/device.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/device.py",
+        "cairn/devices/cairn/machines/sleep_cycle/token.py",
+        "cairn/devices/cairn/machines/bus/bus.py",
+        "cairn/devices/cairn/logs_sweep.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof drives decide and pulse in a fixture world (temp roots, transcripts, pts, an injected asker), all times in a fixed tz so it reads the same on every box, and the device's mint over a fixture roster folder and a fake bus that records whether the old log still exists at each post. One tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/sleep_cycle/proofs/test_the_clock_is_the_base_trigger.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py",
+        "cairn/devices/cairn/proofs/test_the_logs_tree_forgets_past_30_days.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: tooth i of 9b6b392ebcfe's proof runs the live pulse under a scratch HOME and asserts not due; under the clock it would be due inside the 23:00 hour, so its subprocess gets a TZ whose local hour is 12. No assertion changes.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: the sleep_cycle charter's what restates the trigger as the outline's (clock base, measurement overrides), and the lab is recompiled.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/sleep_cycle/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/sleep_cycle/intention+why.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/sleep_cycle/idle.py",
+      "cairn/devices/cairn/device.py",
+      "cairn/devices/cairn/machines/sleep_cycle/proofs/test_the_clock_is_the_base_trigger.py",
+      "cairn/devices/cairn/machines/sleep_cycle/proofs/test_idle_trigger.py",
+      "cairn/devices/cairn/machines/sleep_cycle/intention+why.json"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/sleep_cycle/token.py",
+      "cairn/devices/cairn/machines/bus/bus.py",
+      "cairn/tools/base/shim.py (the 5.9 scheduler list and the 5.8.3.5 shim wake-and-pass are the base shim's)",
+      "cairn/devices/cairn/machines/ground_loop",
+      "cairn/devices/cairn/logs_sweep.py"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "idle.decide returns not due whenever any source is unread, at every hour; tooth i of test_idle_trigger.py asserts exactly that under a scratch HOME",
+      "how": "read cairn/devices/cairn/machines/sleep_cycle/idle.py decide and proofs/test_idle_trigger.py tooth_i"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "CairnDevice sweeps the logs tree in _forget_logs only when a rotation closes (sleep-token close or an empty-roster mint), after every other device",
+      "how": "read cairn/devices/cairn/device.py _handle_sleep_token and _handle_sleep_cycle"
+    },
+    {
+      "when": "2026-11-05",
+      "saw": "no successful sleep cycle has ever run: log sweep, consolidation and temp-tree drops have never fired",
+      "how": "the orchestrator's measure recorded in CC memory no-successful-sleep-cycle-yet; outline 5.3.3"
+    }
+  ]
 }
