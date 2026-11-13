@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: (1) renormalise every box once (git rm --cached -r . && git reset --hard) \u2014 the orchestrator is doing it on akiendell, but it is a hand step with no physics: the next pin or a new box re-opens it; (2) hash normalised bytes in source_fingerprint (clean filter) \u2014 changes every standing seal's fingerprint at once and makes the store depend on git attributes; refused for blast radius; (3) a once-per-commit check in the hook only \u2014 misses `cairn test --seal`. Refusing at the seal door names the file and costs one batched git call per seal.",
+      "hidden_assumption": "That `git cat-file --filters` reproduces what a fresh checkout writes on that box (same attributes, same core.autocrlf) \u2014 it is git's own smudge path, so yes; and that closures hold tracked files (untracked files are skipped: they have no index blob, and dirty_against_index already names them under the hook).",
+      "prior_art": "88e30cde9bd4 (PROVED: the *.py eol=lf pin; its proof reads attributes over a fresh repo, never a pre-pin working tree), daaf7ac3e4ec (the hook source checks out LF), cairn/devices/tester/reseal.py dirty_against_index (git diff normalises, so the drift reads clean). congruency-lab consulted after recompile_gate: no CRLF/eol intention.",
+      "real_collision": "validation_store.source_fingerprint's docstring: 'Deliberately NOT git ... a seal must expire the moment the working tree diverges'. Not a collision: the fingerprint stays raw bytes and a genuine uncommitted edit still seals; only bytes git itself calls unchanged-but-different are refused. Distinction recorded."
+    },
+    "exit": "routed_forward",
+    "falsifier": "RED if a scratch repo whose file was checked out CRLF before an eol=lf pin seals without a refusal naming that file; or if an all-LF tree, or a genuinely edited file, is refused.",
+    "from_idea": "2026-11-13-the-tester-refuses-seal-when-a-closure",
+    "how": "One predicate in cairn/devices/tester (a new working_bytes.py): for each tracked closure file, flag it when its raw bytes differ from `git cat-file --filters :path` (the index blob smudged under today's attributes) AND `git hash-object` (cleaned) equals the index blob (git sees no change). device.run_proof (sink=validations) refuses and persists nothing; reseal (hook and named) refuses through ResealRefused; dirty_against_index's hold names it under the hook. Red-first proof in cairn/devices/tester/proofs over a scratch git repo with core.autocrlf=true.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 3 (a seal is a measurement of named bytes; one that means different bytes per box is not one measurement) and Law 8 (a Windows green that cannot reproduce on Linux is a hollow green a peer leans on).",
+    "what": "No seal lands over a closure file whose working bytes are not what checking out its index blob would write today, while git calls it unchanged; the seal door refuses naming the file, so every seal on every box is the fingerprint of the committed bytes."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-13: Windows seal fp 133032682e11 = committed bytes with cairn/tools/base/__init__.py alone CRLF (scratchpad fphunt.py, every version x CRLF per file, one match). git status is clean on such a tree; the drift is invisible to every git-diff-based check."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "977c653dbdbf",
+  "skill": "intent",
+  "title": "No seal lands over a closure file whose working bytes are not what checking out its index blob would write today, while",
+  "trace_id": "9a6526a8c838",
+  "when": "2026-11-13T03:47:04.090449"
+}

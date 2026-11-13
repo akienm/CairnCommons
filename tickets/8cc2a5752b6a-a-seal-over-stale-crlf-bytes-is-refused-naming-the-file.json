@@ -1,0 +1,96 @@
+{
+  "id": "8cc2a5752b6a",
+  "title": "a seal over stale CRLF bytes is refused, naming the file",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "No seal lands over a closure file whose working bytes are not what checking out its index blob would write today while git calls it unchanged; the seal door refuses naming the file, so a seal on every box is the fingerprint of the committed bytes.",
+  "why": "Measured 2026-11-13: the Windows seal of cairn/tools/base/proofs/test_flock_stands_for_fcntl.py at 52890c2f8 carries fp 133032682e11; Linux hashes 8318d78f2eda over the same 3-file closure. Brute force over every version of each file x CRLF per file finds one match: the committed bytes with cairn/tools/base/__init__.py alone in CRLF. That file last changed 2026-08-13; the *.py eol=lf pin (88e30cde9bd4) landed 2026-11-12 19:04, and git rewrites a working file under a new attribute only when it writes it again. git status reads such a tree clean, so the hook's hold and stage seal and commit it; the Linux hook reseal then dropped 5a37's hollow reading over the skewed seal.",
+  "traces_to": "Law 3 - a seal is a measurement of named bytes, and one whose bytes differ per box is not one measurement; Law 8 - a Windows green that cannot reproduce on Linux is a hollow green a peer leans on.",
+  "how": "A new cairn/devices/tester/working_bytes.py holds one predicate, unnormalized(files, base): candidates are tracked files whose raw hash differs from the index sha; a candidate is flagged when its cleaned hash equals the index sha and the index blob smudged for its path differs from its raw bytes. run_proof (sink=validations) refuses before persist; the reseal door refuses after its run; dirty_against_index names flagged files so the hook holds them.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch repo with core.autocrlf=true whose .py was checked out before an eol=lf pin, unnormalized names that file and dirty_against_index names it, while git status reads the tree clean"
+      },
+      {
+        "n": 2,
+        "claim": "an all-LF tree is named by neither, and a genuinely edited file is named by dirty_against_index but never by unnormalized"
+      },
+      {
+        "n": 3,
+        "claim": "TesterDevice.run_proof with sink=validations over a proof whose closure holds a stale CRLF file raises UnnormalizedClosure naming the file and persists no validation"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/tester/working_bytes.py: unnormalized(files, base) -> sorted repo-relative paths, per how; UnnormalizedClosure(Exception) carrying .files; refusal_text(files) naming each file and the one-time fix (git rm --cached -r -q . && git reset --hard on a clean tree). Regular files only (mode 100644/100755); untracked, symlink and gitlink entries are skipped.",
+      "writes_to": [
+        "cairn/devices/tester/working_bytes.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: device.run_proof: when sink == validations and the closure was read (not the directory fallback), unnormalized(closure, validation_store._REPO_ROOT); non-empty -> persist nothing, raise UnnormalizedClosure. cli.py --seal catches it into the refused lane (SEAL REFUSED prints its text).",
+      "writes_to": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/cli.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/cli.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: reseal.py: dirty_against_index appends unnormalized(files, base), so the hook (index_only) holds the seal before running and stage_clean_seals never stages one; reseal() after its run raises ResealRefused(refusal_text) when the record's closure holds a flagged file.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof builds scratch git repos (scratch_dir) with core.autocrlf=true, commits before and after the pin, and never touches the live tree; tooth 3 repoints validation_store._REPO_ROOT at the scratch repo for one run_proof; one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_seal_over_stale_crlf_bytes_is_refused.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_reseal_stages_clean_seals.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/working_bytes.py",
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/cli.py",
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_a_seal_over_stale_crlf_bytes_is_refused.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store (its fingerprint recipe stays raw bytes)",
+      "cairn/devices/cc/scripts (the orchestrator's helpers)",
+      "akiendell's renormalise (the orchestrator's host step)",
+      ".gitattributes (88e30cde9bd4)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "Windows seal fp 133032682e11 at 52890c2f8 = committed closure with cairn/tools/base/__init__.py alone CRLF; Linux 8318d78f2eda; one match over every version x CRLF-per-file",
+      "how": "git show 52890c2f8:cairn/tools/base/validations/test_flock_stands_for_fcntl.json; brute-force sha256 of the store's recipe over git show <sha>:<file> variants"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "scratch repo, core.autocrlf=true, file checked out before a *.py eol=lf pin: working CRLF, git status clean, git hash-object == index sha, --no-filters differs, cat-file --filters smudges LF; a *.cmd path smudges CRLF",
+      "how": "git init in the scratchpad; od -c; git hash-object [--no-filters]; git cat-file --filters --path=<p> <sha>"
+    }
+  ]
+}

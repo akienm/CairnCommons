@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: (1) `git cat-file --filters --path=<p> <index sha>` writes what a fresh checkout of p would write on this box under today's attributes and core.autocrlf (measured in a scratch repo 2026-11-13: CRLF for a stale .py, LF smudge under eol=lf, CRLF smudge for *.cmd eol=crlf, so the intended CRLF of .cmd files is never flagged); (2) `git hash-object <p>` (clean filters) equal to the index sha is git's own 'unchanged' (git status clean on the stale tree, measured); (3) untracked and symlink/submodule entries have no blob to compare and are skipped; untracked ones are already named by dirty_against_index.",
+    "builder_check": "A Haiku builder needs: the predicate's exact recipe (D1: batch `git hash-object --no-filters --stdin-paths` vs `git ls-files -s` to find candidates; per candidate, flag when `git hash-object` == index sha and the smudged blob != raw bytes); where each door calls it (D2 run_proof after the closure is read, before persist, only for sink=validations; D3 dirty_against_index appends the flagged files, and reseal() raises ResealRefused after the run); that the repo base inside run_proof is validation_store._REPO_ROOT; that the proof builds its repo with scratch_dir and never touches the live tree; run line `bin/cairn test cairn/devices/tester/proofs/test_a_seal_over_stale_crlf_bytes_is_refused.py`. All in the decisions.",
+    "children": "none, because the renormalise of akiendell is a one-time host step the orchestrator holds (cairn/devices/cc/scripts is its), not a decomposition of this code",
+    "collision_check": "validation_store.source_fingerprint docstring ('a seal must expire the moment the working tree diverges, not when someone commits'): distinction, not collision: the fingerprint stays raw bytes; only bytes git calls unchanged-but-different are refused. 88e30cde9bd4 (the pin): complemented, its proof untouched. RULE 1: the predicate and both doors are inside cairn/devices/tester; validation_store is read, never written.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Three clauses: (1) a scratch repo with core.autocrlf=true whose .py was checked out before an eol=lf pin: the predicate names that file and the hook's hold (dirty_against_index) names it; (2) an all-LF tree names nothing, and a genuinely edited file is named only as dirty, never as unnormalised (an uncommitted edit still seals, validation_store's 'deliberately NOT git'); (3) TesterDevice.run_proof with sink=validations over a stale-CRLF closure raises the refusal naming the file and persists no validation. Horizon: the proof seal; live: the next Windows seal of a cairn/tools/base proof reproduces on Linux.",
+    "gates_bound": "code-seam: BUILDME entry (chart claim, intent+sorted berths, outlinecheck), PROVEME build_inspector + proof coverage, PROVED clearance (hollow evidence + verdict). Proved by the tester seal; feeds back to origin via FIXME.",
+    "missing_check": "Not claimed: renormalising akiendell (the orchestrator, after its rebase lands), changing source_fingerprint's recipe (refused for blast radius in the /intent challenge), and the reseal print label (the refusal rides the existing RUNG 4 REFUSED / HELD lanes with its own text naming the file). Everything asserted is in the three clauses.",
+    "node_class": "code-seam",
+    "questions": "none, because the one spec choice (refuse vs normalise the fingerprint) is settled by the raw-bytes recipe at cairn/tools/validation_store/validation_store.py, measured at /intent's challenge",
+    "task_or_ticket": "ticket",
+    "title": "a seal over stale CRLF bytes is refused, naming the file",
+    "watchme": "none, because the live symptom is read at every Linux PROVED crossing by cairn/devices/codemother/machines/clearance/clearance.py (hollow_evidence_absent after a reseal drops a reading over a box-skewed seal), and the ticket's proof is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "git normalises before it compares, so every git-diff-based check (status, dirty_against_index, stage_clean_seals) reads a stale CRLF working copy as clean; only a raw-bytes reader (the fingerprint) sees it. Measured n=1 on 5a37/test_flock_stands_for_fcntl."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "433cccd99177",
+  "skill": "sorted",
+  "title": "a seal over stale CRLF bytes is refused, naming the file",
+  "trace_id": "d8521c269cba",
+  "when": "2026-11-13T03:48:08.942232"
+}
