@@ -17,5 +17,27 @@
       "source": "sorted",
       "at": "2026-10-13T19:34:23+00:00"
     }
+  ],
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "how": "scratch git repos on git for Windows, hook printing GIT_INDEX_FILE",
+      "saw": "the pre-commit hook's GIT_INDEX_FILE: plain commit=.git/index; -a=.git/index.lock; commit -- <paths>=.git/next-index-<pid>.lock; --amend=.git/index. So 'name starts with next-index-' separates the safe path commit from the shared-index ones."
+    },
+    {
+      "when": "2026-11-12",
+      "how": "built locally (NOT pushed, held by orchestrator): artifact.check_shared_index + `check` verb; proof cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py",
+      "saw": "T1 (plain and -a refused, naming commit -- <paths>) RED on hollow HEAD sources, green x2 built; T2 (foreign staged file stays staged+uncommitted after commit -- a) and T4 (merge in progress not refused) green on both, they guard git's own behaviour."
+    },
+    {
+      "when": "2026-11-12",
+      "how": "ran test_reseal_stages_clean_seals and the git-env proof with the check built; test_artifact_door.py is red on HEAD on Windows (FileNotFoundError) so it could not be measured",
+      "saw": "BLAST RADIUS: once pushed every session's plain commit, -a and --amend is refused at once (contradicts the stage-by-name+plain-commit habit); the two measurable scratch-repo proofs stay green."
+    },
+    {
+      "when": "2026-11-12",
+      "how": "reasoned from the shipped seam: after a -- <paths> commit the shared index keeps stale blobs for hook-added paths; refreshing needs post-commit",
+      "saw": "T3 NOT BUILT: it collides with Q#60 (nothing hangs off the git post-commit hook), which is Akien's answer to rule on; alternative is to drop T3 and keep the `git reset -q -- <paths>` residue rule."
+    }
   ]
 }
