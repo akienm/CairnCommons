@@ -1,0 +1,211 @@
+{
+  "id": "88e30cde9bd4",
+  "title": "source files are LF on every box, so a seal's fingerprint means the same bytes everywhere",
+  "owning_intention": "cairn/tools/validation_store/intention+why.json",
+  "intention": "cairn/.gitattributes pins *.py, *.md and *.txt to eol=lf, so a checkout holds the same bytes on every box and a seal's fingerprint means the same bytes everywhere; git add --renormalize in the build commit, which is empty because the blobs are already LF.",
+  "why": "Measured 2026-11-12 on akiendell: bce4 closure fingerprint: CRLF checkout a614f1bf0b613043ab34a79d1441e065ca80e0426df639f70ee6e670783ddae5, *.py eol=lf checkout 9236ec0db64b7ad018656610854360ff20e922cc314800e238f51e09374c2612 (equals the Linux value the orchestrator holds)",
+  "traces_to": "Law 3: a fingerprint is a measurement and has to mean the same bytes on every box; Law 4: the line ending is enforced by git's attributes, not by a reader remembering.",
+  "how": "Add `*.py text eol=lf`, `*.md text eol=lf` and `*.txt text eol=lf` to .gitattributes beside the json and sh pins, with a why-comment. Run git add --renormalize on tracked files in the build commit. Proof: copy the repo's real .gitattributes into a scratch git repo and read git check-attr eol for a .py, a .md and a .txt path (eol: lf), and for a .cmd path (crlf, untouched). The fingerprint equality is the measured why, kept in the ticket, not re-asserted by the proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "git check-attr eol reads lf for a .py, a .md and a .txt path under the repo's .gitattributes"
+      },
+      {
+        "n": 2,
+        "claim": "the pin leaves the .cmd crlf and the existing json/sh pins as they were"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at .gitattributes",
+      "writes_to": [
+        ".gitattributes"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      ".gitattributes",
+      "cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "bce4 closure fingerprint: CRLF checkout a614f1bf0b613043ab34a79d1441e065ca80e0426df639f70ee6e670783ddae5, *.py eol=lf checkout 9236ec0db64b7ad018656610854360ff20e922cc314800e238f51e09374c2612 (equals the Linux value the orchestrator holds)",
+      "how": "two fresh --no-checkout clones of cairn HEAD with core.autocrlf=true, one with the pin in .git/info/attributes; ran the proof, captured its closure, hashed with validation_store.source_fingerprint"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "the index holds every *.py/*.md/*.txt blob as LF: 1068 i/lf w/crlf, 11 i/lf w/lf, 2 i/lf w/mixed, 74 not text",
+      "how": "git ls-files --eol over the three globs"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "88e30cde9bd4: source files are LF on every box, so a seal's fingerprint means the same bytes everywhere",
+      "intent": "cairn/.gitattributes pins *.py, *.md and *.txt to eol=lf, so a checkout holds the same bytes on every box and the validation store's fingerprint of a closure is the same on Windows as on Linux; the renormalize in the build commit is empty because the blobs are already LF.",
+      "scope": ".gitattributes and its proof; the validation store's fingerprint code, the live tree's autocrlf setting and the existing json/sh/cmd pins are not changed",
+      "unknowns": [
+        "a checkout made before the pin stays CRLF until files are re-checked-out; the live tree is not touched here",
+        "the posix side was not run by me: on Linux the pin changes nothing a checkout does"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          ".gitattributes",
+          "cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py"
+        ],
+        "out": [
+          "cairn/tools/validation_store/validation_store.py",
+          "the live tree's core.autocrlf",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which line-ending pins .gitattributes already carries",
+        "what the index holds for *.py/*.md/*.txt"
+      ],
+      "holdings": [
+        {
+          "what": "the validation store's fingerprint",
+          "address": "cairn/tools/validation_store/validation_store.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a line-ending pin for source files",
+          "measure": "git check-attr eol read unspecified for a .py, .md and .txt path under the old .gitattributes on akiendell 2026-11-12"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "three pins in .gitattributes with a why-comment, and an empty renormalize",
+          "why": "the fingerprint hashes raw bytes, so CRLF and LF checkouts of one commit hash differently",
+          "kind": "build",
+          "fills": "a line-ending pin for source files",
+          "uses": [
+            "cairn/tools/validation_store/validation_store.py"
+          ],
+          "writes_to": [
+            ".gitattributes",
+            "cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "three pins in .gitattributes with a why-comment, and an empty renormalize",
+          "why_now": "built; proof red first (unspecified), green twice"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "three pins in .gitattributes with a why-comment, and an empty renormalize",
+          "expect": "git check-attr eol reads lf for the three globs and the old pins hold",
+          "falsifier": "a .py, .md or .txt path reads other than lf, or the .cmd/json/sh pins move",
+          "instrument": "python3 cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the eol-pin proof pass",
+          "instrument": "python3 cairn/tools/validation_store/proofs/test_source_files_are_lf_on_every_box.py",
+          "timeout_s": 300,
+          "covers": [
+            "three pins in .gitattributes with a why-comment, and an empty renormalize"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
