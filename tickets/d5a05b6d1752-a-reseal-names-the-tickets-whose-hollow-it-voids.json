@@ -1,0 +1,87 @@
+{
+  "id": "d5a05b6d1752",
+  "title": "a reseal names the tickets whose hollow it voids",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A seal that replaces a validation a hollow reading was taken over names each ticket whose reading it voided and says to retake it after PROVEME, so the next PROVED crossing is not the first place the loss is seen.",
+  "why": "Measured 2026-11-12, n=5: a reseal over moved code replaced the standing validation, persist_validation carried evidence.hollow forward only on an unchanged fingerprint, so the reading dropped silently, and the next PROVED crossing bounced to FIXME on hollow_evidence_absent. It hit 3195, 59f7 and d692, with 5defc and e8fb pending. Dropping the reading is right (Law 3); nobody being told is the defect (Law 7).",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces); Law 1 (five tickets re-derived the same diagnosis at FIXME).",
+  "how": "reseal.py gains hollow_tickets(proof) (the standing record's evidence.hollow keys), voided_hollows(proof, before) and hollow_voided_lines(rel, tickets). cli.py main reads hollow_tickets before each --seal run and, after the PERSISTED lines, prints a HOLLOW VOIDED block for every proof whose set shrank; reseal_all records r['hollow_voided'] per proof and cli.py _reseal_run prints the same block. Printed, never refused: a reseal over moved code is legitimate, and refusing would block it. Exit codes unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn test --seal over a proof whose code moved under a scratch ticket's standing hollow prints HOLLOW VOIDED naming the ticket and `cairn test --hollow <t> --seal`, the reading is gone from the new record, and rc is 0"
+      },
+      {
+        "n": 2,
+        "claim": "the same seal over unchanged code carries the hollow and names nobody"
+      },
+      {
+        "n": 3,
+        "claim": "reseal_all over moved code returns hollow_voided == [ticket] for the proof, and hollow_voided_lines names the retake command"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: reseal.py gains hollow_tickets, voided_hollows and hollow_voided_lines; reseal_all records hollow_voided per result.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cli.py prints the HOLLOW VOIDED block from both --seal (main) and --reseal (_reseal_run); exit codes unchanged.",
+      "writes_to": [
+        "cairn/devices/tester/cli.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/cli.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over a scratch component with a faked tester (the rung-four fixture shape).",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_reseal_names_the_tickets_whose_hollow_it_voids.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_plain_seal_answers_rung_four.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/cli.py",
+      "cairn/devices/tester/proofs/test_a_reseal_names_the_tickets_whose_hollow_it_voids.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store (the carry rule stays as it is)",
+      "cairn/devices/codemother/machines/clearance",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "59f7 and d692 bounced to FIXME on hollow_evidence_absent after a reseal replaced their hollow seals",
+      "how": "cc_0's report of the PROVED crossings on akiendelllinux"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "persist_validation carries evidence.hollow and hollow_anchor from the prior standing record only when source_fingerprint is unchanged",
+      "how": "read cairn/tools/validation_store/validation_store.py persist_validation"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "the proof is red against HEAD (teeth 1 and 3) and green twice with the build",
+      "how": "bin/cairn test on the proof, HEAD's cli.py and reseal.py swapped in"
+    }
+  ]
+}
