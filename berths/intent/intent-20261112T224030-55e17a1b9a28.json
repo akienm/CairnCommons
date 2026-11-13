@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Strip in the proof only: but the proof cannot reach the unit's env, since systemd-run hands it the manager's regardless of the caller's. The spawn is the one place that can, and UnsetEnvironment is the unit's own property for it, measured working.",
+      "hidden_assumption": "That a live-HOME loop wants the manager's env as it gets it today; it is left exactly as it is, so nothing live changes.",
+      "prior_art": "cairn/tools/scratch/scratch.py home_env (ticket 3301915df481) strips CAIRN_BUS_* from the caller; shim.py already carries CAIRN_TESTER_TEST_ID by --setenv for the same manager-env reason (ticket 2120e74dcf44). This extends that pattern.",
+      "real_collision": "None real. ea6e465680a3 edits test_shim_starts_the_loop.py, not shim.py; this proof is a new file. Ordered behind 59f7/d692/5defc by the orchestrator's tools/base hold."
+    },
+    "exit": "routed_forward",
+    "falsifier": "RED if a scratch-HOME spawn's unit environment holds a CAIRN_BUS_* the caller did not carry, or if a live-HOME spawn's argv changes.",
+    "from_idea": "none, because it was measured 2026-11-12 on akienasus: systemctl --user show-environment holds CAIRN_BUS_HOME=akiendelllinux.local:7419 and CAIRN_HOME_HOST=akiendelllinux.local, and `systemd-run --user --wait --pipe -- env` prints CAIRN_BUS_HOME=akiendelllinux.local:7419, so a scratch ground loop spawned by cairn/tools/base/shim.py ensure_ground_loop dials the Dell's live bus whatever home_env stripped",
+    "how": "In ensure_ground_loop, when HOME is not the account's own home (pwd.getpwuid(os.getuid()).pw_dir), add to the systemd-run argv --setenv=NAME=value for each CAIRN_* the caller carries and -p UnsetEnvironment=NAME for each CAIRN_* in `systemctl --user show-environment` the caller lacks. A live-HOME spawn's argv is unchanged. New red-first proof cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "CP6 (a scratch loop dialing the live bus acts on the live system unseen) and Law 8 (a proof's scratch must not touch what a peer leans on).",
+    "what": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "systemd-run --user units inherit the user manager's CAIRN_BUS_HOME (Dell bus on akienasus); -p UnsetEnvironment=NAME removes it, measured."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "c85c33eb7cbb",
+  "skill": "intent",
+  "title": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ en",
+  "trace_id": "422dee7ac6cf",
+  "when": "2026-11-12T22:40:30.194901"
+}

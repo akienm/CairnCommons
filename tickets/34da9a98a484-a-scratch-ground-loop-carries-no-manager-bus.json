@@ -1,0 +1,67 @@
+{
+  "id": "34da9a98a484",
+  "title": "a scratch ground loop carries no manager bus",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's.",
+  "why": "Measured 2026-11-12 on akienasus: `systemctl --user show-environment` holds CAIRN_BUS_HOME=akiendelllinux.local:7419 and CAIRN_HOME_HOST=akiendelllinux.local, and a transient `systemd-run --user --wait --pipe -- env` prints CAIRN_BUS_HOME=akiendelllinux.local:7419. cairn/tools/base/shim.py ensure_ground_loop spawns the loop through systemd-run with only HOME, PATH (and CAIRN_TESTER_TEST_ID) set by hand, so a scratch-HOME loop started by a proof dials the Dell's live bus, whatever cairn/tools/scratch/scratch.py home_env (ticket 3301915df481) stripped from the caller.",
+  "traces_to": "CP6 (a scratch loop dialing the live bus acts on the live system unseen) and Law 8 (a proof's scratch must not touch what a peer leans on).",
+  "how": "In ensure_ground_loop, after argv is built and before '--': if env_home != pwd.getpwuid(os.getuid()).pw_dir (a scratch HOME), (a) for each os.environ key starting CAIRN_ append f'--setenv={k}={v}'; (b) run `systemctl --user show-environment` (capture_output, timeout 10; on any failure skip b) and for each KEY=VALUE line whose KEY starts CAIRN_ and is not in os.environ append '-p', f'UnsetEnvironment={KEY}'. A live-HOME spawn's argv is unchanged. New red-first proof cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py: tooth test_a_scratch_spawn_unsets_the_managers_bus monkeypatches shim.subprocess.run to record the systemd-run argv (and to answer show-environment with 'CAIRN_BUS_HOME=x:1\\nCAIRN_HOME_HOST=x\\nLANG=C\\n'), calls ensure_ground_loop(home=<scratch_dir>, log=<scratch>/l) with HOME=<scratch>, CAIRN_BUS_HOME unset and CAIRN_ROOT=/r set, and asserts '-p','UnsetEnvironment=CAIRN_BUS_HOME' and '--setenv=CAIRN_ROOT=/r' appear before '--' and no UnsetEnvironment=LANG. Then, where systemd-run is on PATH, it runs `systemd-run --user --quiet --wait --pipe` with those env flags and `-- env` and asserts no line starts CAIRN_BUS_HOME=. Tooth test_a_live_spawn_argv_is_unchanged: with HOME the account's own, the captured argv holds no UnsetEnvironment and no CAIRN_ --setenv beyond CAIRN_TESTER_TEST_ID. Imports of shim bound inside the teeth.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a scratch-HOME spawn's systemd-run argv sets every CAIRN_* the caller carries and unsets every manager CAIRN_* the caller lacks, and a unit run with those flags carries no CAIRN_BUS_HOME"
+      },
+      {
+        "n": 2,
+        "claim": "a spawn under the account's own HOME has the same argv as before this ticket"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ensure_ground_loop adds the scratch-only env flags; the setsid branch and the live path are unchanged.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof is new, two teeth, argv captured in-process plus one real transient unit.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+    ],
+    "out": [
+      "the setsid branch",
+      "live-HOME spawns",
+      "the bus unit (ticket 6c9db321d638)",
+      "cairn/tools/base/proofs/test_shim_starts_the_loop.py (ticket ea6e465680a3)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "manager env CAIRN_BUS_HOME=akiendelllinux.local:7419; a transient unit prints it; with -p UnsetEnvironment=CAIRN_BUS_HOME it prints none (count 0)",
+      "how": "systemctl --user show-environment; systemd-run --user --quiet --wait --pipe [-p UnsetEnvironment=CAIRN_BUS_HOME] -- env | grep CAIRN_BUS_HOME"
+    }
+  ],
+  "writes_to": [
+    "cairn/tools/base/shim.py",
+    "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+  ]
+}
