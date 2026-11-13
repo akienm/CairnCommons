@@ -60,5 +60,152 @@
       "saw": "26 of the 27 group-C proofs fail on their own assertions and only print the one scratch sweep warning",
       "how": "census_out6/full/*.txt read by showC2.py"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "Stop the listener tree the web-server shim proof starts: cairn/devices/web_server/proofs/test_web_server_shim.py lines 134-139 end in os.killpg, which does not exist on Windows, and swallow the AttributeError, leaving listener.py holding web_server.log",
+      "intent": "the web-server shim proof's teardown ends the whole listener tree on Windows through taskkill /T and on POSIX through killpg",
+      "scope": "in: cairn/devices/web_server/proofs/test_web_server_shim.py, cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py; out: every other component, the scratch tool's sweep",
+      "unknowns": [
+        "the new proof does not spawn a process, so the live teardown is measured by the shim proof's own run on Windows, not by this proof"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/web_server/proofs/test_web_server_shim.py",
+          "cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/scratch",
+          "cairn/devices/web_server/shim.py"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where the shim proof tears down the listener it started"
+      ],
+      "holdings": [
+        {
+          "what": "the shim proof's teardown",
+          "address": "cairn/devices/web_server/proofs/test_web_server_shim.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof that the shim proof's teardown has an nt branch",
+          "measure": "Grep of cairn/devices/web_server/proofs for taskkill found none; os.killpg stands alone in the finally"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "a _stop_tree(pid) with an nt taskkill branch in the shim proof, held by an ast scan",
+          "why": "os.killpg does not exist on Windows and the swallowed AttributeError leaks two listener processes holding web_server.log",
+          "kind": "build",
+          "fills": "a proof that the shim proof's teardown has an nt branch",
+          "uses": [
+            "cairn/devices/web_server/proofs/test_web_server_shim.py"
+          ],
+          "writes_to": [
+            "cairn/devices/web_server/proofs/test_web_server_shim.py",
+            "cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "a _stop_tree(pid) with an nt taskkill branch in the shim proof, held by an ast scan",
+          "why_now": "ordered by the orchestrator 2026-11-13 (group C re-filed as the killpg teardown)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "a _stop_tree(pid) with an nt taskkill branch in the shim proof, held by an ast scan",
+          "expect": "the scan finds a taskkill tree-stop and no killpg without an nt branch",
+          "falsifier": "the unedited shim proof has a bare os.killpg in its finally and no taskkill",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the proof's teeth pass",
+          "instrument": "bin/cairn test cairn/devices/web_server/proofs/test_the_shim_proof_stops_what_it_started.py",
+          "timeout_s": 300,
+          "covers": [
+            "a _stop_tree(pid) with an nt taskkill branch in the shim proof, held by an ast scan"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
