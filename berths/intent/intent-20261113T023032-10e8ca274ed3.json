@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked: the smallest fix at the named site is the plain fix; no smaller route.",
+      "hidden_assumption": "That the cause is the site grep found; the ticket's measured field says which part is hypothesis and the proof settles it.",
+      "prior_art": "In-house: tickets a9709b744bf5 (trace names) and 0156856b1fae (windows spawns) came from the same box; git grep over the named files found the sites. Field: none needed.",
+      "real_collision": "None found: no charter requires the current behaviour."
+    },
+    "exit": "routed_forward",
+    "falsifier": "with flock absent (rc 127) logtrim cuts a 200-line log to 10 and the caller shell survives, where the unedited logger leaves 201 and kills the caller ; with flock timing out (rc 1) the caller shell survives and no line is cut, where the unedited logger exits the caller",
+    "from_idea": "2026-11-13-orchestrator-2026-11-13-test-trim-keeps",
+    "how": "In logtrim replace `flock -x -w 5 9 || exit 0` with: run flock; on rc 127 (not installed) go on unlocked, on rc 1 (timeout) return 0 from the function, never exit. Red-first proof bin/proofs/test_logtrim_trims_without_flock.py shadows flock with a shell function returning 127 and 1: (1) with 127 the 200-line log is cut to 10 and the caller survives; (2) with 1 the caller survives and no line is cut.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "title": "logtrim keeps its cut when flock(1) is absent or times out, so the bash logger trims on Windows and never exits its caller's shell",
+    "traces_to": "Law 3: the red was measured at 201 lines on Windows and both teeth ran red on the unedited file; Law 7: a diagnostic surface may fail but must never take down the script it observes (the logger's own charter).",
+    "what": "bin/logger_for_bash logtrim trims when flock is not installed, skips the cut on a flock timeout without ending the caller's shell, and still serialises trims where flock exists."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "found on akiendell only; reported by the orchestrator"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "bd855cbd6cb2",
+  "skill": "intent",
+  "title": "logtrim keeps its cut when flock(1) is absent or times out, so the bash logger trims on Windows and never exits its caller's shell",
+  "trace_id": "9df3a150239f",
+  "when": "2026-11-13T02:30:32.346145"
+}

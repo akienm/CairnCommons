@@ -1,0 +1,209 @@
+{
+  "id": "b3f999c452a1",
+  "title": "logtrim keeps its cut when flock(1) is absent or times out, so the bash logger trims on Windows and never exits its caller's shell",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "bin/logger_for_bash logtrim trims when flock is not installed, skips the cut on a flock timeout without ending the caller's shell, and still serialises trims where flock exists.",
+  "why": "Measured 2026-11-12 on akiendell: test_trim_keeps_the_newest_lines: expected exactly 10 lines after trim, got 201 on Windows; every other case of test_logger_for_bash.py ran green, line-451 trace-wire case included",
+  "traces_to": "Law 3: the red was measured at 201 lines on Windows and both teeth ran red on the unedited file; Law 7: a diagnostic surface may fail but must never take down the script it observes (the logger's own charter).",
+  "how": "In logtrim replace `flock -x -w 5 9 || exit 0` with: run flock; on rc 127 (not installed) go on unlocked, on rc 1 (timeout) return 0 from the function, never exit. Red-first proof bin/proofs/test_logtrim_trims_without_flock.py shadows flock with a shell function returning 127 and 1: (1) with 127 the 200-line log is cut to 10 and the caller survives; (2) with 1 the caller survives and no line is cut.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with flock absent (rc 127) logtrim cuts a 200-line log to 10 and the caller shell survives, where the unedited logger leaves 201 and kills the caller"
+      },
+      {
+        "n": 2,
+        "claim": "with flock timing out (rc 1) the caller shell survives and no line is cut, where the unedited logger exits the caller"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at bin/logger_for_bash, bin/proofs/test_logtrim_trims_without_flock.py",
+      "writes_to": [
+        "bin/logger_for_bash",
+        "bin/proofs/test_logtrim_trims_without_flock.py"
+      ],
+      "reads": [
+        "bin/logger_for_bash"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "bin/proofs/test_logtrim_trims_without_flock.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/logger_for_bash",
+      "bin/proofs/test_logtrim_trims_without_flock.py",
+      "bin/proofs/test_logtrim_trims_without_flock.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "test_trim_keeps_the_newest_lines: expected exactly 10 lines after trim, got 201 on Windows; every other case of test_logger_for_bash.py ran green, line-451 trace-wire case included",
+      "how": "ran each test_ function of bin/proofs/test_logger_for_bash.py through Git Bash and python"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "both teeth of the new proof red on the unedited bin/logger_for_bash: 'the caller died' (flock rc 127 and 1)",
+      "how": "python bin/proofs/test_logtrim_trims_without_flock.py"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "logtrim in bin/logger_for_bash keeps its cut when flock(1) is absent (Windows Git Bash) or times out, and never exits the caller's shell",
+      "intent": "the bash logger's trim works on hosts without flock and a flock failure cannot kill the observed script",
+      "scope": "in: bin/logger_for_bash, bin/proofs/test_logtrim_trims_without_flock.py; out: every other component",
+      "unknowns": [
+        "only the host this runs on is measured; the Linux side is the orchestrator's"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "A rule that matters is enforced by physics, not policy \u2014 the kernel or the schema.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/logger_for_bash",
+          "bin/proofs/test_logtrim_trims_without_flock.py"
+        ],
+        "out": [
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where logtrim calls flock"
+      ],
+      "holdings": [
+        {
+          "what": "logtrim's flock call",
+          "address": "bin/logger_for_bash"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a trim that survives a missing or timed-out flock",
+          "measure": "Grep of bin/logger_for_bash found `flock -x -w 5 9 || exit 0` and no rc handling; the proof's two teeth red on it"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "logtrim handles flock rc 127 (go on) and rc 1 (return 0), never exit",
+          "why": "Git Bash has no flock, so the cut never happens, and exit 0 ends the caller's shell",
+          "kind": "build",
+          "fills": "a trim that survives a missing or timed-out flock",
+          "uses": [
+            "bin/logger_for_bash"
+          ],
+          "writes_to": [
+            "bin/logger_for_bash",
+            "bin/proofs/test_logtrim_trims_without_flock.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "logtrim handles flock rc 127 (go on) and rc 1 (return 0), never exit",
+          "why_now": "ordered by the orchestrator 2026-11-13"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "logtrim handles flock rc 127 (go on) and rc 1 (return 0), never exit",
+          "expect": "200 lines cut to 10 with flock rc 127; caller survives with rc 1 and nothing is cut",
+          "falsifier": "the unedited logtrim leaves 201 lines and kills the caller",
+          "instrument": "bin/cairn test bin/proofs/test_logtrim_trims_without_flock.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "both teeth of the proof pass",
+          "instrument": "bin/cairn test bin/proofs/test_logtrim_trims_without_flock.py",
+          "timeout_s": 300,
+          "covers": [
+            "logtrim handles flock rc 127 (go on) and rc 1 (return 0), never exit"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
