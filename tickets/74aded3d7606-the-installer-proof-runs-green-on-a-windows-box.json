@@ -54,6 +54,11 @@
       "when": "2026-11-12",
       "saw": "test_installer.py is red on a clean HEAD worktree: [ask_yn] expected 'no-branch' got '', [ask_yn] exit 127, [applied] expected applied got failed",
       "how": "ran the proof in a detached git worktree at HEAD with the venv python; shutil.which('bash') is Git's bash and echo hi returns 0 there, so the cause is HYPOTHESIS"
+    },
+    {
+      "when": "2026-11-12",
+      "saw": "Three causes, each measured. (1) subprocess.run(['bash', ...]) from python on Windows resolves via CreateProcess to C:\\Windows\\System32\\bash.exe, the WSL launcher, though shutil.which lists Git's bash first; it strips the backslashes from a Windows path (rc 127). (2) text=True writes 'Y\\r\\n' on Windows and ask_user.sh read 'Y\\r'. (3) the applied tooth built 'test -f C:\\Users\\...' and bash ate the backslashes. Fixed: installer.bash_exe() (shutil.which) used by run_verify and the proof; ask_user.sh strips a trailing CR; the proof's commands use as_posix(). test_installer.py 13 teeth GREEN twice on Windows.",
+      "how": "python subprocess probes of both bashes, then test_installer.py before and after each fix"
     }
   ]
 }
