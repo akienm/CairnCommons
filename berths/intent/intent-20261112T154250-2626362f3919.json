@@ -1,0 +1,37 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Alternative: only add CREATE_NO_WINDOW at each site. Rejected as incomplete: remote.py already does and its child still shows a window, so a flag alone is measured insufficient; the interpreter choice is part of the fix. Alternative: pythonw everywhere. Possible, but a pythonw child loses stdout, so log redirection must stay; the proof will decide between pythonw and base python.exe.",
+      "hidden_assumption": "That the venv launcher is the cause (a hypothesis, not measured - the proof measures it); that the base interpreter named in the venv's pyvenv.cfg is importable with Cairn's dependencies (the venv may hold site-packages the base lacks); that no consumer expects the child's console.",
+      "prior_art": "In-house: tools/bus_client/remote.py:258-272 (flags), devices/web_server/groundloop/pulse.py:137 and cc/scripts/memory_sync.py:49 (each re-implements the same two flags). git grep for Popen found 6 production sites without flags. Field: Python docs - subprocess.CREATE_NO_WINDOW; the venv launcher is a redirector that spawns the base interpreter.",
+      "real_collision": "None found: no charter requires a visible console. Distinction: encapsulation (Rule 1) - the helper is a published tool, so devices import it through its public interface."
+    },
+    "exit": "routed_forward",
+    "falsifier": "On akiendell, starting ground_loop and the bus leaves no process with a console window (MainWindowHandle 0 and no conhost child) for any Cairn-spawned process; and the proof's launcher experiment tells us whether the venv launcher hypothesis was true.",
+    "from_idea": "2026-11-12-the-user-akien-said-mid-session-on",
+    "how": "One small tool, cairn/tools/windowless_spawn/windowless_spawn.py, returns the Popen keyword set for a detached background child: on nt creationflags=DETACHED_PROCESS|CREATE_NO_WINDOW|CREATE_NEW_PROCESS_GROUP and, to defeat the venv launcher, the real base interpreter (or pythonw.exe) instead of venv Scripts\\python.exe; on posix start_new_session=True. The six Popen sites that today pass only start_new_session (tools/base/shim.py:205, ground_loop/cli.py:121, ground_loop/heartbeat.py:144, cc/shim.py:159, web_operator.py:166, remote.py:286) move onto it, and remote.py:270 gains the interpreter fix. Red-first proof first; the build waits for Akien's word that windows may run.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "title": "Cairn's own spawns open no console on Windows",
+    "traces_to": "CP4 and Law 3: Akien's measured complaint (4 windows open) is a defect in how the system behaves on his box; Law 1 and Law 4: one spawn helper instead of six hand-built flag sets, enforced by a proof that greps for bare Popen.",
+    "what": "Every long-lived process Cairn itself spawns (ground_loop, bus serve, device pulses, the mail poke, web_operator) starts on Windows with no console window, through one shared spawn helper."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "the same sweep shows two sites already carry the flags by hand (pulse.py:137, memory_sync.py:49) - the helper replaces three copies of one idea"
+    },
+    {
+      "stratum": "code",
+      "text": "bin/cairn.cmd already exists; the PowerShell-entry gap belongs to the commons-resolver ticket, not here"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "4e641deacc18",
+  "skill": "intent",
+  "title": "Cairn's own spawns open no console on Windows",
+  "trace_id": "b3b9cfcaf928",
+  "when": "2026-11-12T15:42:50.180417"
+}

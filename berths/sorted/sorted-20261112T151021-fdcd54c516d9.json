@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing assumptions, with standing: (1) block names contain ':' only as the 'skill:' and 'harbor_master:clearance' prefixes and ':'->'__' collides with no real block name - to be census-proved in the build by scanning every block name string; (2) the live Linux corpus holds 'skill:<name>.jsonl' files - stated by the orchestrator, not measured on this box; the build handles it by reading BOTH names and folding the legacy file into the new one at the next write, so it does not rely on the assumption being exact; (3) NTFS treats ':' as an alternate-data-stream separator - MEASURED here: an empty file 'skill' appeared in traces/ after the failed write.",
+    "builder_check": "A Haiku builder would ask: (a) what is the new name? -> block.replace(':','__') + '.jsonl'; (b) where does the mapping live? -> one public function trace_path(block, root=None) in learning_block.py and nowhere else; (c) what does a write do with a legacy file? -> reads its lines into 'kept' before the TTL sweep, writes the new file, unlinks the legacy one after os.replace; (d) what keys engine_trace_corpus blocks? -> keep path.stem; consumers of the mangled stem checked in the build; (e) how do the probes read? -> read_trace(block, root=traces) which already returns [] when absent; (f) how is the Windows failure proved on Linux? -> the proof asserts the filename contains none of <>:\"/\\|?* rather than needing NTFS. The ticket carries all of this in decisions.",
+    "children": "none, because the reader moves are one-line changes in the same voyage and share its one proof; the commons-resolver and installer-crash tickets are siblings queued after this one by the orchestrator, not children",
+    "collision_check": "No intention pins the trace filename; learning_block's charter says the trace records every firing and does not name the file. Law 7 (records of truth never collapse errors) is honoured because the legacy file is folded into the new, never dropped. Rule 1: the skill probes and clearance move onto learning_block's public interface (read_trace / trace_path) rather than reaching into it - that is the point of the ticket.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) writing a trace for a ':' block name produces a file whose name has no Windows-reserved character, and the write succeeds on NTFS; (2) read_trace over a store holding a legacy colon file plus a new file returns both sets of records, in order; (3) a write folds a legacy colon file into the new one and retires it, losing no record; (4) the three skill probes and clearance count the same passes/refusals as before when fed a legacy-only store; (5) no hand-built '<block>.jsonl' path remains outside learning_block. Horizon: first Windows firing of /idea after the merge.",
+    "gates_bound": "proof gate (the tester runs the proof, seals a validation beside it; a hollow build must fail it) + durability gate (committed) + feeds-back-to-origin on failure (Laws 3 + 8).",
+    "missing_check": "Readers census (git grep, 2026-11-12): learning_block.read_trace (inside), learning_block.engine_trace_corpus probe (globs *.jsonl, keys by path.stem), skill_block/skilldial (uses read_trace - fixed by the read), clearance.py:251 (builds harbor_master:clearance.jsonl by hand), and three skill probes that hand-build skill:intent/sorted/saveslate.jsonl. Not yet censused: external consumers on the Linux box outside this repo (sleep cycle, cairn dial CLI) - the build greps for them and the proof forbids a hand-built '<block>.jsonl' outside learning_block. Nothing else asserted wrapped is open.",
+    "node_class": "code-seam",
+    "questions": "none, because every spec choice here (the replacement string, read-both-fold-on-write) is a mechanical consequence of the measured failure at cairn/machines/learning_block/learning_block.py and the orchestrator requirement",
+    "task_or_ticket": "ticket",
+    "title": "a trace file's name is legal on every box and every reader finds it",
+    "watchme": "none, because its proof cairn/machines/learning_block/proofs/test_a_trace_file_name_is_legal_on_every_box.py is the whole of its correctness; the standing probe cairn/machines/learning_block/probes/engine_trace_corpus.py already reads the store",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "the same ':' also sits in clearance's block 'harbor_master:clearance' - the writer fix covers it only once clearance.py:251 moves onto trace_path"
+    },
+    {
+      "stratum": "code",
+      "text": "the three skill probes hand-build 'skill:<x>.jsonl'; leaving them would make them silently empty after the rename on Linux"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "a07007103742",
+  "skill": "sorted",
+  "title": "a trace file's name is legal on every box and every reader finds it",
+  "trace_id": "43bbb6b4ab81",
+  "when": "2026-11-12T15:10:21.817544"
+}
