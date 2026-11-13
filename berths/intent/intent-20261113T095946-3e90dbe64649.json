@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered writing the journal by atomic rename (read, append, rename) \u2014 that makes OUR write atomic but does not stop git's stash snapshot from missing it; considered a git hook to refuse stash while a lock is held \u2014 git has no pre-stash hook. The re-check of the handle against the path is the smallest change that lands the line where it can be seen.",
+      "hidden_assumption": "That git always replaces the journal with a new inode rather than truncating in place \u2014 measured on this box (inode replaced: True); if some git op truncates in place, the after-write check would see the same inode, and the line could still be overwritten. The proof measures the stash path; a checkout path rides the same check.",
+      "prior_art": "Consulted the congruency lab (cairn-tools-artifact charter) and the ticket corpus for inode/_append: ticket b7d2e05a1c93 handles two journals meeting at a merge (the driver), not a file replaced under an open handle; nothing covers this window.",
+      "real_collision": "None: the door's existing lock contract ('two writers cannot fork the chain') stands; this widens 'writers' to a writer that does not take the lock."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Red: with the old _append, a line appended while git stash replaces the journal under the open handle is missing from the journal at the path after the pop (measured 2026-11-13 by repro_inode.py). Green: the same sequence leaves exactly one copy of the line in the journal at the path and verify_chain is clean; an append with no rewrite still writes exactly one line.",
+    "from_idea": "2026-11-13-the-artifact-journal-s-append-opens-artifact",
+    "how": "In cairn/tools/artifact/artifact.py _append: after taking the lock, compare os.fstat(fh) with os.stat(path) and re-open if they differ (retry until the locked handle names the file at the path); after writing and fsync, compare again, and if the path now names a different file, append the same line to it unless its entry id is already there. Red-first proof in cairn/tools/artifact/proofs/ replays the scratch repro: open the append, git stash the journal under it, finish the append, pop, and assert the line is in the journal at the path.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 \u2014 errors are permanent in records of truth: the journal is the record of who wrote every record, and a silently dropped line makes the record lie and blocks every commit with 'changed around the door'. Also Law 8 (a peer leans on the journal's chain without re-checking it).",
+    "what": "A journal line the artifact door appends lands in the journal file that stands at the path when the append finishes, even when git replaced that file under the door's open handle."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-13: f695fac922cd's PROVEME journal line was lost this way inside a batch pull --rebase --autostash in the live commons; until the fix, no live-commons stash/checkout/rebase while gates write."
+    },
+    {
+      "stratum": "code",
+      "text": "close.sh silences the commons commit and pull output, so 'cannot rebase: You have unstaged changes' and the door's refusal both went unseen for batch10."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "7051a128ddf8",
+  "skill": "intent",
+  "title": "A journal line the artifact door appends lands in the journal file that stands at the path when the append finishes, eve",
+  "trace_id": "521cf7abfb12",
+  "when": "2026-11-13T09:59:46.502224"
+}

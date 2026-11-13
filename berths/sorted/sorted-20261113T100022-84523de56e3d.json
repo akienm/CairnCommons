@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: git stash/checkout replace a tracked file by writing a new inode at the path (measured: inode replaced True on this box, ext4). An in-place truncate would keep the inode; the after-write check then sees the same file, and the line was written into it, so it is either there or overwritten by git's own bytes afterwards, which no lock can prevent. The dedupe on re-append uses the entry id (sha of the entry), which is unique per line.",
+    "builder_check": "A builder needs: the file (cairn/tools/artifact/artifact.py, _append at about line 368); the checks (os.fstat(fh.fileno()).st_ino/st_dev vs os.stat(jp)); that on a lock-time mismatch it closes, re-opens and re-locks (bounded loop, say 5, then raise loud); that on an after-write mismatch it opens the path a+, flocks, scans for entry['entry'], and if absent recomputes prev from that file's tail and entry id, then appends; Windows (msvcrt) keeps its path and inode semantics, so on nt the check uses st_ino where it is non-zero and skips otherwise. The proof: a scratch git repo with a journal and a state file; monkeypatch artifact.journal_path or use set_diagnostic_roots to point the root at it; drive _append with a hook that runs `git stash push` after open; pop; assert. All of this is in the decisions.",
+    "children": "none, because this is one function and one proof",
+    "collision_check": "The lock contract in _append ('two writers cannot fork the chain') stands; this extends it to a writer that ignores the lock. Ticket b7d2e05a1c93 (journals meeting at a merge) is a distinction: it re-links two journals, it does not see a file replaced under a handle.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clause 1: a line appended while git stash replaces the journal under _append's open handle is in the journal at the path after the pop, once, and verify_chain is clean (red on the old code: missing). Clause 2: an append with no rewrite writes exactly one line, chained to the prior tail. Horizon: PROVED.",
+    "gates_bound": "code-seam gate-set: tester-sealed proof with a hollow reading (Law 8), red-first on the old _append; build_inspector over the artifact tool at PROVED; FIXME on a red.",
+    "missing_check": "Wrapped: the lock-time check (re-open until the locked handle names the file at the path), the after-write check (re-append to the file now at the path unless its entry id is already there), the chain's prev recomputed against the new file's tail on re-append, and the docstring naming this ticket. Out: the merge driver, close.sh's silenced output, and a verb journaling standing bytes (its own idea, 2026-11-13-a-record-whose-bytes-landed-but-whose).",
+    "node_class": "code-seam",
+    "questions": "none, because the lock contract it extends is in cairn/tools/artifact/artifact.py _append's docstring and the loss is measured",
+    "task_or_ticket": "ticket",
+    "title": "a journal line lands in the file at the path, even when git replaced it under the open handle",
+    "watchme": "none, because the proof replays the measured loss beside the door it guards, cairn/tools/artifact/artifact.py (proofs under cairn/tools/artifact/proofs/), and the pre-commit `cairn artifact check` already reds any lost line at the next commit",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-13: git stash replaces the journal inode under an open a+ handle and the line is lost; the record the door wrote first rides the stash back, which is exactly 'changed around the door'."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "d6fd1abd51d2",
+  "skill": "sorted",
+  "title": "a journal line lands in the file at the path, even when git replaced it under the open handle",
+  "trace_id": "d5ca5f9b28df",
+  "when": "2026-11-13T10:00:22.453283"
+}
