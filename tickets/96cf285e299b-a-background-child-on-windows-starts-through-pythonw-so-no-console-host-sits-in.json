@@ -1,0 +1,64 @@
+{
+  "id": "96cf285e299b",
+  "title": "a background child on Windows starts through pythonw so no console host sits in its tree",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "background_python on nt returns the pythonw.exe beside the interpreter when it exists, so a spawned background child owns no console host, and the proof says what a caller sees of it.",
+  "why": "Measured 2026-11-12 on akiendell: tooth 2 of test_a_cairn_spawn_opens_no_console_window.py reds twice alone: a console host sits in the spawned tree [conhost.exe parent = the base python.exe under the venv launcher]",
+  "traces_to": "Law 3 and Law 8: the console-in-tree claim was measured red and the fix is proven by the same measurement; Law 9: red is the default and tooth 2 stays the instrument.",
+  "how": "In cairn/tools/windowless_spawn/windowless_spawn.py background_python, where os_name is nt and a pythonw.exe sits beside the executable, return that path; else return the executable as now (posix unchanged). Update its docstring: the old guess about base interpreters stays recorded as refuted, and the pythonw launcher exits at once so a caller must not track the child by Popen.pid or poll. Red-first proof cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py builds a scratch dir with python.exe and pythonw.exe and asserts the nt result is the pythonw path, the no-pythonw case returns the executable, and posix is unchanged; tooth 2 of 0156856b1fae (the live conhost tree measurement) turns green and is cited by the PROVEME note.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a pythonw.exe beside the executable, background_python('nt', executable=...) returns the pythonw.exe path, where it returned the python.exe path"
+      },
+      {
+        "n": 2,
+        "claim": "with no pythonw.exe beside it, and on posix, background_python returns the executable unchanged"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix at cairn/tools/windowless_spawn/windowless_spawn.py, cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/windowless_spawn.py",
+      "cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py",
+      "cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "tooth 2 of test_a_cairn_spawn_opens_no_console_window.py reds twice alone: a console host sits in the spawned tree [conhost.exe parent = the base python.exe under the venv launcher]",
+      "how": "reran the proof alone on a scratch HOME, reading the census reruns of 2026-11-13"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "spawning pythonw.exe beside the venv python through detached_kwargs() leaves a tree of two pythonw.exe and no conhost; the launcher pythonw poll() is 0 after 4 s while the child runs",
+      "how": "scratch probe, tree read from Win32_Process 2 s after the spawn"
+    }
+  ]
+}
