@@ -1,0 +1,55 @@
+{
+  "id": "446e42bb2b17",
+  "title": "nothing still raises constrain's deleted re-entry guard",
+  "owning_intention": "cairn/devices/codemother/machines/chart_gate/intention+why.json",
+  "intention": "No code in the house sets or reads CAIRN_CONSTRAIN_FLOOR_RUNNING, the re-entry guard 5243cf9dc630 deleted from constrain, and the dead run cache's files leave instance-space.",
+  "why": "Measured 2026-11-12 after 3fff50def: the stage-gates proof still sets the deleted guard (line 45, set/restore 188-198) and its comment says each instrument 'reads not-run', which is false now that the floor reads seals; 5 dead run_cache files stand on akienasus.",
+  "traces_to": "Law 5 (the address carries what a mind needs now) and always-delete-unneeded-code (Law 1).",
+  "how": "Proofs-only: delete _FLOOR_GUARD and its set/restore in the stage-gates proof, replace the comment with: the constrain door's floor reads the seals of the proofs its refs discover and asks the tester nothing (ticket 5243cf9dc630), so this proof needs no guard. rm the instance-space run_cache directory. Run the proof green twice.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the stage-gates proof neither sets nor reads CAIRN_CONSTRAIN_FLOOR_RUNNING and runs green twice"
+      },
+      {
+        "n": 2,
+        "claim": "no code under cairn/ names CAIRN_CONSTRAIN_FLOOR_RUNNING or _PERSISTED"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the guard and its stale comment leave the stage-gates proof; the proof is its own instrument.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/chart_gate/proofs/test_the_stage_gates_chart_a_ticket.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/constrain/constrain.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: ~/.cairn/devices/codemother/0/machines/constrain/run_cache is removed on akienasus (instance-space, no repo write); other boxes report their own.",
+      "writes_to": [],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/chart_gate/proofs/test_the_stage_gates_chart_a_ticket.py"
+    ],
+    "out": [
+      "cairn/devices/codemother/machines/constrain (5243cf9dc630's, already crossed)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-12",
+      "saw": "one code reader of CAIRN_CONSTRAIN_FLOOR_RUNNING (cairn/devices/codemother/machines/chart_gate/proofs/test_the_stage_gates_chart_a_ticket.py:45); 5 files under ~/.cairn/devices/codemother/0/machines/constrain/run_cache",
+      "how": "grep -rn 'CAIRN_CONSTRAIN_FLOOR_RUNNING\\|_PERSISTED\\|run_cache' cairn/; ls run_cache | wc -l"
+    }
+  ]
+}
