@@ -1,0 +1,134 @@
+{
+  "id": "aa3e9a70db47",
+  "title": "every not-PROVED ticket's plan migrates to the shape the cast door admits, its trail moved whole to its log",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "Every ticket that is not PROVED carries a plan the cast door admits: only what a builder builds from, with its trail moved whole to its log and its by-lines gone.",
+  "why": "Akien, 2026-11-14, on d421051bc1f7: \"a ticket shouldn't look like that. it's 3 parts, a metadata and a build plan. this kind of stuff is all supposed to be history. and all tickets were supposed to migrate to that format.\" Measured the same day: 79 of 276 open tickets fail transitions._shape_lacks, and 62 carry 165 trail-like decision lines.",
+  "traces_to": "Law 5: the address carries what a mind needs now. Outline 3.3.2: the plan holds only what a builder builds from, and the history is the log.",
+  "how": "One migration module in the rehearsal machine, beside retire. For each ticket whose workflow_and_state does not carry [PROVED], it moves every trail line to the log whole (decision_retired) and removes it from the plan. It drops each decision's `by` onto the log, and parses a numbered prose falsifier into clauses. It never invents bounds or measured. It returns a report naming each ticket's remaining shape lacks. retire's author tooth goes, per Q#96. d421051bc1f7 is rebuilt first, by hand, as the worked example. The live run is one command after PROVED.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "after the run, every open ticket in a scratch commons passes transitions._shape_lacks, or the report names it with exactly the lacks _shape_lacks returns"
+      },
+      {
+        "n": 2,
+        "claim": "no open plan carries a decision whose text opens with a fold, MEASURED, SETTLES, re-point or superseded marker, and no decision carries `by`"
+      },
+      {
+        "n": 3,
+        "claim": "every moved line and every dropped `by` stands verbatim in its ticket's log, read back through ticket_log.read_log"
+      },
+      {
+        "n": 4,
+        "claim": "every PROVED ticket's plan, state and log files are byte-identical before and after the run"
+      },
+      {
+        "n": 5,
+        "claim": "a second run moves nothing and writes nothing"
+      },
+      {
+        "n": 6,
+        "claim": "retire accepts a line whose `by` differs from the retirer's, so the 'not yours to retire' lack is gone"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: plan_migration.migrate(root) walks <root>/tickets, skips any ticket whose state or plan workflow_and_state carries [PROVED], and writes each changed plan through rehearsal._write_ticket, never write_text.",
+      "writes_to": [
+        "cairn/machines/rehearsal/plan_migration.py"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_log.py",
+        "cairn/tools/base/transitions.py",
+        "cairn/machines/rehearsal/rehearsal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a trail line is a decision whose text, case-folded, opens with a fold marker, MEASURED, SETTLES, re-point or superseded. Each moves whole to the log as kind decision_retired via ticket_log.append_log, and is then removed from the plan.",
+      "writes_to": [
+        "cairn/machines/rehearsal/plan_migration.py"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_log.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: each remaining decision's `by` is logged (kind field, body {n, by}) and removed from the plan.",
+      "writes_to": [
+        "cairn/machines/rehearsal/plan_migration.py"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_log.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: a prose falsifier is split into clauses only when its numbering runs 1..k. Otherwise it stays as it is, and the report names it.",
+      "writes_to": [
+        "cairn/machines/rehearsal/plan_migration.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: migrate returns {ticket_id: [lacks]} from transitions._shape_lacks after the run, for every open ticket still lacking.",
+      "writes_to": [
+        "cairn/machines/rehearsal/plan_migration.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: _retire_lacks loses its author check, per outline 9.3.5.1.1 (Q#96), and the rehearsal charter's public_interface names migrate.",
+      "writes_to": [
+        "cairn/machines/rehearsal/rehearsal.py",
+        "cairn/machines/rehearsal/intention+why.json"
+      ],
+      "reads": [
+        "cairn/machines/rehearsal/rehearsal.py",
+        "cairn/machines/rehearsal/intention+why.json"
+      ]
+    },
+    {
+      "n": 7,
+      "text": "D7: the proof copies a fixture commons (open shaped, open trail-bearing, open prose-falsifier and PROVED tickets) into a scratch root, runs migrate twice, and has one tooth per clause.",
+      "writes_to": [
+        "cairn/machines/rehearsal/proofs/test_every_open_plan_takes_the_cast_shape.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/ticket_log.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/rehearsal/plan_migration.py",
+      "cairn/machines/rehearsal/rehearsal.py",
+      "cairn/machines/rehearsal/intention+why.json",
+      "cairn/machines/rehearsal/proofs/test_every_open_plan_takes_the_cast_shape.py"
+    ],
+    "out": [
+      "every other component",
+      "the live commons (the live run is a separate command after PROVED)",
+      "the owning intentions of big-decision prose (named in the report, not written)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "276 open tickets, 771 PROVED; 79 open fail _shape_lacks; 62 open carry 165 trail-like decision lines; d421051bc1f7 alone has 65 lacks",
+      "how": "a scratch script over origin/main's CairnCommons/tickets calling transitions._shape_lacks with the store charter, and a marker regex over decision text"
+    }
+  ]
+}
