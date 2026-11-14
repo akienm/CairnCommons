@@ -76,5 +76,176 @@
       "saw": "UNMEASURED on Linux: expected unaffected because process_start reads /proc there; the Dell reproduction akienasus offered would confirm 0 leaked tables per run",
       "how": "hypothesis, labelled"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "5b940b1c4fbe: the scratch sweep never reads a live process as a dead minter on Windows in cairn/devices/db_domain/tools/client/store.py",
+      "intent": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the live scratch tables of the process that calls it.",
+      "scope": "in: cairn/devices/db_domain/tools/client/store.py, cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py; out: cairn/devices/tester (the detector proof is 9484180b4ff4's), the bus, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/db_domain/tools/client/store.py",
+          "cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py"
+        ],
+        "out": [
+          "cairn/devices/tester (the detector proof is 9484180b4ff4's)",
+          "the bus",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what cairn/devices/db_domain/tools/client/store.py does today against the ticket's measurement"
+      ],
+      "holdings": [
+        {
+          "what": "the standing code the build reads: test_scratch_cannot_outlive_its_process.py",
+          "address": "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+        },
+        {
+          "what": "the standing code the build reads: store.py",
+          "address": "cairn/devices/db_domain/tools/client/store.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the l",
+          "measure": "process_start(own pid) = None and minter_alive(own pid, now) = False on Windows; sweep_scratch() dropped the caller's own live scratch table (dropped 1, table gone, not registered) (scratch script over store.scratch, scratchpad ma.py, venv python on akiendell)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1: the Windows branch of process_start.",
+          "why": "Measured 2026-11-14 on akiendell: process_start reads /proc, which Windows lacks, so it answered None for every pid. minter_alive then read the caller's OWN process as dead, and sweep_scratch() from a process holding one live scratch table dropped it and unregistered it (probe: sweep dropped 1, tabl",
+          "kind": "build",
+          "fills": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the l",
+          "uses": [
+            "cairn/devices/db_domain/tools/client/store.py"
+          ],
+          "writes_to": [
+            "cairn/devices/db_domain/tools/client/store.py"
+          ]
+        },
+        {
+          "what": "D2: the proof, one tooth per clause.",
+          "why": "Measured 2026-11-14 on akiendell: process_start reads /proc, which Windows lacks, so it answered None for every pid. minter_alive then read the caller's OWN process as dead, and sweep_scratch() from a process holding one live scratch table dropped it and unregistered it (probe: sweep dropped 1, tabl",
+          "kind": "build",
+          "fills": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the l",
+          "uses": [
+            "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+          ],
+          "writes_to": [
+            "cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1: the Windows branch of process_start.",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        },
+        {
+          "what": "D2: the proof, one tooth per clause.",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1: the Windows branch of process_start.",
+          "expect": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the live scratch tables of the process that calls it.",
+          "falsifier": "(1) process_start of a running child is its creation time (within a minute of now) and minter_alive is True for this process and for the child; (2) process_start of a pid that has exited is None and minter_alive is False for it; (3) sweep_scratch() leaves this process's own live scratch table standing and registered",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py"
+        },
+        {
+          "piece": "D2: the proof, one tooth per clause.",
+          "expect": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the live scratch tables of the process that calls it.",
+          "falsifier": "(1) process_start of a running child is its creation time (within a minute of now) and minter_alive is True for this process and for the child; (2) process_start of a pid that has exited is None and minter_alive is False for it; (3) sweep_scratch() leaves this process's own live scratch table standing and registered",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_a_live_minter_survives_the_sweep_on_every_host.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: the Windows branch of process_start.",
+            "D2: the proof, one tooth per clause."
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
