@@ -1,0 +1,46 @@
+{
+  "id": "ab7017361f99",
+  "title": "a proof that writes a plan fixture pins LF so the artifact door can reproduce its bytes",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "test_a_hand_kick_back_writes_the_fixme_list writes its scratch ticket plan and node-class table with newline=\"\\n\", so the artifact door reproduces the plan's serialisation on every host and the fixme-list write lands.",
+  "why": "Measured 2026-11-14 on Windows: Path.write_text in text mode translates \\n to \\r\\n, so the fixture plan's bytes differ from what the door would serialise; emit's fixme-list write then goes through the door, which refuses the write (serialisation cannot be reproduced) and the hand kick-back proof reds on Windows only. Cause differs from red3 (a launch not handing over its ticket store); none of red3's clauses cover it.",
+  "traces_to": "Law 3 (nothing known until measured: the proof must measure emit, not the host's newline), Law 8 (a proof must be the same proof on every box).",
+  "how": "Add newline=\"\\n\" to the two write_text calls in _kick_back and _class_root. Red-first: run the unfixed proof on Windows (CRLF plan, door refusal), then fixed twice.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch ticket store whose plan was written through the proof's writer, the plan's bytes contain no \\r, so the door can reproduce its serialisation and the hand kick-back's fixme list lands on Windows and on Linux"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: pin LF at the two write sites in this proof (plan, node-class copy). A shared scratch-fixture writer is NOT built here: the census (static upper bound 594 record-looking write_text plus 51 open_w across 193 files) is not a count of door hits, and building one door beneath 193 files is a separate decision for the orchestrator.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_hand_kick_back_writes_the_fixme_list.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_a_hand_kick_back_writes_the_fixme_list.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/proofs/test_a_hand_kick_back_writes_the_fixme_list.py"
+    ],
+    "out": [
+      "every other proof",
+      "cairn/tools/base/transitions.py",
+      "cairn/tools/base/ticket_file.py"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "unfixed proof reds on Windows with the door's refusal of the fixme write (CRLF plan); with newline=\"\\n\" green twice; Linux green on fe0b6b541 per akiendelllinux",
+      "how": "bounded proof run on akiendell, branch red3-remainder @ba8dc39a7"
+    }
+  ]
+}
