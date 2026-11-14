@@ -1,0 +1,129 @@
+{
+  "id": "56b61c10bdbe",
+  "title": "a proof run through the tester on Windows writes nothing under the live ~/.cairn",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "On Windows, a proof run through the tester (bin/cairn test, then the tester's run path) runs its subject inside an instance seal, as bwrap gives it on Linux. The subject's home, profile, LocalAppData and temp all resolve to a private copy of instance-space. Any route the redirect misses (an absolute path, SHGetKnownFolderPath, bus_client.remote._live_home) is refused by the kernel, because the subject runs at Low integrity and the live ~/.cairn is Medium. The seal is measured from inside with a control, as check_instance_seal does on Linux. When it cannot be built, the run is INDETERMINATE and the record says so. That is today's loud fallback, never a silent pass.",
+  "why": "Measured 2026-11-14 on akienyoga9i: bwrap_available() is false on Windows, so the tester records the instance seal INDETERMINATE and the subject writes live. The live ~/.cairn holds a SEEDED-BY-A-PROOF file (Nov 13 22:02) from tester/proofs/test_instance_seal.py:60. All 80 live charter emissions on yoga carry a Temp fixture location (97175c117de3). Tooth 2 of ticket 97175c117de3 is a true red on Windows until this exists.",
+  "traces_to": "Law 8 (a run that dirties the live store cannot vouch), Law 7 (an unbuilt seal is loud in the record), CP6, RULE 1 (the seal lives inside the tester; callers reach it only through bin/cairn test).",
+  "how": "On Windows the tester's swap is a mkdtemp dir labelled Low with icacls; the subject starts at Low integrity (DuplicateTokenEx, SetTokenInformation, CreateProcessAsUserW) through a launcher (lowil_launch.py) inside run_owned's job, with HOME, USERPROFILE, LOCALAPPDATA, TEMP and TMP at the swap, so anything the env misses meets a kernel PermissionError. A seal that cannot be built leaves the run INDETERMINATE. The live bus stays out, as on Linux. Red-first: one proof, five teeth, tooth 1 the 97175c117de3 tooth-2 shape.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a stand-in proof run under bin/cairn test on Windows reports the seal marker CAIRN_TESTER_INSTANCE_SEALED=1, reports a ~/.cairn (st_dev, st_ino) that is not the account's live ~/.cairn, and leaves no file naming its fresh token under the live ~/.cairn/logs. This is the 97175 tooth-2 shape, counting files by the token."
+      },
+      {
+        "n": 2,
+        "claim": "the same stand-in writing to the ABSOLUTE live root (scratch.account_home(), i.e. SHGetKnownFolderPath, + .cairn/logs) gets PermissionError, and the file is absent from the live root afterwards. The env redirect is not the seal; the kernel is."
+      },
+      {
+        "n": 3,
+        "claim": "the subject can write its own swap and its temp. A seal that only denies is not a seal (condition 2 of check_instance_seal)."
+      },
+      {
+        "n": 4,
+        "claim": "when the Low launch cannot be built (forced through a fault seam: the launcher's CreateProcessAsUserW fails), the record carries instance_seal INDETERMINATE naming the cause, and the run is never recorded with a confirmed seal."
+      },
+      {
+        "n": 5,
+        "claim": "a nested bin/cairn test inside a sealed Windows run inherits the outer swap (the c54d744aa9ac shape): same ~/.cairn identity, marker set, no second copy made."
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 THE SWAP ON WINDOWS: snapshot_instance_space copies the pristine snapshot into a mkdtemp dir with shutil.copytree; cp -a only works here by Git-Bash accident. It labels that dir Low (icacls <dir> /setintegritylevel (OI)(CI)L, measured non-admin) and makes a sibling Low-labelled temp dir. A failed copy or label is OSError and takes the run down, as a failed cp does today. The pid-named sweep is unchanged.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2 THE LOW LAUNCHER: a new module, tester/lowil_launch.py, run as `python -m cairn.devices.tester.lowil_launch --swap S --temp T -- argv...`. It runs inside run_owned's job object, so KILL_ON_JOB_CLOSE covers its child. It duplicates its own token and sets TokenIntegrityLevel to S-1-16-4096: DuplicateTokenEx, then SetTokenInformation, then CreateProcessAsUserW, measured to work non-admin on yoga. It hands its std handles to the child (STARTF_USESTDHANDLES, bInheritHandles). The child's env is the launcher's, with HOME, USERPROFILE and LOCALAPPDATA pointed at the swap's parent, TEMP and TMP at T, and the marker set to 1. The launcher waits and exits with the child's code. If it cannot launch, it exits with a reserved code and a stderr line naming the Win32 error; the seal check reads that as INDETERMINATE.",
+      "writes_to": [
+        "cairn/devices/tester/lowil_launch.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/runs.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3 THE WRAP: on win32, NoIsolation.wrap with an instance_swap returns the launcher argv in place of the bwrap argv; without a swap it is unchanged. bwrap_available() stays the Linux question. A new instance_seal_available() answers per platform, and both device.py:672's branch and the bash-command site (device.py:954-978) call it.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py",
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4 THE CHECK: on win32, check_instance_seal runs its probe through the same wrap and adds a FOURTH condition to the three: a write to the account's absolute live root (SHGetKnownFolderPath + .cairn) must raise PermissionError. The control stays the tester's own read of the live root. A probe write that reaches live reads BREACHED, as on Linux.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5 INHERIT: on win32, _check_inherited_instance_seal reads three things and never the mount table: the marker, the process's own integrity level (GetTokenInformation TokenIntegrityLevel is Low), and Path.home() differing from scratch.account_home(). A nested run makes no copy and wraps nothing, because its subject is already Low.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6 THE PROOF: tester/proofs/test_a_windows_tester_run_writes_nothing_under_the_live_cairn.py holds teeth 1-5 as the falsifier, red-first. It runs on win32 only. Elsewhere it SKIPS LOUDLY, printing the platform, because Linux is covered by the bwrap seal's own proofs. It is bounded to its own stand-ins, never the whole suite on Windows. (Shape source: cairn/devices/tester/proofs/test_a_bare_proof_run_leaves_no_fixture_emission_in_the_live_logs.py, on unlanded branch bare-run-leaves-no-live-emission-97175c117de3 @5d2a35687, so it is not a read on main.)",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_windows_tester_run_writes_nothing_under_the_live_cairn.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/isolation.py",
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/lowil_launch.py",
+      "cairn/devices/tester/proofs/test_a_windows_tester_run_writes_nothing_under_the_live_cairn.py"
+    ],
+    "out": [
+      "the network seal on Windows (a separate gap; the record still says so)",
+      "bus_client.remote._live_home (unchanged; the kernel refuses its writes)",
+      "the leaked SEEDED-BY-A-PROOF file on yoga (left as evidence; removing it is a host act after this lands)",
+      "97175c117de3's proof file (its tooth 2 should turn green on Windows once this lands; that is measured then, not edited)",
+      "the Linux path (bwrap, unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "A Low-IL child, started with DuplicateTokenEx, SetTokenInformation(25, S-1-16-4096) and CreateProcessAsUserW (rc 0), was DENIED (PermissionError) a write to live ~/.cairn/logs, a write to Medium %TEMP%, and a write to the cairn repo root. It was allowed to write %USERPROFILE%\\AppData\\LocalLow and to read live ~/.cairn.",
+      "how": "measured by akienyoga9i_cc_0 on akienyoga9i, non-admin"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "icacls <a mkdtemp dir under %TEMP%> /setintegritylevel (OI)(CI)L exited rc 0, and the Low child wrote into that dir. So the swap and temp need not live under LocalLow.",
+      "how": "measured by akienyoga9i_cc_0 on akienyoga9i, non-admin"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "Windows reaches the account home in four ways: through USERPROFILE (Path.home and expanduser; scratch.home_env already sets it); around env through scratch.account_home() (SHGetKnownFolderPath FOLDERID_Profile, scratch.py:454); through bus_client/remote.py:83 _live_home(); and through the tester's absolute _INSTANCE_ROOT.",
+      "how": "measured by akienyoga9i_cc_0 on akienyoga9i"
+    }
+  ]
+}
