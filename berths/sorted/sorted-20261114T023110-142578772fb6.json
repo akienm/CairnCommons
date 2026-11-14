@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "1) Every write_state caller either already merges by hand (ticket.py:126, migrate.py:204, ticket_log.py:195), casts fresh with nothing standing (transitions.py:2591), or is write_ticket's split (ticket_file.py:139), which is the path that wiped 4bf3b3cb. So merging at the door changes no output of any caller that already merges. 2) No caller removes a key by omitting it; the census of the five call sites shows none. 3) The fix lives in write_state, so write_ticket's split and rewrite_ticket inherit it unchanged.",
+    "builder_check": "A Haiku builder needs to know: where write_state is (cairn/tools/base/ticket_file.py:152); how the standing state is read (state_path(plan), json, or {} when absent); how drop= is spelled (keyword-only drop: tuple[str, ...] = (), and a dropped key absent from the standing state is not an error); and how the proof builds a scratch ticket. For the last: write a plan and state under a scratch dir with tickets/_charter+why.json copied from the live commons, the way cairn/tools/question/proofs/test_question.py's _world does, and point the artifact door's roots at the scratch via CAIRN_ARTIFACT_ROOTS. The ticket carries all of this.",
+    "children": "none, because the change is one function in cairn/tools/base/ticket_file.py plus its proof",
+    "collision_check": "284798998ab0 split ticket files into plan, state and log. Its promise, that a writer handing over the plan alone leaves the standing state untouched, is extended here to a writer handing over part of the state. That is the same why, so there is no collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: 1) write_state of two keys over a state holding workflow_and_state, questions and two berths leaves the unnamed fields equal and replaces the two; 2) rewrite_ticket handed the plan without its state plus two berths (the 4bf3 path) leaves the state's other fields equal; 3) a key named in drop= is gone and the rest stay. Horizon: the proof is green under bin/cairn test on Linux, and its teeth 1 and 2 were red before D1.",
+    "gates_bound": "code-seam's gate set: a red-first proof whose teeth key the falsifier clauses (PROVES), sealed by the tester, hollow-run, PROVED by the integrator. Failure feeds back to the origin, ticket_file.py's owner.",
+    "missing_check": "Covered: D1 changes write_state to merge, with drop= for named removal. D2 is the red-first proof over a scratch ticket. Not covered and not needed: the three callers' hand merges become redundant but stay correct, and removing them is not this ticket's work.",
+    "node_class": "code-seam",
+    "questions": "none, because merge-plus-drop is a CC mechanism settled against the five call sites of write_state in cairn/tools/base/ticket_file.py and its callers",
+    "task_or_ticket": "ticket",
+    "title": "a state write keeps every standing field it does not name",
+    "watchme": "none, because the write_state door in cairn/tools/base/ticket_file.py is judged whole by its red-first proof; a wipe that slips past would show as a state file losing keys in .artifact-journal.jsonl, which the proof's teeth already measure",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "write_state replaced the whole state file from whatever it was handed. 4bf3b3cb's rewrite_ticket(plan plus two berths) wiped four tickets' cursors. The door now merges, and removal is named."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "4868cd0dfe3c",
+  "skill": "sorted",
+  "title": "a state write keeps every standing field it does not name",
+  "trace_id": "469652447352",
+  "when": "2026-11-14T02:31:10.562845"
+}

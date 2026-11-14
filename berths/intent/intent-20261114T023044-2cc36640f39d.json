@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Refusing a partial dict was the alternative. It needs every caller to read first, and it still lets a caller drop a field by handing over a stale full dict. Merging at the door fixes the 4bf3 path with no caller change, and all five callers already merge or write the full set.",
+      "hidden_assumption": "That no caller needs a key to disappear by omission. Census: ticket.py:126, migrate.py:204, transitions.py:2591 (a fresh cast, nothing standing), ticket_file.py:139 and ticket_log.py:195. None drops a key by omission.",
+      "prior_art": "Grepped CairnCommons/tickets for write_state. 0be964512fb0 and 7088856d2150 only use it, and no ticket covers its whole-file semantics. ticket_log.py:195 already merges by hand as {**standing, **state}, so this lifts an existing in-house pattern into the door.",
+      "real_collision": "None. Ticket 284798998ab0 split the ticket into plan, state and log, and its docstring says a writer handing over the plan alone leaves the state untouched. This extends the same promise to a writer handing over part of the state."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Over a scratch ticket whose state holds workflow_and_state, questions and two berths: a write_state of two keys leaves the other fields byte-equal and the two keys replaced; rewrite_ticket handed the plan plus two berths does the same; a key named in drop= is removed. Wrong intent if a live caller is found that relies on write_state dropping unnamed keys.",
+    "from_idea": "none, because the trigger is a measured wipe, not a captured idea; the wipe's writer is cairn/tools/base/ticket_file.py (write_state, reached from rewrite_ticket in CairnCommons commit 4bf3b3cb)",
+    "how": "write_state lays the dict it is handed over the standing state file instead of replacing it. A key goes away only when the caller names it in an explicit drop= argument. write_ticket's split already routes through write_state, so the 4bf3 path (rewrite_ticket handed a plan plus two berths) inherits the fix. Red-first proof in cairn/tools/base/proofs.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7: a record of truth is permanent and never silently corrupted. Law 4: the whole-state rule was policy kept by each caller (ticket.py, migrate.py and ticket_log.py each read and merge by hand) and becomes physics at the one door.",
+    "what": "ticket_file.write_state keeps every standing state field a write does not name, so a partial dict can no longer wipe a ticket's state."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "4bf3b3cb's wipe came through rewrite_ticket: a script read only the plan file and handed back the plan plus two berths, and write_state took the two berths as the whole state."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "50f6dd294c54",
+  "skill": "intent",
+  "title": "ticket_file.write_state keeps every standing state field a write does not name, so a partial dict can no longer wipe a t",
+  "trace_id": "ffee12eb3f95",
+  "when": "2026-11-14T02:30:44.591984"
+}

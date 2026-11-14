@@ -1,0 +1,64 @@
+{
+  "id": "049249b867ec",
+  "title": "a state write keeps every standing field it does not name",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "ticket_file.write_state lays the dict it is handed over the standing state file. A key goes away only when it is named in drop=, so a partial dict can no longer wipe a ticket's cursor, chart claim or questions.",
+  "why": "Measured 2026-11-14: CairnCommons commit 4bf3b3cb replaced four tickets' .state.json (033f607c5316, 44347787f7d3, aa1459b4ccd4, a9709b744bf5) with only {intent_berth, sorted_berth}, dropping workflow_and_state, questions, chart_claim and watchme. The journal stack is berths_none.py -> rewrite_ticket -> write_ticket:139 -> write_state:156. The dropped fields broke test_question_links tooth 4 (live=3) until a05d15a2 and bf129429 restored them by hand.",
+  "traces_to": "Law 7: a record of truth is permanent and never silently corrupted. Law 4: the merge each caller does by hand becomes physics at the one door.",
+  "how": "D1: write_state(plan, state, *, why, verb='phase', drop=()) reads the standing state (an empty dict when absent), lays state over it, removes each key named in drop, and writes the result through the artifact door in the same shape. D2: a red-first proof over a scratch ticket.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "write_state of two keys over a state holding workflow_and_state, questions, intent_berth and sorted_berth leaves the unnamed fields equal and the two keys replaced"
+      },
+      {
+        "n": 2,
+        "claim": "rewrite_ticket handed the plan without its state plus two berths (the 4bf3b3cb path) leaves the state's other fields equal"
+      },
+      {
+        "n": 3,
+        "claim": "a key named in drop= is gone from the state file and the rest stay"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: write_state merges over the standing state and removes only the keys named in drop=.",
+      "writes_to": [
+        "cairn/tools/base/ticket_file.py"
+      ],
+      "reads": [
+        "cairn/tools/base/ticket_file.py",
+        "cairn/tools/base/ticket_log.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof builds a scratch ticket (plan plus state, tickets/_charter+why.json copied from the live commons, the artifact door's roots bent to the scratch through CAIRN_ARTIFACT_ROOTS), one tooth per clause, red before D1.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+      ],
+      "reads": [
+        "cairn/tools/question/proofs/test_question.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/ticket_file.py",
+      "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+    ],
+    "out": [
+      "every other component; the callers' hand merges stay as they are"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "4bf3b3cb's journal lines for four .state.json show stack berths_none.py -> rewrite_ticket -> write_ticket -> write_state, and each file shrank to two keys",
+      "how": "git show 4bf3b3cb -- .artifact-journal.jsonl in CairnCommons"
+    }
+  ]
+}
