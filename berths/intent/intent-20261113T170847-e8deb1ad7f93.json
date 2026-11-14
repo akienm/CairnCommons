@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Storing the bounded bytes in the ladder would avoid git entirely, but the ladder deliberately stores only the hash (reseal.py:378: git already holds the bytes). --follow is the one-flag change to the reader that already exists.",
+      "hidden_assumption": "That the ladder follows the proof across the rename (read_ladder finds it at the new path). Measured: the 27e5 refusal reached _recorded_bytes, so the ladder was found and only the blob lookup failed. Also assumes git's rename detection pairs the files; a rename that also rewrote most of the file may fall below git's similarity threshold, and then the refusal stands, which is the safe side.",
+      "prior_art": "Ticket e8be83a46ea9 built _recorded_bytes and its tooth 3 (bytes git cannot find are refused); none of its seven teeth renames the proof. grep of CairnCommons/tickets for recorded_bytes and rename+ladder found no ticket for this. The congruency lab holds no intention about renamed proofs at rung 4.",
+      "real_collision": "None. Tooth 3 of e8be (unmeasurable bytes are refused) still holds: an unfindable blob is still refused; this only widens where git is asked to look."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when the new proof is red on HEAD's reseal.py (the renamed proof's bounded bytes are not found, the ticket is refused) and green after the fix, and the unnamed-removed-tooth refusal still fires across a rename. Wrong intent if rung 4 is meant to refuse a rename outright (a rename then needs a question), which would show as an outline line under 19.14.8 saying so.",
+    "from_idea": "none, because the bug was measured, not imagined: ticket 27e5f90dcfa7's rung-4 refusal on cairn/devices/inferenceproxy/proofs/test_host.py (renamed from inference_domain by ticket f942a413f26d) read 'git holds no blob of cairn/devices/inferenceproxy/proofs/test_host.py hashing f2dd2cd148993c10d1eb0affc5f2eede1e51fbc45415deb9728b50ed10343077'",
+    "how": "_recorded_bytes in cairn/devices/tester/reseal.py walks the proof's history with git log --follow --name-only, reading each commit's blob at the path the file had in that commit, not only the current path; a red-first proof renames a committed proof (git mv) under an open ladder, edits it under a code-seam ticket its PROVES names, and asserts rung 4 lifts \u2014 and still refuses when the renamed proof dropped a tooth it does not name.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (nothing enters proven-space without a proof; rung 4 is the gate that measures a moved proof) and Law 1 (a rename is a settled answer; refusing it forces the operator to route every rename through a question, re-deriving what git already records).",
+    "what": "The tester's rung 4 measures the teeth a ticket removed from a proof that was renamed while its ladder stood open, so a ticket can admit a seal over a renamed proof the way it admits one over an edited proof."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "rung 4's ticket routes could not admit a seal over a proof renamed under an open ladder: _recorded_bytes ran git log without --follow, so 27e5f90dcfa7 was refused on test_host.py and the seal went through open-157cfd5052c0 instead"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "1845e53b8785",
+  "skill": "intent",
+  "title": "The tester's rung 4 measures the teeth a ticket removed from a proof that was renamed while its ladder stood open, so a",
+  "trace_id": "85a96bc18a25",
+  "when": "2026-11-13T17:08:47.935488"
+}
