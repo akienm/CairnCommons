@@ -1,0 +1,74 @@
+{
+  "ticket": "06db586bedfd",
+  "at": "2026-11-14T15:25:19+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.14829810000000002,
+      "duration_ms": 59365,
+      "is_error": false,
+      "session_id": "e0982c8f-50de-465d-9807-119c60035a02"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "f380193781f91370da761ed69f110c25428675662f75927655c1d4b00fb29a28",
+  "ticket_sha256": "e4c870bd3494a33a50655ae3800f673fa0c9fd563b8de15e115df7d6d2a0f26d",
+  "touches": [
+    {
+      "number": "4.3.1.5.1",
+      "text": "Nodes: one long list, id = row. Every tree indexes it; no tree owns a node, so several trees can index the same node in different ways."
+    },
+    {
+      "number": "4.3.1.5.1.1",
+      "text": "A row number is the same on every box. Storing a memory first reserves its slot from the librarian on the home box (CAIRN_HOME_HOST, 6.3.7.4), so two boxes are never handed the same slot, and the slot stays reserved until the write is complete. If a box's list is shorter than the slot (eg it holds rows up to 100 and is handed 123 while a sync is bringing the rest), it adds the open slots in between as blanks, and the sync fills them in as it proceeds. WHY: node ids are in every link and blob pointer, so a row has to mean the same node everywhere."
+    },
+    {
+      "number": "4.3.1.5.1.2",
+      "text": "A node id is its master row number and never anything else (Akien, Q#104, 2026-11-14). WHY: any other lookup needs a search, and a row id is direct; a search is far too slow on the target hardware. A node can be voided and its row reused; a node is never searched for."
+    },
+    {
+      "number": "4.3.1.5.1.3",
+      "text": "A node is in one of three states: VOID (deleted, its row available), NOTCACHED, or its data, which follows the node schema. Data that does not follow the schema is a bug."
+    },
+    {
+      "number": "4.3.1.5.1.4",
+      "text": "The sync is the backup, and a local database is a cache of the master. A local call for a node or tree the box does not hold is fed from the master and populates the local copy. If the box holds"
+    },
+    {
+      "number": "4.3.1.5.1.5",
+      "text": "Proofs run against a TESTING database, separate from live."
+    },
+    {
+      "number": "4.3.1.5.1.6",
+      "text": "[Q#108: The node row schema: you said 'something like json of metadata: payload: embeddings: and links: i think'. Measured today, cairn_nodes is node_id text (sha256 hash) / content text / provenance jsonb / standing text / created; embeddings, leaves and links are separate tables keyed by hash ids. Is a node row {metadata, payload, embeddings, links} as one record, or do embeddings and links stay separate tables addressed by row number? Ticket 3ef8654a8027 holds at BUILDME on it (open-4cc69605128d); outline 4.3.1.5.1.3, born of Q#104.]"
+    },
+    {
+      "number": "4.3.1.5.1.7",
+      "text": "[Q#109: A deposit today writes no second node for content already held. It finds the copy by hashing the content (4.3.1.5.1.2 now forbids that as a node id). With row ids, finding the copy needs a lookup by content. Is that a keyed index tree (librarian_content_index: content hash -> row), which is a tree lookup and not a node search? Or does dedup go, so that the same content deposited twice is two rows? Ticket 06db586bedfd holds at BUILDME on it (open-29caf5836f36); outline 4.3.1.5.1.2.]"
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [
+    {
+      "n": 108,
+      "number": "4.3.1.5.1.6",
+      "section": "4.3.1.5.1.6",
+      "text": "The node row schema: you said 'something like json of metadata: payload: embeddings: and links: i think'. Measured today, cairn_nodes is node_id text (sha256 hash) / content text / provenance jsonb / standing text / created; embeddings, leaves and links are separate tables keyed by hash ids. Is a node row {metadata, payload, embeddings, links} as one record, or do embeddings and links stay separate tables addressed by row number? Ticket 3ef8654a8027 holds at BUILDME on it (open-4cc69605128d); outline 4.3.1.5.1.3, born of Q#104."
+    },
+    {
+      "n": 109,
+      "number": "4.3.1.5.1.7",
+      "section": "4.3.1.5.1.7",
+      "text": "A deposit today writes no second node for content already held. It finds the copy by hashing the content (4.3.1.5.1.2 now forbids that as a node id). With row ids, finding the copy needs a lookup by content. Is that a keyed index tree (librarian_content_index: content hash -> row), which is a tree lookup and not a node search? Or does dedup go, so that the same content deposited twice is two rows? Ticket 06db586bedfd holds at BUILDME on it (open-29caf5836f36); outline 4.3.1.5.1.2."
+    }
+  ],
+  "unresolved": [],
+  "questions_opened": [
+    "open-44d1adc3b02e",
+    "open-7af560dd9f69"
+  ],
+  "questions_already_open": []
+}
