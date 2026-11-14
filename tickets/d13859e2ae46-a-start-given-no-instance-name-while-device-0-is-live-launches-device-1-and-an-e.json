@@ -1,39 +1,40 @@
 {
   "id": "d13859e2ae46",
-  "title": "a start given no instance name while <device>_0 is live launches <device>_1, and an explicit live name is refused",
+  "title": "the shim names the instance it would take, and refuses a name already live",
   "owning_intention": "cairn/tools/base/intention+why.json",
-  "intention": "When a device start arrives with no instance name and <device>_0 is live on the bus, the shim launches it as <device>_1 (next free number); a start that names an instance already live is refused loudly, so two never share a name.",
-  "why": "Akien, 5.3.5.2.2 (said 2026-11-13 in akiendell's session): 'if we had two zeros how would messages get routed? ... the launcher has to ask the shim to create the instance, and so it's the shim's job to say we've been asked to start an instance, then we've not been given a name for it, then we have a cc_0 instance, so I'll launch it with cc_1'. The loud refusal of an explicit live name is CC's reading of Q#93, not his words. Split from b38af5fd1852 under RULE 1.",
+  "intention": "A launcher that wants another instance of a device asks the shim 'which instance would you take?': shim.name_instance(device) answers the lowest free number through address.next_free_instance, and name_instance(device, requested) refuses a number that already exists. It is callable without a running instance (a module-level function), because the asker is the launcher, not a client of instance 0. It names; it launches nothing.",
+  "why": "Akien, outline 5.3.5.2.2 (said 2026-11-13): 'the launcher has to ask the shim to create the instance, and so it's the shim's job to say ... we have a cc_0 instance, so I'll launch it with cc_1'. The launcher asks, the shim names, the launcher launches (orchestrator ruling 2026-11-13); the shim has no per-instance launch path (shim.py:1288 starts the one instance it is), so this ticket is the naming half only. Refusing an explicit live name is CC's reading of Q#93, not his words. Split from b38af5fd1852 under RULE 1; depends on 0f7a8cada1ca.",
   "traces_to": "CP1 (an unroutable duplicate name must be impossible, not tolerated) and outline 5.3.5.2.",
-  "how": "Read the shim's start path and how presence marks an instance live; add the next-free rule when no instance is named and a loud refusal when an explicit live one is named. New proof against a fixture bus (never the live one), one tooth per clause.",
+  "how": "Add shim.name_instance(device_id, requested=None, roots=None) -> int. No requested: address.next_free_instance(device_id, roots). requested: return it if address.instances(device_id, roots) does not hold it, else raise InstanceTaken naming it (CC's reading of Q#93). Reads instance folders only through the address tool (0f7a8cada1ca), never by globbing devices/<device>/ in shim.py. One proof over a scratch roots dict, one tooth per clause.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "a start given no instance name for a device whose instance 0 is live is launched as instance 1 (the next free number) and instance 0 is untouched"
+        "claim": "name_instance(device) with no requested number returns the lowest instance number the device does not have ([0, 2] gives 1, none gives 0), callable without a running shim or instance"
       },
       {
         "n": 2,
-        "claim": "a start naming an instance already live on the bus is refused loudly and never leaves two under one name (CC's reading of Q#93, not Akien's words)"
+        "claim": "name_instance(device, requested) returns requested when it is free and raises InstanceTaken naming it when that instance already exists, so two never share a name (CC's reading of Q#93, not Akien's words)"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: the shim's start path picks the lowest free instance number when none is named and refuses an explicit live name.",
+      "text": "D1: a module-level name_instance in shim.py that reads instances only through cairn.tools.base.address; InstanceTaken for an explicit live name.",
       "writes_to": [
         "cairn/tools/base/shim.py"
       ],
       "reads": [
-        "cairn/tools/base/shim.py"
+        "cairn/tools/base/shim.py",
+        "cairn/tools/base/address.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: one proof, one tooth per clause, against a fixture bus; red first.",
+      "text": "D2: one proof over a scratch roots dict, one tooth per clause; red first. Needs 0f7a8cada1ca on main first (address.instances / next_free_instance).",
       "writes_to": [
-        "cairn/tools/base/proofs/test_a_start_with_no_name_takes_the_next_free_instance.py"
+        "cairn/tools/base/proofs/test_the_shim_names_the_instance_it_would_take.py"
       ],
       "reads": []
     }
@@ -41,13 +42,13 @@
   "bounds": {
     "in": [
       "cairn/tools/base/shim.py",
-      "cairn/tools/base/proofs/test_a_start_with_no_name_takes_the_next_free_instance.py"
+      "cairn/tools/base/proofs/test_the_shim_names_the_instance_it_would_take.py"
     ],
     "out": [
       "every other component",
-      "the bus",
-      "the ground loop",
-      "bus_client"
+      "the launcher and the dispatcher (they ask and launch)",
+      "cairn/tools/base/address.py (0f7a8cada1ca)",
+      "a device declaring whether it may have more than one instance (follow-on, not built)"
     ]
   },
   "measured": [
@@ -55,6 +56,11 @@
       "when": "2026-11-13",
       "saw": "cairn/tools/base/shim.py declares a 'start' verb ('wakes the device instance's process') and a presence of ONLINE/OFFLINE (lines ~59-60); no next-instance rule found by grep of its instance handling",
       "how": "grep -n 'instance' cairn/tools/base/shim.py"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "Narrowed by the orchestrator's ruling: shim.py:1288 'start' starts the one instance the shim already is (diagnostic_instance, default 0), and nothing in the shim launches an instance N; so the shim can name an instance but not launch one. superclaude (ae4d581be071, open-62a7f29771e6 'b, next free instance') already does next-free for cc in bash; bin/cairn routes cairn <device>[.<instance>].",
+      "how": "read shim.py 1156/1288, diagnostic.py 146, cairn/devices/cc/superclaude 262-296, bin/cairn header"
     }
   ]
 }
