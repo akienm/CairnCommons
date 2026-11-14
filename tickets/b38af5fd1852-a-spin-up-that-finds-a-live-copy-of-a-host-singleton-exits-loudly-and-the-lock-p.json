@@ -1,8 +1,8 @@
 {
   "id": "b38af5fd1852",
-  "title": "a spin-up that finds a live copy of a host singleton exits loudly, and the lock path carries the cairn instance",
+  "title": "a spin-up that finds a live copy of a host singleton exits quietly (--force replaces it), and the lock path carries the cairn instance",
   "owning_intention": "cairn/tools/base/intention+why.json",
-  "intention": "Every host singleton (bus, ground loop, and a device name on the bus) refuses a second live copy loudly, and the claim's path carries the cairn instance.",
+  "intention": "Every host singleton (bus, ground loop) that finds a live copy exits quietly and leaves it running, --force kills the old one, a device name on the bus is never held by two, and the claim's path carries the cairn instance.",
   "why": "Measured 2026-11-12 on akiendell: live box: bus.lock held=True and ground_loop run.lock held=True (singleton.held); one bus launcher+child pair (1648->16184) and one ground_loop shim+child pair (23396->4904), no duplicates; the bus child 16184 owns conhost 16980, the ground_loop child 4904 none seen",
   "traces_to": "Law 1 (one claim tool, not one per site); Law 4 (the kernel lock, not a convention); Law 7 (the loser refuses loudly); the orchestrator's note that I-the-command-lazy-inits-the-system.md rejects a host-local lock with no instance name.",
   "how": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/base/singleton.py claim, keyed by cairn instance, and prove each by a second claimant that exits.",
@@ -10,7 +10,7 @@
     "clauses": [
       {
         "n": 1,
-        "claim": "for ground_loop and bus, a second start while the first is live exits non-zero with a message naming the held lock, and leaves the first running"
+        "claim": "for ground_loop and bus, a second start while the first is live exits 0 quietly (no error, no trouble) and leaves the first running; with --force it kills the old one and takes the claim"
       },
       {
         "n": 2,
@@ -18,7 +18,7 @@
       },
       {
         "n": 3,
-        "claim": "a second connection under a device name already live on the bus is refused or supersedes the first, as the census decides, and never leaves two"
+        "claim": "a start given no instance name while <device>_0 is live on the bus is launched by the shim as <device>_1 (next free number); an explicit name already live on the bus is refused loudly and never leaves two"
       }
     ]
   },
@@ -70,6 +70,11 @@
       "when": "2026-11-12",
       "saw": "NOT censused: what a second bus or ground_loop start prints and exits with on nt; whether rack (a roster in cairn/tools/rack/rack.py, no process) needs a claim; whether the bus refuses a second connection under a live device name (grep for duplicate-name handling in bus/*.py and bus_client/*.py found none)",
       "how": "grep; the run itself would spawn processes, HYPOTHESIS that bus server.py exits EXIT_HELD (line 936) as its message says"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "Akien answered Q#93: the ticket's 'loudly' was wrong for a second singleton copy: 'spinning up a second ground loop should see the first, and that it's fine, and exit quietly'; '--force, which means kill the old one'; 'i have no recollection why it says loudly'. Naming: two zeros could not be routed, so 'the launcher has to ask the shim to create the instance ... it's the shim's job to say we have a cc_0 instance, so I'll launch it with cc_1'. Some things (embeddings generator) may run several instances, so singleton-ness is per component, not universal.",
+      "how": "his words in the session, recorded verbatim on question open-cf43b673ac07 and in this chat"
     }
   ]
 }
