@@ -1,0 +1,31 @@
+{
+  "confidence": 0.85,
+  "hypotheses": [
+    {
+      "expect": "A proof run inside `cairn test --exec` with no --timeout of its own and no PROOF_TIMEOUT_S runs at the exec's bound, so the budget a chart declares for an instrument is the budget its proof gets; an explicit --timeout and a proof's PROOF_TIMEOUT_S still win, and outside an exec the default stays 120.",
+      "falsifier": "(1) `cairn test --exec 'printenv CAIRN_TESTER_PROOF_BUDGET' --timeout 300` prints 300; (2) `cairn test <a fixture proof sleeping 8 s>` under CAIRN_TESTER_PROOF_BUDGET=3 and no --timeout reports the 3 s budget exceeded; (3) an explicit --timeout beats the env bound, a proof's PROOF_TIMEOUT_S beats it too, and with no env var (or an unusable one) the default stays 120",
+      "instrument": "bin/cairn test cairn/devices/tester/proofs/test_an_exec_bound_reaches_the_proof_it_runs.py",
+      "piece": "D1: TesterDevice.run_exec sets env['CAIRN_TESTER_PROOF_BUDGET'] = str(timeout) beside TEST_ID_ENV when timeout is not None. The name is a module constant PROOF_BUDGET_ENV in device.py."
+    },
+    {
+      "expect": "A proof run inside `cairn test --exec` with no --timeout of its own and no PROOF_TIMEOUT_S runs at the exec's bound, so the budget a chart declares for an instrument is the budget its proof gets; an explicit --timeout and a proof's PROOF_TIMEOUT_S still win, and outside an exec the default stays 120.",
+      "falsifier": "(1) `cairn test --exec 'printenv CAIRN_TESTER_PROOF_BUDGET' --timeout 300` prints 300; (2) `cairn test <a fixture proof sleeping 8 s>` under CAIRN_TESTER_PROOF_BUDGET=3 and no --timeout reports the 3 s budget exceeded; (3) an explicit --timeout beats the env bound, a proof's PROOF_TIMEOUT_S beats it too, and with no env var (or an unusable one) the default stays 120",
+      "instrument": "bin/cairn test cairn/devices/tester/proofs/test_an_exec_bound_reaches_the_proof_it_runs.py",
+      "piece": "D2: in cli.py, `if args.timeout is None: args.timeout = 120` becomes args.timeout = the env's PROOF_BUDGET_ENV value when it parses as an int > 0, else 120. The --timeout help names the env default."
+    },
+    {
+      "expect": "A proof run inside `cairn test --exec` with no --timeout of its own and no PROOF_TIMEOUT_S runs at the exec's bound, so the budget a chart declares for an instrument is the budget its proof gets; an explicit --timeout and a proof's PROOF_TIMEOUT_S still win, and outside an exec the default stays 120.",
+      "falsifier": "(1) `cairn test --exec 'printenv CAIRN_TESTER_PROOF_BUDGET' --timeout 300` prints 300; (2) `cairn test <a fixture proof sleeping 8 s>` under CAIRN_TESTER_PROOF_BUDGET=3 and no --timeout reports the 3 s budget exceeded; (3) an explicit --timeout beats the env bound, a proof's PROOF_TIMEOUT_S beats it too, and with no env var (or an unusable one) the default stays 120",
+      "instrument": "bin/cairn test cairn/devices/tester/proofs/test_an_exec_bound_reaches_the_proof_it_runs.py",
+      "piece": "D3: the proof runs bin/cairn test as a subprocess under an explicit env. Tooth 1: --exec 'printenv CAIRN_TESTER_PROOF_BUDGET' --timeout 300 prints 300. Tooth 2: a scratch fixture proof sleeping 8 s run with CAIRN_TESTER_PROOF_BUDGET=3 reports 'exceeded the 3s budget'. Tooth 3: env 300 + --timeout 3 reports the 3 s budget; env 3 + a fixture declaring PROOF_TIMEOUT_S = 30 sleeping 5 s is green; env 'x' over a 1 s fixture is green (falls back, does not crash). Red on d0c7d8376 for teeth 1 and 2. PROVES names clauses 1-3; sealed with the tester's proofs."
+    }
+  ],
+  "provenance": {
+    "hypotheses": "claude",
+    "triage_ref": "floor",
+    "unknowns": "claude"
+  },
+  "ticket": "e6b25d61abc4",
+  "triage_ref": "/home/akien/.cairn/devices/chart/0/packets/triage-20261113T184832-64f5e77dbaf4.json",
+  "unknowns": []
+}
