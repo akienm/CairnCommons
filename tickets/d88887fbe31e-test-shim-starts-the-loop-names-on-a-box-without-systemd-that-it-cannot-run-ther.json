@@ -1,0 +1,54 @@
+{
+  "title": "test_shim_starts_the_loop names on a box without systemd that it cannot run there, and exits non-zero, instead of four FileNotFoundError tracebacks",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "On a platform without systemctl or /proc, test_shim_starts_the_loop.py prints ONE named line saying it needs systemd user units and /proc and cannot run there, and exits non-zero before any tooth runs, instead of every tooth dying with a FileNotFoundError traceback. That is an honest red at a diagnostic surface (Law 7); the sealer is Linux (outline 9.4.2.3.3.1). On Linux it is unchanged. When the NOTRUN mechanism (ticket for the tester and proof_coverage) lands, a follow-up turns the line into NOTRUN.",
+  "why": "Measured 2026-11-13 on akiendell, house checkout and a worktree alike: test_shim_starts_the_loop.py reds 4 teeth with 'FileNotFoundError: [WinError 2]' (test_a_held_lock_spawns_nothing, test_dead_to_live_one_shim, test_two_shims_one_loop, test_the_setsid_path_leaves_no_scratch_process). The proof's own helpers call `systemctl --user` (lines 107-112, 203) and scan /proc (lines 131-134, 215, 326), and the setsid tooth builds a PATH dir of linux tools (line 289). It is Linux-only by construction. A skip that exits 0 is impossible: the tester reads exit 0 with no green tooth as RED (device.py:736-745), and the NOTRUN state outline 9.4.8.1 describes is not built. The orchestrator ruled this interim: one named line, a non-zero exit, no tracebacks. No ticket owned the Windows red.",
+  "traces_to": "Law 7 (an error is loud at a diagnostic surface, named), Law 3 and Law 9 (red is the default; no skip dressed as green), and outline 9.4.2.3.3.1 (one sealer, on cairn's home, Linux).",
+  "how": "At the top of main(), if systemctl is not found on PATH or /proc does not exist, print one line: 'test_shim_starts_the_loop: needs systemd user units and /proc, which this box lacks (<platform>); the Linux sealer measures it (outline 9.4.2.3.3.1)', and return a non-zero status before any tooth runs. Do not touch the teeth. Linux behaviour is unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on a platform with no systemctl or no /proc the proof prints one line naming that it needs systemd user units and /proc, and exits non-zero before any tooth runs, with no FileNotFoundError traceback, where on Windows it died with it in four teeth"
+      },
+      {
+        "n": 2,
+        "claim": "on Linux the platform check is inert and the proof runs every tooth exactly as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: a platform preamble in main(): one named line and a non-zero exit when systemctl or /proc is absent; the teeth are untouched.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/tools/base/shim.py (the product is not at fault)",
+      "the NOTRUN mechanism (its own ticket against the tester and proof_coverage)",
+      "porting the proof to Windows"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "bin/cairn test of test_shim_starts_the_loop.py on Windows: 4 FAIL lines, all 'FileNotFoundError: [WinError 2]', in the untouched house checkout and in a worktree. Linux-only calls: subprocess.run(['systemctl', ...]) at lines 107, 108, 112, 203; Path('/proc').iterdir() at lines 134, 215, 326; a PATH dir of linux tools at line 289. cairn/devices/tester/device.py:736-745 turns exit 0 with no named green tooth into RED, so a Windows no-op cannot be green; a NOTRUN marker is read by nothing (grep of tester, proof_coverage, validation_store, codemother).",
+      "how": "bin/cairn test over the file on Windows; grep -n over the file; read device.py 726-745; grep for not-run in non-proof code"
+    }
+  ],
+  "id": "d88887fbe31e",
+  "writes_to": [
+    "cairn/tools/base/proofs/test_shim_starts_the_loop.py"
+  ]
+}

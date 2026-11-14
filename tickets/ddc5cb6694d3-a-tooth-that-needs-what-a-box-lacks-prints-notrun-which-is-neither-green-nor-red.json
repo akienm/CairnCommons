@@ -1,0 +1,81 @@
+{
+  "title": "a tooth that needs what a box lacks prints NOTRUN, which is neither green nor red, and the box records no seal for it",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "A proof tooth can print NOTRUN <name> with a reason when the box lacks what it needs (systemd, bubblewrap). teeth_printed returns it in a third list, never in green and never in red; a tester run whose every tooth is NOTRUN writes NO seal on that box and says it asks for the Linux sealer's; a run with some teeth green and some NOTRUN seals only the green ones and names the others. One marker covers systemd teeth and bwrap-only teeth alike.",
+  "why": "Outline 9.4.2.3.3.1 (Akien, Q#90): one sealer, on cairn's home, Linux. 9.4.8.1 (CC's decision on Q#98): a tooth that needs what a box lacks reads not-run on that box, never red, its outcome the sealer's; a box without bubblewrap asks for the run and does not run it itself. Measured 2026-11-13 on akiendell: that state is NOT BUILT. teeth_printed (proof_coverage.py) reads only GREEN_MARKERS and RED_MARKERS, and cairn/devices/tester/device.py lines 736-745 turn exit 0 with no named green tooth into RED ('zero teeth printed'), so a proof on Windows that cannot run has three outcomes: exit non-zero (red), exit 0 with no teeth (red by that rule), or print a green tooth it did not run (a false green). test_shim_starts_the_loop.py (d88887fbe31e) is the measured case, an honest named red as an interim.",
+  "traces_to": "Law 3 (an unmeasured claim is labeled), Law 8 (a hollow green is worse than a red) and Law 9 (red is the default; no skip dressed as green); outline 9.4.2.3.3.1 and 9.4.8.1.",
+  "how": "DESIGN FIRST (this is TICKETME, not built). D1 proof_coverage.teeth_printed learns a NOTRUN marker and returns {green, red, notrun}; green and red are unchanged and notrun names never join either. D2 the tester's run_proof treats a run whose teeth are all NOTRUN as 'asks for the sealer', writes no validation and prints that line, and treats a mixed run as sealing the green teeth only, listing the NOTRUN ones in evidence.stdout_tail's usual place (no ninth field). D3 (CC's decision, below). RULE 1: proof_coverage is a tool and the tester a device, so the build splits into one ticket per component.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "teeth_printed on output containing 'NOTRUN test_x - needs systemd' returns test_x in a notrun list and in neither green nor red, and a proof whose only tooth line is NOTRUN has an empty green list"
+      },
+      {
+        "n": 2,
+        "claim": "a tester run whose every tooth printed NOTRUN writes no validation, prints a line asking for the Linux sealer, and is not RED; a run with green and NOTRUN teeth seals the green ones only"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: teeth_printed reads a NOTRUN marker into a third list; green and red unchanged. (proof_coverage)",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the tester's run_proof records nothing for an all-NOTRUN run and seals only the green teeth of a mixed one; the zero-teeth rule at device.py:736-745 does not fire on an all-NOTRUN run. (tester)",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: CC's DECISION on the open shape question: option B, NO seal is written on a box that cannot run the proof (it prints NOTRUN lines and asks for the sealer), rather than option A, a third verdict value 'not-run' in the seal. WHY B: outline 9.4.8.1 already says such a box 'asks for it and does not run it itself'; B adds no verdict value and no ninth seal field (the eight are ratified), so standing() and the coverage sieves read nothing new; an unsealed proof already reads as not green (Law 9), so nothing can lean on it (Law 8). COST OF B: nothing records that the box tried. WHY NOT A: every reader of verdict (the clearance gate, build_inspector, coverage) must learn a third value, and a 'not-run' record that outlives its box is one more thing to supersede. If Akien wants the attempt recorded (A), that changes D2 and is a one-line reversal of this decision.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": []
+    },
+    {
+      "n": 4,
+      "text": "D4: one proof per component, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_a_notrun_tooth_is_counted_neither_green_nor_red.py",
+        "cairn/devices/tester/proofs/test_an_all_notrun_run_records_no_seal.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "cairn/devices/tester/device.py",
+      "cairn/tools/proof_coverage/proofs/test_a_notrun_tooth_is_counted_neither_green_nor_red.py",
+      "cairn/devices/tester/proofs/test_an_all_notrun_run_records_no_seal.py"
+    ],
+    "out": [
+      "every other component",
+      "the seal record's eight fields (no ninth)",
+      "converting any existing proof to print NOTRUN (a follow-up per proof: test_shim_starts_the_loop.py first)",
+      "the verdict's instrument run (9.4.8.1's bwrap-only tooth in the verdict itself), beyond using the same marker"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "proof_coverage.teeth_printed reads only the two marker sets (GREEN_MARKERS, RED_MARKERS) and returns {green, red}; device.py:736-745: verdict = GREEN if returncode == 0, then 'if verdict == GREEN and not teeth[teeth_green]: verdict = RED' with 'zero teeth printed: exit 0 with no tooth named on stdout'; grep of tester, proof_coverage, validation_store, codemother and skills found no code reading a not-run marker; the outline's 9.4.8.1 is the only mention.",
+      "how": "read proof_coverage.py teeth_printed and tester/device.py 726-760; grep -rniE 'not-run|not_run|notrun' over non-proof code"
+    }
+  ],
+  "id": "ddc5cb6694d3"
+}
