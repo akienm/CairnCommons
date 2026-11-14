@@ -1,0 +1,60 @@
+{
+  "id": "e9c2a17f5b30",
+  "title": "sail's tool-call scorer reads the plan's foreseen paths from outcomes as from decisions",
+  "owning_intention": "skills/sail/intention+why.json",
+  "intention": "skills/sail/toolcalls.py counts a read or write as foreseen when any plan step names it, whether the steps are outcomes or decisions.",
+  "why": "Measured 2026-11-14: Q#100 is answered and the plan becomes outcomes (outline 9.3.5.1.2.1); this component reads ticket plans, so by RULE 1 its dual-read is its own ticket, a sibling of aa3e9a70db47 (the migration).",
+  "traces_to": "Law 5 (the plan carries what a builder needs now), RULE 1 (each reader changes inside its own component); outline 9.3.5.1.2.1.",
+  "how": "Dual-read during the change: compose base's published plan view (5c1e0a7d93b2); after: 5c1e0a7d93b2.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over an outcomes ticket, a read of a path some outcome reads or writes is foreseen and any other read is a miss"
+      },
+      {
+        "n": 2,
+        "claim": "over a decisions ticket the hits and misses are unchanged from main"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: toolcalls.py's foreseen-paths read (~line 134) iterates plan.steps(ticket_doc). It composes cairn.tools.base.plan (ticket 5c1e0a7d93b2): clauses(doc) gives [{n, claim}] from outcomes that carry a claim, else falsifier.clauses; steps(doc) gives [{n, text, writes_to, reads, after}] from outcomes (text = claim, else the migrated text), else decisions; it keeps no second reading of either shape.",
+      "writes_to": [
+        "skills/sail/toolcalls.py"
+      ],
+      "reads": [
+        "skills/sail/toolcalls.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof feeds the reader one ticket in each shape carrying the same content, one tooth per clause.",
+      "writes_to": [
+        "skills/sail/proofs/test_toolcalls_read_outcomes.py"
+      ],
+      "reads": [
+        "skills/sail/toolcalls.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "skills/sail/proofs/test_toolcalls_read_outcomes.py",
+      "skills/sail/toolcalls.py"
+    ],
+    "out": [
+      "cairn/tools/base and its plan view (5c1e0a7d93b2)",
+      "every other reader component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "Akien answered Q#100 (open-7aee6f89e4d9, open-82f27105184f): \"rather than tasks should we be focused on outcomes?\" ... \"yes, we're in agreement. signed -amm\". Outline 9.3.5.1.2.1: a plan is constraints, then outcomes {n, claim, writes_to, reads, after, via?}, then resources; the falsifier's clauses merge into the outcomes (old clause n stays outcome n); during the change every reader accepts both shapes, one sibling ticket per reader component.",
+      "how": "his answer, relayed verbatim by orchestrator; recorded at the question door; outline 9.3.5.1.2.1"
+    }
+  ]
+}
