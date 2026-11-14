@@ -1,0 +1,59 @@
+{
+  "id": "0f7a8cada1ca",
+  "title": "address names a device's existing instances and the next free instance number",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "address lists which instance numbers exist for a device (instances) and names the lowest unused one (next_free_instance), reading the instance root through its own ROOTS and creating nothing, so a caller that needs a second instance asks address and never globs devices/<device>/ itself.",
+  "why": "Orchestrator ruling 2026-11-13 on ticket d13859e2ae46 (shim naming): shim.py must read instance directories through address, not glob devices/<device>/; address has instance_path, log_path, tool_path and machine_path but no function that lists instances. Akien, outline 5.3.5.2.2: 'we have a cc_0 instance, so I'll launch it with cc_1'.",
+  "traces_to": "RULE 1 (encapsulation: the address tool owns instance directory layout) and CP1.",
+  "how": "Add instances(device, roots=None) -> list[int] (sorted numeric directory names under <ROOTS['instance']>/devices/<device>, [] if absent, no mkdir) and next_free_instance(device, roots=None) -> int (lowest non-negative integer not in that list) to address.py. One proof over a scratch roots dict, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "instances(device, roots) returns the sorted integers of the numeric directories under <instance root>/devices/<device>, ignores non-numeric names, returns [] when the folder is absent, and creates nothing"
+      },
+      {
+        "n": 2,
+        "claim": "next_free_instance(device, roots) returns the lowest non-negative integer not among instances(): [0, 2] gives 1, [] gives 0, [0, 1, 2] gives 3"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: two read-only functions in address.py; a directory counts as an instance whether or not its process runs.",
+      "writes_to": [
+        "cairn/tools/base/address.py"
+      ],
+      "reads": [
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof over a scratch roots dict, one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_address_names_the_next_free_instance.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/address.py",
+      "cairn/tools/base/proofs/test_address_names_the_next_free_instance.py"
+    ],
+    "out": [
+      "every other component",
+      "the shim",
+      "the launcher"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "address.py defines instance_path (line 127), log_path, tool_path, held_tool_paths and machine_path, and no function that lists instances; shim.py's instance is the diagnostic attribute diagnostic_instance (default 0, diagnostic.py:146), not a value the shim chooses.",
+      "how": "grep -n '^def ' cairn/tools/base/address.py; grep -n diagnostic_instance cairn/tools/base/shim.py cairn/tools/base/diagnostic.py"
+    }
+  ]
+}

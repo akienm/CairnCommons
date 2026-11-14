@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: instance directories are devices/<device>/<n> under the instance root (instance_path builds exactly that), and a numeric directory name IS an existing instance. Not assumed: that every number has a running process; this reads only what exists on disk. Akien (outline 5.3.5.2.2): 'we have a cc_0 instance, so I'll launch it with cc_1' presupposes something that can say which numbers are taken.",
+    "builder_check": "A Haiku builder needs: the file (cairn/tools/base/address.py), the exact signatures (instances(device, roots=None) -> list[int]; next_free_instance(device, roots=None) -> int), that roots follow the same default as instance_path (ROOTS), that nothing is created (reading must not mkdir), and a proof over a scratch roots dict. The ticket carries all of these.",
+    "children": "none, because the fix is two small read-only functions in one file and one proof",
+    "collision_check": "Looked at address.py's instance_path/log_path/tool_path/machine_path (path builders; none lists) and ticket d13859e2ae46 (shim naming), which this is a dependency of at orchestrator's ruling (address owns instance directory reads, not shim.py). No collision: this adds two read-only functions and changes none.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) instances(device, roots) returns the sorted integers named by the numeric directories under <instance root>/devices/<device>, ignoring non-numeric names, and [] when the device folder is absent | (2) next_free_instance(device, roots) returns the lowest non-negative integer not in that list, so [0, 2] gives 1 and [] gives 0. Horizon: red against HEAD (neither function exists), green after.",
+    "gates_bound": "proof gate (a hollow build must fail it) + durability gate (committed) + feeds-back-to-origin on failure (Laws 3 + 8).",
+    "missing_check": "Not wrapped: whether an instance whose directory exists but whose process is gone counts as taken. This ticket says yes (a directory is an instance's home and its state; reusing the number would reuse another instance's state), and names it; liveness is the shim's own presence and is out of this tool's reach.",
+    "node_class": "code-seam",
+    "questions": "none, because the only open choice (a stale directory counts as taken) is named in missing_check and is CC's mechanism; see press_office/CairnComponentOutline.txt 5.3.5.2.2 and ticket d13859e2ae46",
+    "task_or_ticket": "ticket",
+    "title": "address names a device's existing instances and the next free instance number",
+    "watchme": "none, because its proof cairn/tools/base/proofs/test_address_names_the_next_free_instance.py is the whole of its correctness; the live check is the same command on akiendell; the code lives at cairn/tools/base/address.py",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "address gets instances() and next_free_instance(); the shim's start --new will call them instead of globbing devices/<device>/ itself."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "9fd652b7a4e3",
+  "skill": "sorted",
+  "title": "address names a device's existing instances and the next free instance number",
+  "trace_id": "1daca6acdfc2",
+  "when": "2026-11-13T18:51:02.206441"
+}
