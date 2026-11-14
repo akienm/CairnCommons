@@ -16,7 +16,8 @@
   },
   "bounds": {
     "in": [
-      "cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py"
+      "cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py",
+      "cairn/devices/tester/reach/sitecustomize.py"
     ],
     "out": [
       "every other component"
@@ -42,6 +43,168 @@
       "at": "2026-11-14T04:37:16+00:00",
       "writes_to": [],
       "reads": []
+    },
+    {
+      "n": 2,
+      "text": "D2: THE SCRIPT BY ITS ARGV. Measured 2026-11-13 on Python 3.14.10: at atexit sys.modules['__main__'] carries no __file__, so the reach sitecustomize logged every file a script subprocess loaded except the script itself, and a meta-proof's seal left the proof it ran out of fingerprint_closure (tooth 5 red). The atexit logger now adds os.path.abspath(sys.argv[0]) when argv[0] names a file ('-c' and '' name none). The proof's PROVES names this ticket on tooth 5, which is red on main and green on the branch.",
+      "writes_to": [
+        "cairn/devices/tester/reach/sitecustomize.py",
+        "cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "eb62a15cc109: the red proof test_a_seal_records_what_it_reached.py",
+      "intent": "A meta-proof's seal covers the proof it runs again: tooth 5 of the reach proof is green, because the script a subprocess ran is in the reach log on Python 3.14.",
+      "scope": "cairn/devices/tester/reach/sitecustomize.py and the one proof's PROVES",
+      "unknowns": [
+        "the Linux python version on the Dell; the fix holds on 3.12 too since argv is a superset"
+      ],
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Every component talks to every other component only through that component's public interface.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py",
+          "cairn/devices/tester/reach/sitecustomize.py"
+        ],
+        "out": [
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where a subprocess's loaded files are logged",
+        "the script's own file at atexit"
+      ],
+      "holdings": [
+        {
+          "what": "the reach sitecustomize that logs each process's module files at atexit",
+          "address": "cairn/devices/tester/reach/sitecustomize.py"
+        },
+        {
+          "what": "the tester that reads the reach log into fingerprint_closure",
+          "address": "cairn/devices/tester/device.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "the script's own file at atexit",
+          "measure": "python 3.14.10 -c with an atexit hook printing getattr(sys.modules['__main__'], '__file__', None) from a script prints None; tooth 5 reds on main e055e5b99"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the reach sitecustomize names the script a subprocess ran from argv at atexit, so a meta-proof's seal carries the proof it ran in fingerprint_closure; PROVES binds tooth 5",
+          "why": "a meta-proof's seal that misses the proof it runs cannot turn yellow when that proof moves",
+          "kind": "build",
+          "fills": "the script's own file at atexit",
+          "uses": [
+            "cairn/devices/tester/reach/sitecustomize.py",
+            "cairn/devices/tester/device.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/reach/sitecustomize.py",
+            "cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the reach sitecustomize names the script a subprocess ran from argv at atexit, so a meta-proof's seal carries the proof it ran in fingerprint_closure; PROVES binds tooth 5",
+          "why_now": "it is the one piece, and 5 of 5 teeth are green on the build branch"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the reach sitecustomize names the script a subprocess ran from argv at atexit, so a meta-proof's seal carries the proof it ran in fingerprint_closure; PROVES binds tooth 5",
+          "expect": "5 teeth green twice",
+          "falsifier": "tooth 5 red: green_proof.py absent from the meta-proof seal's fingerprint_closure",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "test_a_seal_records_what_it_reached.py is green",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py",
+          "timeout_s": 900,
+          "covers": [
+            "the reach sitecustomize names the script a subprocess ran from argv at atexit, so a meta-proof's seal carries the proof it ran in fingerprint_closure; PROVES binds tooth 5"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
