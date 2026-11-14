@@ -1,0 +1,75 @@
+{
+  "id": "271146bf067d",
+  "title": "a runner's drive runs the caller's own interpreter",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "Every runner drive that a_run_that_fails_to_run_leaves_a_trail launches names the interpreter running the inspector (a '{python}' placeholder expanded to sys.executable), never a bare interpreter name resolved from PATH, so a runner that leaves a trail never reads as one that does not because PATH named a stub.",
+  "why": "Measured 2026-11-13 on akiendell, clean main ba93cd143: cairn/machines/rehearsal/proofs/test_a_failed_run_is_counted.py reds 3/4. The rehearsal runner's drive begins with a bare 'python3', which on Windows is the Microsoft Store stub; it exits 9009 and writes no trail, so the sieve reds a runner that does leave one. That is a false red (Law 8 cares about false greens; a false red still blocks every crossing on the box).",
+  "traces_to": "ba4166fe51c4 (a-failed-run-is-counted: drive each runner's failure through its own CLI verb); Law 3 (measured by running, so the drive has to actually run); 39eccfbc09aa (moved runners_leave_trails.json out of sieves/).",
+  "how": "In a_run_that_fails_to_run_leaves_a_trail (inspector.py), the argv comprehension that expands '{scratch}' also expands '{python}' to sys.executable. The rehearsal row in cairn/machines/build_inspector/runners_leave_trails.json changes its first word from 'python3' to '{python}'. The tester row (bin/cairn) is untouched. The proof cairn/machines/build_inspector/proofs/test_a_runner_drive_runs_the_callers_interpreter.py carries one tooth per falsifier clause. Stacked on branch sieve-why-39eccfbc09aa, where the runners file now lives.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "no runner drive in cairn/machines/build_inspector/runners_leave_trails.json begins with a bare interpreter name (python, python3, py, or one ending .exe), and the rehearsal runner's drive begins with '{python}'"
+      },
+      {
+        "n": 2,
+        "claim": "a_run_that_fails_to_run_leaves_a_trail over a testing runner whose drive is ['{python}', '-c', <write one json file into argv[1]>, '{scratch}'] finds nothing: the placeholder expanded to a working interpreter and the scratch path arrived"
+      },
+      {
+        "n": 3,
+        "claim": "the same testing runner with 'testing-no-such-interpreter' as its first word reds exactly once, with an exit value that starts 'un-runnable'"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the argv comprehension in a_run_that_fails_to_run_leaves_a_trail expands '{python}' to sys.executable beside '{scratch}'.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the rehearsal row's drive in runners_leave_trails.json begins with '{python}'; the tester row is untouched. (The file sits at sieves/runners_leave_trails.json on main until 39eccfbc09aa lands; this ticket builds on that branch.)",
+      "writes_to": [
+        "cairn/machines/build_inspector/runners_leave_trails.json"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof test_a_runner_drive_runs_the_callers_interpreter.py, one tooth per falsifier clause, measuring only build_inspector.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_a_runner_drive_runs_the_callers_interpreter.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/machines/build_inspector/runners_leave_trails.json",
+      "cairn/machines/build_inspector/proofs/test_a_runner_drive_runs_the_callers_interpreter.py"
+    ],
+    "out": [
+      "cairn/machines/rehearsal/ (its CLI verb already leaves a trail; only the interpreter launching it was wrong)",
+      "bin/cairn and the tester row"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "test_a_failed_run_is_counted.py RED 3/4 on clean main ba93cd143 and on sieve-why-39eccfbc09aa: finding a_run_that_fails_to_run_leaves_a_trail on rehearsal, exit 9009 (Windows Store python3 stub).",
+      "how": "python cairn/machines/rehearsal/proofs/test_a_failed_run_is_counted.py, run singly on akiendell (Windows 11), from the repo root"
+    }
+  ]
+}
