@@ -1,0 +1,61 @@
+{
+  "title": "bus_client no longer masks exit 3 when it starts the bus, once the bus loser exits quietly",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads as a failed unit again. BUILDS AFTER ac71d984ebda LANDS ON MAIN: until the bus loser exits 0, the flag is correct.",
+  "why": "ac71d984ebda (branch ac71d984ebda-build, tip 7718b16a2, queued with akienasus) makes a second bus exit 0 quietly, as b38af5fd1852 did for the ground loop, per Akien's Q#93 answer (outline 5.3.5.2.1; the bus is CC's read of it). cairn/tools/bus_client/remote.py:229 still passes -p SuccessExitStatus=3 when it starts the bus (_spawn), its docstring at line 205 names the flag, and its note at line 243 says 'the flock decides; loser exits 3'. After ac71 those are stale and the flag would hide a regression to the loud exit.",
+  "traces_to": "Law 5 (the thing and its story may not contradict) and Law 7 (a regression to a loud exit must not be hidden).",
+  "how": "AFTER ac71d984ebda IS ON MAIN: delete the '-p', 'SuccessExitStatus=3' pair from _spawn's systemd-run argv; reword the docstring at line 205 and the note at line 243 to say a second bus exits 0 quietly. One proof reads the function's source with ast and the file's text, so it runs on any OS. Rebase over akiendelllinux's 5370 FIXME first (it edits _spawn, _detached and _setsid in the same file).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_spawn's systemd-run argv no longer carries -p SuccessExitStatus=3, where it did"
+      },
+      {
+        "n": 2,
+        "claim": "remote.py no longer says the bus's second copy exits 3, in its docstring or notes, where it said so in two places"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remove the flag and reword the docstring and the note in remote.py; built only after ac71d984ebda is on main.",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof reading the source, one tooth per clause; red first, and red on a hollow build.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
+    ],
+    "out": [
+      "every other component",
+      "bus/server.py (ac71d984ebda)",
+      "the base shim (ec6dc8002b27)",
+      "superclaude (15e64f9fe960)",
+      "akiendelllinux's 5370 FIXME (it lands first or is rebased over)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "remote.py _spawn passes '-p', 'SuccessExitStatus=3' in its systemd-run argv (line 229); the docstring at line 205 names 'SuccessExitStatus=3' and the note at line 243 says 'the flock decides; loser exits 3'. On current main the bus loser still exits EXIT_HELD=3 (bus/server.py), so today the flag is correct; the bus loser exits 0 only on ac71d984ebda-build (7718b16a2), which has not landed.",
+      "how": "read remote.py 203-245; read bus/server.py serve() on main and on origin/ac71d984ebda-build"
+    }
+  ],
+  "id": "6ba3a921dd8d"
+}
