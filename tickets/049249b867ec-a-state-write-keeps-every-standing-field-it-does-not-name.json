@@ -19,6 +19,10 @@
       {
         "n": 3,
         "claim": "a key named in drop= is gone from the state file and the rest stay"
+      },
+      {
+        "n": 4,
+        "claim": "set_phase moving a ticket out of a phase whose release stands (release=None) leaves no release in the state file, and set_phase with a release writes it"
       }
     ]
   },
@@ -43,12 +47,26 @@
       "reads": [
         "cairn/tools/question/proofs/test_question.py"
       ]
+    },
+    {
+      "n": 3,
+      "text": "D3: write_ticket takes drop= and passes it to write_state; set_phase names drop=(\"release\",) when it clears the release, because D1's merge keeps a key merely popped from the doc.",
+      "writes_to": [
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/ticket_file.py",
+        "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/ticket_file.py"
+      ]
     }
   ],
   "bounds": {
     "in": [
       "cairn/tools/base/ticket_file.py",
-      "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+      "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py",
+      "cairn/tools/base/transitions.py"
     ],
     "out": [
       "every other component; the callers' hand merges stay as they are"
@@ -59,6 +77,11 @@
       "when": "2026-11-14",
       "saw": "4bf3b3cb's journal lines for four .state.json show stack berths_none.py -> rewrite_ticket -> write_ticket -> write_state, and each file shrank to two keys",
       "how": "git show 4bf3b3cb -- .artifact-journal.jsonl in CairnCommons"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "after D1 landed, test_transitions' test_the_written_ticket_reads_sound_to_the_watching_probe read RED: \"a release outlived its phase\", because set_phase popped release from the doc and write_state's merge kept the standing one",
+      "how": "akienasus_cc_0 on akiendelllinux, 3e08102ef35a's PROVEME walk (rung 4 seal, 2026-11-14T05:50:55); the cause read at transitions.py:2162 and ticket_file.py:152-169, fixed by akiendelllinux_cc_0 @ff08532cb"
     }
   ],
   "chart": {
