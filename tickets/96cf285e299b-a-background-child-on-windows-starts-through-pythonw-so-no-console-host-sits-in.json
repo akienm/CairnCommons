@@ -10,11 +10,11 @@
     "clauses": [
       {
         "n": 1,
-        "claim": "with a pythonw.exe beside the executable, background_python('nt', executable=...) returns the pythonw.exe path, where it returned the python.exe path"
+        "claim": "on nt, with a pythonw.exe beside the executable, background_pythonw returns that pythonw.exe path, and background_python still returns the executable"
       },
       {
         "n": 2,
-        "claim": "with no pythonw.exe beside it, and on posix, background_python returns the executable unchanged"
+        "claim": "with no pythonw.exe beside the executable, background_pythonw falls back to background_python (the executable); on posix it returns the executable unchanged"
       }
     ]
   },
@@ -59,6 +59,14 @@
       "when": "2026-11-13",
       "saw": "spawning pythonw.exe beside the venv python through detached_kwargs() leaves a tree of two pythonw.exe and no conhost; the launcher pythonw poll() is 0 after 4 s while the child runs",
       "how": "scratch probe, tree read from Win32_Process 2 s after the spawn"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "0156856b1fae (commit 6ea474469) already shipped background_pythonw(), which returns the venv pythonw.exe beside the interpreter on nt; ground_loop/cli.py, base/shim.py and bus_client/remote.py call it. So 96cf is proofs-only. background_python must keep returning python.exe: a caller that reads the child's output needs stdout, which pythonw lacks.",
+      "how": "git log -- windowless_spawn.py; grep -rn background_pythonw; read both docstrings"
     }
+  ],
+  "writes_to": [
+    "cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py"
   ]
 }
