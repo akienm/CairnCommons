@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: the flag existed only because the singleton loser exited 3 and a transient unit that exits NONZERO stays loaded in `failed` state and blocks its own name (superclaude lines ~553-559, measured 2026-08-18). Since b38af5fd1852 (35711160e) the loser exits 0, and a unit that exits ZERO is garbage-collected and frees its name, so the flag has no remaining job. Not assumed: that no other unit launched through _sc_loop_start relies on it; the web-server unit (line ~711) does not carry it. The orchestrator's reason is also load-bearing: with the flag in, a loser that regresses to the loud exit 3 reads as a success, which is how a stale flag hides exactly the regression b38af5fd1852 removed.",
+    "builder_check": "A Haiku builder needs: the file and exact lines (superclaude 5, 524, 553-559, 595-596, 636, 672, 689), that line 636 `-p SuccessExitStatus=3 \\` is deleted and the comments rewritten to 'a loser exits 0 quietly', the three charter fields, and the proof's two teeth (extract the _sc_loop_start function text; assert no SuccessExitStatus in it; assert no 'loser exits 3' anywhere in the file). The ticket carries all of these.",
+    "children": "none, because the fix is one flag, a handful of comments and one charter correction, with one proof",
+    "collision_check": "Looked at b38af5fd1852 (the loser exits 0; its bounds left superclaude out), 64db27776707 (arm 4 of the recovery survival proof; independent of this) and the web-server unit in the same file (no SuccessExitStatus; line ~700 comment says so). No collision. The flag's removal changes what a loud exit 3 looks like (failed, name blocked), which is the signal wanted, and reset-failed on the retry path already handles a wedged name.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) the launcher's ground-loop unit start (_sc_loop_start) no longer passes -p SuccessExitStatus=3 | (2) superclaude no longer says the ground loop's singleton loser exits 3, in comments or in its log lines. Horizon: both red on current main (the flag and the comments are there), green after, and red again on a hollow build with the flag restored; the proof reads the launcher's text, so it runs on any OS.",
+    "gates_bound": "proof gate (a hollow build must fail it) + durability gate (committed) + feeds-back-to-origin on failure (Laws 3 + 8).",
+    "missing_check": "Not wrapped: whether the cc charter (cairn/devices/cc/intention+why.json) must change too. It states the flag and 'the singleton loser exits 3 BY DESIGN' in three fields (superclaude/ground_loop_spawn: shape, why_SuccessExitStatus_3_is_not_optional, why_reset_failed_moved_to_the_retry), and those would contradict the launcher after this change (Law 5: the thing and its story may never contradict). The ticket therefore puts the charter correction in the same ticket, as D2, through the artifact door. Also not in scope: the recovery proof test_ground_loop_survives_its_caller.py arm 3, whose comment 'the singleton loser exits 3 BY DESIGN' is stale; its commands measure systemd's own behaviour and are unaffected, only the comment is stale.",
+    "node_class": "code-seam",
+    "questions": "none, because the quiet exit is Akien's answer (press_office/CairnComponentOutline.txt 5.3.5.2.1-2, ticket b38af5fd1852) and this removes what that made stale; the charter correction follows from it",
+    "task_or_ticket": "ticket",
+    "title": "superclaude no longer masks exit 3 for the ground loop, and its comments say the loser exits quietly",
+    "watchme": "none, because its proof cairn/devices/cc/proofs/test_superclaude_does_not_mask_a_loud_loser_exit.py is the whole of its correctness; the live check is a launch on a Linux box where a second ground loop leaves no failed unit; the code lives at cairn/devices/cc/superclaude",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "superclaude still masked exit 3 and said the loser exits 3; since b38af5fd1852 it exits 0. The flag is removed so a regression to the loud exit reads as failed again."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "e0b18af621bd",
+  "skill": "sorted",
+  "title": "superclaude no longer masks exit 3 for the ground loop, and its comments say the loser exits quietly",
+  "trace_id": "f5c40ac07ddf",
+  "when": "2026-11-13T19:41:09.496563"
+}

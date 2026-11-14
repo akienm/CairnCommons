@@ -1,0 +1,70 @@
+{
+  "id": "15e64f9fe960",
+  "title": "superclaude no longer masks exit 3 for the ground loop, and its comments say the loser exits quietly",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "superclaude's ground-loop unit is started without -p SuccessExitStatus=3, and superclaude's comments and log lines say the singleton loser exits 0 quietly, so a loser that regresses to the loud exit 3 reads as a failed unit again; the cc charter says the same.",
+  "why": "Orchestrator, 2026-11-13: after b38af5fd1852 (35711160e, Akien's Q#93 answer, outline 5.3.5.2.1) the ground loop's loser exits 0, so superclaude's -p SuccessExitStatus=3 (line 636) and its comments 'the singleton loser exits 3' (lines 5, 524, 553-557, 672, 689) are stale, and the flag makes a loud exit 3 read as success. The cc charter repeats the story in three fields.",
+  "traces_to": "Law 5 (the thing and the story of the thing may never contradict) and Law 7 (a regression to a loud exit must not be hidden).",
+  "how": "Delete `-p SuccessExitStatus=3 \\` from _sc_loop_start; rewrite the stale comments and the two log lines to say a loser exits 0 quietly (keep the 2026-08-18 history, marked removed); correct the three charter fields through the artifact door. One proof reads the launcher's text on any OS.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the launcher's ground-loop unit start (_sc_loop_start) no longer passes -p SuccessExitStatus=3, where it did"
+      },
+      {
+        "n": 2,
+        "claim": "superclaude no longer says the ground loop's singleton loser exits 3, in its comments or its log lines, where it said so in five places"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remove the flag and rewrite the stale comments and log lines in superclaude.",
+      "writes_to": [
+        "cairn/devices/cc/superclaude"
+      ],
+      "reads": [
+        "cairn/devices/cc/superclaude"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: correct the cc charter's three fields that state the flag and 'exits 3 BY DESIGN', through the artifact door.",
+      "writes_to": [
+        "cairn/devices/cc/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/cc/intention+why.json"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof reading the launcher's text, one tooth per clause; red first, and red on a hollow build.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_superclaude_does_not_mask_a_loud_loser_exit.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/superclaude",
+      "cairn/devices/cc/intention+why.json",
+      "cairn/devices/cc/proofs/test_superclaude_does_not_mask_a_loud_loser_exit.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py (its arm 3 comment is stale but its commands measure systemd, not the launcher)",
+      "the web-server unit's start (no flag)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "superclaude passes -p SuccessExitStatus=3 at _sc_loop_start (line 636) and says the loser exits 3 at lines 5, 524, 553-557, 595-596, 672 and 689; the cc charter repeats it in superclaude/ground_loop_spawn (shape, why_SuccessExitStatus_3_is_not_optional, why_reset_failed_moved_to_the_retry). Inside a tester run the launcher also adds -p CollectMode=inactive-or-failed.",
+      "how": "grep -n 'SuccessExitStatus|exits 3|exit 3' cairn/devices/cc/superclaude; read the charter fields with json"
+    }
+  ]
+}
