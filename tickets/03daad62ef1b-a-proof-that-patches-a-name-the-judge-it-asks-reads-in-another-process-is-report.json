@@ -1,11 +1,11 @@
 {
   "id": "03daad62ef1b",
   "title": "a proof that patches a name the judge it asks reads in another process is reported, naming the patched target",
-  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
-  "intention": "proof_coverage reports a proof that patches a module attribute in its own process while a judge it asks (directly, through an ask alias, through a transitions function that reaches the wire, or through one proof-local helper) runs in another process and reads that attribute: the report names the proof, the patched target, the judge and the reach chain; a target it cannot resolve is listed, never dropped.",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "build_inspector reports a proof that patches a module attribute in its own process while a judge it asks (directly, through an ask alias, through a transitions function that reaches the wire, or through one proof-local helper) runs in another process and reads that attribute: the report names the proof, the patched target, the judge and the reach chain; a target it cannot resolve is listed, never dropped.",
   "why": "Measured 2026-11-14, three cases of one class: judges answer in CodeMother's process since 17d570c10390, so a patch made in the asker never reaches the judge. corrosion's tooth 2 (citation.ruling_covers_path, 149b), 3e08102ef35a's _TICKETS patches in test_transitions, test_entry_gate_jurisdiction and test_the_stones_are_pushed, and d3248e7cb2fd's crossings.ROOTS patch each went red long after the move and were found by hand. akiendell's scan over main plus the import_sieve fix flags 11 files / 91 findings, six of them new.",
   "traces_to": "Law 4 (a defect class found three times by hand needs an instrument); Law 3 (the report shows the patch is answer-side rather than assuming it); Law 8 (a peer leans on a green a patched asker manufactures).",
-  "how": "A new module unseen_patches.py in proof_coverage: unseen_patches(source, repo_root) walks a proof's ast for patch sites live across an ask-capable call, resolves the target through the proof's imports, and reports it only when import_sieve.reaches of the judge's module holds a file that reads the attribute; unseen_patch_proofs(repo_root) runs it over every proof. Exported from proof_coverage/__init__.py; not wired into lacks().",
+  "how": "A new module unseen_patches.py in the build_inspector machine (beside run_record.py, not inspector.py): unseen_patches(source, repo_root) walks a proof's ast for patch sites live across an ask-capable call, resolves the target through the proof's imports, and reports it only when import_sieve.reaches of the judge's module holds a file that reads the attribute; unseen_patch_proofs(repo_root) runs it over every proof. The judges are build_inspector's own: a judge name is a top-level function of inspector.py or run_record.py, read by ast from its own machine, so codemother's shim is not read. Not wired into lacks() or a sieve.",
   "falsifier": {
     "clauses": [
       {
@@ -25,31 +25,22 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: unseen_patches.py reads patch sites, ask-capable calls (INSPECT_JUDGES by ast, the spread handled; transitions' wire-reaching functions by its own ast call graph; one level of proof-local helper) and the answer-side reach through import_sieve.reaches.",
+      "text": "D1: cairn/machines/build_inspector/unseen_patches.py reads patch sites, ask-capable calls (a literal ask of a judge, the judge being a top-level function of build_inspector's inspector.py or run_record.py read by ast; transitions' wire-reaching functions by its own ast call graph; one level of proof-local helper) and the answer-side reach through import_sieve.reaches. It lives in a machine because a tool calls no other Cairn component (outline 1.3.1; open-1ff5b870cb04 answered strict) and this one uses import_sieve; it reads its own machine's judges, never cairn/devices/codemother/shim.py (open-71c6ce696ed7).",
       "writes_to": [
-        "cairn/tools/proof_coverage/unseen_patches.py"
+        "cairn/machines/build_inspector/unseen_patches.py"
       ],
       "reads": [
-        "cairn/devices/codemother/shim.py",
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/machines/build_inspector/run_record.py",
         "cairn/tools/base/transitions.py",
         "cairn/tools/import_sieve/sieve.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: proof_coverage/__init__.py exports unseen_patches and unseen_patch_proofs; lacks() is not changed.",
+      "text": "D2: one proof, one tooth per clause, each calling unseen_patches over a scratch repo, never the build_inspector nest; it is not wired into lacks() or into a sieve.",
       "writes_to": [
-        "cairn/tools/proof_coverage/__init__.py"
-      ],
-      "reads": [
-        "cairn/tools/proof_coverage/__init__.py"
-      ]
-    },
-    {
-      "n": 3,
-      "text": "D3: one proof, one tooth per clause, each calling unseen_patches over a scratch repo, never the build_inspector nest.",
-      "writes_to": [
-        "cairn/tools/proof_coverage/proofs/test_a_patch_the_judge_cannot_see_is_refused.py"
+        "cairn/machines/build_inspector/proofs/test_a_patch_the_judge_cannot_see_is_refused.py"
       ],
       "reads": [
         "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
@@ -58,14 +49,14 @@
   ],
   "bounds": {
     "in": [
-      "cairn/tools/proof_coverage/unseen_patches.py",
-      "cairn/tools/proof_coverage/__init__.py",
-      "cairn/tools/proof_coverage/proofs/test_a_patch_the_judge_cannot_see_is_refused.py"
+      "cairn/machines/build_inspector/unseen_patches.py",
+      "cairn/machines/build_inspector/proofs/test_a_patch_the_judge_cannot_see_is_refused.py"
     ],
     "out": [
-      "cairn/tools/proof_coverage/proof_coverage.py (8e2018855b31 edits it)",
-      "build_inspector/inspector.py",
-      "wiring into lacks()",
+      "cairn/machines/build_inspector/inspector.py (the inspector chain edits it)",
+      "cairn/tools/proof_coverage/ (a tool may not use import_sieve, outline 1.3.1)",
+      "cairn/devices/codemother/shim.py (not read)",
+      "wiring into lacks() or a sieve",
       "fixing the flagged proofs (their own tickets)",
       "every other component"
     ]
