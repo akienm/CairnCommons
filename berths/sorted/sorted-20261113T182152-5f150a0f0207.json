@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: the base shim is where an instance gets named (Akien, 5.3.5.2.2: 'the launcher has to ask the shim to create the instance, and so it's the shim's job'), and the shim can tell which instances are live on the bus (presence). Not yet read: the shim's start handler (shim.py 'start' verb, line ~60); the first decision of the build is to read it and name the next-free rule.",
+    "builder_check": "A Haiku builder needs: the file (cairn/tools/base/shim.py start verb); how to list live instances (read presence in the shim, never import another device, RULE 1); the rule (no name -> lowest free number; explicit live name -> loud refusal); and to prove it against a fixture bus, not the live one. The ticket carries the rule and the proof shape; the presence read is its first measurement.",
+    "children": "none, because the fix is one component (the base shim) and one proof; the ground loop and bus halves are b38af5fd1852 and ac71d984ebda",
+    "collision_check": "Looked at outline 5.3.5.2.2 (naming: 'we have a cc_0 instance, so I'll launch it with cc_1') and ticket b38af5fd1852 (ground loop, now split off) and ac71d984ebda (bus): the three are siblings, none touches the shim. The explicit-name refusal is CC's inference, flagged as such; Akien said two zeros could not be routed, which is why a duplicate name cannot stand.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) a start given no instance name for a device whose instance 0 is live is launched as instance 1 (next free number), and instance 0 is untouched | (2) a start naming an instance that is already live on the bus is refused loudly (CC's reading of Q#93, not his words) and never leaves two. Horizon: green twice on a fixture bus; red against the parent commit.",
+    "gates_bound": "proof gate (a hollow build must fail it) + durability gate (committed) + feeds-back-to-origin on failure (Laws 3 + 8).",
+    "missing_check": "Not wrapped: how 'live on the bus' is read (presence ONLINE vs a lock) and whether a name like <host>_cc_RESCUE counts as an instance number. Both are named as the build's first measurement, with a tooth each.",
+    "node_class": "code-seam",
+    "questions": "none, because Akien's Q#93 answer (press_office/CairnComponentOutline.txt 5.3.5.2.2, ticket b38af5fd1852, said 2026-11-13) settles the naming rule; the explicit-live-name refusal is CC's reading and is marked so in clause 2 and in the outline source",
+    "task_or_ticket": "ticket",
+    "title": "a start given no instance name while <device>_0 is live launches <device>_1, and an explicit live name is refused",
+    "watchme": "none, because its proof cairn/tools/base/proofs/test_a_start_with_no_name_takes_the_next_free_instance.py is the whole of its correctness; the live check is the same command on akiendell; the code lives at cairn/tools/base/shim.py",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Shim naming from Q#93: no name given -> next free number; an explicit live name refused is CC's reading, not his words."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "e216aca5b375",
+  "skill": "sorted",
+  "title": "a start given no instance name while <device>_0 is live launches <device>_1, and an explicit live name is refused",
+  "trace_id": "88bf14b7fdfd",
+  "when": "2026-11-13T18:21:52.542701"
+}

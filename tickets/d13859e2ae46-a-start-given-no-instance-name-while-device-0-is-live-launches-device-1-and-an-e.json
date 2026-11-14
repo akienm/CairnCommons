@@ -1,0 +1,60 @@
+{
+  "id": "d13859e2ae46",
+  "title": "a start given no instance name while <device>_0 is live launches <device>_1, and an explicit live name is refused",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "When a device start arrives with no instance name and <device>_0 is live on the bus, the shim launches it as <device>_1 (next free number); a start that names an instance already live is refused loudly, so two never share a name.",
+  "why": "Akien, 5.3.5.2.2 (said 2026-11-13 in akiendell's session): 'if we had two zeros how would messages get routed? ... the launcher has to ask the shim to create the instance, and so it's the shim's job to say we've been asked to start an instance, then we've not been given a name for it, then we have a cc_0 instance, so I'll launch it with cc_1'. The loud refusal of an explicit live name is CC's reading of Q#93, not his words. Split from b38af5fd1852 under RULE 1.",
+  "traces_to": "CP1 (an unroutable duplicate name must be impossible, not tolerated) and outline 5.3.5.2.",
+  "how": "Read the shim's start path and how presence marks an instance live; add the next-free rule when no instance is named and a loud refusal when an explicit live one is named. New proof against a fixture bus (never the live one), one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a start given no instance name for a device whose instance 0 is live is launched as instance 1 (the next free number) and instance 0 is untouched"
+      },
+      {
+        "n": 2,
+        "claim": "a start naming an instance already live on the bus is refused loudly and never leaves two under one name (CC's reading of Q#93, not Akien's words)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the shim's start path picks the lowest free instance number when none is named and refuses an explicit live name.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause, against a fixture bus; red first.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_start_with_no_name_takes_the_next_free_instance.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs/test_a_start_with_no_name_takes_the_next_free_instance.py"
+    ],
+    "out": [
+      "every other component",
+      "the bus",
+      "the ground loop",
+      "bus_client"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "cairn/tools/base/shim.py declares a 'start' verb ('wakes the device instance's process') and a presence of ONLINE/OFFLINE (lines ~59-60); no next-instance rule found by grep of its instance handling",
+      "how": "grep -n 'instance' cairn/tools/base/shim.py"
+    }
+  ]
+}
