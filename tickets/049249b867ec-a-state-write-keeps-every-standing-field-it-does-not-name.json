@@ -88,7 +88,7 @@
     "orient": {
       "request": "049249b867ec: a state write keeps every standing field it does not name in cairn/tools/base/ticket_file.py",
       "intent": "ticket_file.write_state lays the dict it is handed over the standing state file. A key goes away only when it is named in drop=, so a partial dict can no longer wipe a ticket's cursor, chart claim or questions.",
-      "scope": "in: cairn/tools/base/ticket_file.py, cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py; out: every other component; the callers' hand merges stay as they are",
+      "scope": "in: cairn/tools/base/ticket_file.py, cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py, cairn/tools/base/transitions.py; out: every other component; the callers' hand merges stay as they are",
       "unknowns": [],
       "confidence": 0.85,
       "provenance": {
@@ -112,7 +112,8 @@
       "bounds": {
         "in": [
           "cairn/tools/base/ticket_file.py",
-          "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+          "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py",
+          "cairn/tools/base/transitions.py"
         ],
         "out": [
           "every other component; the callers' hand merges stay as they are"
@@ -137,6 +138,10 @@
         {
           "what": "the standing code the build reads: ticket_log.py",
           "address": "cairn/tools/base/ticket_log.py"
+        },
+        {
+          "what": "the standing code the build reads: transitions.py",
+          "address": "cairn/tools/base/transitions.py"
         },
         {
           "what": "the standing code the build reads: test_question.py",
@@ -185,6 +190,21 @@
           "writes_to": [
             "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
           ]
+        },
+        {
+          "what": "D3: write_ticket takes drop= and passes it to write_state; set_phase names drop=(\"release\",) when it clears the release, because D1's merge keeps a key merely p",
+          "why": "Measured 2026-11-14: CairnCommons commit 4bf3b3cb replaced four tickets' .state.json (033f607c5316, 44347787f7d3, aa1459b4ccd4, a9709b744bf5) with only {intent_berth, sorted_berth}, dropping workflow_and_state, questions, chart_claim and watchme. The journal stack is berths_none.py -> rewrite_ticket",
+          "kind": "build",
+          "fills": "ticket_file.write_state lays the dict it is handed over the standing state file. A key goes away only when it is named in drop=, so a partial dict can no longer wipe a ticket's cursor, chart claim or ",
+          "uses": [
+            "cairn/tools/base/transitions.py",
+            "cairn/tools/base/ticket_file.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/transitions.py",
+            "cairn/tools/base/ticket_file.py",
+            "cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+          ]
         }
       ],
       "unknowns": [],
@@ -204,6 +224,10 @@
         {
           "what": "D2: the proof builds a scratch ticket (plan plus state, tickets/_charter+why.json copied from the live commons, the artifact door's roots bent to the scratch th",
           "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        },
+        {
+          "what": "D3: write_ticket takes drop= and passes it to write_state; set_phase names drop=(\"release\",) when it clears the release, because D1's merge keeps a key merely p",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
         }
       ],
       "unknowns": [],
@@ -219,13 +243,19 @@
         {
           "piece": "D1: write_state merges over the standing state and removes only the keys named in drop=.",
           "expect": "ticket_file.write_state lays the dict it is handed over the standing state file. A key goes away only when it is named in drop=, so a partial dict can no longer wipe a ticket's cursor, chart claim or questions.",
-          "falsifier": "(1) write_state of two keys over a state holding workflow_and_state, questions, intent_berth and sorted_berth leaves the unnamed fields equal and the two keys replaced; (2) rewrite_ticket handed the plan without its state plus two berths (the 4bf3b3cb path) leaves the state's other fields equal; (3) a key named in drop= is gone from the state file and the rest stay",
+          "falsifier": "(1) write_state of two keys over a state holding workflow_and_state, questions, intent_berth and sorted_berth leaves the unnamed fields equal and the two keys replaced; (2) rewrite_ticket handed the plan without its state plus two berths (the 4bf3b3cb path) leaves the state's other fields equal; (3) a key named in drop= is gone from the state file and the rest stay; (4) set_phase moving a ticket out of a phase whose release stands (release=None) leaves no release in the state file, and set_phase with a release writes it",
           "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
         },
         {
           "piece": "D2: the proof builds a scratch ticket (plan plus state, tickets/_charter+why.json copied from the live commons, the artifact door's roots bent to the scratch th",
           "expect": "ticket_file.write_state lays the dict it is handed over the standing state file. A key goes away only when it is named in drop=, so a partial dict can no longer wipe a ticket's cursor, chart claim or questions.",
-          "falsifier": "(1) write_state of two keys over a state holding workflow_and_state, questions, intent_berth and sorted_berth leaves the unnamed fields equal and the two keys replaced; (2) rewrite_ticket handed the plan without its state plus two berths (the 4bf3b3cb path) leaves the state's other fields equal; (3) a key named in drop= is gone from the state file and the rest stay",
+          "falsifier": "(1) write_state of two keys over a state holding workflow_and_state, questions, intent_berth and sorted_berth leaves the unnamed fields equal and the two keys replaced; (2) rewrite_ticket handed the plan without its state plus two berths (the 4bf3b3cb path) leaves the state's other fields equal; (3) a key named in drop= is gone from the state file and the rest stay; (4) set_phase moving a ticket out of a phase whose release stands (release=None) leaves no release in the state file, and set_phase with a release writes it",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
+        },
+        {
+          "piece": "D3: write_ticket takes drop= and passes it to write_state; set_phase names drop=(\"release\",) when it clears the release, because D1's merge keeps a key merely p",
+          "expect": "ticket_file.write_state lays the dict it is handed over the standing state file. A key goes away only when it is named in drop=, so a partial dict can no longer wipe a ticket's cursor, chart claim or questions.",
+          "falsifier": "(1) write_state of two keys over a state holding workflow_and_state, questions, intent_berth and sorted_berth leaves the unnamed fields equal and the two keys replaced; (2) rewrite_ticket handed the plan without its state plus two berths (the 4bf3b3cb path) leaves the state's other fields equal; (3) a key named in drop= is gone from the state file and the rest stay; (4) set_phase moving a ticket out of a phase whose release stands (release=None) leaves no release in the state file, and set_phase with a release writes it",
           "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_partial_state_write_keeps_the_standing_fields.py"
         }
       ],
@@ -245,7 +275,8 @@
           "timeout_s": 600,
           "covers": [
             "D1: write_state merges over the standing state and removes only the keys named in drop=.",
-            "D2: the proof builds a scratch ticket (plan plus state, tickets/_charter+why.json copied from the live commons, the artifact door's roots bent to the scratch th"
+            "D2: the proof builds a scratch ticket (plan plus state, tickets/_charter+why.json copied from the live commons, the artifact door's roots bent to the scratch th",
+            "D3: write_ticket takes drop= and passes it to write_state; set_phase names drop=(\"release\",) when it clears the release, because D1's merge keeps a key merely p"
           ]
         }
       ],
