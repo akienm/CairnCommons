@@ -1,8 +1,8 @@
 {
   "id": "b38af5fd1852",
-  "title": "a spin-up that finds a live copy of a host singleton exits quietly (--force replaces it), and the lock path carries the cairn instance",
+  "title": "a second ground loop exits quietly, --force replaces it, and the ground-loop lock path carries the cairn instance",
   "owning_intention": "cairn/tools/base/intention+why.json",
-  "intention": "Every host singleton (bus, ground loop) that finds a live copy exits quietly and leaves it running, --force kills the old one, a device name on the bus is never held by two, and the claim's path carries the cairn instance.",
+  "intention": "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for bus.lock) and shim naming (<device>_1) are separate tickets, RULE 1.",
   "why": "Measured 2026-11-12 on akiendell: live box: bus.lock held=True and ground_loop run.lock held=True (singleton.held); one bus launcher+child pair (1648->16184) and one ground_loop shim+child pair (23396->4904), no duplicates; the bus child 16184 owns conhost 16980, the ground_loop child 4904 none seen",
   "traces_to": "Law 1 (one claim tool, not one per site); Law 4 (the kernel lock, not a convention); Law 7 (the loser refuses loudly); the orchestrator's note that I-the-command-lazy-inits-the-system.md rejects a host-local lock with no instance name.",
   "how": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/base/singleton.py claim, keyed by cairn instance, and prove each by a second claimant that exits.",
@@ -10,49 +10,54 @@
     "clauses": [
       {
         "n": 1,
-        "claim": "for ground_loop and bus, a second start while the first is live exits 0 quietly (no error, no trouble) and leaves the first running; with --force it kills the old one and takes the claim"
+        "claim": "a second ground loop started while the first is live exits 0 with nothing on stdout or stderr and leaves the first running; with --force it kills the old one and holds the claim"
       },
       {
         "n": 2,
-        "claim": "the two lock paths each contain the cairn instance segment (devices/<device>/<instance>/...), none is host-global"
-      },
-      {
-        "n": 3,
-        "claim": "a start given no instance name while <device>_0 is live on the bus is launched by the shim as <device>_1 (next free number); an explicit name already live on the bus is refused loudly and never leaves two"
+        "claim": "the ground loop's lock path contains the cairn instance segment (devices/cairn/0/...), not a host-global path"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: the fix at cairn/tools/base/singleton.py, cairn/devices/cairn/machines/bus/server.py, cairn/devices/cairn/machines/ground_loop/guard.py",
+      "text": "D1: --force is guard.force_claim (kills the record's pid, retries the claim); the runner _claim returns (claim, exit_code); the loser's exit is 0 and silent; a failed --force is loud, exit 3 (EXIT_FORCE_FAILED).",
       "writes_to": [
-        "cairn/tools/base/singleton.py",
-        "cairn/devices/cairn/machines/bus/server.py",
-        "cairn/devices/cairn/machines/ground_loop/guard.py"
+        "cairn/devices/cairn/machines/ground_loop/guard.py",
+        "cairn/devices/cairn/machines/ground_loop/__main__.py"
       ],
       "reads": [
-        "cairn/tools/base/singleton.py"
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: one proof, one tooth per clause; red first.",
+      "text": "D2: ground_loop's own proof moves with it: test_the_doors_loser_exits_zero_and_says_nothing replaces the exit-3 tooth (PROVES bae622881f03 clause 7), and the no-takeover tooth now expects exit 0 and silence.",
       "writes_to": [
-        "cairn/tools/base/proofs/test_a_second_spin_up_of_a_host_singleton_exits.py"
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
+      ],
+      "reads": []
+    },
+    {
+      "n": 3,
+      "text": "D3: one new proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
       ],
       "reads": []
     }
   ],
   "bounds": {
     "in": [
-      "cairn/tools/base/singleton.py",
-      "cairn/devices/cairn/machines/bus/server.py",
       "cairn/devices/cairn/machines/ground_loop/guard.py",
-      "cairn/tools/base/proofs/test_a_second_spin_up_of_a_host_singleton_exits.py"
+      "cairn/devices/cairn/machines/ground_loop/__main__.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
     ],
     "out": [
-      "every other component"
+      "every other component",
+      "the bus",
+      "the shim"
     ]
   },
   "measured": [
@@ -75,6 +80,17 @@
       "when": "2026-11-13",
       "saw": "Akien answered Q#93: the ticket's 'loudly' was wrong for a second singleton copy: 'spinning up a second ground loop should see the first, and that it's fine, and exit quietly'; '--force, which means kill the old one'; 'i have no recollection why it says loudly'. Naming: two zeros could not be routed, so 'the launcher has to ask the shim to create the instance ... it's the shim's job to say we have a cc_0 instance, so I'll launch it with cc_1'. Some things (embeddings generator) may run several instances, so singleton-ness is per component, not universal.",
       "how": "his words in the session, recorded verbatim on question open-cf43b673ac07 and in this chat"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "Split by the orchestrator under RULE 1: b38a is ground_loop only. Windows: test_ground_loop.py's test_a_reader_never_sees_a_torn_record is red about one run in two on main AND on this branch (PermissionError / WinError 145 from beat.json while a reader holds it); unrelated to this change, a separate defect in write_record on Windows.",
+      "how": "bin/cairn test <proof> run twice on main and twice on the branch worktree"
     }
+  ],
+  "writes_to": [
+    "cairn/devices/cairn/machines/ground_loop/guard.py",
+    "cairn/devices/cairn/machines/ground_loop/__main__.py",
+    "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
+    "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
   ]
 }
