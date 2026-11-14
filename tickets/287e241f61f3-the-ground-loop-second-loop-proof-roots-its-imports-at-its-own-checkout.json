@@ -1,0 +1,46 @@
+{
+  "id": "287e241f61f3",
+  "title": "the ground_loop second-loop proof roots its imports at its own checkout",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "test_a_second_loop_exits_quietly_and_force_replaces_it.py computes REPO as parents[6], the checkout, so its `import cairn` measures this tree's ground_loop and not the main checkout's editable install.",
+  "why": "Measured 2026-11-14 on origin/main 2889bdd1f: proof_coverage.misrooted_proofs names exactly this proof at line 22 (`sys.path.insert(0, str(REPO))` with REPO = Path(__file__).resolve().parents[5], which resolves to <checkout>/cairn, not the checkout; parents[6] is the checkout). So test_a_proof_roots_its_imports_at_its_own_checkout reds over the real tree, and run outside the tester this proof measures main's code, so a hollow cannot red it. The file's path is cairn/devices/cairn/machines/ground_loop/proofs/, which is one level deeper than the parents[5] its author counted.",
+  "traces_to": "Law 3 (a proof measures this tree), Law 8 (a hollow a proof cannot see is a hollow green).",
+  "how": "Change parents[5] to parents[6] on the REPO line; add one tooth that calls proof_coverage.misrooted_inserts on __file__ and asserts [] (red on the unfixed line, green fixed). Red-first.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "misrooted_inserts over this proof returns [] (its sys.path entry is the checkout root), and over the real tree test_a_proof_roots_its_imports_at_its_own_checkout reads green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: REPO = parents[6]; the one new tooth reads the tool's published scan.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py",
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/tools/proof_coverage"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "misrooted_proofs('.') on origin/main names this proof only: [{'line': 22, 'resolves_to': 'cairn', 'source': 'sys.path.insert(0, str(REPO))'}]; Path(__file__).resolve().parents[5] is <checkout>/cairn and parents[6] is <checkout>",
+      "how": "python3 over a worktree of origin/main 2889bdd1f on akiendell"
+    }
+  ]
+}
