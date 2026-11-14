@@ -1,0 +1,49 @@
+{
+  "id": "64db27776707",
+  "title": "the ground-loop survival proof asserts the quiet exit of a losing claimant, not the old loud refusal",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "Arm 4 of test_ground_loop_survives_its_caller.py follows outline 5.3.5.2.1: a second ground loop that loses the claim writes nothing to the nohup log and exits 0, and the first loop keeps the lock; the arm asserts the quiet exit and is not deleted.",
+  "why": "Measured by akiendelllinux on origin/main: test_ground_loop_survives_its_caller.py reds on 'the losing claimant's refusal GREW the nohup log: 0 -> 0 bytes' and 'the refusal names the claim, not a crash: tail: ''' because b38af5fd1852 (35711160e) made a second loop exit 0 quietly per Akien's Q#93 answer (outline 5.3.5.2.1), and its bounds left this proof out. No ticket covered it.",
+  "traces_to": "Law 3 and Law 9: a proof that asserts a behaviour the system retired is red by construction; CP4 resolves the chafe.",
+  "how": "In arm_four_legibility replace the two loud-refusal checks with: the nohup log did not grow; the loser's unit is not failed (systemctl --user show <unit>.service -p ActiveState -p Result); the first loop's pid is still alive and still the beat record's pid. The taken-unit-name half is unchanged. Update the arm's heading, and add a note beside the docstring's verbatim 0d16e513ff26 falsifier that the refusal is now quiet. Linux only.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "arm 4 of test_ground_loop_survives_its_caller.py asserts that a second ground loop writes nothing to the nohup log, exits without failing its unit, and leaves the first loop alive and still named by the beat record; it is red on main (the loud-refusal checks) and green after, on Linux"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: arm 4's first half asserts the quiet exit (silence, unit not failed, survivor keeps the claim); the arm is kept.",
+      "writes_to": [
+        "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/devices/cairn/machines/ground_loop (b38af5fd1852 owns the behaviour and its proof)",
+      "arm 4's taken-unit-name half"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "On Windows the proof is red for an unrelated reason: bin/cairn test dies at CreateProcess of a systemd tool (it needs systemd-run --user and cgroup v2, and main() says RED when either is absent). The loud-refusal assertions are at lines ~534-538 (after > before, and a regex over 'claim|singleton|already|refus'). akiendelllinux measured the Linux red on origin/main.",
+      "how": "bin/cairn test cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py on Windows; read lines 506-566 and main()"
+    }
+  ]
+}
