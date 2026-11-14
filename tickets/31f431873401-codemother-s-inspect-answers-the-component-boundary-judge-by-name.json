@@ -1,0 +1,61 @@
+{
+  "id": "31f431873401",
+  "title": "codemother's inspect answers the component-boundary judge by name",
+  "owning_intention": "cairn/devices/codemother/intention+why.json",
+  "intention": "INSPECT_JUDGES in cairn/devices/codemother/shim.py lists buildme_stays_in_its_component, so a crossing lane that asks it over the inspect wire is answered, not refused by name.",
+  "why": "The BUILDME lane (ticket 67d479860f5d) asks the judge (ticket 8d14f4aa9e72) through codemother's inspect verb, and inspect refuses any name off INSPECT_JUDGES before anything runs (shim.py:111-130). The list lives in codemother and the judge in build_inspector, so RULE 1 puts the one line in its own ticket. Proves after the judge, before the lane.",
+  "traces_to": "RULE 1, Law 4.",
+  "how": "One name added to the inspector tuple in INSPECT_JUDGES, with a comment citing 8d14f4aa9e72; a red-first proof asks codemother's inspect for buildme_stays_in_its_component over the bus and is answered (not refused by name), and a name off the list is still refused.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "codemother's inspect asked for buildme_stays_in_its_component over the bus answers with the judge's result, not a refusal naming an unlisted judge"
+      },
+      {
+        "n": 2,
+        "claim": "a name not on INSPECT_JUDGES is still refused by name and nothing runs"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the INSPECT_JUDGES line, beside the inspector names, citing ticket 8d14f4aa9e72.",
+      "writes_to": [
+        "cairn/devices/codemother/shim.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, over the inspect wire the way test_codemother_answers_inspect_over_the_bus.py asks it.",
+      "writes_to": [
+        "cairn/devices/codemother/proofs/test_codemother_inspect_answers_the_component_boundary_judge.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/proofs/test_codemother_answers_inspect_over_the_bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/shim.py",
+      "cairn/devices/codemother/proofs/test_codemother_inspect_answers_the_component_boundary_judge.py"
+    ],
+    "out": [
+      "cairn/machines/build_inspector (the judge, 8d14f4aa9e72)",
+      "cairn/tools/base (the lane, 67d479860f5d)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "INSPECT_JUDGES (cairn/devices/codemother/shim.py:118) lists 37 inspector names and list_runs; buildme_stays_in_its_component is not among them, and a name off the list is refused by name",
+      "how": "read shim.py lines 110-131 on akiendelllinux main"
+    }
+  ]
+}
