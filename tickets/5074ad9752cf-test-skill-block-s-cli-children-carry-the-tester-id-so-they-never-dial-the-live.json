@@ -1,0 +1,53 @@
+{
+  "id": "5074ad9752cf",
+  "title": "test_skill_block's CLI children carry the tester id, so they never dial the live bus",
+  "owning_intention": "cairn/machines/skill_block/intention+why.json",
+  "intention": "test_skill_block's CLI children carry CAIRN_TESTER_TEST_ID when the tester set it, so under the tester their judge asks ride a scratch CodeMother and never the live bus.",
+  "why": "Measured 2026-11-14: on d41cdc76c, bin/cairn test over cairn/machines/skill_block/proofs/test_skill_block.py reds 3 of 34 teeth with 'no bus process answered at /home/akien/.cairn/devices/cairn/machines/bus/0/bus.sock within 15s (spawned: setsid; last answer: ConnectionRefusedError...)'. The proof's minimal child env (_WIN_ENV) drops PROOF_ENV, so since 17d570c10390 (850d9d327) transitions._ask_once sends the child's asks to reach('codemother') on the live bus, whose socket is a dead file inside the instance seal.",
+  "traces_to": "Law 8 (a proof measures its own component, never the live world) and Law 7 (a red the code did not earn is a false record).",
+  "how": "Rename _WIN_ENV to _CHILD_ENV at its 4 uses and lay CAIRN_TESTER_TEST_ID into it from os.environ when present; red-first: the same 3 teeth red without the line.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "under bin/cairn test, test_skill_block's 34 teeth are green and none reports no bus process answered at the live bus.sock"
+      },
+      {
+        "n": 2,
+        "claim": "with the CAIRN_TESTER_TEST_ID line removed, test_cli_fires_and_refuses_with_honest_exit_codes, test_the_proof_never_touches_the_live_trace and test_the_wire_is_not_fatal_when_the_ROOTS_are_unwritable red"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: test_skill_block's child env is _CHILD_ENV (renamed from _WIN_ENV), and it carries CAIRN_TESTER_TEST_ID from os.environ when the tester set it; skill_block's code is untouched.",
+      "writes_to": [
+        "cairn/machines/skill_block/proofs/test_skill_block.py"
+      ],
+      "reads": [
+        "cairn/machines/skill_block/proofs/test_skill_block.py",
+        "cairn/tools/base/transitions.py"
+      ]
+    }
+  ],
+  "fixes": [
+    "cairn/machines/skill_block/proofs/test_skill_block.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/skill_block/proofs/test_skill_block.py"
+    ],
+    "out": [
+      "skill_block's code",
+      "transitions._ask_once's PROOF_ENV gate (17d570c10390)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "3 of 34 teeth red on d41cdc76c with ConnectionRefusedError at the live bus.sock; 34 of 34 green on a17840871 with the env line",
+      "how": "bin/cairn test --timeout 600 on the proof from worktree ~/dev/src/wt-tr/cairn with CAIRN_BUS_HOME=/tmp/testing-b93-bmfD"
+    }
+  ]
+}

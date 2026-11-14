@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Changing _ask_once to treat a scratch HOME as proof context was the alternative; it widens a gate shared by every caller (17d570c10390's design) to fix one proof's env. Passing the tester's id through the proof's own child env is the smallest fix and stays inside skill_block.",
+      "hidden_assumption": "That CAIRN_TESTER_TEST_ID is the only variable the child needs to choose the scratch path. Measured: with it copied, all 34 teeth green on Linux.",
+      "prior_art": "17d570c10390 (850d9d327) introduced the PROOF_ENV gate in _ask_once; 0c2c3f53c2be moved judges into CodeMother's process. No ticket covers child envs that drop PROOF_ENV. Grepped CairnCommons/tickets for _WIN_ENV and CAIRN_TESTER_TEST_ID in skill_block: none.",
+      "real_collision": "None. The minimal env exists so Windows children do not inherit a huge env; adding one named key keeps that aim."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Under bin/cairn test all 34 teeth of test_skill_block are green and none reaches /home/akien/.cairn/devices/cairn/machines/bus/0/bus.sock; with the env line removed the same 3 teeth red. Wrong intent if the 3 reds come from skill_block's own code rather than the child env.",
+    "from_idea": "none, because the trigger is a measured red, not a captured idea: cairn/machines/skill_block/proofs/test_skill_block.py at d41cdc76c reds 3 of 34 teeth under bin/cairn test",
+    "how": "The proof builds a minimal env for its CLI children (_WIN_ENV). It drops PROOF_ENV, so transitions._ask_once falls through to reach('codemother') on the live bus, whose bus.sock is a dead file inside the seal. Rename _WIN_ENV to _CHILD_ENV and copy CAIRN_TESTER_TEST_ID into it when the tester set it. Red-first: the 3 teeth red on d41cdc76c, green after.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8: a proof measures only its own component and never the live world; Law 7: a red the code did not earn is a false record.",
+    "what": "test_skill_block's CLI children carry the tester's CAIRN_TESTER_TEST_ID, so under the tester they ask a scratch CodeMother and never dial the live bus from inside the instance seal."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A proof that builds a minimal child env silently drops PROOF_ENV, and since 17d570c10390 that routes the child's judge asks to the live bus: inside the tester's seal they fail with ConnectionRefusedError after 15s."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3f98c87333f7",
+  "skill": "intent",
+  "title": "test_skill_block's CLI children carry the tester's CAIRN_TESTER_TEST_ID, so under the tester they ask a scratch CodeMoth",
+  "trace_id": "cea4a4ea12a1",
+  "when": "2026-11-14T03:08:47.317297"
+}
