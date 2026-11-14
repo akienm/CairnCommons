@@ -1,0 +1,80 @@
+{
+  "id": "67797b98784d",
+  "title": "a tester run whose every tooth printed NOTRUN writes no seal and asks for the Linux sealer",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "When every tooth a proof printed is NOTRUN (it needs what this box lacks) and it printed no red, the tester writes no validation for it, casts no red ticket, and bin/cairn test prints a NOTRUN line naming the proof and asking for the Linux sealer's run. A run with green and NOTRUN teeth and no red seals green over the green teeth only and names the NOTRUN ones in its stdout_tail. A run that exits non-zero stays red.",
+  "why": "Outline 9.4.8.1 (CC's decision on Q#98): a tooth that needs what a box lacks reads not-run on that box, never red, and the box asks for the sealer's run rather than running it itself. Measured 2026-11-13 on akiendell: cairn/devices/tester/device.py run_proof turns exit 0 with no green tooth into RED ('zero teeth printed'), so a proof that cannot run on Windows has only red or a false green. ddc5cb6694d3 D1 gives teeth_printed the notrun list; nothing in the tester reads it yet. This is the tester half of ddc5cb6694d3 (its parent), split out under RULE 1; precedent: TIMEOUT (3dfceaa272ec) is a returned verdict never persisted, and 77f15efd5a96 is the zero-teeth rule this sits before.",
+  "traces_to": "Law 8: nothing enters proven-space without a proof (a not-run tooth proves nothing, so it seals nothing). Law 9: an unsealed proof already reads not green. Law 7: the not-run is printed loud, not collapsed into a red.",
+  "how": "In cairn/devices/tester/device.py, _teeth carries the notrun names. In run_proof, before the zero-teeth rule: exit 0, no green tooth, no red tooth and at least one NOTRUN tooth gives verdict NOTRUN = 'not-run', a module constant beside TIMEOUT. Like TIMEOUT it is never persisted under any sink and casts no red ticket, so the seal's verdict values and its eight fields are unchanged (ddc5 D3, option B). A mixed run (green and NOTRUN, no red, exit 0) seals GREEN; teeth_green holds the green ones only, and stdout_tail ends with one line 'NOTRUN (the Linux sealer's): <names>'. In cairn/devices/tester/cli.py the summary prints 'NOTRUN <proof>  (asks for the Linux sealer; nothing written)' and counts not-runs apart from greens and reds. A not-run does not fail the command: exit 0 when nothing else is red. The red-first proof runs fixture proofs through TesterDevice.run_proof into a scratch validations dir.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture proof that prints only 'NOTRUN test_x - needs systemd' and exits 0, run with sink validations, leaves no validation file, returns verdict 'not-run' and casts no red ticket (red_tickets.ticket_what_is_new is not called)"
+      },
+      {
+        "n": 2,
+        "claim": "a fixture proof that prints one ok tooth and one NOTRUN tooth and exits 0 seals GREEN, with teeth_green the ok tooth only and the NOTRUN name in stdout_tail"
+      },
+      {
+        "n": 3,
+        "claim": "a fixture proof that prints a NOTRUN tooth and exits 1 is RED, as before"
+      },
+      {
+        "n": 4,
+        "claim": "bin/cairn test's summary over the clause-1 fixture prints a NOTRUN line naming the proof and the Linux sealer, and the command exits 0"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: run_proof reads the notrun list; an all-NOTRUN, no-red, exit-0 run returns verdict 'not-run' (constant NOTRUN beside TIMEOUT), never persisted and never red-ticketed; a mixed run seals GREEN over its green teeth and names the not-run ones at the end of stdout_tail.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the CLI summary prints a NOTRUN line per not-run proof and counts them apart; a not-run alone does not fail the command.",
+      "writes_to": [
+        "cairn/devices/tester/cli.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/cli.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one red-first proof, one tooth per clause, over fixture proofs in a scratch dir.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_an_all_notrun_run_records_no_seal.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/cli.py",
+      "cairn/devices/tester/proofs/test_an_all_notrun_run_records_no_seal.py"
+    ],
+    "out": [
+      "proof_coverage (ddc5cb6694d3 D1)",
+      "the seal record's eight fields and its persisted verdict values",
+      "converting any existing proof to print NOTRUN (test_shim_starts_the_loop.py first, its own follow-up)",
+      "the verdict door's handling of not-run (a follow-up if a verdict ever runs a not-run proof)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "exit 0 with no green tooth seals RED ('zero teeth printed'), so a box that cannot run a tooth has only red or a false green",
+      "how": "read cairn/devices/tester/device.py run_proof, the zero-teeth rule after _teeth(proc.stdout)"
+    }
+  ]
+}
