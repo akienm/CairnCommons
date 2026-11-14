@@ -1,0 +1,83 @@
+{
+  "id": "4fb37aa5a13f",
+  "title": "the scratch tool names a proof scope that moves HOME in-process and leaves USERPROFILE behind",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "The scratch tool names every proof scope that moves HOME in its own process and leaves USERPROFILE behind, so a scratch HOME on Windows cannot silently read the live one.",
+  "why": "Measured 2026-11-13 on akienyoga9i: scratch_home_bypass reads [] over inferenceproxy and aider_shim, while both proofs read the live ~/.cairn on Windows. inferenceproxy's _home did monkeypatch.setenv(HOME) and aider_shim's cold seam string did os.environ[HOME] = %r, and on Windows Path.home() reads USERPROFILE (01414c39eb2b, a0f74572040b). The bypass scan reads env copies handed to a child; an in-process set copies nothing. A census of every proofs/test_*.py at main found exactly those two in-process sites.",
+  "traces_to": "Law 3; Law 4 (a rule that matters is enforced by physics); Law 8.",
+  "how": "D1: scratch.py gains public scratch_home_in_process(root) -> ['<relpath>:<line> <scope>']: for each function, and each string constant that parses as Python once %r/%s/%d are filled, the env keys it sets in-process (setenv, putenv, os.environ[K]=, os.environ.setdefault/update, patch.dict(os.environ, ...)); named when HOME is set and USERPROFILE is not. A string's lines count from its line in the file. D2: the charter's what names scratch_home_in_process. D3: new proof test_an_in_process_home_move_moves_userprofile_too.py, one tooth per clause, fixture keys spelled apart so the scan does not read the proof itself; the quiet tooth carries a control that must be named.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "each in-process spelling that moves HOME alone is named: setenv, putenv, os.environ[K]=, setdefault, update, patch.dict"
+      },
+      {
+        "n": 2,
+        "claim": "the same scopes moving USERPROFILE too are quiet, and so is an env copy handed to a child, while a control is named"
+      },
+      {
+        "n": 3,
+        "claim": "a seam string with %r placeholders that moves HOME alone is named at its line in the file"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: scratch.py gains public scratch_home_in_process(root) -> ['<relpath>:<line> <scope>']: for each function, and each string constant that parses as Python once %r/%s/%d are filled, the env keys it sets in-process (setenv, putenv, os.environ[K]=, os.environ.setdefault/update, patch.dict(os.environ, ...)); named when HOME is set and USERPROFILE is not. A string's lines count from its line in the file.",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the charter's what names scratch_home_in_process.",
+      "writes_to": [
+        "cairn/tools/scratch/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/scratch/intention+why.json"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: new proof test_an_in_process_home_move_moves_userprofile_too.py, one tooth per clause, fixture keys spelled apart so the scan does not read the proof itself; the quiet tooth carries a control that must be named.",
+      "writes_to": [
+        "cairn/tools/scratch/proofs/test_an_in_process_home_move_moves_userprofile_too.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/scratch/intention+why.json",
+      "cairn/tools/scratch/proofs/test_an_in_process_home_move_moves_userprofile_too.py",
+      "cairn/tools/scratch/scratch.py"
+    ],
+    "out": [
+      "cairn/tools/scratch's other primitives",
+      "build_inspector (c058eae40a95 seats the sieve)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "what": "the scans at main",
+      "saw": "Measured 2026-11-13 on akienyoga9i: scratch_home_bypass reads [] over inferenceproxy and aider_shim, while both proofs read the live ~/.cairn on Windows. inferenceproxy's _home did monkeypatch.setenv(HOME) and aider_shim's cold seam string did os.environ[HOME] = %r, and on Windows Path.home() reads ",
+      "when": "2026-11-13",
+      "how": "akienyoga9i"
+    },
+    {
+      "what": "the build on akienyoga9i",
+      "saw": "fix: 3 teeth green; hollow (_env_keys_set_in_process returns {}) reds all three",
+      "when": "2026-11-13",
+      "how": "branch scratch-in-process-home-4fb37aa5a13f"
+    }
+  ]
+}
