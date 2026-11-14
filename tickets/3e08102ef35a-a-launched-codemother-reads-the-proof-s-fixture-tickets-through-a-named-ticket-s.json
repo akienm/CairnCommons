@@ -1,0 +1,103 @@
+{
+  "id": "3e08102ef35a",
+  "title": "a launched CodeMother reads the proof's fixture tickets through a named ticket_store root",
+  "owning_intention": "cairn/tools/inspect_wire/intention+why.json",
+  "intention": "inspect_wire.launch takes a ticket_store root. The CodeMother it launches points ticket_file._TICKETS at that root under a scratch HOME, so a proof's fixture tickets reach the judges that read find_ticket.",
+  "why": "Measured 2026-11-14: commit 8627334b2 (149b9a1ab9c4) moved seven proofs from in-process fixture() to inspect_wire.launch. Their in-process `ticket_file._TICKETS = commons / 'tickets'` no longer reaches the judge, which runs in the launched CodeMother and reads her own store. So crossing_named_ticket refuses 'widget is not cast', and test_the_stones_are_pushed, test_transitions and test_entry_gate_jurisdiction red. They are 3 of the 12 reds holding 149b9a1ab9c4 at PROVEME.",
+  "traces_to": "Law 8: nothing enters proven-space without a proof a hollow build couldn't pass. These proofs red for a fixture that does not reach the judge, not for the code they measure.",
+  "how": "ROOT_ENV in both inspect_wire.py and inspector.py gains ticket_store -> CAIRN_BUILD_INSPECTOR_TICKET_STORE. _launch_env and launch take ticket_store=None and set it only when named. inspector.py, directly after `from cairn.tools.base import ticket_file as _tf`, sets `_tf._TICKETS = Path(_bent)` when `_root_override('ticket_store')` answers. That is the existing scratch-HOME guard, so a live HOME refuses the bend on stderr. Each launch() in the three proofs passes ticket_store=<the dir it already assigns to ticket_file._TICKETS>. Prototype on origin/main 175c1107c: test_the_stones_are_pushed red -> green.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a CodeMother launched with ticket_store=<dir> answers crossing_named_ticket with no mismatch for a ticket filed only in <dir>, and one launched without it reports that ticket not cast"
+      },
+      {
+        "n": 2,
+        "claim": "with CAIRN_BUILD_INSPECTOR_TICKET_STORE set under the account's own HOME, the inspector leaves ticket_file._TICKETS at the live store and says so on stderr"
+      },
+      {
+        "n": 3,
+        "claim": "test_the_stones_are_pushed, test_transitions and test_entry_gate_jurisdiction are green under bin/cairn test, and every launch() in them names ticket_store"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: inspect_wire.py: ROOT_ENV gains \"ticket_store\": \"CAIRN_BUILD_INSPECTOR_TICKET_STORE\"; _launch_env(berths, tickets_root, crossing_roots, ticket_store=None) sets it only when named; launch(*, berths=None, tickets_root=None, crossing_roots=None, ticket_store=None) passes it through and its docstring names it.",
+      "writes_to": [
+        "cairn/tools/inspect_wire/inspect_wire.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/inspect_wire.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: inspector.py: ROOT_ENV gains the same key. Directly after `from cairn.tools.base import ticket_file as _tf`, `if (_bent := _root_override(\"ticket_store\")): _tf._TICKETS = Path(_bent)`. Placing it beside _TICKETS_ROOT (~:392) NameErrors, measured: _tf is imported later. tickets_root and _TICKETS_ROOT are untouched.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the three proofs pass ticket_store=<the path they assign to ticket_file._TICKETS> at every launch() call (test_transitions 14, test_entry_gate_jurisdiction 3, test_the_stones_are_pushed 1). Red-first: run each before the change and record the 'not cast' refusal. After the change, read each red tooth's failure, and if it is something other than 'not cast', fix that tooth's root, but only one that launch() already names.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_transitions.py",
+        "cairn/tools/base/proofs/test_entry_gate_jurisdiction.py",
+        "cairn/tools/base/proofs/test_the_stones_are_pushed.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_transitions.py",
+        "cairn/tools/base/proofs/test_entry_gate_jurisdiction.py",
+        "cairn/tools/base/proofs/test_the_stones_are_pushed.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: teeth for clauses 1 and 2 in test_ask_reaches_a_launched_codemother.py, keyed in its PROVES under this id: a launch with and without ticket_store over one fixture ticket; and the inspector module imported in a subprocess under the account's own HOME with the env set, so _tf._TICKETS is the live store and stderr names the refusal. Clause 3 is keyed in the three proofs' PROVES.",
+      "writes_to": [
+        "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/inspect_wire/inspect_wire.py",
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/tools/base/proofs/test_transitions.py",
+      "cairn/tools/base/proofs/test_entry_gate_jurisdiction.py",
+      "cairn/tools/base/proofs/test_the_stones_are_pushed.py",
+      "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
+    ],
+    "out": [
+      "every other component",
+      "tickets_root and _TICKETS_ROOT (unifying the two ticket roots is not this ticket)",
+      "test_rehearsal.py and test_the_rehearsal_lane_is_retired.py (green, measured)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "test_the_stones_are_pushed red: PROVED crossing refused: named ticket 'widget' is not cast, no file matching 'widget' in /tmp/.../commons/tickets",
+      "how": "bin/cairn test in a detached worktree at origin/main 175c1107c with a CairnCommons worktree beside it"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "passing tickets_root=commons/'tickets' to launch left it red; bending _tf._TICKETS from a new env after the _tf import turned it green",
+      "how": "prototype diff in the same worktree, then bin/cairn test"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "test_entry_gate_jurisdiction red with the same 'widget is not cast' refusal; test_rehearsal and test_the_rehearsal_lane_is_retired green",
+      "how": "bin/cairn test over the three, unpatched, at origin/main"
+    }
+  ]
+}
