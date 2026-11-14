@@ -5,7 +5,7 @@
   "intention": "Arm 4 of test_ground_loop_survives_its_caller.py follows outline 5.3.5.2.1: a second ground loop that loses the claim writes nothing to the nohup log and exits 0, and the first loop keeps the lock; the arm asserts the quiet exit and is not deleted.",
   "why": "Measured by akiendelllinux on origin/main: test_ground_loop_survives_its_caller.py reds on 'the losing claimant's refusal GREW the nohup log: 0 -> 0 bytes' and 'the refusal names the claim, not a crash: tail: ''' because b38af5fd1852 (35711160e) made a second loop exit 0 quietly per Akien's Q#93 answer (outline 5.3.5.2.1), and its bounds left this proof out. No ticket covered it.",
   "traces_to": "Law 3 and Law 9: a proof that asserts a behaviour the system retired is red by construction; CP4 resolves the chafe.",
-  "how": "In arm_four_legibility replace the two loud-refusal checks with: the nohup log did not grow; the loser's unit is not failed (systemctl --user show <unit>.service -p ActiveState -p Result); the first loop's pid is still alive and still the beat record's pid. The taken-unit-name half is unchanged. Update the arm's heading, and add a note beside the docstring's verbatim 0d16e513ff26 falsifier that the refusal is now quiet. Linux only.",
+  "how": "In arm_four_legibility replace the two loud-refusal checks with: the nohup log did not grow; the loser's exit status is read from the user journal (journalctl --user -u <unit>.service, 'Main process exited, code=exited, status=N/') and must be 0, and the tooth FAILS if the status cannot be seen; the first loop's pid is still alive and still the beat record's pid. The taken-unit-name half is unchanged. Update the arm's heading, and add a note beside the docstring's verbatim 0d16e513ff26 falsifier. Linux only.",
   "falsifier": {
     "clauses": [
       {
@@ -44,6 +44,11 @@
       "when": "2026-11-13",
       "saw": "On Windows the proof is red for an unrelated reason: bin/cairn test dies at CreateProcess of a systemd tool (it needs systemd-run --user and cgroup v2, and main() says RED when either is absent). The loud-refusal assertions are at lines ~534-538 (after > before, and a regex over 'claim|singleton|already|refus'). akiendelllinux measured the Linux red on origin/main.",
       "how": "bin/cairn test cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py on Windows; read lines 506-566 and main()"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "The first version read the loser's unit state, which cannot distinguish the old loud exit 3 from exit 0: the launcher starts the loop with -p SuccessExitStatus=3 (cairn/devices/cc/superclaude, _sc_loop_start) so a unit that exited 3 is not 'failed', and inside a tester run it adds -p CollectMode=inactive-or-failed (_sc_test_mark), so the unit is collected on exit and systemctl show answers empty, which passes any state check vacuously. Closed by reading the exit status from the user journal and failing if it is not visible. Not run: Windows has no systemd.",
+      "how": "read cairn/devices/cc/superclaude lines 598-640; orchestrator's review of check (2)"
     }
   ]
 }
