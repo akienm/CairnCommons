@@ -1,0 +1,69 @@
+{
+  "ticket": "to be minted at cast",
+  "status": "DRAFT shaped plan by akiendell_cc_0, 2026-11-14, for akienasus to cast; yours-to-build after cast (orchestrator, 2026-11-14). Not cast.",
+  "title": "the inference proxy's charter names every verb the device answers, infer first",
+  "owning_intention": "cairn/devices/inferenceproxy/intention+why.json",
+  "intention": "The proxy's charter public_interface names each bus verb the device declares (resolve, embed, infer, calls, migration), with its body keys and its reply, so a caller reads the door from the charter and not from device.py. A verb the device declares and the charter does not name is a red.",
+  "why": "Measured 2026-11-14 while planning b0c0c47835c1: cairn/devices/inferenceproxy/intention+why.json public_interface names the module cairn.devices.inferenceproxy.host and ONE bus verb, 'calls'; device.py:59 declares resolve, embed, infer, calls and migration. RULE 1 says a component's public interface is what its charter declares in public_interface, and a caller (the b0c0 probe's resolver is the next) can reach 'infer' only by reading the code. The gap is the whole set, not infer alone, and one fix names all five.",
+  "traces_to": "RULE 1 (a component is reached through what its charter declares), Law 5 (the intent and the code share an address and may not contradict), Law 4 (a declaration that matters needs an instrument: the proof compares the two).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "every verb key in the dict returned by InferenceProxy declared_verbs (read by ast from device.py, the base verbs excluded) appears in the charter's public_interface as \"bus verb '<name>'\""
+      },
+      {
+        "n": 2,
+        "claim": "the entries for infer and resolve name the body keys the handler keeps (kind, prompt, messages, model, domain, options, tools; temperature) and the reply keys (answer, hit, ticket, model, outcome; a refusal is outcome 'refused' with refused and detail), and infer says it fixes kind to generate"
+      },
+      {
+        "n": 3,
+        "claim": "the 'calls' entry and the module entry are unchanged byte for byte, and a verb the charter names that the device does not declare is also a red"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: public_interface gains four entries in the form the 'calls' entry already uses (\"bus verb 'x' (ticket ...): body {...} -> {...}\"): resolve, embed, infer, migration, written from the handlers' own docstrings and whitelist; the charter write rides the artifact door (cairn artifact write, a field-level diff of three lines or fewer per entry, nothing else in the file changes).",
+      "writes_to": [
+        "cairn/devices/inferenceproxy/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/inferenceproxy/device.py",
+        "cairn/devices/inferenceproxy/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause, red first: it parses device.py with ast for the declared_verbs dict's string keys and reads the charter's public_interface; it starts no device and imports none.",
+      "writes_to": [
+        "cairn/devices/inferenceproxy/proofs/test_the_charter_names_every_verb_the_device_answers.py"
+      ],
+      "reads": [
+        "cairn/devices/inferenceproxy/device.py",
+        "cairn/devices/inferenceproxy/intention+why.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/inferenceproxy/intention+why.json",
+      "cairn/devices/inferenceproxy/proofs/test_the_charter_names_every_verb_the_device_answers.py"
+    ],
+    "out": [
+      "device.py (the verbs are described, not changed)",
+      "the b0c0c47835c1 probe",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "Read of cairn/devices/inferenceproxy/device.py: declared_verbs (line 53) returns {**super().declared_verbs(), resolve, embed, infer, calls, migration}; _handle_embed and _handle_infer call _handle_resolve with kind fixed to embed and generate via _with_kind (line 18); _handle_resolve keeps the request keys kind, prompt, messages, model, domain, options, tools (a whitelist, because the request is the cache key), reads temperature (default 0.0) separately, and returns domain.resolve's result or, on a refusal, a value with keys outcome='refused', refused, detail, ticket, model, hit=False, answer=None; _handle_calls takes limit and since; _handle_migration takes no body and returns the migration report. The charter's public_interface is a list of two strings: the module name and the 'calls' verb.",
+      "how": "read device.py lines 18-200 and the charter's public_interface with python json"
+    }
+  ],
+  "unmeasured": "whether other charters have the same gap (this ticket is the proxy's only); not censused here",
+  "questions_for_akien": []
+}
