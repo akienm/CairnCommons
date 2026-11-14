@@ -1,0 +1,31 @@
+{
+  "answers": {
+    "assumption_check": "Measured 2026-11-13 on akiendell: with HOME=<scratch> in a child's env, Path.home() still returns C:\\Users\\akien, because on Windows Path.home() reads USERPROFILE and ignores HOME. cairn/tools/base/address.py:99 builds the one instance root as Path.home()/'.cairn', so every scratch-HOME child on Windows resolves the LIVE ~/.cairn. Seen landing twice: test_traces_berth_under_their_holder.py wrote fixture traces into ~/.cairn/devices/librarian/0/machines/learning_block/traces/b.jsonl (removed by hand). Census over the repo: 14 files build their scratch env through home_env, and 18 more files in 11 components copy os.environ and set HOME by hand. Load-bearing: Path.home() and os.path.expanduser('~') both read USERPROFILE first on Windows (measured, Python 3.14), so setting USERPROFILE beside HOME is enough; on POSIX USERPROFILE is ignored, so the change is inert there.",
+    "builder_check": "A Haiku builder needs: home_env in cairn/tools/scratch/scratch.py sets env['USERPROFILE']=str(home) next to env['HOME'], before extra is applied (so a caller's explicit USERPROFILE still wins); a proof under cairn/tools/scratch/proofs that runs sys.executable under home_env(scratch) and reads back Path.home() and cairn.tools.base.address.ROOTS['instance']; and the census function scratch_home_bypass. All are in the how and decisions.",
+    "children": "none, because home_env and its proof are one component's change at cairn/tools/scratch/; the 18 hand-built envs are each their own component's change (RULE 1) and are named, not built, here",
+    "collision_check": "3301915df481 (home_env drops CAIRN_BUS_*) intends the same door to be the whole of a scratch child's isolation; this adds the home half to that door, so the two whys agree. cairn/tools/base/address.py's floor rule (it imports pathlib and nothing else) is untouched, which is why the fix is at the door and not at the root. 17d4d1899545 D7 records this leak on its own proof; its build switches that proof to home_env.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Three clauses: (1) a child run under home_env(scratch) reports Path.home()==scratch, expanduser('~')==scratch and ROOTS['instance']==scratch/.cairn, on Windows and POSIX alike; (2) a caller's explicit USERPROFILE in extra still wins; (3) scratch_home_bypass(root) names every function under root's proofs that copies os.environ and sets HOME by hand: over a testing tree it names the planted bypass and not the home_env caller. Horizon: until Python's Windows home lookup changes.",
+    "gates_bound": "code-seam: BUILDME entry gate, PROVEME build gate (build_inspector sieves over cairn/tools/scratch), PROVED exit gate; proved by the tester.",
+    "missing_check": "Not wrapped until now: the platform's own home lookup. home_env scrubbed the bus but trusted HOME to mean home, which is true on POSIX and false on Windows. Also not wrapped: nothing names a proof that bypasses the door; clause 3 publishes the scan so each component can hold its own proofs to it.",
+    "node_class": "code-seam",
+    "questions": "none, because press_office/CairnComponentOutline.txt 17.11.6.1 rules that the proof machinery is CC's to settle, and where a scratch child's home resolves is that machinery",
+    "task_or_ticket": "ticket",
+    "title": "a scratch HOME is the child's home on Windows too",
+    "watchme": "none, because the proof this ticket adds under cairn/tools/scratch/proofs is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "text": "Measured 2026-11-13 on akiendell: with HOME=<scratch> in a child's env, Path.home() still returns C:\\Users\\akien, because on Windows Path.home() reads USERPROFILE and ignores HOME. cairn/tools/base/address.py:99 builds the one instance root as Path.home()/'.cairn', so every scratch-HOME child on Windows resolves the LIVE ~/.cairn. Seen landing twice: test_traces_berth_under_their_holder.py wrote fixture traces into ~/.cairn/devices/librarian/0/machines/learning_block/traces/b.jsonl (removed by hand). Census over the repo: 14 files build their scratch env through home_env, and 18 more files in 11 components copy os.environ and set HOME by hand."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "262de5d985f1",
+  "skill": "sorted",
+  "title": "a scratch HOME is the child's home on Windows too",
+  "trace_id": "0d6cc9f20305",
+  "when": "2026-11-13T18:32:14.842195"
+}

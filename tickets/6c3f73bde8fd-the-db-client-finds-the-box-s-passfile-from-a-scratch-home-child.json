@@ -1,0 +1,63 @@
+{
+  "id": "6c3f73bde8fd",
+  "title": "the db client finds the box's passfile from a scratch-HOME child",
+  "owning_intention": "cairn/devices/db_domain/tools/client/intention+why.json",
+  "intention": "A child run under a scratch HOME still reaches the box's Postgres on the TCP route: the client finds the box's pgpass through the box root home_env names, and never through the scratch.",
+  "why": "Measured 2026-11-13 by akiendell on the Windows house checkout at d2a61adc9: with d95796cdfb9b's home_env setting USERPROFILE beside HOME, codemother/machines/clearance/proofs/test_clearance.py reds at its first scratch-HOME ask (:103) with '5432 fe_sendauth: no password supplied'; with only that line reverted it is green. store._conn_args on Windows dials TCP loopback with passfile= the pgpass under the instance root, falling back to the root the process started with (fc4bb2062253). In a scratch-HOME child both are the scratch, so no pgpass is found, and the explicit passfile= overrides libpq's own PGPASSFILE, so nothing outside store.py can supply it.",
+  "traces_to": "fc4bb2062253 (the passfile survives a repointed instance root); d95796cdfb9b (a scratch HOME is the child's home on Windows too); Law 3.",
+  "how": "D1 _conn_args falls back, after its own root and its startup root, to the pgpass under CAIRN_SCRATCH_BOX_INSTANCE. D2 a tooth in the passfile proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with no pgpass under the current or startup root, _conn_args names none while CAIRN_SCRATCH_BOX_INSTANCE is unset, names the box's once it is set, and the current root's pgpass still wins"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: store._conn_args tries, in order, the current root's pgpass, the startup root's, then <CAIRN_SCRATCH_BOX_INSTANCE>/devices/db_domain/0/pgpass; the variable is read as a string.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: tooth test_a_scratch_home_child_finds_the_box_passfile in the passfile proof.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+    ],
+    "out": [
+      "cairn/tools/scratch (d95796cdfb9b sets the variable)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "what": "test_clearance.py on Windows with home_env's USERPROFILE",
+      "saw": "red at :103, 5432 fe_sendauth: no password supplied; green with the line reverted",
+      "when": "2026-11-13",
+      "how": "akiendell, Windows house checkout at d2a61adc9, three runs (relayed by the orchestrator)"
+    },
+    {
+      "what": "the passfile tooth on akienyoga9i",
+      "saw": "3/3 green; with store.py reverted the new tooth fails",
+      "when": "2026-11-13",
+      "how": "~/.cairn/venv/Scripts/python.exe cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py"
+    }
+  ]
+}
