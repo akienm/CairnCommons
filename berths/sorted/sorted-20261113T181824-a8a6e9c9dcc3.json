@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: Akien's Q#93 answer about the ground loop applies to the bus. That is CC's read, not yet his word (outline 5.3.5.2.1 says so); his own outline 5.3.5.2 already says a second copy of the part that binds first 'exits quietly'. Also load-bearing: the kernel frees bus.lock when the holder dies, so --force can kill and retry the claim.",
+    "builder_check": "A Haiku builder needs: the file and lines (server.py claim() ~832 and the held branch ~963-967; __main__.py argparse ~41-49); the exit semantics (0, silent); how --force finds a pid (decide and prove it); to run against a scratch CAIRN_BUS_HOME, never the live bus; and that bus_client is out. The ticket carries all of these except the pid mechanism, which is its first decision.",
+    "children": "none, because the fix is one component (the bus) and one proof; the ground loop half is b38af5fd1852 and shim naming is its own ticket",
+    "collision_check": "Looked at outline 5.3.5.2 / 5.3.5.2.1 (quiet exit, --force) and ticket b38af5fd1852 (ground loop, now split off): no collision, this is its bus half. bus_client/proofs/test_a_draining_bus_is_used_not_raced.py only mentions EXIT_HELD in a docstring (grep, 2026-11-13) and pins nothing, so RULE 1 holds: that proof stays out. Any caller that treats exit 3 as 'a bus is up' (bus_client ensure_bus spawn path) is read at build, and a change there would be its own ticket.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) a second bus start while the first holds bus.lock exits 0 with empty stdout and stderr and the first keeps serving; with --force the old bus is killed and the new one holds the claim | (2) the bus.lock path contains devices/cairn/machines/bus/<instance>. Horizon: the proof runs green twice on a scratch CAIRN_BUS_HOME and is red against the build's parent commit.",
+    "gates_bound": "proof gate (a hollow build must fail it) + durability gate (committed) + feeds-back-to-origin on failure (Laws 3 + 8).",
+    "missing_check": "Not wrapped: how --force finds the old bus's pid (the bus has no record file like the ground loop's beat.json; a candidate is a pid line written under the lock). The ticket's how names it as the first thing the build decides, with a tooth.",
+    "node_class": "code-seam",
+    "questions": "none, because Akien's Q#93 answer (press_office/CairnComponentOutline.txt 5.3.5.2.1-2, ticket b38af5fd1852, recorded 2026-11-13) settles the behavior and the bus extension is flagged CC's read in the outline itself; the open point is a mechanism (pid lookup), which is CC's to decide",
+    "task_or_ticket": "ticket",
+    "title": "a second bus exits quietly while the first holds bus.lock, and --force replaces it",
+    "watchme": "none, because its proof cairn/devices/cairn/machines/bus/proofs/test_a_second_bus_exits_quietly_and_force_replaces_it.py is the whole of its correctness; the live check is the same command on akiendell; the code lives at cairn/devices/cairn/machines/bus/server.py",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The bus half of Q#93: quiet exit and --force; the bus extension is CC's read until Akien says it."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "8138ef424831",
+  "skill": "sorted",
+  "title": "a second bus exits quietly while the first holds bus.lock, and --force replaces it",
+  "trace_id": "69a8843d2629",
+  "when": "2026-11-13T18:18:24.484030"
+}
