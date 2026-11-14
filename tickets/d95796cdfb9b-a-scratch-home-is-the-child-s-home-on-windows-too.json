@@ -1,0 +1,83 @@
+{
+  "id": "d95796cdfb9b",
+  "title": "a scratch HOME is the child's home on Windows too",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "A child given a scratch HOME through home_env finds its home there on every platform: Path.home(), expanduser('~') and the instance root they imply all resolve under the scratch, so no proof's child writes into live instance space.",
+  "why": "Measured 2026-11-13 on akiendell: with HOME=<scratch> in a child's env, Path.home() still returns C:\\Users\\akien, because on Windows Path.home() reads USERPROFILE and ignores HOME. cairn/tools/base/address.py:99 builds the one instance root as Path.home()/'.cairn', so every scratch-HOME child on Windows resolves the LIVE ~/.cairn. Seen landing twice: test_traces_berth_under_their_holder.py wrote fixture traces into ~/.cairn/devices/librarian/0/machines/learning_block/traces/b.jsonl (removed by hand). Census over the repo: 14 files build their scratch env through home_env, and 18 more files in 11 components copy os.environ and set HOME by hand. A proof that writes into live instance space is the severe version of a red: the run reads green or red while the live corpus quietly gains fixture records.",
+  "traces_to": "3301915df481 (home_env: a scratch HOME carries no live bus); 17d4d1899545 D7 (the leak measured on its proof); Law 3; CLAUDE.md three roots (instance space is never a proof's to write).",
+  "how": "D1 home_env sets USERPROFILE beside HOME. D2 a public scratch_home_bypass(root) scan, the shape of bare_temp_reach, names hand-built HOME envs so each component holds its own proofs to the door. D3 proof test_a_scratch_home_is_the_childs_home_everywhere.py, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a child run with sys.executable under home_env(scratch) prints Path.home(), os.path.expanduser('~') and cairn.tools.base.address.ROOTS['instance'], and they equal scratch, scratch and scratch/.cairn"
+      },
+      {
+        "n": 2,
+        "claim": "home_env(scratch, USERPROFILE=other) gives the child USERPROFILE=other: the caller's extra still applies last"
+      },
+      {
+        "n": 3,
+        "claim": "scratch_home_bypass over a testing tree with one proof that does dict(os.environ, HOME=x) and one that calls home_env(x) names exactly the first"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: home_env sets env['USERPROFILE']=str(home) next to HOME, before extra is applied.",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: scratch_home_bypass(root) -> ['<relpath>:<line> <function>'] for each function in root's proofs/test_*.py that copies os.environ and sets a HOME key; public, names no caller and exempts nothing, like bare_temp_reach.",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: proof test_a_scratch_home_is_the_childs_home_everywhere.py, one tooth per clause, measuring only the scratch tool.",
+      "writes_to": [
+        "cairn/tools/scratch/proofs/test_a_scratch_home_is_the_childs_home_everywhere.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/proofs/test_home_env_carries_no_bus_address.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/scratch/scratch.py",
+      "cairn/tools/scratch/proofs/test_a_scratch_home_is_the_childs_home_everywhere.py"
+    ],
+    "out": [
+      "every other component",
+      "the 18 hand-built envs (each its own component's change)",
+      "cairn/tools/base/address.py (its pathlib-only floor)",
+      "in-process HOME sets (aider_shim, inferenceproxy)"
+    ]
+  },
+  "measured": [
+    {
+      "what": "Path.home() under HOME=<scratch> on Windows",
+      "how": "HOME=<scratch> py -3 -c 'from pathlib import Path; print(Path.home())' on akiendell, 2026-11-13",
+      "when": "2026-11-13",
+      "saw": "C:\\Users\\akien"
+    },
+    {
+      "what": "scratch-HOME envs by route",
+      "how": "AST scan with _copies_environ/_sets_home from cairn/tools/base/proofs/test_a_scratch_home_proof_reaches_no_live_bus.py over every *.py in the repo, 2026-11-13",
+      "when": "2026-11-13",
+      "saw": "14 files through home_env; 18 files in 11 components hand-built"
+    }
+  ]
+}
