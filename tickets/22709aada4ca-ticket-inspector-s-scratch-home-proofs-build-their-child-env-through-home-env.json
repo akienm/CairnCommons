@@ -1,0 +1,51 @@
+{
+  "id": "22709aada4ca",
+  "title": "ticket_inspector's scratch-HOME proofs build their child env through home_env",
+  "owning_intention": "cairn/tools/ticket_inspector/intention+why.json",
+  "intention": "Every scratch-HOME child cairn/tools/ticket_inspector's proofs start gets its home through home_env, so on every platform it finds its home in the scratch and never reaches the live ~/.cairn.",
+  "why": "Measured 2026-11-13 on akienyoga9i (Windows) at cairn 96aa5dac7: cairn.tools.scratch.scratch.scratch_home_bypass(<repo>) names 1 site(s) in cairn/tools/ticket_inspector: cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py:41 _checks. Each builds a child env with HOME set to a scratch by hand, so on Windows, where Path.home() reads USERPROFILE (d95796cdfb9b), the child resolves the LIVE ~/.cairn, and none gets home_env's CAIRN_BUS_ scrub (3301915df481).",
+  "traces_to": "d95796cdfb9b (a scratch HOME is the child's home on Windows too); 3301915df481; Law 3.",
+  "how": "D1 each named site builds its env with home_env(home, **extra), keeping its own scrub on the result.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "scratch_home_bypass(<repo>) names no site under cairn/tools/ticket_inspector"
+      },
+      {
+        "n": 2,
+        "claim": "each named proof file is green and a Windows run of it writes nothing under the live ~/.cairn"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: at cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py:41 _checks, the env is home_env(home, **the site's other keys); a site's own key scrub applies to home_env's result.",
+      "writes_to": [
+        "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+      ],
+      "reads": [
+        "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py"
+    ],
+    "out": [
+      "cairn/tools/scratch (home_env unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "what": "scratch_home_bypass over the repo, sites under cairn/tools/ticket_inspector",
+      "saw": "cairn/tools/ticket_inspector/proofs/test_the_inspector_finds_the_repo_where_it_stands.py:41 _checks",
+      "when": "2026-11-13",
+      "how": "py -3 -c scratch.scratch_home_bypass(Path('.')) in cairn at 96aa5dac7 on akienyoga9i"
+    }
+  ]
+}

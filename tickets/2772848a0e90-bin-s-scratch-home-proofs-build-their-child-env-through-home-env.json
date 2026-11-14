@@ -1,0 +1,60 @@
+{
+  "id": "2772848a0e90",
+  "title": "bin's scratch-HOME proofs build their child env through home_env",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "Every scratch-HOME child bin's proofs start gets its home through home_env, so on every platform it finds its home in the scratch and never reaches the live ~/.cairn.",
+  "why": "Measured 2026-11-13 on akienyoga9i (Windows) at cairn 96aa5dac7: cairn.tools.scratch.scratch.scratch_home_bypass(<repo>) names 4 site(s) in bin: bin/proofs/test_askscan.py:101 _hook; bin/proofs/test_cairn_floor.py:58 _env; bin/proofs/test_cairn_help_lists_in_the_operators_order.py:92 _env; bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py:75 _run. Each builds a child env with HOME set to a scratch by hand, so on Windows, where Path.home() reads USERPROFILE (d95796cdfb9b), the child resolves the LIVE ~/.cairn, and none gets home_env's CAIRN_BUS_ scrub (3301915df481).",
+  "traces_to": "d95796cdfb9b (a scratch HOME is the child's home on Windows too); 3301915df481; Law 3.",
+  "how": "D1 each named site builds its env with home_env(home, **extra), keeping its own scrub on the result.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "scratch_home_bypass(<repo>) names no site under bin"
+      },
+      {
+        "n": 2,
+        "claim": "each named proof file is green and a Windows run of it writes nothing under the live ~/.cairn"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: at bin/proofs/test_askscan.py:101 _hook; bin/proofs/test_cairn_floor.py:58 _env; bin/proofs/test_cairn_help_lists_in_the_operators_order.py:92 _env; bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py:75 _run, the env is home_env(home, **the site's other keys); a site's own key scrub applies to home_env's result.",
+      "writes_to": [
+        "bin/proofs/test_askscan.py",
+        "bin/proofs/test_cairn_floor.py",
+        "bin/proofs/test_cairn_help_lists_in_the_operators_order.py",
+        "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py"
+      ],
+      "reads": [
+        "bin/proofs/test_askscan.py",
+        "bin/proofs/test_cairn_floor.py",
+        "bin/proofs/test_cairn_help_lists_in_the_operators_order.py",
+        "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/proofs/test_askscan.py",
+      "bin/proofs/test_cairn_floor.py",
+      "bin/proofs/test_cairn_help_lists_in_the_operators_order.py",
+      "bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py"
+    ],
+    "out": [
+      "cairn/tools/scratch (home_env unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "what": "scratch_home_bypass over the repo, sites under bin",
+      "saw": "bin/proofs/test_askscan.py:101 _hook; bin/proofs/test_cairn_floor.py:58 _env; bin/proofs/test_cairn_help_lists_in_the_operators_order.py:92 _env; bin/proofs/test_help_lists_the_bin_beside_the_code_from_the_launcher.py:75 _run",
+      "when": "2026-11-13",
+      "how": "py -3 -c scratch.scratch_home_bypass(Path('.')) in cairn at 96aa5dac7 on akienyoga9i"
+    }
+  ]
+}
