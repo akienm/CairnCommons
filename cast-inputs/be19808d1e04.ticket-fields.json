@@ -1,0 +1,79 @@
+{
+ "id": "be19808d1e04",
+ "title": "a test run from a linked worktree never casts a live ticket",
+ "date": "2026-11-14",
+ "owner": "CC",
+ "owning_intention": "cairn/devices/tester/intention+why.json",
+ "intention": "A red measured in a builder's linked worktree is named as not ticketed and never becomes a live ticket; only the house tree's reds are cast.",
+ "why": "Outline 9.4.2.3.7.5 wants every red ticketed, but a red-first run in a worktree is the build working, not a red lost. Read 2026-11-14 on akienyoga9i, while building 207c4074b3d5's FIXME 1 (branch fixme-207c4074b3d5, 80246bd57): cairn/tools/base/ticket_file.py:15 derives the store as <checkout>/../CairnCommons/tickets. On Windows every builder's worktree (C:/automation/local/cairn-<id>) is a sibling of the house commons, so that store resolves to the LIVE C:/automation/local/CairnCommons/tickets, in a git tree. red_tickets._rel keys a worktree's proof as inside its repo, and run_proof tickets every red. So a red-first `bin/cairn test` in a Windows worktree would cast a live ticket for a build in flight, and commit it into the house commons. This was read, not run: running it would cast the live ticket. On the Dell, /tmp worktrees have no sibling commons and hit StoreUnreachable instead (FIXME 1).",
+ "traces_to": "Law 7 (the red stays in its record, and the not-ticketed is named); ticket 207c4074b3d5 (D7, FIXME 1)",
+ "how": "D1: A LINKED WORKTREE NEVER CASTS. ticket_what_is_new asks git whether the repo it keys against is a linked worktree (`git rev-parse --git-dir` differs from `--git-common-dir`). If it is, the call casts nothing, commits nothing, and raises StoreUnreachable naming the worktree, so run_proof's FIXME 1 path prints '<proof> is red and was NOT ticketed: ...' and the run goes on. A proof's scratch repo, set through ROOTS['repo'] and made with git init, is a main tree and still casts, so 207c's teeth keep their world. Builds on 207c4074b3d5's FIXME 1 (StoreUnreachable). D2: PROOF, red-first. cairn/devices/tester/proofs/test_a_worktree_run_casts_no_live_ticket.py: a scratch main repo, a linked worktree added from it, and a scratch commons in git standing where the worktree's sibling store resolves. One tooth per clause.",
+ "falsifier": {
+  "clauses": [
+   {
+    "n": 1,
+    "claim": "a red run_proof over a proof in a linked worktree whose sibling ticket store is in a git tree casts no ticket and commits nothing to that commons"
+   },
+   {
+    "n": 2,
+    "claim": "the same run returns its red record and names on stderr that the red was not ticketed because the checkout is a linked worktree"
+   },
+   {
+    "n": 3,
+    "claim": "a red run over the same proof in the main tree still casts its ticket, so the guard is the worktree and not the red"
+   }
+  ]
+ },
+ "bounds": {
+  "in": [
+   "cairn/devices/tester/red_tickets.py",
+   "cairn/devices/tester/proofs/test_a_worktree_run_casts_no_live_ticket.py"
+  ],
+  "out": [
+   "every other component",
+   "cairn/tools/base/ticket_file.py unchanged",
+   "CLAUDE.md",
+   "instance-space under ~/.cairn"
+  ]
+ },
+ "measured": [
+  {
+   "when": "2026-11-14",
+   "saw": "Read 2026-11-14 on akienyoga9i, while building 207c4074b3d5's FIXME 1 (branch fixme-207c4074b3d5, 80246bd57): cairn/tools/base/ticket_file.py:15 derives the store as <checkout>/../CairnCommons/tickets. On Windows every builder's worktree (C:/automation/local/cairn-<id>) is a sibling of the house commons, so that store resolves to the LIVE C:/automation/local/CairnCommons/tickets, in a git tree. red_tickets._rel keys a worktree's proof as inside its repo, and run_proof tickets every red. So a red-first `bin/cairn test` in a Windows worktree would cast a live ticket for a build in flight, and commit it into the house commons. This was read, not run: running it would cast the live ticket. On the Dell, /tmp worktrees have no sibling commons and hit StoreUnreachable instead (FIXME 1).",
+   "how": "read of ticket_file.py:15, red_tickets._rel and device.py run_proof's tail in worktree cairn-207c"
+  }
+ ],
+ "decisions": [
+  {
+   "n": 1,
+   "text": "D1: A LINKED WORKTREE NEVER CASTS. ticket_what_is_new asks git whether the repo it keys against is a linked worktree (`git rev-parse --git-dir` differs from `--git-common-dir`). If it is, the call casts nothing, commits nothing, and raises StoreUnreachable naming the worktree, so run_proof's FIXME 1 path prints '<proof> is red and was NOT ticketed: ...' and the run goes on. A proof's scratch repo, set through ROOTS['repo'] and made with git init, is a main tree and still casts, so 207c's teeth keep their world. Builds on 207c4074b3d5's FIXME 1 (StoreUnreachable).",
+   "writes_to": [
+    "cairn/devices/tester/red_tickets.py"
+   ],
+   "reads": [
+    "cairn/devices/tester/red_tickets.py",
+    "cairn/devices/tester/device.py",
+    "cairn/tools/base/ticket_file.py"
+   ]
+  },
+  {
+   "n": 2,
+   "text": "D2: PROOF, red-first. cairn/devices/tester/proofs/test_a_worktree_run_casts_no_live_ticket.py: a scratch main repo, a linked worktree added from it, and a scratch commons in git standing where the worktree's sibling store resolves. One tooth per clause.",
+   "writes_to": [
+    "cairn/devices/tester/proofs/test_a_worktree_run_casts_no_live_ticket.py"
+   ],
+   "reads": [
+    "cairn/devices/tester/red_tickets.py",
+    "cairn/devices/tester/proofs/test_each_run_tickets_its_new_reds_and_orphans.py"
+   ]
+  }
+ ],
+ "node_class": "code-seam",
+ "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+ "watchme": "none, because it is one defect found while building 207c4074b3d5's FIXME 1",
+ "intent_berth": "none, because it is one defect found while building 207c4074b3d5's FIXME 1",
+ "sorted_berth": "<SORTED_BERTH>",
+ "parent": null,
+ "model": "opus",
+ "questions": []
+}
