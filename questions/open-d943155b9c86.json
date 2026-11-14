@@ -1,0 +1,15 @@
+{
+  "id": "open-d943155b9c86",
+  "date": "2026-11-14",
+  "ticket": "3ef8654a8027",
+  "question": "Q#113 (outline 4.3.1.5.1.4.1.1): does each box fill itself to a full copy of the db, NOTCACHED only transient, or stay a fill-on-read cache with full copies on some boxes only?",
+  "why_it_blocks": "4.3.1.5.1.4.1 (every box holds a full copy) and 4.3.1.5.1.4 / .6.10 (a fill-on-demand cache) read as conflicting; the sync's shape depends on it",
+  "raised_by": "cc (superclaude-24744.scope)",
+  "born_of": null,
+  "source": null,
+  "resolved": true,
+  "answer": "every box other than the home database is constantly updating it's copy... i guess i didn't explain this well before... we have a database proxy device. everything that wants to talk to the database talks to that device. i suspect, and correct me if you think i'm wrong, that each box should have it's own database proxy. so process a on akienasus talks to it's local db proxy. it's local db proxy says: request recieved -> if data is local and current, return it, done. -> else get data from other host's db proxy, return it, and cache it locally in the background. this slowly builds up a backup copy in every host in the system. sleep cycles also sync the dbs across hosts. but from a device, machine or tool perspective, it just talks to the local db proxy. why: because we started all this work on akienasus. and then we thought it had died. which turned out to be a software problem, as a complete rebuild with KUbuntu 26.04 has been stable since we set it up. but anyway, when we thought it dead, we knew we needed backups of the db. but this cache/sync strategy means we never have to make a backup. it's already there as a byproduct of the caching, which oh by the way also keeps everything as fast as possible.",
+  "answered_by": "Akien, recorded by caller class cc",
+  "answered_at": "2026-11-14T11:40:40-07:00",
+  "spawned": []
+}
