@@ -1,0 +1,62 @@
+{
+  "confidence": 0.85,
+  "provenance": {
+    "sub_problems": "claude",
+    "survey_ref": "floor",
+    "unknowns": "claude"
+  },
+  "sub_problems": [
+    {
+      "fills": "The artifact door never drops a journal line silently when git rewrites the tree it writes into: a git rewrite run under `cairn artifact quiet` cannot interleave with a door write, and a rewrite that ignores it makes the door raise and park the entry, never drop it.",
+      "kind": "build",
+      "uses": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "what": "D1: artifact.py gains door_lock(root): an exclusive flock (msvcrt on nt) on <git dir>/cairn-door.lock, git dir from `git rev-parse --absolute-git-dir` at the root (no git dir: no lock), re-entrant within a process. write() and remove() hold it across the record write and _append. _append checks (st_dev, st_ino) of its locked handle against the path: at lock time a mismatch re-opens and re-locks, at most 5 tries, then raises OSError naming the path; after the write and fsync a mismatch appends the entry to <git dir>/cairn-orphaned-lines.jsonl and raises JournalLineOrphaned naming the path, the entry id and the park file. On nt a zero st_ino skips the check. The docstrings name this ticket.",
+      "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "fills": "The artifact door never drops a journal line silently when git rewrites the tree it writes into: a git rewrite run under `cairn artifact quiet` cannot interleave with a door write, and a rewrite that ignores it makes the door raise and park the entry, never drop it.",
+      "kind": "build",
+      "uses": [
+        "cairn/tools/artifact/__main__.py"
+      ],
+      "what": "D2: `cairn artifact quiet [-C <dir>] -- <cmd...>` takes door_lock for the git dir at <dir> (default cwd), runs the command, releases, and exits with its code.",
+      "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+      "writes_to": [
+        "cairn/tools/artifact/__main__.py"
+      ]
+    },
+    {
+      "fills": "The artifact door never drops a journal line silently when git rewrites the tree it writes into: a git rewrite run under `cairn artifact quiet` cannot interleave with a door write, and a rewrite that ignores it makes the door raise and park the entry, never drop it.",
+      "kind": "build",
+      "uses": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "what": "D3: close.sh's two `git pull -q --rebase --autostash` run under `bin/cairn artifact quiet --`.",
+      "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "fills": "The artifact door never drops a journal line silently when git rewrites the tree it writes into: a git rewrite run under `cairn artifact quiet` cannot interleave with a door write, and a rewrite that ignores it makes the door raise and park the entry, never drop it.",
+      "kind": "build",
+      "uses": [
+        "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+      ],
+      "what": "D4: the proof builds a scratch git repo with a journal (prior entries, one uncommitted) and points the door at it with set_diagnostic_roots. Tooth 1: (a) a `quiet -- sh -c 'git stash push; sleep; git stash pop'` subprocess holds the lock while a door write starts; the write lands after the pop, with the record's bytes, its line once, verify_chain [] and the stash list empty; (b) a stash run on the journal's first open, ignoring the lock, makes the door raise JournalLineOrphaned and the entry stands in the park file; (c) a file replaced at the path between open and lock gets the line, once. Red on the old code. Tooth 2: a write with no rewrite adds exactly one line chained on the tail. PROVES names clauses 1 and 2; sealed in the same commit.",
+      "why": "Measured 2026-11-13: f695fac922cd's PROVEME cursor write (cert certificates/f695fac922cd-PROVEME-20261113T163007Z-80cd.cert.json) kept its bytes but lost its journal line inside a batch's pull --rebase --autostash in the live commons, and every commons commit then refused with 'changed around the door'. A scratch repro showed git stash replacing the journal inode under _append's open a+ handle: the line went to the orphaned inode, the record rode the stash back.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+        "cairn/tools/artifact/validations/test_a_journal_line_survives_a_git_rewrite.json"
+      ]
+    }
+  ],
+  "survey_ref": "/home/akien/.cairn/devices/chart/0/packets/survey-20261113T173354-df7f37a791d6.json",
+  "ticket": "0f8aefbba1d0",
+  "unknowns": []
+}
