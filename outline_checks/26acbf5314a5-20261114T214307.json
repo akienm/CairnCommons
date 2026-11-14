@@ -1,0 +1,87 @@
+{
+  "ticket": "26acbf5314a5",
+  "at": "2026-11-14T21:43:07+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1755111,
+      "duration_ms": 98647,
+      "is_error": false,
+      "session_id": "4eca251f-35f9-4c6e-a700-4a67f37fa410"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "c4cf030e1c1db96bccc374f82a0a65c2d97dfab5d40cf7dd8992f957d29c4df3",
+  "ticket_sha256": "17d32649316a7c2db594334b2201ca45bc7c49caf2c434f00f95aa826675fd5b",
+  "touches": [
+    {
+      "number": "4.3.1.5.1.6",
+      "text": "The node schema (Akien, Q#108, 2026-11-14: CC's proposal, which he approved, plus his flexible metadata field). WHY: nodes have to be really fast, and row ids are fastest; a payload can be anything, so a node points into blobs and lists."
+    },
+    {
+      "number": "4.3.1.5.1.6.2",
+      "text": "nodes (the one long list): row, gen, state (VOID|NOTCACHED|DATA), kind (the payload type), payload (inline when small), blob (an address, when large), meta (flexible json), out (a list address), in (a list address), seq (a change counter for the sync)."
+    },
+    {
+      "number": "4.3.1.5.1.6.3",
+      "text": "lists: row, gen, state, owner, items (bigint[] of addresses), and optional weights (real[], parallel). A long list chains to a next chunk."
+    },
+    {
+      "number": "4.3.1.5.1.6.4",
+      "text": "links: row, gen, a, b, weight, traversals. One row per link; both endpoints' lists hold its address, so a link is bidirectional and its weight has one home."
+    },
+    {
+      "number": "4.3.1.5.1.6.5",
+      "text": "blobs: row, gen, state, kind (json|csv|text|bytes|vector...), bytes. Several blobs are a list of blob addresses."
+    },
+    {
+      "number": "4.3.1.5.1.6.6",
+      "text": "trees: leaf tables keep their shape and weights. A leaf points at a node address, and the node's in list holds the leaf's address back. So each leaf table gains an additive row bigint column and keeps leaf_id, and its table tag is assigned at its birth from a tag registry the home librarian holds (0x0100 upward, synced like nodes); tags.json pins only the core four (CC, a mechanism under Q#108, 2026-11-14)."
+    },
+    {
+      "number": "4.3.1.5.1.6.9",
+      "text": "Slots are reserved from the home librarian in blocks (eg 1,000), not per row; reserved rows not yet used sit VOID."
+    },
+    {
+      "number": "4.3.1.5.1.6.11",
+      "text": "confidence: the first key in meta, 0 to 1. Measured results are high; things read on the internet are lower, by source. It is treated like a why when adjudicating conflicting information. Little used now, used later."
+    },
+    {
+      "number": "4.3.1.5.1.6.13",
+      "text": "An embedding is attached to a node per (node, question): its vector is in a blob, and it carries the question node's address. Any memory node can carry one; the embeddings generator device makes it by running the question and the data through the graph tree (Akien, Q#110, 2026-11-14)."
+    },
+    {
+      "number": "4.3.1.5.1.5.2",
+      "text": "How the TESTING database works (CC's design; Akien handed it to CC, 2026-11-14: \"i suggested a test db. you took it from there. how SHOULD we make this work?\"). (1) The db proxy is the seam (4.3.1.5.1.4.1.1, 11.3.7): proofs, devices and tools never choose a database; the proxy chooses by session context. (2) The test runner sets the context, never the proof: bin/cairn test and the hollow run open every db session with context=testing, so a proof can neither forget it nor pick live (Law 4). (3) In testing context, writes go only to the TESTING database: same schema, rows from a reserved address range, so a testing address never collides with a live one. (4) In testing context, reads are an overlay: testing rows first, live underneath, live pinned at the seq the run started at. A proof reads live with no fixtures (Q#112), what it wrote shadows live for that run only, and the run repeats within itself. (5) In live context the proxy never consults the TESTING database, so testing artifacts are invisible to all but the run that made them, by construction rather than by filtering. (6) Each run's testing rows carry its run id and are dropped at run end; the sleep cycle sweeps orphans. (7) A proof over live data asserts invariants, never snapshots; a tooth that needs an exact value writes its fixture into the overlay first. Until the per-box proxy exists, the same routing sits in the store door (db_domain) and moves into the proxy when it is built. WHY: a context the proof sets is a context a proof can forget; the runner is the one place every proof passes through. - akiendelllinux_orchestrator; approved 2026-11-14: \"4.3.1.5.1.5.2 -amm\" -amm"
+    },
+    {
+      "number": "4.3.1.6",
+      "text": "Embeddings. Not every node gets one. WHY: embedding every single thing would make an impossible mound of data, and that is not how Akien works, and this is meant to work the way he does. What gets embedded is the pattern: the answers to a few key questions that cross domains (4.3.1.8). A node without an embedding is found by its key (eg an exact request)."
+    },
+    {
+      "number": "4.3.1.7",
+      "text": "Lifetimes. Each tree declares its lifetime when it is made: kept, one activity (eg one sleep run), or until its source file changes. Dropping a tree drops its leaves and its own links. A node goes only when no tree indexes it, so whatever a temporary tree's activity promoted into a permanent tree outlives it. The drop is enforced, not a habit. WHY: a run that ends without dropping its tables leaves them behind forever."
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "4.3.1.5.1.6.11",
+      "text": "confidence: the first key in meta, 0 to 1. Measured results are high; things read on the internet are lower, by source. It is treated like a why when adjudicating conflicting information. Little used now, used later.",
+      "ticket_says": "confidence is ABSENT: no migrated node's meta has a confidence key, including a legacy node whose provenance carries one (that value stays verbatim inside meta.provenance), and trees.read_node of a migrated node reads unscored",
+      "why": "The outline specifies that confidence is 'the first key in meta, 0 to 1' as part of the node schema design. The ticket's clause 2 explicitly contradicts this by excluding confidence from the top-level meta field after migration, keeping it only within provenance instead. This is a deliberate deviation from the outlined schema: the outline prescribes where confidence should exist in new nodes; the ticket prescribes it absent from that location."
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [
+    "Law 1",
+    "Law 6",
+    "Law 7"
+  ],
+  "questions_opened": [
+    "open-cddfd983ccbc"
+  ],
+  "questions_already_open": []
+}
