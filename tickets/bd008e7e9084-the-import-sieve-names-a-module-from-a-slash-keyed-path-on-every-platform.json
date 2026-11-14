@@ -1,0 +1,69 @@
+{
+  "id": "bd008e7e9084",
+  "title": "the import sieve names a module from a slash-keyed path on every platform",
+  "owning_intention": "cairn/tools/import_sieve/intention+why.json",
+  "intention": "import_sieve reads its '/'-keyed import graph the same way on every platform: module_name and the device_isolation rule split graph paths on '/', so on Windows reaches() and the RULE 1 device check measure the real graph instead of an empty one. A walk that resolves none of its own imports is loud, never green.",
+  "why": "Measured 2026-11-14 by akiendell_cc_0 on akiendell (Windows): import_sieve.module_name (sieve.py:280) splits on os.sep while the graph keys are '/'-normalised (sieve.py:182), so reaches() is empty for every start and every sieve built on it (fire_path_unreachable, the reach sieves) reads green by vacuity there. Read on akienasus at main: sieve.py:586 and :593 (device_isolation, RULE 1's device-path check) split the same graph paths on os.sep, so on Windows no device is found and the encapsulation check reads green by vacuity too.",
+  "traces_to": "Law 9 (green is earned: a green by vacuity is a false green); RULE 1 (the device-path check must measure on every box); Law 8 (a peer leans on a green).",
+  "how": "module_name folds backslashes to '/' and splits on '/'; the two device_isolation splits (sieve.py:586, :593) split on '/'; reaches() raises HollowScan when its graph has at least 20 in-tree imports and none resolves to a file, so a vacuous walk is loud. A new proof, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "module_name gives the same module for a '/' spelling and a backslash spelling of one path, and the device_isolation split reads '/'-keyed graph paths the same on every platform"
+      },
+      {
+        "n": 2,
+        "claim": "reaches() over the real tree is non-empty for a known start"
+      },
+      {
+        "n": 3,
+        "claim": "a walk over a graph with at least 20 in-tree imports, none of which resolves to a file, raises HollowScan instead of reading green; a single dead import stays quiet"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: module_name and the device_isolation splits read '/'; reaches() raises HollowScan over a graph that resolves none of at least 20 in-tree imports.",
+      "writes_to": [
+        "cairn/tools/import_sieve/sieve.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/sieve.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/import_sieve/proofs/test_the_sieve_reads_the_same_paths_on_every_box.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/proofs/test_import_sieve.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/import_sieve/sieve.py",
+      "cairn/tools/import_sieve/proofs/test_the_sieve_reads_the_same_paths_on_every_box.py"
+    ],
+    "out": [
+      "every other component",
+      "the import graph's key format (sieve.py:182 stays)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "reaches() empty for every start on Windows; every sieve on it green by vacuity",
+      "how": "akiendell_cc_0 on akiendell, relayed by message; commons 94ec6aa15 cast-inputs/a-proof-that-patches-a-name-the-judge-reads-in-another-process-is-refused.shaped-plan.json new_finding_for_a_ticket"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "sieve.py:280, :586, :593 split graph paths on os.sep; :182 normalises keys to '/'",
+      "how": "grep -n os.sep cairn/tools/import_sieve/sieve.py on akienasus at main"
+    }
+  ]
+}
