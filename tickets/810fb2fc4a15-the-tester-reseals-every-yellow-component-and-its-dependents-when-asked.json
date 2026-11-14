@@ -1,0 +1,82 @@
+{
+  "id": "810fb2fc4a15",
+  "title": "the tester reseals every yellow component and its dependents when asked",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A tester verb reseal-yellow reseals every component reading yellow and every proof waiting on it, through the one reseal door.",
+  "why": "Outline 9.4.2.3.7.2 in press_office/CairnComponentOutline.txt, Akien 2026-11-13: commit, hourly, daily and weekly tiers (9.4.2.3.7); 'every test failure, every orphaned file, HAS TO BE FIXED ... reds don't get lost' and 'so each run writes any new bugs'. Siblings, one per piece of outline 9.4.2.3.7, cast together on 2026-11-13: yellow ee4e874a2d61, red tickets 207c4074b3d5, scheduler 185cee7cce24, hourly 810fb2fc4a15, daily cd40ac53f08a, weekly 346c75c2f8b7, Cairn's list c811a8b1b8c7, adjudication aa2d42b15886. Build order: ee4e874a2d61 and 207c4074b3d5 first, then 185cee7cce24, then 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7, then c811a8b1b8c7, then aa2d42b15886.",
+  "traces_to": "outline 9.4.2.3.7.2 (hourly, confirmed by Akien 2026-11-13); Law 9",
+  "how": "tiers.reseal_yellow asks codemother's inspect verb over the bus for the yellow set (ticket ee4e874a2d61), collects each yellow component's proofs and the dependent proofs waiting on it, runs them through reseal.reseal_all, and hands the results to red_tickets (207c4074b3d5).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with A yellow on B's proof, reseal-yellow reseals A's proofs and B's proof, and A then reads green"
+      },
+      {
+        "n": 2,
+        "claim": "with nothing yellow, reseal-yellow runs no proof and replies an empty set"
+      },
+      {
+        "n": 3,
+        "claim": "a dependent proof that reseals red is ticketed through red_tickets and the reply names it red"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ORDER. Builds after ee4e874a2d61 (the yellow entries), 207c4074b3d5 (the red tickets), 266d39d56d06 (codemother answers inspect over the bus) and 93fa3e3a6199 (build_inspector in codemother), revised on open-ffae1cd5fc50.",
+      "writes_to": [],
+      "reads": []
+    },
+    {
+      "n": 2,
+      "text": "D2: VERB `reseal-yellow` in device.py's declared_verbs, body none. tiers.reseal_yellow asks codemother's `inspect` verb over the bus (bus_client.reach('codemother')) for the yellow list; it never imports build_inspector (outline 9.4.3.3.4, RULE 1; revised on open-ffae1cd5fc50). An absent or refusing codemother is raised loudly and reseals nothing. The set is every yellow component's proofs plus its waiting_on proofs, deduped and sorted.",
+      "writes_to": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/tiers.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/tools/bus_client/bus_client.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: SEAL. The set goes through reseal.reseal_all (:907), the one door that writes a seal; then red_tickets.ticket_what_is_new(results, scan_orphans=False). The reply names each proof and its verdict.",
+      "writes_to": [
+        "cairn/devices/tester/tiers.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: PROOF, red-first.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_reseal_yellow_reseals_yellow_and_its_dependents.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_reseal_yellow_reseals_yellow_and_its_dependents.py",
+      "cairn/devices/tester/tiers.py"
+    ],
+    "out": [
+      "every other component",
+      "CLAUDE.md",
+      "press_office/CairnComponentOutline.txt"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "tester declared_verbs are run, notices and notice-seen; reseal_all exists and is the one door that persists a seal",
+      "how": "read of cairn/devices/tester/device.py:504 and cairn/devices/tester/reseal.py:907"
+    }
+  ]
+}

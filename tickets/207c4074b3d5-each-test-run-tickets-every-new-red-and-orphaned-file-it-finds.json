@@ -1,0 +1,110 @@
+{
+  "id": "207c4074b3d5",
+  "title": "each test run tickets every new red and orphaned file it finds",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Every tester run casts one ticket per new red and per orphaned file it sees, unless an open ticket already carries it, so reds don't get lost.",
+  "why": "Outline 9.4.2.3.7.5 in press_office/CairnComponentOutline.txt, Akien 2026-11-13: commit, hourly, daily and weekly tiers (9.4.2.3.7); 'every test failure, every orphaned file, HAS TO BE FIXED ... reds don't get lost' and 'so each run writes any new bugs'. Siblings, one per piece of outline 9.4.2.3.7, cast together on 2026-11-13: yellow ee4e874a2d61, red tickets 207c4074b3d5, scheduler 185cee7cce24, hourly 810fb2fc4a15, daily cd40ac53f08a, weekly 346c75c2f8b7, Cairn's list c811a8b1b8c7, adjudication aa2d42b15886. Build order: ee4e874a2d61 and 207c4074b3d5 first, then 185cee7cce24, then 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7, then c811a8b1b8c7, then aa2d42b15886.",
+  "traces_to": "Law 7 (errors are permanent in records of truth) and outline 9.4.2.3.7.5 (reds don't get lost)",
+  "how": "A module red_tickets.py in the tester: from a run's results and an orphan scan, build one dedup key per red (proof path + tooth) and per orphan (path); skip a key an open ticket carries in `fixes` or names in bounds.in; cast the rest through cast_ticket, each with its own /sorted firing through skills/sorted/door.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a run with one red proof and one orphan of each kind casts exactly three tickets, each with its key in fixes and a sorted berth that exists"
+      },
+      {
+        "n": 2,
+        "claim": "the same run repeated casts nothing: each key is carried by the open ticket the first run cast"
+      },
+      {
+        "n": 3,
+        "claim": "a red whose proof is named in an open ticket's bounds.in casts nothing"
+      },
+      {
+        "n": 4,
+        "claim": "a cast refused by either door makes the run exit non-zero naming the refusal, and lands no partial ticket"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: KEYS. A red's key is `red:<proof repo-relative path>::<tooth key>` (the tooth key from the run record; `*` when the run names none). An orphan's key is `orphan:<repo-relative path>`.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: ORPHAN, CC's reading of 9.4.2.3.7.5, recorded as such: (a) a validation record under some <component>/validations/ whose proof file is gone; (b) a git-tracked file under cairn/ or skills/ with no intention+why.json in it or any parent directory below the repo root. Measured from `git ls-files`, never from the census, so the tester reaches into no other component (RULE 1).",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: DEDUP. A key is carried when a ticket not yet PROVED or closed lists it in `fixes`, or, for a red, names its proof path in bounds.in (a ticket building a red-first proof carries its own red). Carried keys cast nothing.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: CAST. Each uncarried key casts one ticket at TICKETME with node_class code-seam, owner CC, owning_intention the charter nearest the path, `fixes: [<key>]`, falsifier 'the proof reseals green' (red) or 'the path belongs to a component or is gone' (orphan), measured citing the run record path. It fires skills/sorted/door.py with a packet whose completeness answers name the run record, and intent_berth is 'none, because <run record path>'. A refusal at either door is raised loudly and the run's exit is non-zero (Law 7); it is never swallowed.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py",
+        "skills/sorted/door.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: WIRING. Every run whose results reach the tester (run_proof, reseal_all, and the tier verbs that follow) calls red_tickets.ticket_what_is_new(results, scan_orphans=<whole-tree run>) at its end. A single-proof run tickets its red only; orphans are scanned on whole-tree runs.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: PROOF, red-first, over a scratch commons and scratch repo.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_each_run_tickets_its_new_reds_and_orphans.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_each_run_tickets_its_new_reds_and_orphans.py",
+      "cairn/devices/tester/red_tickets.py"
+    ],
+    "out": [
+      "every other component",
+      "CLAUDE.md",
+      "press_office/CairnComponentOutline.txt"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "the reseal ladder's rung 3 raises one trouble per unrepaired component; no tester code casts a ticket, and no general orphaned-file definition exists (working_tree_clean catches dirt, :4899 names orphan seals)",
+      "how": "read of cairn/devices/tester/reseal.py:1-60, grep for cast_ticket under cairn/devices/tester, read of cairn/machines/build_inspector/inspector.py:4444 and :4899"
+    }
+  ]
+}

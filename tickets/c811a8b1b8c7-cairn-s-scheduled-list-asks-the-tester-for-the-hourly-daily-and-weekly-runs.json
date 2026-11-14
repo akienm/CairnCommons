@@ -1,0 +1,84 @@
+{
+  "id": "c811a8b1b8c7",
+  "title": "Cairn's scheduled list asks the tester for the hourly, daily and weekly runs",
+  "owning_intention": "cairn/devices/cairn/intention+why.json",
+  "intention": "Cairn's scheduled list carries an hourly reseal-yellow and a weekly weekly-run, and Cairn's own sleep asks the tester's run-every-proof, each over the bus.",
+  "why": "Outline 9.4.2.3.7.2-.4 and 5.3.3 in press_office/CairnComponentOutline.txt, Akien 2026-11-13: commit, hourly, daily and weekly tiers (9.4.2.3.7); 'every test failure, every orphaned file, HAS TO BE FIXED ... reds don't get lost' and 'so each run writes any new bugs'. Siblings, one per piece of outline 9.4.2.3.7, cast together on 2026-11-13: yellow ee4e874a2d61, red tickets 207c4074b3d5, scheduler 185cee7cce24, hourly 810fb2fc4a15, daily cd40ac53f08a, weekly 346c75c2f8b7, Cairn's list c811a8b1b8c7, adjudication aa2d42b15886. Build order: ee4e874a2d61 and 207c4074b3d5 first, then 185cee7cce24, then 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7, then c811a8b1b8c7, then aa2d42b15886.",
+  "traces_to": "outline 9.4.2.3.7.2 to .4 and 5.3.3.1 (sleep is on Cairn's list); RULE 1 (device to device over the bus)",
+  "how": "cairn/devices/cairn/0/schedule.json declares the two entries; each fires a Cairn verb that asks the tester over the bus; the step at which Cairn holds its own sleep token asks run-every-proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a pulse at an hourly slot sends reseal-yellow to the tester once; a pulse at the weekly slot sends weekly-run once"
+      },
+      {
+        "n": 2,
+        "claim": "Cairn's own sleep step sends run-every-proof once before the token moves on"
+      },
+      {
+        "n": 3,
+        "claim": "with no tester answering, each ask is raised loudly and nothing reads as done"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ORDER. Builds after 185cee7cce24 (the scheduler), 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7 (the tester's verbs).",
+      "writes_to": [],
+      "reads": []
+    },
+    {
+      "n": 2,
+      "text": "D2: ENTRIES in schedule.json: {name: test-tier-hourly, cadence: hourly, verb: ask-tester-reseal-yellow} and {name: test-tier-weekly, cadence: 'weekly@Sun 02:00', verb: ask-tester-weekly-run}, each with its why citing 9.4.2.3.7. The two verbs live in cairn/devices/cairn/device.py and send the tester's verb through bus_client.reach('tester'), asynchronously; a refused or absent tester is raised loudly.",
+      "writes_to": [
+        "cairn/devices/cairn/0/schedule.json",
+        "cairn/devices/cairn/device.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/device.py",
+        "cairn/tools/bus_client/bus_client.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: DAILY. Where Cairn holds the sleep token for its own sleep routine (token.py; the builder measures the exact step), Cairn asks the tester's run-every-proof before handing the token on. Moving sleep itself onto the list (5.3.3.1) is not this ticket.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/sleep_cycle/token.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/sleep_cycle/idle.py",
+        "cairn/devices/cairn/machines/sleep_cycle/token.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: PROOF, red-first, over the scratch bus (cairn/devices/cairn/tools/scratch_bus) with a stub tester.",
+      "writes_to": [
+        "cairn/devices/cairn/proofs/test_cairns_list_asks_the_tester_for_each_tier.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/0/schedule.json",
+      "cairn/devices/cairn/device.py",
+      "cairn/devices/cairn/machines/sleep_cycle/token.py",
+      "cairn/devices/cairn/proofs/test_cairns_list_asks_the_tester_for_each_tier.py"
+    ],
+    "out": [
+      "every other component",
+      "CLAUDE.md",
+      "press_office/CairnComponentOutline.txt"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "cairn/devices/cairn/0/ holds only bin/; no schedule.json and no list exists",
+      "how": "ls cairn/devices/cairn/0/"
+    }
+  ]
+}

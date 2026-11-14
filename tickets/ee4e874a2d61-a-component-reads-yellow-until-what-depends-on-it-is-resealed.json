@@ -1,0 +1,81 @@
+{
+  "id": "ee4e874a2d61",
+  "title": "a component reads yellow until what depends on it is resealed",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "component_color derives yellow for a component whose own proofs are green at its current fingerprint while some other component's proof still carries a reached digest of it from before its change.",
+  "why": "Outline 9.4.2.3.7.1 in press_office/CairnComponentOutline.txt, Akien 2026-11-13: commit, hourly, daily and weekly tiers (9.4.2.3.7); 'every test failure, every orphaned file, HAS TO BE FIXED ... reds don't get lost' and 'so each run writes any new bugs'. Siblings, one per piece of outline 9.4.2.3.7, cast together on 2026-11-13: yellow ee4e874a2d61, red tickets 207c4074b3d5, scheduler 185cee7cce24, hourly 810fb2fc4a15, daily cd40ac53f08a, weekly 346c75c2f8b7, Cairn's list c811a8b1b8c7, adjudication aa2d42b15886. Build order: ee4e874a2d61 and 207c4074b3d5 first, then 185cee7cce24, then 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7, then c811a8b1b8c7, then aa2d42b15886.",
+  "traces_to": "Law 9 (red is the default, green is earned) and outline 9.4.2.3.7.1 (in service at 80% trust)",
+  "how": "One reader beside component_color, `yellow_until_dependents_reseal(row, comp_dir, repo_root)`, inverts the 50e0581737e8 yellows: a_reached_component_moved marks the DEPENDENT's proof yellow; this marks the CHANGED component yellow while any such dependent proof stands. inspect() reports it as an entry in its existing `yellow` list, never as a finding, so no gate refuses on yellow (9.4.2.3.7.1: yellow is in service).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "A's proofs green at its fingerprint and B's proof sealed with a reached digest of A from before A changed: inspect()'s yellow list carries a component-waits-on-dependents entry for A whose waiting_on names B's proof"
+      },
+      {
+        "n": 2,
+        "claim": "after B's proof reseals with the current digest of A, the yellow list carries no entry for A"
+      },
+      {
+        "n": 3,
+        "claim": "A with a stale own seal reads red whatever its dependents say, and no finding or gate changes because a component is yellow"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: READER. `yellow_until_dependents_reseal(row, comp_dir, repo_root) -> list[dict]` in inspector.py, beside component_color (:3886). It returns one entry per dependent proof whose seal evidence.reached digest (validation_store.seal_digest) for this component no longer matches its current digest: {component, dependent_proof, sealed_digest, current_digest}. Empty list: no dependent waits. It reuses the digest reading a_reached_component_moved (:3959) already does, never a second recipe.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: COLOR, revised on open-8c76dcbbd304 (outline 9.4.3.3.1: the inspector outputs only its findings): no new output key. Each D1 entry joins inspect()'s existing `yellow` list (ticket 50e0581737e8, PROVED) as {kind: 'component-waits-on-dependents', component, waiting_on: [dependent proofs]}. A component is red when component_color returns any entry, else yellow when the list carries a component-waits-on-dependents entry for it, else green. It certifies nothing and posts nothing; no sieve and no gate reads yellow as red.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: BOUNDS COLLISION, measured 2026-11-13: tickets 93fa3e3a6199, 17d570c10390 and 149b9a1ab9c4 move or reach build_inspector. If 93fa3e3a6199 lands first, this ticket's paths become cairn/devices/codemother/machines/build_inspector/...; the builder re-reads the address at BUILDME.",
+      "writes_to": [],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: PROOF, red-first, one tooth per clause, over a scratch repo with two components where B's sealed proof reached A.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_a_component_reads_yellow_until_its_dependents_reseal.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/machines/build_inspector/proofs/test_a_component_reads_yellow_until_its_dependents_reseal.py"
+    ],
+    "out": [
+      "every other component",
+      "CLAUDE.md",
+      "press_office/CairnComponentOutline.txt"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "component_color derives only red (missing seal, fingerprint mismatch); a_reached_component_moved (ticket 50e0581737e8) marks the dependent's proof yellow, never the changed component",
+      "how": "read of cairn/machines/build_inspector/inspector.py:3886, :3959 and inspect() at :5139"
+    }
+  ]
+}

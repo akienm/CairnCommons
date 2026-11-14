@@ -1,0 +1,68 @@
+{
+  "id": "cd40ac53f08a",
+  "title": "the tester runs every proof when asked, for the daily run in sleep",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A tester verb run-every-proof reseals every tracked proof through the one reseal door and tickets what is new, for Cairn's sleep to ask daily.",
+  "why": "Outline 9.4.2.3.7.3 in press_office/CairnComponentOutline.txt, Akien 2026-11-13: commit, hourly, daily and weekly tiers (9.4.2.3.7); 'every test failure, every orphaned file, HAS TO BE FIXED ... reds don't get lost' and 'so each run writes any new bugs'. Siblings, one per piece of outline 9.4.2.3.7, cast together on 2026-11-13: yellow ee4e874a2d61, red tickets 207c4074b3d5, scheduler 185cee7cce24, hourly 810fb2fc4a15, daily cd40ac53f08a, weekly 346c75c2f8b7, Cairn's list c811a8b1b8c7, adjudication aa2d42b15886. Build order: ee4e874a2d61 and 207c4074b3d5 first, then 185cee7cce24, then 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7, then c811a8b1b8c7, then aa2d42b15886.",
+  "traces_to": "outline 9.4.2.3.7.3 (daily, in sleep, 5.3.3); Law 9",
+  "how": "tiers.run_every_proof lists every tracked proofs/test_*.py, runs them through reseal.reseal_all, then red_tickets with the orphan scan on.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "run-every-proof over three proofs seals the green one, tickets the red one once, and reports the notrun one without a seal"
+      },
+      {
+        "n": 2,
+        "claim": "the orphan scan runs and an orphan in the scratch repo is ticketed"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ORDER. Builds after 207c4074b3d5 and after 810fb2fc4a15 (both write tiers.py and device.py).",
+      "writes_to": [],
+      "reads": []
+    },
+    {
+      "n": 2,
+      "text": "D2: VERB `run-every-proof`, body none: every `git ls-files '*/proofs/test_*.py'` path, sorted, through reseal.reseal_all; then red_tickets.ticket_what_is_new(results, scan_orphans=True). A proof printing NOTRUN on this box seals nothing and is reported as NOTRUN (tickets ddc5cb6694d3 and eb27604ab267).",
+      "writes_to": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/tiers.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: PROOF, red-first, over a scratch repo of three proofs (green, red, notrun).",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_run_every_proof_seals_each_and_tickets_reds.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_run_every_proof_seals_each_and_tickets_reds.py",
+      "cairn/devices/tester/tiers.py"
+    ],
+    "out": [
+      "every other component",
+      "CLAUDE.md",
+      "press_office/CairnComponentOutline.txt"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "sleep has no every-proof step and Cairn has no sleep routine function; the tester has no whole-tree verb",
+      "how": "read of cairn/devices/cairn/machines/sleep_cycle/idle.py:229, grep for a routine in cairn/devices/cairn, read of cairn/devices/tester/device.py:504"
+    }
+  ]
+}

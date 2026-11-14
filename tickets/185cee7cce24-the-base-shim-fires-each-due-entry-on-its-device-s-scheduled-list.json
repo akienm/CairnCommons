@@ -1,0 +1,87 @@
+{
+  "id": "185cee7cce24",
+  "title": "the base shim fires each due entry on its device's scheduled list",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "Each device's shim holds a scheduled list, and on each pulse an entry whose time has come fires as a probe in that device.",
+  "why": "Outline 5.9 in press_office/CairnComponentOutline.txt, Akien 2026-11-13: commit, hourly, daily and weekly tiers (9.4.2.3.7); 'every test failure, every orphaned file, HAS TO BE FIXED ... reds don't get lost' and 'so each run writes any new bugs'. Siblings, one per piece of outline 9.4.2.3.7, cast together on 2026-11-13: yellow ee4e874a2d61, red tickets 207c4074b3d5, scheduler 185cee7cce24, hourly 810fb2fc4a15, daily cd40ac53f08a, weekly 346c75c2f8b7, Cairn's list c811a8b1b8c7, adjudication aa2d42b15886. Build order: ee4e874a2d61 and 207c4074b3d5 first, then 185cee7cce24, then 810fb2fc4a15, cd40ac53f08a and 346c75c2f8b7, then c811a8b1b8c7, then aa2d42b15886.",
+  "traces_to": "outline 5.9 (the scheduler is part of the base shim) and 5.6 (no device grows a daemon of its own); Law 4",
+  "how": "scheduler.py in tools/base reads the device's declared list, compares each entry with the clock and its last-fired time on each on_pulse, and fires a due entry as a probe; the list answers list, show, get and set as a machine reached through its device (2.4.10).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a pulse at a due time fires the entry's verb once and records last_fired; the next pulse in the same slot fires nothing"
+      },
+      {
+        "n": 2,
+        "claim": "after a gap spanning three slots, the next pulse fires the entry once"
+      },
+      {
+        "n": 3,
+        "claim": "set refuses a verb the device does not declare and a cadence it cannot read, naming each, and writes nothing"
+      },
+      {
+        "n": 4,
+        "claim": "list, show and get answer from schedule.json as written"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: LIST. A device instance declares its list at cairn/devices/<device>/<instance>/schedule.json (class-space declared config, CC's reading of CLAUDE.md's 'the instance's declared config'): [{name, cadence, verb, why}]. cadence is 'hourly', 'daily@HH:MM' or 'weekly@<Mon..Sun> HH:MM', local time. verb is one of the device's own declared verbs, so a match runs inside that device.",
+      "writes_to": [
+        "cairn/tools/base/scheduler.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: PULSE. Shim.on_pulse (:522) calls scheduler.due(entries, now, last_fired) before its probes; each due entry fires as a probe that invokes its verb. Last-fired time is the device's state, at ~/.cairn/devices/<device>/<instance>/scheduler/last_fired.json. A missed slot fires once at the next pulse, never once per missed slot.",
+      "writes_to": [
+        "cairn/tools/base/scheduler.py",
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: COMMANDS. `cairn <device> scheduler list|show|get|set` (2.4.10): set writes schedule.json through the artifact door, refusing an unknown verb or an unreadable cadence by name.",
+      "writes_to": [
+        "cairn/tools/base/scheduler.py"
+      ],
+      "reads": []
+    },
+    {
+      "n": 4,
+      "text": "D4: PROOF, red-first.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_due_scheduled_entry_fires_on_the_pulse.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/proofs/test_a_due_scheduled_entry_fires_on_the_pulse.py",
+      "cairn/tools/base/scheduler.py",
+      "cairn/tools/base/shim.py"
+    ],
+    "out": [
+      "every other component",
+      "CLAUDE.md",
+      "press_office/CairnComponentOutline.txt"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "no scheduler code and no ticket for one; on_pulse evaluates declared probes only; sleep mints its token at a constant CLOCK_HOUR=23 in idle.py",
+      "how": "grep for 'schedul' over cairn/ and CairnCommons/tickets; read of cairn/tools/base/shim.py:522 and cairn/devices/cairn/machines/sleep_cycle/idle.py:50"
+    }
+  ]
+}
