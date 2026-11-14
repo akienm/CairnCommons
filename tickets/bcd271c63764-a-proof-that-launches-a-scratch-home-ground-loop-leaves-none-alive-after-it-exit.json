@@ -1,0 +1,71 @@
+{
+  "id": "bcd271c63764",
+  "title": "a proof that launches a scratch-HOME ground loop leaves none alive after it exits, run through the tester or plainly",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "A scratch HOME reaps the ground loop launched under it when the proof that made it exits, so no ground_loop whose HOME is a scratch dir outlives its proof and no scratch run.lock stays held, whether the proof ran through the tester or plainly; the house HOME's loop is never touched.",
+  "why": "Measured 2026-11-14 on akienyoga9i by akienyoga9i_cc_0 with the Restart Manager (read-only): 56 ground_loop pythonw processes, 28 parent/child pairs; only the house pair (5168/16420) is legitimate, the other 27 children each hold a stale scratch HOME's run.lock under %TEMP%, from proofs of ae0d88a55edb, 42ddfe3b7256 and 4356ea1d8755. Causes measured: windowless_spawn's detached child stays in run_owned's job (killed 2 s after return); every orphan's tree had 715d2205a2ec's fix; the tester's run_proof log shows none of those proofs ran through it at any orphan's start. So proofs run outside run_owned leak their scratch loops.",
+  "traces_to": "Law 7 (a leaked process holding a lock is a silent error); CP6 (safety built, not assumed); outline 9.4.2 (the tester's runs leave nothing behind) extended to plain runs.",
+  "how": "In the scratch HOME's teardown (or the builder's chosen site), read the scratch HOME's ground_loop run.lock holder and end it with its child before the HOME is removed. A red-first proof launches a scratch-HOME ground loop from a plain subprocess, lets it exit, and finds no ground_loop with that HOME alive.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a proof that launches a scratch-HOME ground loop and exits, run plainly (not through run_owned), leaves no ground_loop alive whose HOME is that scratch dir, and its run.lock is not held"
+      },
+      {
+        "n": 2,
+        "claim": "the same proof run through bin/cairn test leaves none alive either"
+      },
+      {
+        "n": 3,
+        "claim": "the house HOME's ground loop is alive and holds its run.lock after both runs"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the scratch HOME's teardown reaps the ground loop (and its child) holding that HOME's run.lock, only for a scratch HOME.",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one red-first proof, one tooth per clause; the plain-run tooth measures on Windows and on Linux.",
+      "writes_to": [
+        "cairn/tools/scratch/proofs/test_a_scratch_home_leaves_no_ground_loop_behind.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/proofs/test_a_killed_runs_scratch_is_swept_by_the_next.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/scratch/scratch.py",
+      "cairn/tools/scratch/proofs/test_a_scratch_home_leaves_no_ground_loop_behind.py"
+    ],
+    "out": [
+      "run_owned's job (715d2205a2ec, kept)",
+      "the house HOME's ground loop",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "27 scratch-HOME ground_loop pairs alive on yoga, each holding a stale scratch run.lock; the house pair 5168/16420 legitimate",
+      "how": "akienyoga9i_cc_0: Restart Manager RmGetList over <HOME>\\.cairn\\devices\\cairn\\0\\machines\\ground_loop\\run.lock, relayed by message"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "a windowless_spawn detached sleeper died 2 s after run_owned returned; the same spawn outside run_owned lived; the tester's run_proof log shows none of the orphans' proofs at their start times",
+      "how": "akienyoga9i_cc_0 on yoga: a stand-in proof through run_owned and ~/.cairn/logs/tester/0"
+    }
+  ]
+}
