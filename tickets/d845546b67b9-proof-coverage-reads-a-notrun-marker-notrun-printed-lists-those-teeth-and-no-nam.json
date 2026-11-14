@@ -1,0 +1,62 @@
+{
+  "title": "proof_coverage reads a NOTRUN marker: notrun_printed lists those teeth, and no name printed NOTRUN is ever counted green",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "A proof tooth that needs what a box lacks can print NOTRUN <name> (with a reason). proof_coverage.notrun_printed(stdout) returns those names; teeth_printed keeps its {green, red} shape and never counts a name green if the proof also printed it NOTRUN, and a name printed NOTRUN and red stays red. This is child 1 of ddc5cb6694d3 (D1); the tester honouring it is child 2.",
+  "why": "Outline 9.4.8.1 (CC's decision on Q#98, after Akien's Q#90 answer, 9.4.2.3.3.1): a tooth that needs what a box lacks reads not-run, never red, its outcome the sealer's. Measured 2026-11-13: nothing reads a not-run marker. teeth_printed reads only GREEN_MARKERS and RED_MARKERS; a line `  NOTRUN  test_x` already mints no tooth (its marker is in neither set), but a name printed both ways (PASS and NOTRUN) would count green, the direction a hollow build wants, and nothing can ask which teeth did not run. A third key in teeth_printed's dict would break the existing equality assertion at test_proof_coverage.py:805 (== {'green': [], 'red': []}), so the shape stays and a new function carries the list.",
+  "traces_to": "Law 3 (an unmeasured claim is labeled), Law 8 (a hollow green is worse than a red) and Law 9; outline 9.4.8.1.",
+  "how": "Add NOTRUN_MARKERS = frozenset({'notrun'}) and notrun_printed(stdout) -> list[str], sharing teeth_printed's three line patterns; teeth_printed drops from green any name notrun_printed also names, and red still wins over notrun. Export notrun_printed from the package __init__. Existing outputs with no NOTRUN line read identically.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "notrun_printed returns the names printed on NOTRUN lines, in print order and de-duplicated, and a proof whose only tooth line is NOTRUN has an empty green list from teeth_printed"
+      },
+      {
+        "n": 2,
+        "claim": "a name printed both PASS and NOTRUN is not green, a name printed both FAIL and NOTRUN is red and not in notrun_printed, and teeth_printed on output with no NOTRUN line returns exactly what it returned before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: NOTRUN_MARKERS and notrun_printed beside teeth_printed; teeth_printed's return shape is unchanged (a third key would break test_proof_coverage.py:805).",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py",
+        "cairn/tools/proof_coverage/__init__.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py",
+        "cairn/tools/proof_coverage/__init__.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause, over literal stdout strings; red first.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_a_notrun_tooth_is_counted_neither_green_nor_red.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "cairn/tools/proof_coverage/__init__.py",
+      "cairn/tools/proof_coverage/proofs/test_a_notrun_tooth_is_counted_neither_green_nor_red.py"
+    ],
+    "out": [
+      "every other component",
+      "the tester (child 2 of ddc5cb6694d3 honours the marker)",
+      "converting any proof to print NOTRUN"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "proof_coverage.py: GREEN_MARKERS = {ok, pass, passed, green, good}, RED_MARKERS = {fail, failed, red, error, errored, broken}; teeth_printed returns {'green': [...], 'red': [...]}; test_proof_coverage.py:805 asserts the exact dict {'green': [], 'red': []}. cairn/devices/tester/device.py:303-305 is the only non-proof caller and reads printed['green'] and printed['red'] only.",
+      "how": "read proof_coverage.py 60-151; grep -rn teeth_printed over cairn and build_inspector"
+    }
+  ],
+  "id": "d845546b67b9"
+}

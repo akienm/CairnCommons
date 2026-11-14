@@ -1,0 +1,61 @@
+{
+  "title": "the tester seals nothing for a run whose every tooth printed NOTRUN, says so, and does not read it as RED",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "When a proof run prints NOTRUN for every tooth it names and no green or red tooth, the tester writes no validation for it, prints one line saying the box asks for the Linux sealer (outline 9.4.8.1), and does not read it as RED, so the zero-teeth rule at device.py:736-745 does not fire; a run that prints some green teeth and some NOTRUN ones seals the green teeth only and names the NOTRUN ones in its output; a run that prints nothing at all is still RED. This is child 2 of ddc5cb6694d3 (D2, D3) and depends on d845546b67b9 (proof_coverage.notrun_printed).",
+  "why": "Outline 9.4.2.3.3.1 (Akien, Q#90): one sealer, on cairn's home, Linux. 9.4.8.1 (CC's decision on Q#98): a box that cannot run a proof asks for the sealer's run and does not run it itself; a tooth that needs what the box lacks reads not-run, never red. Measured 2026-11-13: cairn/devices/tester/device.py lines 736-745 turn an exit-0 run with no named green tooth into RED ('zero teeth printed'), so a proof on Windows that cannot run has no honest outcome; test_shim_starts_the_loop.py (d88887fbe31e) is an honest named red as an interim. Decision D3 of ddc5cb6694d3 (CC, confirmed by the orchestrator): no seal on such a box, no new verdict value, no ninth seal field.",
+  "traces_to": "Law 8 (a hollow green is worse than a red; a box must not seal what it did not run), Law 9 and Law 7; outline 9.4.2.3.3.1 and 9.4.8.1.",
+  "how": "BUILDS AFTER d845546b67b9 LANDS. In run_proof, after _teeth(stdout), read proof_coverage.notrun_printed(stdout). If there are NOTRUN names and no green and no red teeth: do not persist a validation, print 'ask for the Linux sealer: <names>: <reason>', and exit with a result the callers read as not-run (not RED, not GREEN, not sealed). If there are green teeth too: seal as today (green teeth only) and list the NOTRUN names in the output. The zero-teeth rule is unchanged for a run that prints nothing.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a tester run whose stdout names only NOTRUN teeth writes no validation, prints a line asking for the Linux sealer, and is not recorded RED, where today it is RED with 'zero teeth printed'"
+      },
+      {
+        "n": 2,
+        "claim": "a run with green and NOTRUN teeth seals as today with the green teeth only and names the NOTRUN ones, and a run that prints no tooth at all is still RED 'zero teeth printed'"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: run_proof reads notrun_printed and, for an all-NOTRUN run, persists nothing and says it asks for the sealer; the zero-teeth rule stays for a run that names nothing.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause, over a scratch fixture proof; red first.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_an_all_notrun_run_records_no_seal.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_an_all_notrun_run_records_no_seal.py"
+    ],
+    "out": [
+      "every other component",
+      "proof_coverage (d845546b67b9)",
+      "the seal record's eight fields",
+      "converting test_shim_starts_the_loop.py's line to NOTRUN (a follow-up after this lands)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "device.py:736-745: verdict = GREEN if proc.returncode == 0 else RED; teeth = _teeth(proc.stdout); 'if verdict == GREEN and not teeth[teeth_green]: verdict = RED' with the note 'zero teeth printed: exit 0 with no tooth named on stdout'. No code in the tester reads a not-run marker.",
+      "how": "read device.py 726-760; grep -rniE 'not-run|not_run|notrun' over non-proof code"
+    }
+  ],
+  "id": "eb27604ab267"
+}
