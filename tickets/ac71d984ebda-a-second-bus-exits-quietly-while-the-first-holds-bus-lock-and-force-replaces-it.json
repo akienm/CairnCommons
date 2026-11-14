@@ -1,0 +1,63 @@
+{
+  "id": "ac71d984ebda",
+  "title": "a second bus exits quietly while the first holds bus.lock, and --force replaces it",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "A bus started while the first holds bus.lock exits 0 with nothing on stdout or stderr and leaves the first serving; --force kills the old bus and takes the claim; the bus.lock path carries the cairn instance.",
+  "why": "Measured 2026-11-13: the bus loser exits EXIT_HELD=3 with a stderr line (bus/server.py:965-967), but outline 5.3.5.2 says a second copy exits quietly, and Akien said (5.3.5.2.2, said in akiendell's session) a second ground loop 'should see the first, and that it's fine, and exit quietly' and '--force, which means kill the old one'. The bus extension is CC's read (5.3.5.2.1), not yet his word. Split from b38af5fd1852 by the orchestrator under RULE 1.",
+  "traces_to": "CP1 and Law 7 (a deliberate quiet exit is a designed shape, a failed --force is loud); outline 5.3.5.2.",
+  "how": "In bus/server.py serve, when claim() returns None: exit 0 silently unless --force; with --force find the holder's pid (decide the mechanism: a pid written under the lock), kill it, retry claim() until the kernel frees it, else exit 3 loudly. Add --force to bus/__main__.py argparse. New proof against a scratch CAIRN_BUS_HOME, never the live bus, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a second bus started while the first holds bus.lock exits 0 with empty stdout and stderr and the first keeps serving; with --force the old bus is killed and the new one holds the claim"
+      },
+      {
+        "n": 2,
+        "claim": "the bus.lock path contains the cairn instance segment (devices/cairn/machines/bus/<instance>), not a host-global path"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the bus loser exits 0 silently; --force kills the holder and retries the claim; a failed --force is loud, exit 3.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/__main__.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/__main__.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause, against a scratch CAIRN_BUS_HOME; red first.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_second_bus_exits_quietly_and_force_replaces_it.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/__main__.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_second_bus_exits_quietly_and_force_replaces_it.py"
+    ],
+    "out": [
+      "every other component",
+      "bus_client",
+      "ground_loop",
+      "the shim"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "no proof pins the bus's exit 3: bus_client/proofs/test_a_draining_bus_is_used_not_raced.py mentions EXIT_HELD only in a docstring, and test_bus.py has no second-claimant tooth; server.py:963-967 returns EXIT_HELD=3 with a stderr line",
+      "how": "grep -rn EXIT_HELD over cairn; read both proofs"
+    }
+  ]
+}
