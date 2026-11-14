@@ -1,0 +1,110 @@
+{
+  "ticket": "06db586bedfd",
+  "at": "2026-11-14T15:46:33+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1427181,
+      "duration_ms": 47459,
+      "is_error": false,
+      "session_id": "47255b01-dfc6-4d7c-978a-29574771e746"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "0bb6853b82a0f62dd11336978a1edeea242363f216900d56e15c76cde6113919",
+  "ticket_sha256": "d5e3a0e9ce780b64583a4953e0c94c5c1b0ea0a6e8f46f0897144201e28c1cde",
+  "touches": [
+    {
+      "number": "4.3.1",
+      "text": "Knowledge: one list of nodes, owned by the librarian."
+    },
+    {
+      "number": "4.3.1.4",
+      "text": "Ownership. The librarian owns every tree and delegates some to the devices that learn. EVERYTHING THAT LEARNS USING OUR GRAPH TREES IS A DELEGATE (CodeMother, chart and any learning block are examples, not a list), and each holds its trees by the librarian's delegation (Law 6: delegation through the owner's gate). WHY: two holders with different weights over the same nodes have different perspectives and can debate points, and the librarian, asked anything, can look at the query from both."
+    },
+    {
+      "number": "4.3.1.5.1",
+      "text": "Nodes: one long list, id = row. Every tree indexes it; no tree owns a node, so several trees can index the same node in different ways."
+    },
+    {
+      "number": "4.3.1.5.1.1",
+      "text": "A row number is the same on every box. Storing a memory first reserves its slot from the librarian on the home box (CAIRN_HOME_HOST, 6.3.7.4), so two boxes are never handed the same slot, and the slot stays reserved until the write is complete. If a box's list is shorter than the slot (eg it holds rows up to 100 and is handed 123 while a sync is bringing the rest), it adds the open slots in between as blanks, and the sync fills them in as it proceeds. WHY: node ids are in every link and blob pointer, so a row has to mean the same node everywhere."
+    },
+    {
+      "number": "4.3.1.5.1.2",
+      "text": "A node id is its master row number and never anything else (Akien, Q#104, 2026-11-14). WHY: any other lookup needs a search, and a row id is direct; a search is far too slow on the target hardware. A node can be voided and its row reused; a node is never searched for."
+    },
+    {
+      "number": "4.3.1.5.1.3",
+      "text": "A node is in one of three states: VOID (deleted, its row available), NOTCACHED, or its data, which follows the node schema. Data that does not follow the schema is a bug."
+    },
+    {
+      "number": "4.3.1.5.1.4",
+      "text": "The sync is the backup, and a local database is a cache of the master. A local call for a node or tree the box does not hold is fed from the master and populates the local copy. If the box holds"
+    },
+    {
+      "number": "4.3.1.5.1.6",
+      "text": "The node schema (Akien, Q#108, 2026-11-14: CC's proposal, which he approved, plus his flexible metadata field). WHY: nodes have to be really fast, and row ids are fastest; a payload can be anything, so a node points into blobs and lists."
+    },
+    {
+      "number": "4.3.1.5.1.6.1",
+      "text": "ADDRESS: every reference is one 64-bit integer, the top 16 bits a table tag and the low 48 a row. A list of addresses can name nodes, blobs, leaves in any tree, lists and links. Every pointer is a direct row fetch, and a new kind of thing is a new tag, not a schema change."
+    },
+    {
+      "number": "4.3.1.5.1.6.2",
+      "text": "nodes (the one long list): row, gen, state (VOID|NOTCACHED|DATA), kind (the payload type), payload (inline when small), blob (an address, when large), meta (flexible json), out (a list address), in (a list address), seq (a change counter for the sync)."
+    },
+    {
+      "number": "4.3.1.5.1.6.3",
+      "text": "lists: row, gen, state, owner, items (bigint[] of addresses), and optional weights (real[], parallel). A long list chains to a next chunk."
+    },
+    {
+      "number": "4.3.1.5.1.6.4",
+      "text": "links: row, gen, a, b, weight, traversals. One row per link; both endpoints' lists hold its address, so a link is bidirectional and its weight has one home."
+    },
+    {
+      "number": "4.3.1.5.1.6.5",
+      "text": "blobs: row, gen, state, kind (json|csv|text|bytes|vector...), bytes. Several blobs are a list of blob addresses."
+    },
+    {
+      "number": "4.3.1.5.1.6.6",
+      "text": "trees: leaf tables keep their shape and weights. A leaf points at a node address, and the node's in list holds the leaf's address back. So each leaf table gains an additive row bigint column and keeps leaf_id, and its table tag is assigned at its birth from a tag registry the home librarian holds (0x0100 upward, synced like nodes); tags.json pins only the core four (CC, a mechanism under Q#108, 2026-11-14)."
+    },
+    {
+      "number": "4.3.1.5.1.6.7",
+      "text": "gen: a reference carries (row, gen). After a VOID row is reused, a mismatch reads loud as gone, never as wrong data."
+    },
+    {
+      "number": "4.3.1.5.1.6.8",
+      "text": "void: walk the node's in list, remove it from each source's out list, mark it VOID. No search."
+    },
+    {
+      "number": "4.3.1.5.1.6.9",
+      "text": "Slots are reserved from the home librarian in blocks (eg 1,000), not per row; reserved rows not yet used sit VOID."
+    },
+    {
+      "number": "4.3.1.5.1.6.10",
+      "text": "sync: read-through fill (gap rows NOTCACHED), and the master sends the rows whose seq is past what the remote last saw. Row by row, no hashes."
+    },
+    {
+      "number": "4.3.1.5.1.6.11",
+      "text": "confidence: the first key in meta, 0 to 1. Measured results are high; things read on the internet are lower, by source. It is treated like a why when adjudicating conflicting information. Little used now, used later."
+    },
+    {
+      "number": "8",
+      "text": "LIBRARIAN DEVICE (cairn/devices/librarian/)"
+    },
+    {
+      "number": "8.3.1",
+      "text": "Owns the graph trees: the one list of nodes, and each depositor's index over them (4.3.1.1). Owns all learning in the system and delegates it (4.3.1.4); CC's learning records belong here too."
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [],
+  "questions_already_open": []
+}
