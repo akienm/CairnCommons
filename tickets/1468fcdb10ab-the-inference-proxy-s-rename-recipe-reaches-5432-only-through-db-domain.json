@@ -1,0 +1,69 @@
+{
+  "id": "1468fcdb10ab",
+  "title": "the inference proxy's rename recipe reaches 5432 only through db_domain",
+  "owning_intention": "cairn/devices/inferenceproxy/intention+why.json",
+  "intention": "the inference proxy reaches Postgres only through db_domain's store, its rename recipe included.",
+  "why": "Measured 2026-11-13 on akienyoga9i at origin/main c3d8c3593: tools/import_sieve's test_sole_path_is_clean_on_the_real_corpus_for_both_domains reds on 'cairn/devices/inferenceproxy/rename_instance.py imports [psycopg2, psycopg2.sql] — a SECOND door to 5432'. The import came in with 60e1dd170 under ticket f942a413f26d (whose state still reads TICKETME:waiting): apply_tables composes its DDL with psycopg2.sql, around db_domain's store. The orchestrator asked for the fix.",
+  "traces_to": "RULE 1 (encapsulation); Law 4 (the 5432 sole path is physics, import_sieve).",
+  "how": "D1: rename_instance.py drops 'from psycopg2 import sql'; a local _ident(name) double-quotes an identifier with any inner quote doubled (what sql.Identifier renders), and the fold, table rename and index rename compose their DDL with it on the store's connection. _fold_new_into_old loses its sql parameter. Owner-gated drop, update and delete stay the store's. D2: new proof cairn/devices/inferenceproxy/proofs/test_the_rename_recipe_goes_through_the_one_door.py: tooth 1 runs the 5432 sole-path rule over the real corpus and reads the recipe's imports with import_sieve.imports_in; tooth 2 drives apply_tables over a recording connection and a fake store and asserts the exact quoted DDL.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the 5432 sole-path rule over the real corpus catches nothing under cairn/devices/inferenceproxy/, and the recipe's parsed imports hold no Postgres driver"
+      },
+      {
+        "n": 2,
+        "claim": "apply_tables composes the fold, the table rename and the index rename with every identifier double-quoted and any inner quote doubled"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: rename_instance.py drops 'from psycopg2 import sql'; a local _ident(name) double-quotes an identifier with any inner quote doubled (what sql.Identifier renders), and the fold, table rename and index rename compose their DDL with it on the store's connection. _fold_new_into_old loses its sql parameter. Owner-gated drop, update and delete stay the store's.",
+      "writes_to": [
+        "cairn/devices/inferenceproxy/rename_instance.py"
+      ],
+      "reads": [
+        "cairn/devices/inferenceproxy/rename_instance.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: new proof cairn/devices/inferenceproxy/proofs/test_the_rename_recipe_goes_through_the_one_door.py: tooth 1 runs the 5432 sole-path rule over the real corpus and reads the recipe's imports with import_sieve.imports_in; tooth 2 drives apply_tables over a recording connection and a fake store and asserts the exact quoted DDL.",
+      "writes_to": [
+        "cairn/devices/inferenceproxy/proofs/test_the_rename_recipe_goes_through_the_one_door.py"
+      ],
+      "reads": [
+        "cairn/devices/inferenceproxy/rename_instance.py",
+        "cairn/tools/import_sieve/proofs/test_import_sieve.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/inferenceproxy/proofs/test_the_rename_recipe_goes_through_the_one_door.py",
+      "cairn/devices/inferenceproxy/rename_instance.py"
+    ],
+    "out": [
+      "cairn/devices/db_domain (the store unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "what": "test_import_sieve at main",
+      "saw": "Measured 2026-11-13 on akienyoga9i at origin/main c3d8c3593: tools/import_sieve's test_sole_path_is_clean_on_the_real_corpus_for_both_domains reds on 'cairn/devices/inferenceproxy/rename_instance.py imports [psycopg2, psycopg2.sql] — a SECOND door to 5432'. The import came in with 60e1dd170 under ticket f942a413f26d (whose state still reads TICKETME:waiting): apply_tables composes its DDL with psycopg2.sql, around db_domain's store. The orchestrator asked for the fix.",
+      "when": "2026-11-13",
+      "how": "bin/cairn test on akienyoga9i"
+    },
+    {
+      "what": "the build on akienyoga9i",
+      "saw": "fix: 2 teeth green; hollow (main's rename_instance.py) reds both",
+      "when": "2026-11-13",
+      "how": "branch one-door-rename-1468fcdb10ab"
+    }
+  ]
+}
