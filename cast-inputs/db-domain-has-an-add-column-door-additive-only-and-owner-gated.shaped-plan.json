@@ -1,0 +1,81 @@
+{
+  "ticket": "<caster mints>",
+  "owner": "CC",
+  "date": "2026-11-14",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "status": "DRAFT v1 by akiendell_cc_0, 2026-11-14, for casting (orchestrator). BUILT: branch add-column (sha in the READY), PROVES key add-column to rekey.",
+  "title": "db_domain has an ADD-COLUMN door: additive only, owner-gated, never a drop or a retype",
+  "owning_intention": "cairn/devices/db_domain/tools/client/intention+why.json",
+  "intention": "store.add_owned_column(table, owner, name, coltype, *, default=None) adds one nullable column (or one with a literal default) to an owned table. It returns True when added and False when a column of that name and base type already stands. The owner alone may call it (Law 6). It never drops a column, never retypes one, and takes a bare type name and nothing else.",
+  "why": "The librarian row-id migration (T5, orchestrator 2026-11-14) must give 39 live leaf tables a `row bigint` column (Akien's answer to Q#104: node ids are master row numbers). The store has a door for a constraint (add_owned_constraint) and one for an index (add_owned_index) and none for a column, and the_constraint_door_is_the_only_alter probe reds any ALTER TABLE outside store.py, so without this door the migration would be a hand ALTER around the owner gate. Additive only because a migration that can drop or retype is a general ALTER, which is what the door exists to keep out.",
+  "traces_to": "Law 6 (the owner alone gates writes to its table), Law 4 (the schema door, not a convention), RULE 1 (the librarian reaches the database only through db_domain).",
+  "how": "D1: add_owned_column in store.py beside the constraint and index doors: owner-gated like them; the name a plain identifier; the type a bare type name (letters, digits, underscores, single spaces, an optional (n) or (n,m), an optional []) none of whose words is a keyword that makes it more than a type (primary, key, unique, references, check, default, generated, constraint, not, null, drop, alter, table, add, column, select, insert, delete, update) and which Postgres resolves (to_regtype); an existing column of the same base type is a no-op (False), of another base type is SchemaChangeRefused; ALTER TABLE ... ADD COLUMN built with sql.Identifier and, for a default, sql.Literal. D2: a proof, three teeth. A NOT NULL, a key or a CHECK goes through the constraint door afterwards.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the owner adds a column: it returns True, every existing row survives unchanged and reads NULL in the new column (or the default when one is given), and adding it again returns False"
+      },
+      {
+        "n": 2,
+        "claim": "a non-owner is refused with OwnershipError and the column is not added; a table db_domain never created is refused too"
+      },
+      {
+        "n": 3,
+        "claim": "a retype is refused with SchemaChangeRefused and leaves type and rows as they were; a type string carrying a statement, a key, a default, NOT NULL or an unknown type is refused and the table stands; the column list never shrinks; no drop or retype door exists"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: add_owned_column and SchemaChangeRefused in store.py.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, over scratch tables the store drops at exit.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_the_add_column_door_is_additive_and_owner_gated.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_an_owned_index_is_owner_gated.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/proofs/test_the_add_column_door_is_additive_and_owner_gated.py"
+    ],
+    "out": [
+      "the librarian's migration itself (T5)",
+      "the constraint and index doors",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "store.py has create_owned_table, add_owned_constraint, add_owned_index, write, update, delete, drop_table and no column door; db_domain's the_constraint_door_is_the_only_alter probe skips only store.py",
+      "how": "read cairn/devices/db_domain/tools/client/store.py and cairn/devices/db_domain/probes/the_constraint_door_is_the_only_alter.py on origin/main"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "after the build: the three teeth read green on Windows, red unfixed (the door is absent); a retype of a bigint column to text is refused naming 'bigint'; 'bigint; DROP TABLE t' is refused and the table stands",
+      "how": "the new proof, bare, CAIRN_TESTER_TEST_ID set"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "UNMEASURED: that the 39 live leaf tables take the column by one call each on a populated database, and the cost of ALTER TABLE ADD COLUMN on the largest of them (Postgres adds a nullable column without rewriting; a DEFAULT on a recent Postgres is also metadata-only, on older ones a rewrite)",
+      "how": "hypothesis, labelled; T5's own measurement"
+    }
+  ],
+  "watchme": "none, because its proof cairn/devices/db_domain/proofs/test_the_add_column_door_is_additive_and_owner_gated.py is the whole of its correctness"
+}
