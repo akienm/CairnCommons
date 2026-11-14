@@ -1,0 +1,74 @@
+{
+  "id": "e215f7524659",
+  "title": "a path crosses the inspect wire by its root, not by the asking box's disk",
+  "owning_intention": "cairn/tools/inspect_wire/intention+why.json",
+  "intention": "A Path that crosses codemother's inspect wire from under a known root (the caller's cairn checkout or its CairnCommons) arrives as that root plus a relative path, and the answering judge resolves it against its own checkout of the same root; a path under no known root is refused loudly at the wire, never resolved as a missing file.",
+  "why": "Measured 2026-11-14 on akienasus: CAIRN_BUS_HOME=akiendelllinux.local:7419, so /sorted's reason_has_referent (skills/sorted/door.py:64) asks the Dell's codemother over inspect, the Path crosses as its plain string (inspect_wire.py:31 {'__wire__':'path','v':str(value)}), and /home/akien/cairn/... does not exist on the Dell, so every 'none, because <repo path>' reason is refused as having no referent. Ticket-id referents still resolve. Every judge taking a Path answers from the wrong disk whenever caller and bus host differ; a Windows caller (C:\\automation\\local\\cairn) sends backslashes no Linux judge can open.",
+  "traces_to": "Law 3 (a judge's answer is a measurement of the caller's world, so it must read the same file the caller named); Law 7 (a path the wire cannot place is refused by name, never answered False); RULE 1 (the fix lives in the one module holding both directions of the wire, so no judge or door patches it alone).",
+  "how": "In cairn/tools/inspect_wire/inspect_wire.py, the path kind changes shape: wire_encode resolves a Path and, when it lies under one of the known roots, sends {'__wire__':'path','root':'cairn'|'CairnCommons','rel':<posix relpath>}; wire_decode joins rel (split on both / and \\) onto its own checkout of that root. The known roots are named in one function, _roots(), returning {'cairn': the checkout this module is imported from (Path(__file__).resolve().parents[3]), 'CairnCommons': cairn.tools.edges.edges.commons_root()} (a tool using a tool). A Path under neither root raises ValueError naming the path at encode; a decoded root the answerer does not know raises at decode. A relative Path is resolved against cwd before the test. The old {'v': str} form is gone (no compatibility lane: both directions ship in one module). The proof drives the codec with caller and answerer roots set to two different scratch trees (by monkeypatching _roots per side), and asks reason_has_referent through ask() in a launched codemother whose roots differ from the caller's.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a Path under the caller's cairn root, encoded with caller roots A and decoded with answerer roots B, rebuilds as the same relative path under B's cairn root; likewise for CairnCommons"
+      },
+      {
+        "n": 2,
+        "claim": "the /sorted 'none, because <repo path>' reason naming a file that exists under the answerer's checkout but at a different absolute path than the caller's is judged True through ask() (a launched codemother whose roots differ from the caller's)"
+      },
+      {
+        "n": 3,
+        "claim": "an absolute Path under neither known root raises ValueError naming it at wire_encode, and an encoded path naming an unknown root raises at wire_decode; neither is ever answered False"
+      },
+      {
+        "n": 4,
+        "claim": "a path kind whose rel carries backslashes (a Windows caller) decodes on Linux to the same file as its forward-slash spelling"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the path kind crosses as {root, rel}; _roots() names the two known roots; an unplaceable path raises at encode, an unknown root at decode; the charter's 'A Path crosses as its string' line and falsifier are updated in the same act.",
+      "writes_to": [
+        "cairn/tools/inspect_wire/inspect_wire.py",
+        "cairn/tools/inspect_wire/intention+why.json"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/inspect_wire.py",
+        "cairn/tools/edges/edges.py",
+        "skills/sorted/door.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a NEW proof, one tooth per clause; the existing proofs (test_ask_reaches_a_launched_codemother.py, codemother's test_codemother_answers_inspect_over_the_bus.py tooth 3) are re-run, and are edited only if their Path tooth reads the old {'v'} form.",
+      "writes_to": [
+        "cairn/tools/inspect_wire/proofs/test_a_path_crosses_the_wire_by_root.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/inspect_wire/inspect_wire.py",
+      "cairn/tools/inspect_wire/intention+why.json",
+      "cairn/tools/inspect_wire/proofs/test_a_path_crosses_the_wire_by_root.py"
+    ],
+    "out": [
+      "skills/sorted/door.py (read only: the fix is at the wire, not the door)",
+      "cairn/devices/codemother (her verb decodes through this module unchanged)",
+      "cairn/tools/edges (read only)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "/sorted refused every 'none, because <path>' field cast from akienasus while ticket-id referents passed; CAIRN_BUS_HOME=akiendelllinux.local:7419 and no codemother runs on akienasus",
+      "how": "env | grep CAIRN_BUS on akienasus; skills/sorted/door.py:64 reason_has_referent -> ask_inspector; inspect_wire.py:31 encodes str(value); the 9f5bb43e8a64 cast refused on akienasus and passed on the Dell"
+    }
+  ]
+}
