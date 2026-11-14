@@ -34,7 +34,7 @@
     },
     {
       "n": 2,
-      "text": "D2: fresh() recomputes the section hash over the current outline for the recorded touched numbers when the whole-outline hash differs; old records and zero-touch records keep the whole-outline rule (conservative).",
+      "text": "D2: fresh() recomputes the section hash over the current outline for the recorded touched numbers when the whole-outline hash differs. A record with no section hash (every stored record predates the field) derives it from the outline version it read, found in git by its outline_sha256 through one cached `git cat-file --batch` over the outline's history; an outline version that was never committed (the outline is edited in place) cannot be found and the record reads stale. A zero-touch record keeps the whole-outline rule.",
       "writes_to": [
         "cairn/devices/codemother/machines/outline_check/outline_check.py"
       ],
@@ -72,6 +72,11 @@
       "when": "2026-11-14",
       "saw": "a3ac9282bdfa's census on akiendell over 404 tickets with outline_checks records: 13 fresh, 384 stale because the outline changed, 5 stale because the plan changed, 2 stale because the ticket version it read is not in git; so a whole-outline rule re-runs nearly everything. Outline 9.3.5.1: 'the cheapest model reads it beside the outline sections it touches ... It reads the outline as it stands each time, so editing the outline costs nothing'. A record already stores touches ([{number, text}]) and open_questions, and outline_check.parse() returns entries with number and text (the [Q#n] tag is inside the text).",
       "how": "a3ac9282bdfa's corpus census script; read outline 9.3.5.1; read outline_check.py parse() and the record fields at check()"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "Built (branch de75c632ea30-build, stacked on a3ac9282bdfa) and censused over the 407 stored records on akiendell, all of which predate the field. Whole-outline rule (a3ac): 15 fresh. Section rule with git-derived section hashes: 35 fresh; stale: 210 because a touched section changed, 107 because the outline version the record read is not in git (it was an uncommitted working copy), 46 because the plan changed, 7 because the ticket version is not in git, 2 because a touched number no longer resolves. A probe for renumbering (matching a touched line by its TEXT, not its number) found ZERO extra fresh records, so renumbering is not the cause and the text-anchored design was not built. Of the records that touched sections, 88 had untouched sections by number and 164 had a genuinely changed subtree. So the section rule helps modestly (15 to 35 fresh) and does not remove the cost: the touched sections are the actively edited ones, and 107 records cannot be shown unchanged because the outline they read was never committed.",
+      "how": "census scripts over <commons>/outline_checks with outline_check.fresh() on the stacked branch; a renumbering probe over the same records"
     }
   ],
   "id": "de75c632ea30"
