@@ -1,0 +1,64 @@
+{
+  "id": "host-postgres-on-windows",
+  "date": "2026-11-14",
+  "owner": "CC — CC gates writes to this intention; the PostgreSQL service is the box's, installed by Akien's one elevated command and kept by Recovery (outline 6.3.5, 11.3.5).",
+  "intention": "Every Windows cairn box runs PostgreSQL as an automatic Windows service on 127.0.0.1:5432, with a LOGIN CREATEDB role for the OS user, a pgpass in db_domain's instance space (~/.cairn/devices/db_domain/0/pgpass), and a store.connect() that reaches the cairn database, so a bus (live or scratch) comes up on Windows and asks CodeMother instead of dying at its transit table.",
+  "why": "Measured 2026-11-14 on akienyoga9i: scratch_bus.launch('codemother') raised 'ConnectionError: no bus process answered at ...\\bus.sock within 15s (spawned: detached; last answer: FileNotFoundError ... bus.port)'. The spawned bus died first, in ~/.cairn/logs/bus.log: BusDevice.scratch -> store.scratch -> connect -> ensure_database -> 'psycopg2.OperationalError: connection to server at \"127.0.0.1\", port 5432 failed: Connection refused (0x0000274D/10061)'. yoga has no PostgreSQL at all: nothing on 5432, no postgresql service, no db_domain instance dir. So the /sorted door, which asks CodeMother over the bus since 17d570c10390, cannot cast from yoga, and every Windows builder needs akienasus to cast for it. Outline 11.3.5 says PostgreSQL is a host service installed and upgraded by Recovery, and 11.3.5.1 that every box keeps its own database; Recovery carried no PostgreSQL recipe on any platform (grep of cairn/devices/recovery: zero hits).",
+  "traces_to": "outline 11.3.5 and 11.3.5.1 (PostgreSQL is a host service installed by Recovery; each box keeps its own database), 6.3.5 (the installer walks host-seams), Law 3 (verify measures before anything is called up), Law 7 (verify names the first missing piece)",
+  "node_class": "host-seam",
+  "ticket": "PENDING — akienasus casts; rekeyed on cast",
+  "platforms": [
+    "win32"
+  ],
+  "cost": "One UAC prompt for Akien (the EDB installer elevates itself). ~300 MB under C:\\Program Files\\PostgreSQL\\17 and a data dir. A service running as NETWORK SERVICE, listening on loopback by default. Two generated passwords live only in pgpass; pg_install.options holds the superuser one until step 5 deletes it.",
+  "apply": {
+    "note": "Complete recipe, written to option (B): a Windows service, because 11.3.5 makes PostgreSQL a host service that Recovery installs and upgrades (winget upgrade carries it), not a portable copy. Steps 1, 3, 4, 5 and 6 run as the user with no elevation; step 2 is the ONE command Akien runs, and its only elevation is the installer's own UAC prompt. No secret is ever on a command line: step 1 generates both passwords into files, the installer reads the superuser one from --optionfile, step 3 passes the role's as a bound parameter. Each step is idempotent. Mirrors akiendell, measured 2026-11-14: postgresql-x64-17 Running/Automatic, pgpass present.",
+    "1_secrets": "CC, unprivileged. Writes ~/.cairn/devices/db_domain/0/pgpass (lines 127.0.0.1:5432:*:postgres:<generated> and 127.0.0.1:5432:*:<USERNAME>:<generated>; kept if already present) and pg_install.options (superpassword, serverport=5432, disable-components=stackbuilder):\n\"$HOME/.cairn/venv/Scripts/python.exe\" -I - <<'PY'\nimport os, pathlib, secrets\nd = pathlib.Path.home() / \".cairn\" / \"devices\" / \"db_domain\" / \"0\"\nd.mkdir(parents=True, exist_ok=True)\np = d / \"pgpass\"\nif not p.is_file():\n    s, r = secrets.token_urlsafe(24), secrets.token_urlsafe(24)\n    p.write_text(f\"127.0.0.1:5432:*:postgres:{s}\\n127.0.0.1:5432:*:{os.environ['USERNAME']}:{r}\\n\")\ns = next(l.split(\":\", 4)[4] for l in p.read_text().splitlines() if l.split(\":\")[3] == \"postgres\")\n(d / \"pg_install.options\").write_text(f\"superpassword={s}\\nserverport=5432\\ndisable-components=stackbuilder\\n\")\nprint(\"pgpass and pg_install.options written under\", d)\nPY",
+    "2_install": "AKIEN, the one elevated step, typed at the CC prompt (bash) and approved at UAC:\n! winget install --id PostgreSQL.PostgreSQL.17 -e --silent --accept-package-agreements --accept-source-agreements --override \"--mode unattended --unattendedmodeui none --optionfile $(cygpath -w ~/.cairn/devices/db_domain/0/pg_install.options)\"",
+    "3_role": "CC, unprivileged. As postgres over TCP with the pgpass, CREATE (or ALTER) ROLE <USERNAME> LOGIN CREATEDB with the generated password, bound as a parameter. libpq's default user on Windows is the OS user, which is what store.connect() sends:\n\"$HOME/.cairn/venv/Scripts/python.exe\" -I - <<'PY'\nimport os, pathlib, psycopg2\nfrom psycopg2 import sql\np = pathlib.Path.home() / \".cairn\" / \"devices\" / \"db_domain\" / \"0\" / \"pgpass\"\nme = os.environ[\"USERNAME\"]\npw = next(l.split(\":\", 4)[4] for l in p.read_text().splitlines() if l.split(\":\")[3] == me)\nc = psycopg2.connect(host=\"127.0.0.1\", port=5432, dbname=\"postgres\", user=\"postgres\", passfile=str(p))\nc.autocommit = True\ncur = c.cursor()\ncur.execute(\"SELECT 1 FROM pg_roles WHERE rolname = %s\", (me,))\nverb = \"ALTER\" if cur.fetchone() else \"CREATE\"\ncur.execute(sql.SQL(verb + \" ROLE {} LOGIN CREATEDB PASSWORD %s\").format(sql.Identifier(me)), (pw,))\nprint(verb, \"ROLE\", me, \"LOGIN CREATEDB\")\nc.close()\nPY",
+    "4_database": "CC, unprivileged. store.connect() self-provisions the cairn database and its owner registry (ensure_database, _ensure_registry):\n\"$HOME/.cairn/venv/Scripts/python.exe\" -c 'from cairn.devices.db_domain.tools.client import store; store.connect().close()'",
+    "5_cleanup": "CC. rm ~/.cairn/devices/db_domain/0/pg_install.options (the superuser password stays only in pgpass). Add a pointer, never the value, in ~/.akien/akien.credentials.cfg under a PostgreSQL group: '<box> postgres superuser and <USERNAME> role: file:~/.cairn/devices/db_domain/0/pgpass'.",
+    "6_reverify": "CC. Run the verify twice; then bring up scratch_bus.launch('codemother') and record the first step past the database that fails, if any."
+  },
+  "verify": {
+    "command": "py=\"$HOME/.cairn/venv/Scripts/python.exe\"; \"$py\" -c 'import socket,sys; s=socket.socket(); s.settimeout(3); sys.exit(s.connect_ex((\"127.0.0.1\",5432)))' </dev/null || { echo 'RED: nothing on 5432 (no listener at 127.0.0.1:5432)'; exit 1; }; svc=$(sc.exe query type= service state= all | sed -n 's/^SERVICE_NAME: \\(postgresql-x64-[0-9]*\\).*/\\1/p' | head -1); [ -n \"$svc\" ] || { echo 'RED: something listens on 5432 but no postgresql-x64-* service is installed'; exit 1; }; sc.exe query \"$svc\" | grep -q RUNNING || { echo \"RED: service $svc is not RUNNING\"; exit 1; }; sc.exe qc \"$svc\" | grep -q AUTO_START || { echo \"RED: service $svc does not start automatically\"; exit 1; }; [ -s \"$HOME/.cairn/devices/db_domain/0/pgpass\" ] || { echo 'RED: no pgpass at ~/.cairn/devices/db_domain/0/pgpass'; exit 1; }; out=$(\"$py\" -c 'from cairn.devices.db_domain.tools.client import store; c=store.connect(); cur=c.cursor(); cur.execute(\"select current_user\"); print(cur.fetchone()[0]); c.close()' </dev/null 2>&1) || { echo \"RED: store.connect() failed: $(printf %s \"$out\" | tail -1)\"; exit 1; }; echo \"green: $svc running and automatic on 5432, pgpass present, store.connect() as $out\"",
+    "green": "exit 0 printing 'green: postgresql-x64-<n> running and automatic on 5432, pgpass present, store.connect() as <role>'. It is offered only on win32 (`platforms`, ticket 45a6331971fd); Linux boxes reach PostgreSQL over the Unix socket.",
+    "red": "exit 1 naming the FIRST missing piece, in order: nothing on 5432; a listener that is not a postgresql-x64-* service; the service not RUNNING; the service not AUTO_START; no pgpass; store.connect() failing (its last error line).",
+    "horizon": "at every cairn start on a Windows box, after every winget upgrade of PostgreSQL, and after any reboot (the AUTO_START check is what makes a reboot survivable)"
+  },
+  "hypotheses": [
+    "HYPOTHESIS (unmeasured): the EDB installer that winget's PostgreSQL.PostgreSQL.17 runs accepts --optionfile with superpassword/serverport/disable-components keys (it is an InstallBuilder installer, which documents --optionfile). Falsified by step 2 failing or prompting; then the keys move onto --override, at the cost of the password on the installer's command line.",
+    "HYPOTHESIS (unmeasured): the bus comes up once store.connect() works. Step 6 measures the next failing step, if one exists."
+  ],
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "akienyoga9i: verify exit 1, 'RED: nothing on 5432 (no listener at 127.0.0.1:5432)'",
+      "how": "bash -c \"$(verify.command)\" before any apply"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "akienyoga9i: with a throwaway python listener bound to 127.0.0.1:5432, verify exit 1, 'RED: something listens on 5432 but no postgresql-x64-* service is installed' (the sc.exe parse runs); listener gone, back to 'RED: nothing on 5432'",
+      "how": "a 20 s socket.listen on 127.0.0.1:5432, verify run during and after"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "akienyoga9i: step 1 under a scratch HOME/USERPROFILE writes pgpass (postgres and akien lines) and pg_install.options; a second run keeps the same pgpass (sha1 907cb7f1d318 both runs)",
+      "how": "the step 1 script run twice with HOME and USERPROFILE at a mktemp dir, values redacted on read"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "akiendell: postgresql-x64-17 Running Automatic; pgpass present; only a [::]:5432 FIN_WAIT_1 row in netstat, no LISTENING row seen; psql/pg_ctl not on PATH",
+      "how": "akiendell_cc_0 ran netstat, Get-Service, Test-Path, Get-Command read-only"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "winget offers PostgreSQL.PostgreSQL.17 version 17.12-1",
+      "how": "winget show --id PostgreSQL.PostgreSQL.17 -e"
+    }
+  ],
+  "gated_by": [
+    "Akien",
+    "CC"
+  ]
+}
