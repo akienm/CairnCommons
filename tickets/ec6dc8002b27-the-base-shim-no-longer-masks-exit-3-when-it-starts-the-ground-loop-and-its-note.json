@@ -1,0 +1,60 @@
+{
+  "title": "the base shim no longer masks exit 3 when it starts the ground loop, and its notes say the loser exits quietly",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "ensure_ground_loop in the base shim starts the ground loop's unit without -p SuccessExitStatus=3, and its three notes say a singleton loser exits 0 quietly, so a loser that regresses to the loud exit 3 reads as a failed unit again.",
+  "why": "Measured 2026-11-13: b38af5fd1852 (35711160e, Akien's Q#93 answer, outline 5.3.5.2.1) made the ground loop's loser exit 0. cairn/tools/base/shim.py:194 still passes -p SuccessExitStatus=3 when a shim starts the loop (ensure_ground_loop), and the notes at lines 215, 225 and 241 say 'loser exits 3'. Same shape as superclaude's, fixed by 15e64f9fe960; the base shim is a different component, so it is its own ticket (RULE 1).",
+  "traces_to": "Law 5 (the thing and its story may not contradict) and Law 7 (a regression to a loud exit must not be hidden).",
+  "how": "Delete the -p SuccessExitStatus=3 pair from ensure_ground_loop's systemd-run argv; reword the three notes to say a loser exits 0 quietly. One proof reads the function's source with ast and the file's text, so it runs on any OS.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "ensure_ground_loop's systemd-run argv no longer carries -p SuccessExitStatus=3, where it did"
+      },
+      {
+        "n": 2,
+        "claim": "shim.py no longer says the ground loop's singleton loser exits 3, in any note, where it said so in three places"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remove the flag and reword the three notes in shim.py.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof reading the source, one tooth per clause; red first, and red on a hollow build.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_the_shim_does_not_mask_a_loud_loser_exit.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs/test_the_shim_does_not_mask_a_loud_loser_exit.py"
+    ],
+    "out": [
+      "every other component",
+      "superclaude (15e64f9fe960)",
+      "cairn/tools/bus_client/remote.py (the bus unit, after ac71d984ebda)",
+      "the base charter (it does not tell this story; checked)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "shim.py:194 passes '-p', 'SuccessExitStatus=3' in ensure_ground_loop's systemd-run argv; notes at lines 215, 225 and 241 say 'singleton guard decides; loser exits 3'. cairn/tools/base/intention+why.json holds no mention of exits 3, SuccessExitStatus or the loser. No proof asserts the flag or the note text.",
+      "how": "grep -n over shim.py; json walk of the base charter; grep of proofs for the note text"
+    }
+  ],
+  "id": "ec6dc8002b27"
+}
