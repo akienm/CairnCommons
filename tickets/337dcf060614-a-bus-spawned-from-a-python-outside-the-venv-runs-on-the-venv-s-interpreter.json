@@ -1,0 +1,66 @@
+{
+  "id": "337dcf060614",
+  "title": "a bus spawned from a python outside the venv runs on the venv's interpreter",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "windowless_spawn.background_python() answers Cairn's venv interpreter when its caller is a python outside any venv and a venv stands ($CAIRN_VENV or ~/.cairn/venv, bin/python3 then Scripts/python.exe); a caller in a venv, a box with no venv, and an explicit executable keep their answer; background_pythonw rides it.",
+  "why": "Measured 2026-11-14 by akiendell_cc_0 on akiendell (Windows): from the system python, which has no psycopg2, scratch_bus.launch('codemother') died at `import psycopg2`, because background_python() returned sys.executable and remote.py's _detached/_setsid spawn every bus through it. With this change plus passfile 4b1c65ef9, the same launch from the system python served in 4.1 s.",
+  "traces_to": "CP4 (builders on Windows cannot cast while the bus cannot come up); Law 7 (the spawn picks the interpreter the bus can run on, not the one that happens to call).",
+  "how": "Add venv_python() mirroring recovery/bootstrap.sh cairn_python; background_python() returns sys.executable when the caller is in a venv or no venv stands, else the venv's interpreter; an explicit executable wins. A red-first proof runs a real child from the base interpreter.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a real child run from the base interpreter (outside a venv) calling plain background_python() answers the venv's interpreter"
+      },
+      {
+        "n": 2,
+        "claim": "a venv caller, a box with no venv, and an explicit executable each keep their answer"
+      },
+      {
+        "n": 3,
+        "claim": "venv_python finds both layouts, honours $CAIRN_VENV, prefers bin/ over Scripts/, and answers None for a venv that does not stand"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: venv_python() and the venv-aware background_python() in windowless_spawn.py; background_pythonw unchanged and riding it.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_the_spawn_interpreter_is_the_venvs_outside_a_venv.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/proofs/test_background_python_is_pythonw_on_nt.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/windowless_spawn.py",
+      "cairn/tools/windowless_spawn/proofs/test_the_spawn_interpreter_is_the_venvs_outside_a_venv.py"
+    ],
+    "out": [
+      "cairn/tools/bus_client/remote.py (its call sites unchanged)",
+      "the passfile fix (d95796cdfb9b)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "from the system python the scratch bus died at import psycopg2; with the change plus 4b1c65ef9 it served in 4.1 s; the new proof 0/3 on the unfixed helper, 3/3 twice by the system and by the venv python",
+      "how": "akiendell_cc_0 on akiendell, branch venv-spawn-interpreter @805d11a98 in a throwaway worktree, relayed by message"
+    }
+  ]
+}
