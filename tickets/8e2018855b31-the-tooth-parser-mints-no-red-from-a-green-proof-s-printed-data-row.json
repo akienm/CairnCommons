@@ -1,0 +1,66 @@
+{
+  "id": "8e2018855b31",
+  "title": "the tooth parser mints no red from a green proof's printed data row",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "proof_coverage's tooth parser reads a red tooth only from a line a proof printed as a report of one of its own teeth, never from an indented data row a green proof prints, such as a status beside a path, so a green seal never parses to a red tooth.",
+  "why": "Measured 2026-11-14 on akiendelllinux: test_proof_coverage is 29/30, red at test_NO_GREEN_SEAL_IN_THE_CORPUS_PARSES_TO_A_RED_TOOTH. The GREEN seal cairn/devices/tester/validations/test_a_host_seam_seals_on_this_box_only.json (ticket dfe6c1432fc8) prints a table of per-box host-seam verdicts, one row '         red  /tmp/dfe6-host-seam-scratch.../host-testing-dfe6c1432fc8.json on akiendelllinux'. _MARKER_LABEL (proof_coverage.py:92) reads any indented '<marker> <label>' line as a tooth, so that data row became a red tooth labelled with a path. The tooth's why is that the parser never invents a red; it just did, and the next proof that prints a status beside a path will mint the same false red. This red blocks 149b9a1ab9c4's clause 2 (test_proof_coverage is one of the 73 proofs it rewrote).",
+  "traces_to": "Law 8 (a false red in the coverage evidence is as corrosive as a false green: the sieve reds a ticket for a tooth that was never a tooth); Law 3 (the parser's reading of a seal is a measurement and must not be manufactured).",
+  "how": "In cairn/tools/proof_coverage/proof_coverage.py, narrow _MARKER_LABEL's label so a data row cannot be a tooth: a label that is a filesystem path (begins with '/', '~/' or a drive letter, or is a single token containing a path separator) is not a tooth label. The builder measures the green corpus before and after: no green seal parses to a red tooth, and no green seal loses a tooth it reads today, apart from the dfe6 path rows. The proof adds a fixture case with dfe6's exact row, and the live-corpus tooth stays as the invariant.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the line '         red  /tmp/dfe6-host-seam-scratch.4026531836-481112-mw9s8so2/host-testing-dfe6c1432fc8.json on akiendelllinux' parses to no tooth, and the same row with green parses to no tooth"
+      },
+      {
+        "n": 2,
+        "claim": "over the live corpus, no green seal parses to a red tooth (test_NO_GREEN_SEAL_IN_THE_CORPUS_PARSES_TO_A_RED_TOOTH goes green), and the count of teeth read from green seals drops by no more than the dfe6 path rows"
+      },
+      {
+        "n": 3,
+        "claim": "prose-label teeth the parser reads today still read: '  ok the backdate refusal wrote no slate', 'PASS: status returns 0 and reads liveness', '  PASS  a unified line is the answer'"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _MARKER_LABEL's label refuses a filesystem path; the dfe6 row is its measured case, recorded in the comment above the regex.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py",
+        "cairn/devices/tester/validations/test_a_host_seam_seals_on_this_box_only.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: test_proof_coverage gains one tooth per clause; the live-corpus invariant tooth is unchanged.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
+    ],
+    "out": [
+      "cairn/devices/tester (dfe6's proof prints as it does; ruling (b): the parser is fixed, not the printer)",
+      "cairn/machines/build_inspector",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "test_proof_coverage 29/30: 'a GREEN seal's own output parses to a red tooth — the parser is minting a red the proof never reported: [(cairn/devices/tester/validations/test_a_host_seam_seals_on_this_box_only.json, [/tmp/dfe6-host-seam-scratch.4026531836-481112-mw9s8so2/host-testing-dfe6c1432fc8.json on akiendelllinux])]'",
+      "how": "python3 cairn/tools/proof_coverage/proofs/test_proof_coverage.py on akiendelllinux at d41cdc76c; the seal's stdout_tail holds four indented green/red rows of that shape"
+    }
+  ]
+}
