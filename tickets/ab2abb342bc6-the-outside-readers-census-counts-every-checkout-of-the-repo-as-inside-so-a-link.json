@@ -1,0 +1,71 @@
+{
+  "id": "ab2abb342bc6",
+  "title": "the outside-readers census counts every checkout of the repo as inside, so a link into a second checkout is no reader",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "outside_readers.default_inside() lists the running cairn checkout, CairnCommons, and every git worktree of either (git worktree list), so the census run from a worktree does not read a skill junction or symlink into another checkout of the same repo as a reader outside our repos.",
+  "why": "Measured 2026-11-14 on akiendell: the census (46851816800f, child 1 of e78c9858f5fb) run from a worktree read 210 readers (186 skill state/history/charter JSON records and 24 lines in 12 skill .py files) where the truth was 0. Its default inside was the running checkout and CairnCommons, and the entries under ~/.claude/skills are NTFS junctions into the HOUSE checkout, another worktree of the same repo. With the house checkout named inside it read 0 readers and 54 mentions, the same as akienasus. e78c9858f5fb's WRONG-INTENT clause 6 reads this census: a later reader could take the 210 for code that needs .json.",
+  "traces_to": "Law 3 (a census is a measurement, and one that reads 210 where the truth is 0 is a wrong one), Law 7.",
+  "how": "D1: a _worktrees(repo) helper over `git worktree list --porcelain` (read-only, GIT_* scrubbed from the environment, empty on any git failure), and default_inside() returns the running checkout, CairnCommons and their worktrees, deduplicated; default_roots() already reads default_inside() to leave out our own repos under ~/dev/src, so it follows. D2: a proof, two teeth. Red-first: unfixed, the planted reader behind a junction into a second worktree is listed.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a link (symlink, or an NTFS junction on Windows) under a scratch ~/.claude/skills into a SECOND checkout of this repo reads 0 readers and 0 mentions under the default inside"
+      },
+      {
+        "n": 2,
+        "claim": "a link into an UNRELATED git repository holding the same file still reads as a reader, with its path and line (the fix walls nothing off)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: default_inside() adds every worktree of cairn and CairnCommons.",
+      "writes_to": [
+        "cairn/tools/artifact/outside_readers.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/outside_readers.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, over scratch worktrees and links.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_the_census_counts_every_checkout_a_skill_links_to_as_inside.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/outside_readers.py",
+      "cairn/tools/artifact/proofs/test_the_census_counts_every_checkout_a_skill_links_to_as_inside.py"
+    ],
+    "out": [
+      "46851816800f's proof and its seal stand as they are",
+      "jurisdiction.json",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "census run from the worktree cairn-wt-sy: 210 readers (186 .json, 24 .py), 74 mentions; with inside=[house repo, commons, worktree]: 0 readers, 54 mentions; ~/.claude/skills entries chart, design, idea, intent, moreabout, note, restart, ruled, sail, saveslate, sorted, tellmeabout, whatslefttodo, cairnhelp, challenge are Junctions into C:\\automation\\local\\cairn\\skills",
+      "how": "python -m cairn.tools.artifact.outside_readers; Get-ChildItem ~/.claude/skills (LinkType, Target)"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "after the build, the same live census from a worktree: 0 readers, 54 mentions; 46851816800f's proof still reads 0 failures",
+      "how": "census() under the default inside from the worktree, and the earlier proof run bare"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "UNMEASURED on Linux: skills there are symlinks (not junctions) and git worktree list behaves the same, so the fix is expected to hold; not run",
+      "how": "hypothesis, labelled"
+    }
+  ]
+}
