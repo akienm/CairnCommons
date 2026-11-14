@@ -1,0 +1,143 @@
+{
+  "ticket": "06db586bedfd",
+  "at": "2026-11-14T15:43:35+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1507451,
+      "duration_ms": 57194,
+      "is_error": false,
+      "session_id": "1c4d8516-ac3b-42d9-8275-9023574cbfa1"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "0bb6853b82a0f62dd11336978a1edeea242363f216900d56e15c76cde6113919",
+  "ticket_sha256": "ed66d49e2cb6ac6aa2686acb7c1f24fdf534638fb7cc5e1b641e853f4194c20f",
+  "touches": [
+    {
+      "number": "4.3.1.5.1",
+      "text": "Nodes: one long list, id = row. Every tree indexes it; no tree owns a node, so several trees can index the same node in different ways."
+    },
+    {
+      "number": "4.3.1.5.1.1",
+      "text": "A row number is the same on every box. Storing a memory first reserves its slot from the librarian on the home box (CAIRN_HOME_HOST, 6.3.7.4), so two boxes are never handed the same slot, and the slot stays reserved until the write is complete. If a box's list is shorter than the slot (eg it holds rows up to 100 and is handed 123 while a sync is bringing the rest), it adds the open slots in between as blanks, and the sync fills them in as it proceeds. WHY: node ids are in every link and blob pointer, so a row has to mean the same node everywhere."
+    },
+    {
+      "number": "4.3.1.5.1.2",
+      "text": "A node id is its master row number and never anything else (Akien, Q#104, 2026-11-14). WHY: any other lookup needs a search, and a row id is direct; a search is far too slow on the target hardware. A node can be voided and its row reused; a node is never searched for."
+    },
+    {
+      "number": "4.3.1.5.1.2.1",
+      "text": "Fetch by id is never a search; it always goes directly there (Akien, 2026-11-14). WHY: the target hardware is a 10th-gen i7 with 16 GB RAM and no GPU, and only a direct fetch keeps it from bogging down. The lived symptom: in the Igors, reading one word into a 3M-entry word graph took more than 1 second, and the laptop crawled. The row-id model comes from dBase II record numbers, the first database he used."
+    },
+    {
+      "number": "4.3.1.5.1.3",
+      "text": "A node is in one of three states: VOID (deleted, its row available), NOTCACHED, or its data, which follows the node schema. Data that does not follow the schema is a bug."
+    },
+    {
+      "number": "4.3.1.5.1.4",
+      "text": "The sync is the backup, and a local database is a cache of the master. A local call for a node or tree the box does not hold is fed from the master and populates the local copy. If the box holds"
+    },
+    {
+      "number": "4.3.1.5.1.6",
+      "text": "The node schema (Akien, Q#108, 2026-11-14: CC's proposal, which he approved, plus his flexible metadata field). WHY: nodes have to be really fast, and row ids are fastest; a payload can be anything, so a node points into blobs and lists."
+    },
+    {
+      "number": "4.3.1.5.1.6.1",
+      "text": "ADDRESS: every reference is one 64-bit integer, the top 16 bits a table tag and the low 48 a row. A list of addresses can name nodes, blobs, leaves in any tree, lists and links. Every pointer is a direct row fetch, and a new kind of thing is a new tag, not a schema change."
+    },
+    {
+      "number": "4.3.1.5.1.6.2",
+      "text": "nodes (the one long list): row, gen, state (VOID|NOTCACHED|DATA), kind (the payload type), payload (inline when small), blob (an address, when large), meta (flexible json), out (a list address), in (a list address), seq (a change counter for the sync)."
+    },
+    {
+      "number": "4.3.1.5.1.6.3",
+      "text": "lists: row, gen, state, owner, items (bigint[] of addresses), and optional weights (real[], parallel). A long list chains to a next chunk."
+    },
+    {
+      "number": "4.3.1.5.1.6.4",
+      "text": "links: row, gen, a, b, weight, traversals. One row per link; both endpoints' lists hold its address, so a link is bidirectional and its weight has one home."
+    },
+    {
+      "number": "4.3.1.5.1.6.5",
+      "text": "blobs: row, gen, state, kind (json|csv|text|bytes|vector...), bytes. Several blobs are a list of blob addresses."
+    },
+    {
+      "number": "4.3.1.5.1.6.6",
+      "text": "trees: leaf tables keep their shape and weights. A leaf points at a node address, and the node's in list holds the leaf's address back. So each leaf table gains an additive row bigint column and keeps leaf_id, and its table tag is assigned at its birth from a tag registry the home librarian holds (0x0100 upward, synced like nodes); tags.json pins only the core four (CC, a mechanism under Q#108, 2026-11-14)."
+    },
+    {
+      "number": "4.3.1.5.1.6.7",
+      "text": "gen: a reference carries (row, gen). After a VOID row is reused, a mismatch reads loud as gone, never as wrong data."
+    },
+    {
+      "number": "4.3.1.5.1.6.8",
+      "text": "void: walk the node's in list, remove it from each source's out list, mark it VOID. No search."
+    },
+    {
+      "number": "4.3.1.5.1.6.9",
+      "text": "Slots are reserved from the home librarian in blocks (eg 1,000), not per row; reserved rows not yet used sit VOID."
+    },
+    {
+      "number": "4.3.1.5.1.6.10",
+      "text": "sync: read-through fill (gap rows NOTCACHED), and the master sends the rows whose seq is past what the remote last saw. Row by row, no hashes."
+    },
+    {
+      "number": "4.3.1.5.1.6.11",
+      "text": "confidence: the first key in meta, 0 to 1. Measured results are high; things read on the internet are lower, by source. It is treated like a why when adjudicating conflicting information. Little used now, used later."
+    },
+    {
+      "number": "4.3.1.5.1.6.12",
+      "text": "The TESTING database (4.3.1.5.1.5) has the same schema in a separate database."
+    },
+    {
+      "number": "4.3.1.5.1.7",
+      "text": "Dedup stays: the storer saves only what it finds is not already held (Akien, Q#109, 2026-11-14: 'how would it be saved twice?'). 'Is it already held?' is asked of a tree, a keyed content index found by its key (4.3.1.6), never a node search."
+    },
+    {
+      "number": "4.3.1.9",
+      "text": "The walk: a first HYPOTHESIS (0.7). CC's draft, written so the experiments (4.3.1.10) have something to be wrong about; it is replaced by what they show. WHY: Akien sets what the trees are for and judges what they do; the mechanism is the teammate's draft, the way the geogebra model was for the 3d scanner, and it is learned here by running it, not by specifying it first."
+    },
+    {
+      "number": "4.3.1.9.2",
+      "text": "What a leaf weight is. Each node, in the tree's own leaf table, remembers the words that have led to it, with counts: \"buffer\" carries tank and cistern from plumbing, capacitor from electronics, inbox from mail, each with how often. This is where cross-domain comes from: the words of every field pile up on the same pattern node, so a new plumbing sentence reaches \"buffer\" by plumbing words and finds the electronics and the mail already there."
+    },
+    {
+      "number": "4.3.1.10",
+      "text": "The bench. The trees are learned by watching them run, so the first thing built on them is a way to see them: a graph-trees pane on the librarian's page (15) that draws a tree, takes a string and a question, lights the path with its scores, shows the embedding and the miss when there is one, and walks two strings from two domains side by side to see whether they land together; and the same from the command line, `cairn librarian walk \"<string>\" for <question>` (8.4.5). Every number in 4.3.1.9 (the floor, the buckets, the merge rule) is a setting, so an experiment is changing one and walking again. WHY: \"i can imagine being able to understand it once i can run experiments and see what happens.\" Nothing in 4.3.1.9 is known until this has measured it (Law 3)."
+    },
+    {
+      "number": "8.5.1",
+      "text": "The trees tool's charter lists in its public interface what it offers: the module, and deposit_keyed, find and the keyed leaf's shape beside it. Akien 2026-11-09, answering Q#77."
+    },
+    {
+      "number": "11.3.5.1",
+      "text": "A remote box keeps its own database and syncs it with the home box's (6.3.7.4). Node rows are the same on every box; the sync fills the blanks a box holds open (4.3.1.5.1.1). WHY: the local copy is fast, and the sync is the backup."
+    },
+    {
+      "number": "11.3.6",
+      "text": "Who holds tables: every table of learning is a tree in the memory model (4.3.1.5), owned by the librarian and delegated to the devices that learn. A table that is not learning is an exception and names why; the bus's message table is the first (5.5.3.4.1)."
+    },
+    {
+      "number": "9.4.2.3.3.1",
+      "text": "A seal is host independent: one record per proof, whichever box asks. Seals are made by one sealing machine in the cairn device, and there is only ever one cairn (until a laptop dies and a backup takes over), so there is one sealer. A box that is not cairn's home asks the sealer instead of writing its own seal. Akien 2026-11-13, answering Q#90 (a Windows reseal of a mixed proof overwrote the Linux seal, measured 2026-11-12): \"then we have to invent a way for seals to be host independent. one way would be to create a sealing machine in cairn. there's only ever one cairn until we have a laptop die and have to fail over to a backup\"."
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "4.3.1.5.1.6.6",
+      "text": "trees: leaf tables keep their shape and weights. A leaf points at a node address, and the node's in list holds the leaf's address back. So each leaf table gains an additive row bigint column and keeps leaf_id, and its table tag is assigned at its birth from a tag registry the home librarian holds (0x0100 upward, synced like nodes); tags.json pins only the core four (CC, a mechanism under Q#108, 2026-11-14).",
+      "ticket_says": "D10: repoint the sibling proof to the address API; measured: 'leaf tables key leaves by text leaf_id, so a leaf has no row to address yet'; bounds.out defers: 'leaf addressing per the open question below'",
+      "why": "The outline states 'each leaf table gains an additive row bigint column and keeps leaf_id', prescribing row-based addressing for leaves. The ticket acknowledges leaves currently have only text leaf_id and explicitly defers row addressing as an open question. The outline requirement and the ticket's deferred state cannot both be the implemented norm simultaneously."
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [
+    "open-d1415ab1b93d"
+  ],
+  "questions_already_open": []
+}
