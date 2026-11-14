@@ -1,7 +1,7 @@
 {
   "title": "a ticket whose build is on main has crossed BUILDME",
   "owning_intention": "cairn/machines/build_inspector/intention+why.json",
-  "intention": "build_inspector reds every ticket whose cursor still reads [TICKETME:...] while the cairn repo's main carries at least one commit naming its id that changes code (any path outside press_office/ and outside *.md). The red names the ticket and the commits. A ticket past TICKETME, or one whose only naming commits are outline/question/doc commits, is not red.",
+  "intention": "build_inspector reds every ticket whose cursor still reads [TICKETME:...] while the cairn repo's main carries at least one commit whose subject names its id before the subject's first colon and that changes code (any path outside press_office/ and outside *.md). The red names the ticket and the commits. A ticket past TICKETME, one named only after the colon (a passing mention), or one whose only naming commits are outline/question/doc commits, is not red.",
   "why": "Measured 2026-11-14 on akiendell by census over commons main and origin/main (5399 commits): 113 tickets read [TICKETME:...]; 47 of them are named by at least one origin/main commit; 31 of the 47 carry a 'Linux seal of its proofs' or reseal commit, and 32 of the 47 have no fixme at all, so they were built, landed and sealed without a chart attempt or a BUILDME crossing. Two of two tickets the orchestrator picked as unbuilt (404d3f6f3d9b, 3ba20f30a585) were already built and sealed on main. The land and seal path is the integrator's own scripts (the orchestrator grepped the cairn repo: no python component moves a cursor there), so the rule cannot live there; it is a rule that matters (Law 4) and today is policy. A sieve reading the two records (commons state, repo log) makes the disagreement a red instead of a thing a mind finds by accident.",
   "traces_to": "Law 4 (a rule that matters is enforced by physics, not policy), Law 5 (a thing and its story may not contradict: the repo says built, the state says TICKETME), Law 9 (red is the default; a built ticket whose cursor says otherwise is a visible red, not a lost one).",
   "how": "A repo-level scan in inspector.py, called by inspect() beside slate_reach and unbuilt_intentions (not a per-component row sieve): read every tickets/*.state.json in the sibling CairnCommons for a [TICKETME:...] cursor (via _workflow_cursor), run one `git log --format=%H%x09%s --name-only` over the cairn repo's main, index commits whose subject names a ticket id (twelve lowercase hex), keep those that change at least one path outside press_office/ and outside *.md, and emit one finding per ticket id with its commit shas. RULE 1: the sieve reads records only and imports no machine. Proof: a scratch cairn repo and scratch commons, red first.",
@@ -13,7 +13,7 @@
       },
       {
         "n": 2,
-        "claim": "a ticket whose only naming commit changes press_office/ or a .md file, a ticket past TICKETME with a code commit, and a TICKETME ticket named by no commit are each NOT reported"
+        "claim": "a ticket whose only naming commit changes press_office/ or a .md file, a ticket named only after the subject's first colon, a ticket past TICKETME with a code commit, and a TICKETME ticket named by no commit are each NOT reported"
       }
     ]
   },
@@ -30,7 +30,7 @@
     },
     {
       "n": 2,
-      "text": "D2: 'code' is any changed path outside press_office/ and outside *.md; seal commits (validations/, history.json) count, because a seal on main is evidence the build landed. The 47 instances are not tickets of their own: they are the integrator's re-chart backlog and the red keeps them from being lost.",
+      "text": "D2: 'code' is any changed path outside press_office/ and outside *.md; seal commits (validations/, history.json) count, because a seal on main is evidence the build landed. A commit names a ticket only when the id stands before the subject's first colon (the integrator's 'id: what' and 'id, id: what' forms); an id after the colon is a passing mention and does not count. The 43 instances are not tickets of their own: they are the integrator's re-chart backlog and the red keeps them from being lost.",
       "writes_to": [],
       "reads": []
     },
@@ -60,6 +60,11 @@
       "when": "2026-11-14",
       "saw": "113 tickets at [TICKETME:...] on commons main; 47 named by an origin/main commit subject; 31 of those 47 with a seal or reseal commit; 32 of the 47 with no fixme; 13 with a chart/orient-shaped last fixme, 2 with another gate's. The orchestrator found no python component in the cairn repo that moves a cursor on land (the land and seal path is the integrator's scripts). 217c82fe7b57 (a ticket built before hex ids names its build commits for the hollow) is adjacent, not a sibling: it anchors the hollow's build commits, it does not red a built-but-uncrossed ticket.",
       "how": "census script over CairnCommons/tickets/*.state.json and `git log origin/main` (scratchpad census_tm.py), the orchestrator's grep of the cairn repo, and reading ticket 217c82fe7b57's intention"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "False-positive census on origin/main (git log --name-only) against 114 [TICKETME:...] tickets: 43 are named by a code commit (the 47 upper bound drops 4 doc-only: 4c4a, 12443, dd79, d421, so the built count is at most 43, not 47); 42 of the 43 have a code commit whose subject names the id BEFORE the first colon, 1 (aa05710a5124) only after it, a passing mention; 8 of the 43 carry only seal commits in that lead position and 34 carry at least one non-seal lead commit (a build or red-first proof). So the measured built count is 42, and the lead-colon rule removes the one false positive.",
+      "how": "scratchpad census_fp.py: git log origin/main --format='@@%H<TAB>%s' --name-only over the cairn repo, matched against the [TICKETME:...] state files in CairnCommons/tickets"
     }
   ],
   "id": "a4a3f5634e7c"
