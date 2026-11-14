@@ -1,0 +1,88 @@
+{
+  "ticket": "<caster mints>",
+  "owner": "CC",
+  "date": "2026-11-14",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "status": "DRAFT v1 by akiendell_cc_0, 2026-11-14, for casting (orchestrator, relaying Akien's answer to Q#104). Build follows the cast; stacks after win-process-start (5b940b1c4fbe) only for its sweep proof, not for code.",
+  "title": "a test run reaches a TESTING database, never the live one",
+  "owning_intention": "cairn/devices/db_domain/tools/client/intention+why.json",
+  "intention": "store.connect() dials the database named by database_name(): `cairn_testing` when the process carries CAIRN_TESTER_TEST_ID (the tester's run marker, already carried to every bus a test spawns) and `cairn` otherwise; ensure_database() creates whichever is asked for. Every table a test run makes, scratch tables and the owner and scratch registries beside them, lives in the testing database, so a test cannot touch a live table and a sweep run by a test cannot reach live tables, because they are in another database.",
+  "why": "Akien 2026-11-14 (relayed by the orchestrator, answering Q#104): \"we need a TESTING database.\" The lived symptoms are all from proofs and scratch tables sharing the live `cairn` database: (1) 2026-09-06, 9,087 tables, 12 live (201a37bf1613); (2) 2026-11-14 on akiendell, a sweep that read live processes as dead dropped the caller's own scratch tables, and 36 orphan seal_ann_*_delivery tables stood in the live database (5b940b1c4fbe, 9484180b4ff4); (3) the sweep is a DELETE FROM over a registry in the live database, run by a test, so a bug in a test-run's sweep is a bug against live tables. Separation by database is physics (Postgres cannot read across databases on one connection), not a naming convention that a pattern sweep must respect.",
+  "traces_to": "Law 4 (a rule that matters is enforced by physics), Law 6 (a test run owns nothing live), the standing rule that a test against live data is marked as testing.",
+  "how": "D1: store.database_name() reads CAIRN_TESTER_TEST_ID: set -> `cairn_testing`, unset -> DB_NAME (`cairn`); connect() and ensure_database() use it; the owner registry and the scratch registry are created per database as they already are. D2: a proof, three teeth. D3 (decision for Akien, opened as a question): a proof that must read LIVE learning tables (2b3d842bc118's clause_4_the_live_tables_are_hers reads the live codemother tables) gets NO door in this ticket: under a test run it reads the testing database, where those tables are absent, and is re-pointed by its own ticket to the sync's cache (3ef8654a8027 v2).",
+  "questions_for_akien": [
+    {
+      "question": "May a proof read the LIVE database at all? Today 2b3d842bc118's clause_4_the_live_tables_are_hers reads the live codemother_*_nodes tables, and any 'proof over live data' shape does the same. With a TESTING database, the choices are: no door (a test sees only testing; live-data proofs are re-pointed at the local cache the sync fills), or one named read-only door (a store.live_read() a proof may call, refused for writes).",
+      "why": "the TESTING database's whole worth is that a test cannot touch live tables; a read door is a hole of exactly the kind the separation closes, but without it the corpus's live-data proofs have nothing to read until the sync's cache exists. The build takes 'no door'."
+    }
+  ],
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with CAIRN_TESTER_TEST_ID set, store.connect() answers current_database() = cairn_testing (created on demand), and with it unset, `cairn`"
+      },
+      {
+        "n": 2,
+        "claim": "a scratch table minted under a test id exists in cairn_testing and NOT in the live database; and sweep_scratch() under a test id leaves a scratch table and registry row standing in the live database"
+      },
+      {
+        "n": 3,
+        "claim": "a table written through store.write by a process under a test id lands in cairn_testing, owner registry included, and the live database's owner registry is unchanged"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: database_name() and its two uses in store.py.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/tester/runs.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, over the two real databases of the local Postgres, both asked by name.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
+    ],
+    "out": [
+      "the bus and every other component (they reach the database through the store door, and the environment variable they already carry picks the database)",
+      "2b3d842bc118's proof (re-pointed by its own ticket)",
+      "the sync (3ef8654a8027 v2)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "store.DB_NAME = 'cairn' is the one database every connect() dials; scratch tables, the owner registry cairn_owned and the scratch registry cairn_scratch all live in it; the tester marks a run with CAIRN_TESTER_TEST_ID (runs.py:37) and the bus launch already carries it to the bus process (remote.py:240)",
+      "how": "read cairn/devices/db_domain/tools/client/store.py, cairn/devices/tester/runs.py, cairn/tools/bus_client/remote.py on origin/main"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "akiendell's live `cairn` database held 32 tables, 24 of them leaked seal_ann_*_delivery debris from tests (36 after one more run), before 5b940b1c4fbe",
+      "how": "store.query over pg_tables"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "UNMEASURED: how many proofs in the corpus read or write LIVE (non-scratch) tables and so change behaviour under the testing database; the build's census over the corpus is its first step and is listed in the ticket's measured",
+      "how": "hypothesis, labelled"
+    }
+  ],
+  "watchme": "none, because its proof cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py is the whole of its correctness"
+}

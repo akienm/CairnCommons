@@ -1,0 +1,92 @@
+{
+  "ticket": "3ef8654a8027",
+  "owner": "CC",
+  "date": "2026-11-14",
+  "node_class": "code-seam",
+  "status": "DRAFT v2 by akiendell_cc_0, 2026-11-14: a RE-PLAN of the held ticket 3ef8654a8027 after Akien's answer to Q#104 (relayed by the orchestrator). Supersedes branch sync-3ef8 @ccf811fc8 (hash-id insert-only union), which is withdrawn. NOT BUILDABLE until the librarian row-id ticket (akiendelllinux) lands, since the master row numbers live in the librarian. For akienasus to rewrite onto the ticket through the door.",
+  "title": "a remote box's database is a cache and backup of the master: a local read of a node or tree that is not local is filled from the master by row number",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "intention": "A remote box keeps its own database as a CACHE AND BACKUP of the master's. A node's id is its MASTER ROW NUMBER and nothing else. A local db read of a node or tree that is not local is fed from the master and the local copy is populated at the same time. A row number the box has been handed or has seen but not yet fetched is a NOTCACHED placeholder, and a node's state is VOID, NOTCACHED, or its data.",
+  "why": "Akien 2026-11-14, answering Q#104 (relayed by the orchestrator, verbatim): \"the code is wrong. there shall be no data node ids based on anything other than master row number.\" and \"we need a TESTING database. the sync is the backup. if a local db call is made and that node or tree is not local, it's fed from the master and the local is also populated, so the local is a cache (and backup)... Gap rows are marked NOTCACHED. Node states: VOID / NOTCACHED / <data>.\" That reverses the sync-3ef8 build (content-hash ids, a primary-key union pushed from home) and reshapes the sync from a copy job into a read-through cache: nothing is copied until something asks for it. Measured 2026-11-12: akienasus's local db held none of codemother's trees while akiendelllinux's held 688 rows, so 2b3d842bc118's clause 4 reds on akienasus.",
+  "traces_to": "outline 4.3.1.5.1.1 (a row number is the same on every box; slots reserved from the home librarian, gaps held as blanks) and 11.3.5.1 (the local copy is fast, the sync is the backup), Law 6 (the master assigns, the owner gates).",
+  "how": "D1 (waits for the librarian's row-id ticket, akiendelllinux): the id of a node is the integer the master librarian reserved; no function of content makes an id. D2: db_domain's cache path in sync.py: read_through(table, row_number): the local row is data -> return it; NOTCACHED or absent -> ask the master over the bus (the master's db_domain answers a `fetch` verb for one row or one tree), write the answer locally through the owner gate, return it; VOID on the master -> the local row records VOID and nothing else is made up. D3: a slot handed to this box that it does not hold is written NOTCACHED, never left absent (4.3.1.5.1.1's blanks). D4: the backup half: a local write goes to the master by reservation first (the slot comes from the master), and a local row the master lacks is pushed (the master stays the one assigner). D5: the transport is the bus verb, not a database link; the testing database (a separate ticket) is what a proof runs against.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a local read of a node row number the box does not hold is answered from the master and the local table then holds it, identical, under the same owner"
+      },
+      {
+        "n": 2,
+        "claim": "a row number handed to the box and not yet fetched reads NOTCACHED locally, and reads as data after the first read-through"
+      },
+      {
+        "n": 3,
+        "claim": "a row the master marks VOID is cached as VOID and a second read does not ask the master again"
+      },
+      {
+        "n": 4,
+        "claim": "no node id on either box is derived from content: two nodes with the same content hold two row numbers"
+      },
+      {
+        "n": 5,
+        "claim": "2b3d842bc118's clause_4_the_live_tables_are_hers runs green on akienasus"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the cache path, replacing sync.py's insert-only union.",
+      "writes_to": [
+        "cairn/devices/db_domain/sync.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/sync.py",
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, two real databases (the master and a cache) on the testing database's rules, one tooth per clause 1-4.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_a_local_read_of_a_missing_node_is_filled_from_the_master.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/sync.py",
+      "cairn/devices/db_domain/proofs/test_a_local_read_of_a_missing_node_is_filled_from_the_master.py"
+    ],
+    "out": [
+      "cairn/devices/librarian (the row-id reservation is its own ticket)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "the sync-3ef8 build keyed rows by the existing primary key, which in cairn_nodes is trees.node_id_for(content) = sha256(content)[:16]; Akien's answer makes that the wrong key",
+      "how": "read cairn/devices/librarian/tools/trees/trees.py:143 and the answered Q#104"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "UNMEASURED: how many existing rows carry hash ids on each box and what a migration to master row numbers costs; the librarian's row-id ticket owns that measurement",
+      "how": "hypothesis, labelled"
+    }
+  ],
+  "depends_on": [
+    "the librarian row-id ticket (akiendelllinux)",
+    "the TESTING database ticket (a-test-run-reaches-a-testing-database-never-the-live-one): the proof runs there"
+  ],
+  "questions_still_open": [
+    "Q#105 direction (now: master to cache on a miss, and the cache's writes back to the master as the backup: is that the whole of it?)",
+    "Q#106 authority (Law 6)",
+    "Q#107 conflict (the master wins, by Akien's 'master row number'? to confirm)"
+  ],
+  "watchme": "none, because its proof cairn/devices/db_domain/proofs/test_a_local_read_of_a_missing_node_is_filled_from_the_master.py is the whole of its correctness"
+}
