@@ -1,56 +1,56 @@
 {
   "ticket": "b0c0c47835c1",
-  "status": "DRAFT v2 shaped plan by akiendell_cc_0, 2026-11-14, for re-charting by akienasus. Not cast. v2 settles the two choices as CC calls (orchestrator: neither needs Akien) and records the measurement that nothing yet feeds it: this ticket has a CHILD that must build first.",
-  "title": "a scheduled inspection reads the accumulated gate feedback and proposes a dial adjustment, which lands only through the gate's adjust door",
+  "status": "DRAFT v3 by akiendell_cc_0, 2026-11-14, for re-charting by akienasus. Not cast. v3 REPLACES v1/v2 after finding that most of this ticket's code already exists: the remaining work is wiring, and it depends on a child that feeds it.",
+  "title": "the existing gate-feedback probe is wired: a gate firing is recorded and a scheduled inspection reaches the model through an injected resolver",
   "owning_intention": "cairn/tools/base/intention+why.json",
   "wanted": "yes, measured 2026-11-14: its producer and its door both exist now. cairn/tools/data_recorder (PROVED, ticket 3ca32dd07e86) is written as 'the passive consumer's mailbox ... scheduled-llm-gate-inspection reads the accumulated records and proposes parameter adjustments'; cairn/tools/base/gate_class.py:201 TransitionGate.adjust(sieve_name, dial, value) returns the prior state, so a rollback exists; outline 17.7 (data_recorder: a mailbox until an inspection reads them), 17.10 (feedback) and 5.9 (Cairn's scheduled list: a pulse matches an entry and kicks off a probe) carry the pieces. The ticket's own horizon ('after the feedback tool's route is built ... at least one gate collects structured feedback') is the open part: not measured here whether any gate writes into a data_recorder yet.",
   "superseded_by": "none found: grep of CairnCommons/tickets for 'scheduled-llm-gate-inspection' and 'gate inspection' finds only 3ca32dd07e86 (its producer, PROVED) and this ticket.",
-  "intention": "A probe on Cairn's scheduled list (outline 5.9) hands a data_recorder's accumulated feedback records and the current dial values to the language model through the inference proxy, receives a proposed adjustment as JSON, and applies each proposal only through TransitionGate.adjust, recording the prior value it returns so the same door can put it back. The sieve stays deterministic Python and the model is never in the measurement path.",
+  "intention": "The gate_parameters_adjust_from_feedback probe (cairn/tools/base/probes/) reads feedback that gate firings really write, is handed a resolver that asks the language model through the inference proxy, and its proposals still land only through TransitionGate.adjust, recording the prior value so the same door puts it back. Nothing new is invented: the existing inspect/build_prompt/parse_proposals are the implementation.",
   "why": "A sieve that matches 100% cannot show efficacy; the feedback it collects is where efficacy hides and nobody reads it. Reading it on a schedule closes the loop (measure, accumulate, read, adjust, measure differently). Original statement and Law 4 / learns-its-gates tracing in the b0c0c47835c1 ticket.",
   "traces_to": "Law 4 (a gate whose dials never adjust from evidence is policy dressed as physics), Law 6 (the gate's own door is the only write path), sieves-measure-not-judge (the model proposes, never decides, never sits in the measurement path), Law 1 (reading accumulated feedback once instead of a human re-reading it each session).",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "inspect(records, dials, ask) with a stub ask that returns a proposal returns the proposal and changes no dial; the module imports no inference code (the ask is injected), so no sieve path reaches a model"
+        "claim": "with the child ticket's recorder fed, the probe's trigger reads those records and fires once the threshold is met, and a firing with a stub resolver returns the proposals and the prior values adjust() returned"
       },
       {
         "n": 2,
-        "claim": "apply(proposal, gate) changes a dial only through TransitionGate.adjust and records the prior value it returns; calling adjust with that recorded value restores the dial exactly (rollback by the door it entered through); a proposal naming a sieve or dial the tree lacks is refused by adjust and leaves everything unchanged"
+        "claim": "with a resolver injected by the shim, _carry no longer answers 'no resolver in context'; with none it still refuses loudly and applies nothing"
       },
       {
         "n": 3,
-        "claim": "the prompt handed to ask carries the records as one JSON object per line plus the current dial values and nothing else, and a reply that is not valid JSON in the declared shape is refused and applies nothing"
+        "claim": "an adjustment applied through the probe is undone by calling adjust with the recorded prior value, restoring the dial exactly (the existing revert tooth, now through the probe)"
       },
       {
         "n": 4,
-        "claim": "the inspection is declared as an entry on Cairn's scheduled list that the pulse's clock match fires, and the code starts no loop, thread or daemon"
+        "claim": "the model is never in a sieve's measurement path: the probe imports no inference code (the resolver is injected) and the module has no loop, thread or daemon"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: a new module cairn/tools/base/gate_inspection.py holds inspect(records, dials, ask) -> proposal and apply(proposal, gate) -> list of {sieve, dial, prior, new}; it imports TransitionGate's adjust only by being handed the gate, and imports no inference code (the caller injects ask, which in production is the inference proxy's bus verb).",
+      "text": "D1: REUSE, do not add a module. The change is inside cairn/tools/base/probes/gate_parameters_adjust_from_feedback.py: _read_feedback reads the recorder the child ticket feeds (DataRecorder.read()) instead of BUILD_GATE._feedback_dir files; inspect, build_prompt and parse_proposals stay.",
       "writes_to": [
-        "cairn/tools/base/gate_inspection.py"
+        "cairn/tools/base/probes/gate_parameters_adjust_from_feedback.py"
       ],
       "reads": [
-        "cairn/tools/base/gate_class.py",
+        "cairn/tools/base/probes/gate_parameters_adjust_from_feedback.py",
         "cairn/tools/data_recorder/data_recorder.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: the proposal shape is {\"adjustments\": [{\"sieve\": str, \"dial\": str, \"value\": json, \"because\": str}]}; the reply parser refuses anything else.",
+      "text": "D2: the shim that fires the probe injects context['resolver'], a callable that asks the inference proxy over the bus; the probe imports no inference code. Which shim carries it follows the holder chosen in the child ticket (codemother).",
       "writes_to": [],
       "reads": [
-        "cairn/tools/base/gate_class.py"
+        "cairn/tools/base/probe.py"
       ]
     },
     {
       "n": 3,
-      "text": "D3: CADENCE, a CC call recorded as a decision. Outline 5.9, 17.7 and 17.10 name no tier or sleep for a gate inspection (5.9.3.1 only says a pulse matches a list entry and kicks off a probe; 17.7 says a mailbox 'until an inspection reads them'), so no line settles it. The inspection is one entry on Cairn's scheduled list that the sleep routine runs, with the daily sleep trigger (5.3.3.1, 5.3.3.4: the clock, 2300): it reads ACCUMULATED feedback, not a fast signal, and the model call belongs in the box's opening, not at commit time. The entry is the probe the pulse's clock match kicks off (5.9.3.1).",
+      "text": "D3: CADENCE, a CC call recorded as a decision. Outline 5.9, 17.7 and 17.10 name no tier or sleep for a gate inspection (5.9.3.1: a pulse matches a list entry and kicks off a probe; 17.7: a mailbox 'until an inspection reads them'). The probe keeps its existing records-accumulated threshold as its trigger, and its firing is the daily sleep entry (5.3.3.1, 5.3.3.4: the clock, 2300), since it reads accumulated feedback and the model call belongs in the box's opening.",
       "writes_to": [],
       "reads": [
         "cairn/tools/base/shim.py"
@@ -58,54 +58,40 @@
     },
     {
       "n": 4,
-      "text": "D4: one proof, one tooth per clause, over a scratch gate tree and a stub ask; red first. The model call itself is not exercised.",
+      "text": "D4: extend the existing proof cairn/tools/base/proofs/test_gate_feedback.py with the probe's teeth under this ticket's PROVES key (clauses 1 to 4), over a scratch recorder and a stub resolver; red first.",
       "writes_to": [
-        "cairn/tools/base/proofs/test_a_scheduled_inspection_adjusts_a_dial_only_through_the_gate.py"
+        "cairn/tools/base/proofs/test_gate_feedback.py"
       ],
       "reads": []
-    },
-    {
-      "n": 5,
-      "text": "D5: WHICH GATE FIRST, a CC call by measurement. The rule is the recorder with the most gate observations. Measured 2026-11-14 on akiendell: no gate observation is written to any recorder, so no recorder qualifies today; the only populated recorder is the inference proxy's metrics (21 records), which is not gate feedback. The first gate is therefore the build_inspector's gate (the only gate whose charter, cairn/tools/gate/intention+why.json, names this probe and its feedback route) once the child ticket below feeds its recorder.",
-      "writes_to": [],
-      "reads": [
-        "cairn/tools/gate/intention+why.json"
-      ]
     }
   ],
   "bounds": {
     "in": [
-      "cairn/tools/base/gate_inspection.py",
-      "cairn/tools/base/proofs/test_a_scheduled_inspection_adjusts_a_dial_only_through_the_gate.py"
+      "cairn/tools/base/probes/gate_parameters_adjust_from_feedback.py",
+      "cairn/tools/base/proofs/test_gate_feedback.py"
     ],
     "out": [
+      "gate_class.py (the child ticket changes how feedback is written)",
       "the inference proxy",
       "the data_recorder tool",
-      "gate_class.py (adjust is used, not changed)",
-      "any real model call",
-      "choosing which inspector's recorder is inspected first"
+      "any real model call"
     ]
   },
   "measured": [
     {
       "when": "2026-11-14",
-      "saw": "cairn/tools/base/gate_class.py:201 adjust(sieve_name, dial, value) validates the tree, sieve and dial and returns the prior state; cairn/tools/data_recorder has write/read/clear and its charter names this ticket as the reader; tools/base/intention+why.json is the ticket's owning intention and resolves; no tickets name the same work besides 3ca32dd07e86",
-      "how": "read gate_class.py, data_recorder.py and its charter, grep of CairnCommons/tickets, outline 5.9, 17.7, 17.10"
-    },
-    {
-      "when": "2026-11-14",
-      "saw": "Callers of DataRecorder: cairn/tools/base/device.py (lazy inbound recorder for a verb-less receive), cairn/devices/codemother/shim.py:79 (charter instance inbound/, inspector findings), cairn/devices/cairn/metrics.py:43 (metrics). On akiendell, records.jsonl under ~/.cairn/devices/*/*/tools/data_recorder: exactly one, inferenceproxy/0/.../metrics/records.jsonl with 21 lines. No gate recorder exists on this box. The akiendelllinux count was NOT measured: ssh from this box fails with 'Host key verification failed' and I did not alter known_hosts; the command to run there is: find ~/.cairn -name records.jsonl -path '*data_recorder*' -exec wc -l {} +",
-      "how": "git grep for data_recorder/DataRecorder outside its own tool, find ~/.cairn for records.jsonl, wc -l, outline 5.9/5.3.3/17.7/17.10"
+      "saw": "MOST OF b0c0 IS ALREADY BUILT, so v1 and v2 of this plan (a new gate_inspection.py module) would have paralleled it (Law 1). cairn/tools/base/probes/gate_parameters_adjust_from_feedback.py already has _read_feedback, build_prompt, parse_proposals, inspect(records, resolver) which calls BUILD_GATE.adjust per proposal, a Threshold and an enough() predicate; cairn/tools/base/gate_class.py TransitionGate._collect_feedback already writes a structured record after EVERY gate firing (gate, timestamp, verdict, checks_total/passed/failed, record, mismatches); adjust() returns the prior state and cairn/tools/base/proofs/test_gate_feedback.py covers green/red feedback, adjust, revert and the refusals. What is missing is the WIRING, both measured: (1) _collect_feedback writes only when self._tree is set, and `.construct(` has no caller outside proofs (git grep), so BUILD_GATE._tree is None in production and no feedback is ever written: find ~/.cairn for a feedback dir returns none on akiendell, and the Dell has no gate recorder either (orchestrator 2026-11-14: records.jsonl only in codemother/0/tools/charter/inbound (302) and inferenceproxy/0/tools/data_recorder/metrics (18)); (2) the probe's _carry needs context['resolver'] and nothing in the repo injects one (it answers 'no resolver in context'). Note also that the probe reads BUILD_GATE._feedback_dir (files), not a data_recorder, though cairn/tools/data_recorder/intention+why.json says gate feedback lands there (17.7).",
+      "how": "read the probe, gate_class.py, test_gate_feedback.py; git grep '.construct(' and 'resolver'; find ~/.cairn for feedback dirs and records.jsonl; the orchestrator's Dell count"
     }
   ],
   "questions_for_akien": [],
-  "unmeasured": "the Dell's recorder counts (command above); if the Dell holds a gate recorder with records, D5's first gate and the child ticket's scope change, and this plan should be amended before charting",
+  "unmeasured": "whether the probe is armed/registered with a shim anywhere (not read); the shape of the resolver verb on the inference proxy (outline-level, not read here); no real model call is exercised by any tooth",
   "children": [
     {
-      "title": "the build_inspector's gate writes the observation of each firing into a data_recorder",
-      "why": "MEASURED: nothing feeds this ticket. Callers of DataRecorder in the repo are the base device's lazy inbound recorder (cairn/tools/base/device.py), codemother's charter backpack for inspector FINDINGS (cairn/devices/codemother/shim.py), and the metrics recorder (cairn/devices/cairn/metrics.py); none receives a gate's observation (the sieve inputs, the outputs, the dial values, the owner's disposition). b0c0 has nothing to inspect until one does.",
+      "title": "a gate firing's observation lands in a data_recorder, so something is there to inspect",
       "must_build_before": "b0c0c47835c1",
-      "status": "PROPOSED, not cast; akienasus or the orchestrator casts it. Its own plan needs its own measurement of what a gate firing carries."
+      "plan_file": "cast-inputs/gate-firings-land-in-a-data-recorder.shaped-plan.json",
+      "status": "PROPOSED, drafted, not cast"
     }
   ]
 }
