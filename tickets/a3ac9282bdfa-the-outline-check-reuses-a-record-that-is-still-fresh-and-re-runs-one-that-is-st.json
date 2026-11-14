@@ -1,0 +1,68 @@
+{
+  "title": "the outline check reuses a record that is still fresh and re-runs one that is stale, so a walk neither crosses on an old read nor re-opens questions on an unchanged one",
+  "owning_intention": "cairn/devices/codemother/machines/outline_check/intention+why.json",
+  "intention": "cairn outlinecheck <ticket> reuses its newest ran:true record when that record still stands for what it read, and re-runs the check when it does not. A record stands iff the outline's bytes hash to its outline_sha256 AND the ticket's plan fields (tickets/_charter+why.json#plan_fields) equal those of the git revision of the ticket whose bytes hash to its ticket_sha256; if no such revision exists it does not stand. A change to the ticket's state (its cursor) alone never makes a record stale. --force re-runs regardless.",
+  "why": "akienasus, idea 2026-11-13-an-outline-check-only-stands-for-the (commons 94b96196), measured 2026-11-13 on akiendelllinux: the BUILDME lane accepted any ran:true record, so ac71d984ebda crossed BUILDME on a check taken before outline commits 66c17d5a6 and 198f4ef24; 64db27776707, 266d, 17d5, 207c and ee4e were all stale. The opposite failure: the integrator's walk re-ran outlinecheck every time and each re-run opened new questions (2a20 gained open-c64761fc30c3, citing 9.4.2.3.7.1, a line added after its first check). The rule lives only in the integrator's scratch script /tmp/akienasus_ocfresh.py on the Dell; it belongs in the machine. The machine's D2 says the outline is 'read on every run, never cached': this does not cache the outline, it hashes it on every call and reuses a RECORD only while the hash still matches.",
+  "traces_to": "Law 3 (a check is a measurement of what it read; a stale one is a claim about documents that have since changed), Law 8 (a hollow green gets leaned on) and Law 1 (a settled answer is not re-derived).",
+  "how": "Add fresh(ticket, record, root) -> (bool, reason) and fresh_standing(ticket, root): the newest ran:true record, kept only if fresh. check(ticket, reader, root, force=False) returns the fresh standing record with its existing question ids (via _open_what_stands, which is idempotent: it never opens a question twice) without calling the reader; otherwise it runs as today. The CLI gains --force. The plan fields come from <commons>/tickets/_charter+why.json#plan_fields, never a hand list; when the ticket's revisions cannot be read (no git, no matching revision) the record is stale. Spelled again in the sieve (RULE 1: the sieve reads records and cannot import this machine), so the two predicates carry a cross-reference.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a ran:true record whose outline_sha256 equals the outline's hash now and whose ticket plan fields equal those of the revision it read, check() returns that record and its question ids, calls the reader zero times and writes no new record; a change to the ticket's state only (its cursor) leaves it fresh"
+      },
+      {
+        "n": 2,
+        "claim": "when the outline's bytes changed, or a plan field of the ticket changed, or no git revision of the ticket hashes to ticket_sha256, check() calls the reader and writes a new record; --force re-runs a fresh one"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: fresh() and fresh_standing() in outline_check.py, plan fields read from the ticket charter; stale when the read revision cannot be found (ee4e's case).",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: check() reuses a fresh standing record unless force=True; the CLI gets --force; reuse returns the record's existing question ids through the idempotent _open_what_stands.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": []
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof over a scratch commons (a git repo) and a scratch outline, with a counting fake reader; one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_a_stale_outline_check_is_rerun_and_a_fresh_one_reused.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/outline_check/outline_check.py",
+      "cairn/devices/codemother/machines/outline_check/proofs/test_a_stale_outline_check_is_rerun_and_a_fresh_one_reused.py"
+    ],
+    "out": [
+      "every other component",
+      "the build_inspector sieve buildme_rides_the_outline_check (its own ticket, after 93fa3e3a6199 moves the package)",
+      "the integrator's scratch script (/tmp/akienasus_ocfresh.py), which this replaces",
+      "the outline's own text and the question door"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "akienasus's scratch script /tmp/akienasus_ocfresh.py on the Dell (pasted in its message of 2026-11-13) implements the rule: the outline's sha256 must equal the record's outline_sha256, and the ticket's plan fields must equal those of the git revision whose bytes hash to ticket_sha256, found by `git log --format=%H -- <ticket>` and `git show <rev>:<ticket>`; 'stale' when no revision matches. Measured with it on the Dell: stale (outline changed): 64db, 266d, 17d5; stale (plan changed: falsifier, decisions): 207c; stale (version not in git): ee4e; no ran:true record: 7ea5; fresh: 2a20. Its PLAN tuple was its own guess (it has node_class and watchme, and lacks constraints, builder_notes, chart_notes, writes_to, chart and fixes); this ticket uses tickets/_charter+why.json#plan_fields, [id, title, owning_intention, intention, why, traces_to, how, falsifier, constraints, decisions, builder_notes, chart_notes, writes_to, bounds, measured, chart, fixes]. CRLF is not a risk: .gitattributes pins *.txt and *.json eol=lf, so a Windows checkout hashes the outline and tickets as the Dell does (git ls-files --eol on the outline reads i/lf w/lf). outline_check.py today: check() always reads (line 180), standing() accepts any ran:true record (line 295); the record already carries outline_sha256 and ticket_sha256 (lines 205-206).",
+      "how": "read outline_check.py check/standing; akienasus's message and script; git ls-files --eol; json read of tickets/_charter+why.json"
+    }
+  ],
+  "id": "a3ac9282bdfa"
+}

@@ -1,0 +1,60 @@
+{
+  "title": "the sieve buildme_rides_the_outline_check reds an outline check that no longer stands for the outline or the ticket plan it read",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "buildme_rides_the_outline_check is green only if the newest ran:true outline check record still stands: the outline's bytes hash to its outline_sha256 AND the ticket's plan fields (tickets/_charter+why.json#plan_fields) equal those of the git revision of the ticket whose bytes hash to its ticket_sha256. A stale record, or one whose ticket revision cannot be found, is red with a finding that names why and names `cairn outlinecheck <ticket>` as the fix. A change to the ticket's state (its cursor) alone leaves it green.",
+  "why": "akienasus, idea 2026-11-13-an-outline-check-only-stands-for-the (commons 94b96196), measured 2026-11-13: the sieve accepts any ran:true record (inspector.py:2404 'some outline_checks/<ticket>-*.json record carries ran: true'), so ac71d984ebda crossed BUILDME on a check taken before two later outline commits; 64db27776707, 266d, 17d5, 207c and ee4e were all stale. The record already carries outline_sha256 and ticket_sha256 and nothing compared them to what stands now. Companion to a3ac9282bdfa (the machine reuses a fresh record and re-runs a stale one); this is the lane that refuses to let a stale one cross.",
+  "traces_to": "Law 4 (a rule that matters is enforced by physics: the lane must refuse a stale check, not hope the integrator re-ran it) and Law 8 (a hollow green is worse than a red).",
+  "how": "BUILD AFTER 93fa3e3a6199 LANDS: that ticket moves the build_inspector package (to cairn/devices/codemother/machines/build_inspector/), so this edits the file at its new path and the bounds are re-pointed then. In the sieve add the same predicate as the machine's (the sieve reads records and cannot import the machine, RULE 1, so it is spelled again with a cross-reference to a3ac9282bdfa): hash the outline now, find the ticket's revision by hash through git in the commons, compare the plan fields from the ticket charter. Red when the outline hash differs, the plan differs, or no revision matches; the finding names the reason and `cairn outlinecheck <ticket>`.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "buildme_rides_the_outline_check returns no finding for a ticket whose newest ran:true record's outline_sha256 equals the outline's hash now and whose ticket plan fields equal those of the revision it read, including after a cursor-only change to the ticket"
+      },
+      {
+        "n": 2,
+        "claim": "it returns one finding naming the reason and the command that clears it when the outline's bytes changed since the record, or a ticket plan field changed, or no revision of the ticket hashes to ticket_sha256, where today it returned none"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the sieve compares the record's outline_sha256 and the ticket revision's plan fields, spelled again from the machine's predicate; plan fields from the ticket charter; stale when the read revision cannot be found.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof over a scratch commons (a git repo) and a scratch outline; one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_buildme_rides_the_outline_check_is_fresh.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/machines/build_inspector/proofs/test_buildme_rides_the_outline_check_is_fresh.py"
+    ],
+    "out": [
+      "every other component",
+      "the outline_check machine (a3ac9282bdfa)",
+      "the package move itself (93fa3e3a6199)",
+      "buildme_rides_the_chart and the other BUILDME lanes"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "inspector.py:2404 buildme_rides_the_outline_check iterates <commons>/outline_checks/<ticket>-*.json and returns [] on the first record with ran:true; it reads records only (the docstring says why: a machine reaching into a device is the breach encapsulation_holds forbids). akienasus's scratch script /tmp/akienasus_ocfresh.py (Dell) measured the rule on live tickets: stale (outline changed) 64db, 266d, 17d5; stale (plan changed) 207c; stale (revision not in git) ee4e; no ran:true record 7ea5; fresh 2a20. 93fa3e3a6199's bounds list cairn/devices/codemother/machines/build_inspector/ as the new home of inspector.py, so this file moves.",
+      "how": "read inspector.py 2404-2440; akienasus's message and script; read 93fa3e3a6199's bounds"
+    }
+  ],
+  "id": "cbf1d333984f"
+}

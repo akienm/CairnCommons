@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: the record's ticket_sha256 is the hash of the ticket PLAN file as it stood when the check ran, and a git revision with those bytes exists whenever the ticket was committed before the check (ee4e shows it can be absent, which is why absent means stale). Also load-bearing: plan fields are the right notion of 'the ticket changed'; the cursor lives in the state file, but some flows write workflow_and_state into the plan doc, so comparing only plan_fields keeps a crossing from making every record stale. Not assumed: that git is always available to the machine; without it the record stands only on an exact whole-file hash match.",
+    "builder_check": "A Haiku builder needs: the file and the two functions to read (check at line 180, standing at 295), the exact predicate (three conditions plus the conservative fallback), the plan-field source (the ticket charter, never a hand list), the idempotent question path, and the proof's scratch git world (copy the existing proofs' door.set_diagnostic_roots pattern and make the scratch commons a git repo). The ticket carries all of these.",
+    "children": "none, because the change is one predicate and one reuse branch in one machine, with one proof",
+    "collision_check": "Looked at the machine's own D2 ('the outline is read on every run, never cached'; reuse keyed on the outline's hash does not cache the outline), the sieve ticket (the same predicate, spelled again in build_inspector, which 93fa3e3a6199 is moving) and the integrator's scratch script this replaces. The integrator's walk calling outlinecheck every time is the second caller this changes: after this it reuses a fresh record.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) a fresh record is reused with zero reader calls and no new record, and a cursor-only change keeps it fresh | (2) a changed outline, a changed plan field, or an unfindable revision re-runs the check; --force re-runs a fresh one. Horizon: red on current main (check always reads), green after; proven over a scratch git commons with a counting fake reader.",
+    "gates_bound": "proof gate (a hollow build must fail it) + durability gate (committed) + feeds-back-to-origin on failure (Laws 3 + 8).",
+    "missing_check": "Not wrapped: how the machine finds the commons repo root and the ticket's relative path under it for the git calls (door.roots()['CairnCommons'] and the ticket file's path), and what happens in a scratch commons that is not a git repo (the proof's world is a real scratch git repo). Also unmeasured: the cost of walking a long ticket history; the integrator's script does it per call and it was acceptable.",
+    "node_class": "code-seam",
+    "questions": "none, because the rule is the orchestrator's and akienasus's (idea 94b96196, press_office/CairnComponentOutline.txt 10.3.5.1 for the check itself) and was measured on the Dell; nothing here is a spec choice for Akien",
+    "task_or_ticket": "ticket",
+    "title": "the outline check reuses a record that is still fresh and re-runs one that is stale, so a walk neither crosses on an old read nor re-opens questions on an unchanged one",
+    "watchme": "none, because its proof cairn/devices/codemother/machines/outline_check/proofs/test_a_stale_outline_check_is_rerun_and_a_fresh_one_reused.py is the whole of its correctness; the live check is the same command on akiendell; the code lives at cairn/devices/codemother/machines/outline_check/outline_check.py",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The outline check will reuse a fresh record and re-run a stale one (outline bytes and ticket plan fields compared to what it read); before, BUILDME accepted any ran:true record and walks re-ran every time."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "73c6538be645",
+  "skill": "sorted",
+  "title": "the outline check reuses a record that is still fresh and re-runs one that is stale, so a walk neither crosses on an old read nor re-opens questions on an unchanged one",
+  "trace_id": "8fea5d0373d4",
+  "when": "2026-11-13T23:03:40.302339"
+}
