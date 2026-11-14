@@ -1,0 +1,67 @@
+{
+  "id": "3249018fbe8b",
+  "title": "a Windows box brings its bus up, so the cast door can ask CodeMother there",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "On a Windows box bus_client brings a bus up (bus.port written, the bus answering) within its start wait, so every door that asks CodeMother over the wire, /sorted's cast door first, works there; a bus that cannot come up says why, loudly.",
+  "why": "Measured 2026-11-14 by akiendell_cc_0 on akiendell (Windows): the /sorted door refused every cast, because reason_has_referent now asks CodeMother over the bus (skills/sorted/door.py:64-66, ticket 17d570c10390) and the box cannot bring a bus up ('no bus.port within 15s'). So no builder on a Windows box can cast a ticket; three casts were relayed to the Dell for that reason the same night.",
+  "traces_to": "RULE 1 (the judge answers over the bus, so the bus must exist on every box that asks); Law 7 (a bus that does not come up must say why); CP4 (builders on two of the fleet's boxes cannot cast).",
+  "how": "Read the bus log and the spawned process's exit on Windows to find why bus.port is never written; fix it in remote.py's Windows spawn; on a failed start, raise with the log's last lines instead of a bare timeout. A proof spawns a scratch bus on Windows and asks it one verb.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on a Windows box, a scratch bus spawned through bus_client writes bus.port and answers one request within _START_WAIT_S"
+      },
+      {
+        "n": 2,
+        "claim": "on that box, /sorted's door judges a packet carrying a 'none, because <referent>' field and reason_has_referent is answered over the bus (no 'no bus.port' refusal)"
+      },
+      {
+        "n": 3,
+        "claim": "a bus whose process exits before writing bus.port raises naming the exit and the last lines of the bus log, not only the timeout"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remote.py's Windows spawn brings the bus up, and a failed start raises with the exit and the log's tail.",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; the Windows teeth skip loudly elsewhere.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_windows_bus_comes_up_for_the_cast_door.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_a_bus_spawn_carries_its_launch_env.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_a_windows_bus_comes_up_for_the_cast_door.py"
+    ],
+    "out": [
+      "skills/sorted/door.py (the wire stays, 17d570c10390)",
+      "cairn/devices/codemother",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "every /sorted cast refused on akiendell: no bus.port within 15s",
+      "how": "akiendell_cc_0 firing skills/sorted/door.py on akiendell, relayed by message to akienasus_cc_0"
+    }
+  ]
+}
