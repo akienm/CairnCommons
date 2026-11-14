@@ -1,0 +1,65 @@
+{
+  "id": "9fbffaad248a",
+  "title": "a hollow reverts only the ticket's own change to a file, not later tickets' changes to the same file",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "When the hollow takes a ticket's build away from a file that other tickets changed after the anchor, it removes only that ticket's build hunks and leaves the other tickets' changes in place. Where the hunks will not come off over theirs, it refuses loudly, naming the file and the commits, and never falls back silently to the whole-file revert.",
+  "why": "Measured 2026-11-14 by akiendelllinux: a diagnostic `bin/cairn test --hollow 852b6b5fa4bd` on 8d20852d6 reverted cairn/tools/scratch/scratch.py whole to the anchor 29f2393aa463. That also dropped two later tickets' commits to the same file, e4be129fd (d95796cdfb9b) and d839314f7 (0c2c3f53c2be), though 852b's own change is one line. So the reading was 'the world without three tickets'. A tooth that reds because a later ticket's function went missing reads ok and is credited to this build. ce92eb562cf9 already takes the build's hunks away, but only as a retry when the whole-file revert printed no teeth.",
+  "traces_to": "Law 8: a proof a hollow build couldn't pass. A hollow that reverts more than the build measures more than the build. Law 7: an overlap is refused by name, never collapsed into a reading.",
+  "how": "In cairn/devices/tester/hollow.py, a new _later_by_others(root, anchor, rel, builds) lists the non-merge commits in anchor..HEAD that changed rel and are not the ticket's build commits. When the ticket names build commits for that root (anchor['build_commits']), the file stood at the anchor, and the list is non-empty, measure takes away only the build hunks through the existing _revert_hunks (a git merge-file three-way, newest first) as the primary revert, with revert_mode 'hunks'. A refusal leads with which later commits had to stay. A build commit that never touched the file reads UNWRIT. With no named build commit (a journal anchor, where nothing tells the build's commits from others'), or no later change by others, the whole-file revert stays, since it produces the same bytes. Moves and deletions keep today's path. The red-first proof builds a scratch fixture repo with two tickets' commits to one file.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a fixture repo where ticket A changes f.py near the top and a later ticket B appends to the same file far below, A's hollow leaves B's change (a proof checking it reads f.py HOLLOW) and takes A's away (a proof checking A's function reds), with revert_mode hunks"
+      },
+      {
+        "n": 2,
+        "claim": "when B also edits A's own line, so A's hunk cannot be reverse-applied over it, measure raises HollowUnmeasurable naming f.py, A's commit and B's commit, and returns no reading (no whole-file fallback)"
+      },
+      {
+        "n": 3,
+        "claim": "with no later change by others, or no build commit named for the ticket, the whole-file revert stands (revert_mode whole-file) and reads as before, and the existing hollow proofs stay green, 06f0445e7a63's anchor teeth and ce92eb562cf9's hunk-mode teeth among them"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: a file other tickets changed after the anchor is reverted by the build's own hunks first (_later_by_others + _revert_hunks with a context-led refusal); the UNRAN retry runs only where no others changed the file; the anchor rule is untouched.",
+      "writes_to": [
+        "cairn/devices/tester/hollow.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/hollow.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one red-first proof, one tooth per clause, over a two-ticket fixture repo under a scratch dir.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_hollow_takes_away_only_its_own_tickets_change.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_hollow_takes_away_the_build_not_the_years_since.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/hollow.py",
+      "cairn/devices/tester/proofs/test_a_hollow_takes_away_only_its_own_tickets_change.py"
+    ],
+    "out": [
+      "the anchor rule itself (06f0445e7a63, PROVED)",
+      "the move and deletion paths",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "the 852b hollow reverted scratch.py whole to 29f2393aa463, dropping e4be129fd (d95796cdfb9b) and d839314f7 (0c2c3f53c2be)",
+      "how": "bin/cairn test --hollow 852b6b5fa4bd (diagnostic) on 8d20852d6; git log fdc128de1^..HEAD -- cairn/tools/scratch/scratch.py"
+    }
+  ]
+}
