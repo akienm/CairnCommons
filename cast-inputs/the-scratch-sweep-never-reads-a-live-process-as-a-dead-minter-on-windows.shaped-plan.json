@@ -1,0 +1,86 @@
+{
+  "ticket": "<caster mints>",
+  "owner": "CC",
+  "date": "2026-11-14",
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "status": "DRAFT v1 by akiendell_cc_0, 2026-11-14, for casting. BUILT: branch win-process-start @0988cc59d (on origin/main 219f2c3db). It is the ROOT CAUSE of orphan ticket 9484180b4ff4, whose own build is the stacked detector proof orphan-9484-proof @54d197e22 (PROVES 9484180b4ff4 {1,2}); land this first.",
+  "title": "the scratch sweep never reads a live process as a dead minter on Windows",
+  "owning_intention": "cairn/devices/db_domain/tools/client/intention+why.json",
+  "intention": "store.process_start answers the creation time of a RUNNING pid on Windows (GetProcessTimes), None for a pid that is gone, so minter_alive is True for a live process and sweep_scratch never drops the live scratch tables of the process that calls it.",
+  "why": "Measured 2026-11-14 on akiendell: process_start reads /proc, which Windows lacks, so it answered None for every pid. minter_alive then read the caller's OWN process as dead, and sweep_scratch() from a process holding one live scratch table dropped it and unregistered it (probe: sweep dropped 1, table gone, not registered). The tester sweeps before every --seal (cli.py:701), so test_the_seal_announces_itself lost its fixture bus families mid-run; the bus re-created its tables unregistered; each transit table was then dropped by name at exit and each _delivery companion, with no registry row to find it by, outlived the run: 24 seal_ann_*_delivery tables on the cairn database, 3 more per run (21 -> 24 measured), the orphan ticket 9484180b4ff4. Linux is unaffected (it reads /proc); this is the Windows branch the 2026-09-06 scratch design (201a37bf1613) never had.",
+  "traces_to": "Law 4 (a scratch table that cannot outlive its process must not die under it either), Law 3.",
+  "how": "D1: _windows_process_start(pid) via ctypes kernel32: OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION), GetExitCodeProcess (STILL_ACTIVE 259, because a handle to an exited process still opens), GetProcessTimes creation FILETIME to epoch seconds, None when the pid cannot be opened; process_start dispatches to it when os.name == 'nt' and reads /proc elsewhere unchanged. D2: a proof, three teeth. Red-first on Windows.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "process_start of a running child is its creation time (within a minute of now) and minter_alive is True for this process and for the child"
+      },
+      {
+        "n": 2,
+        "claim": "process_start of a pid that has exited is None and minter_alive is False for it"
+      },
+      {
+        "n": 3,
+        "claim": "sweep_scratch() leaves this process's own live scratch table standing and registered"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the Windows branch of process_start.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py"
+    ],
+    "out": [
+      "cairn/devices/tester (the detector proof is 9484180b4ff4's)",
+      "the bus",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "process_start(own pid) = None and minter_alive(own pid, now) = False on Windows; sweep_scratch() dropped the caller's own live scratch table (dropped 1, table gone, not registered)",
+      "how": "scratch script over store.scratch, scratchpad ma.py, venv python on akiendell"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "bisect: during test_the_seal_announces_itself the cairn_scratch registry held 0 seal_ann rows while 3 transit + 3 _delivery tables stood; after _SCRATCH.close() the 3 _delivery tables remained",
+      "how": "scratchpad bis.py, REGISTRY query before close"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "after the fix one run of the leaking proof adds 0 tables (before: +3); the 36 existing orphans (empty, owner bus, no registry row) were dropped through store.drop_table on this box",
+      "how": "9484180b4ff4's proof tooth 1, red unfixed, green fixed; clean.py"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "UNMEASURED on Linux: expected unaffected because process_start reads /proc there; the Dell reproduction akienasus offered would confirm 0 leaked tables per run",
+      "how": "hypothesis, labelled"
+    }
+  ],
+  "watchme": "none, because its proof cairn/devices/db_domain/tools/client/proofs/test_a_live_minter_survives_the_sweep_on_every_host.py is the whole of its correctness"
+}
