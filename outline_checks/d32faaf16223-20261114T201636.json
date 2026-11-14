@@ -1,0 +1,102 @@
+{
+  "ticket": "d32faaf16223",
+  "at": "2026-11-14T20:16:36+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1790081,
+      "duration_ms": 94513,
+      "is_error": false,
+      "session_id": "611e8eec-3979-4058-91f3-0c86b48640a3"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "c4cf030e1c1db96bccc374f82a0a65c2d97dfab5d40cf7dd8992f957d29c4df3",
+  "ticket_sha256": "48b7c4c9d67504a46fe1816d49c24bdab00d11877e363579778c22720b65db43",
+  "touches": [
+    {
+      "number": "4.3.1.1",
+      "text": "Other devices keep no node tables of their own. They put what they learn into the librarian's nodes through the librarian's verbs on the bus, and each depositor gets its own index over the shared nodes, because each asked different questions first while assimilating."
+    },
+    {
+      "number": "4.3.1.4",
+      "text": "Ownership. The librarian owns every tree and delegates some to the devices that learn. EVERYTHING THAT LEARNS USING OUR GRAPH TREES IS A DELEGATE (CodeMother, chart and any learning block are examples, not a list), and each holds its trees by the librarian's delegation (Law 6: delegation through the owner's gate). WHY: two holders with different weights over the same nodes have different perspectives and can debate points, and the librarian, asked anything, can look at the query from both."
+    },
+    {
+      "number": "4.3.1.5.1.1",
+      "text": "A row number is the same on every box. Storing a memory first reserves its slot from the librarian on the home box (CAIRN_HOME_HOST, 6.3.7.4), so two boxes are never handed the same slot, and the slot stays reserved until the write is complete. If a box's list is shorter than the slot (eg it holds rows up to 100 and is handed 123 while a sync is bringing the rest), it adds the open slots in between as blanks, and the sync fills them in as it proceeds. WHY: node ids are in every link and blob pointer, so a row has to mean the same node everywhere."
+    },
+    {
+      "number": "4.3.1.5.1.2",
+      "text": "A node id is its master row number and never anything else (Akien, Q#104, 2026-11-14). WHY: any other lookup needs a search, and a row id is direct; a search is far too slow on the target hardware. A node can be voided and its row reused; a node is never searched for."
+    },
+    {
+      "number": "4.3.1.5.1.2.1",
+      "text": "Fetch by id is never a search; it always goes directly there (Akien, 2026-11-14). WHY: the target hardware is a 10th-gen i7 with 16 GB RAM and no GPU, and only a direct fetch keeps it from bogging down. The lived symptom: in the Igors, reading one word into a 3M-entry word graph took more than 1 second, and the laptop crawled. The row-id model comes from dBase II record numbers, the first database he used."
+    },
+    {
+      "number": "4.3.1.5.1.3",
+      "text": "A node is in one of three states: VOID (deleted, its row available), NOTCACHED, or its data, which follows the node schema. Data that does not follow the schema is a bug."
+    },
+    {
+      "number": "4.3.1.5.1.4",
+      "text": "The sync is the backup, and a local database is a cache of the master. A local call for a node or tree the box does not hold is fed from the master and populates the local copy. If the box holds"
+    },
+    {
+      "number": "4.3.1.5.1.4.1",
+      "text": "Every box holds a full copy of the database (Akien, 2026-11-14: \"every box will make a copy of the db so we don't lose it. so postgres yes\"). WHY: no single box's loss loses the memory; this is why every box, yoga included, runs Postgres. -amm"
+    },
+    {
+      "number": "4.3.1.5.1.4.1.1",
+      "text": "The full copy is a byproduct of the cache, not a separate backup (Akien, Q#113, 2026-11-14, open-d943155b9c86). Every box runs its own database proxy (11.3.7), and a device, machine or tool only ever talks to its local one. A read is answered locally when the row is local and current; otherwise the local proxy gets it from another host's proxy, returns it, and caches it locally in the background. Sleep cycles also sync the databases across hosts, so NOTCACHED is a transient state and every box slowly builds a full copy. WHY, his words: \"when we thought it dead, we knew we needed backups of the db. but this cache/sync strategy means we never have to make a backup. it's already there as a byproduct of the caching, which oh by the way also keeps everything as fast as possible.\" -amm"
+    },
+    {
+      "number": "4.3.1.5.1.4.1.2",
+      "text": "A write goes through the local proxy to the home's proxy; the home writes it and stamps its seq, and the other boxes get it by the read fill and the sleep-cycle sync. The home is the one writer (4.3.1.5.1.6.9: slots come from the home). WHY: one writer means no box holds a row the home lacks, so the copies never conflict. - akiendelllinux_orchestrator; approved, Q#114, 2026-11-14 (open-34c4451291a6): \"that looks to me like it will work.\" -amm"
+    },
+    {
+      "number": "4.3.1.5.1.6",
+      "text": "The node schema (Akien, Q#108, 2026-11-14: CC's proposal, which he approved, plus his flexible metadata field). WHY: nodes have to be really fast, and row ids are fastest; a payload can be anything, so a node points into blobs and lists."
+    },
+    {
+      "number": "4.3.1.5.1.6.2",
+      "text": "nodes (the one long list): row, gen, state (VOID|NOTCACHED|DATA), kind (the payload type), payload (inline when small), blob (an address, when large), meta (flexible json), out (a list address), in (a list address), seq (a change counter for the sync)."
+    },
+    {
+      "number": "4.3.1.5.1.6.9",
+      "text": "Slots are reserved from the home librarian in blocks (eg 1,000), not per row; reserved rows not yet used sit VOID."
+    },
+    {
+      "number": "4.3.1.5.1.6.10",
+      "text": "sync: read-through fill (gap rows NOTCACHED), and the master sends the rows whose seq is past what the remote last saw. Row by row, no hashes."
+    },
+    {
+      "number": "4.3.1.5.1.6.11",
+      "text": "confidence: the first key in meta, 0 to 1. Measured results are high; things read on the internet are lower, by source. It is treated like a why when adjudicating conflicting information. Little used now, used later."
+    },
+    {
+      "number": "4.3.1.5.1.7",
+      "text": "Dedup stays: the storer saves only what it finds is not already held (Akien, Q#109, 2026-11-14: 'how would it be saved twice?'). 'Is it already held?' is asked of a tree, a keyed content index found by its key (4.3.1.6), never a node search."
+    },
+    {
+      "number": "8.1",
+      "text": "PURPOSE: Owns what Cairn knows: the knowledge graph trees (4.3.1), and answers questions from them."
+    },
+    {
+      "number": "8.3.1",
+      "text": "Owns the graph trees: the one list of nodes, and each depositor's index over them (4.3.1.1). Owns all learning in the system and delegates it (4.3.1.4); CC's learning records belong here too."
+    },
+    {
+      "number": "11.3.7",
+      "text": "Every box runs its own instance of the database proxy, and everything on that box talks only to it (Akien, Q#113, 2026-11-14; 4.3.1.5.1.4.1.1). Each box's proxy is its own instance (1.3.4), so this agrees with 5.5.3.8 (\"a device runs on one box\"): no instance is duplicated, the class has one instance per box, like the foundational set of 5.5.3.8.1. WHY: the local read is fast, and the cache it fills is every box's backup. -amm; the fit with 5.5.3.8 - akienasus_cc_0"
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [],
+  "questions_already_open": []
+}
