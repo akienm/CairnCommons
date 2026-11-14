@@ -1,0 +1,59 @@
+{
+  "id": "a29cf5216236",
+  "title": "cairn/tools/base publishes cairn_test_argv, a bash-free cairn test entry on Windows",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "cairn_test_argv(*args) -> (argv, env, cwd), beside bash_script_argv: on POSIX [bin/cairn, test, *args] unchanged; on Windows [sys.executable, -m, cairn.devices.tester.cli, *args] with cwd REPO, CAIRN_TESTER_CALLER_CWD the caller's cwd and PYTHONUTF8=1, so no bash starts.",
+  "why": "Measured 2026-11-14 on akienyoga9i: bin/cmd/test is a bash shim holding no logic (cd REPO; CAIRN_TESTER_CALLER_CWD=$PWD; exec python -m cairn.devices.tester.cli), and MSYS bash cannot start at Low integrity (56b61c10bdbe D8), so every proof that runs bin/cairn test on Windows is a detect-kind run. A plain tool (outline 2.3.7.1: no fifth published client tool) gives every component's proofs one bash-free entry; it starts the tester's public CLI as a process and imports nothing from the tester.",
+  "traces_to": "Law 4, RULE 1 (the tester's CLI is its public interface; a tool has users, not an owner).",
+  "how": "D1 cairn_test_argv in script_argv.py beside bash_script_argv; D2 a red-first proof in base's proofs. Hollow: remove the function.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Windows the argv names no bash and runs the tester CLI with the caller's cwd carried in CAIRN_TESTER_CALLER_CWD"
+      },
+      {
+        "n": 2,
+        "claim": "on POSIX the argv is bin/cairn test with the args unchanged"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn_test_argv beside bash_script_argv.",
+      "writes_to": [
+        "cairn/tools/base/script_argv.py"
+      ],
+      "reads": [
+        "cairn/tools/base/script_argv.py",
+        "bin/cmd/test"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_cairn_test_argv_names_no_bash_on_windows.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/script_argv.py",
+      "cairn/tools/base/proofs/test_cairn_test_argv_names_no_bash_on_windows.py"
+    ],
+    "out": [
+      "cairn/devices/tester (the parent sibling ticket)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "bin/cmd/test does only cd REPO; CAIRN_TESTER_CALLER_CWD=$PWD; exec $PY -m cairn.devices.tester.cli \"$@\"",
+      "how": "akienyoga9i_cc_0 read bin/cmd/test on origin/main, relayed by message"
+    }
+  ]
+}
