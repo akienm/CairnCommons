@@ -1,0 +1,57 @@
+{
+  "id": "535ca407cc73",
+  "title": "the verdict-deposit ledger closes a berth on librarian node addresses",
+  "owning_intention": "cairn/tools/chain/intention+why.json",
+  "intention": "mark_deposited accepts a landing of librarian node addresses (positive ints, outline 4.3.1.5.1.1) as well as legacy non-blank string ids, and still refuses an empty landing or a non-id.",
+  "why": "Measured 2026-11-14 on the 06db stack: codemother's drain landed four int addresses and mark_deposited refused them as 'landed no node ids' (it accepted only str), so the berth stood pending forever and test_deposit went red.",
+  "traces_to": "Law 7 — a record of truth records what happened; a full landing refused as empty is a lie of omission.",
+  "how": "A _a_node_id predicate (positive int, not bool; or non-blank str); a lone int is wrapped like a lone str. Red-first proof over scratch ledgers.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "mark_deposited with positive int addresses (a list, and a lone int) records them as given and pending() stops returning the berth"
+      },
+      {
+        "n": 2,
+        "claim": "an empty list, 0, a negative int, True and a blank string are each refused with VerdictRefused and append nothing; a legacy string id still closes"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: mark_deposited's id check becomes _a_node_id.",
+      "writes_to": [
+        "cairn/tools/chain/verdict_contract.py"
+      ],
+      "reads": [
+        "cairn/tools/chain/verdict_contract.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/chain/proofs/test_a_deposit_closes_on_node_addresses.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/chain/verdict_contract.py",
+      "cairn/tools/chain/proofs/test_a_deposit_closes_on_node_addresses.py"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "test_deposit red on the 06db stack: VerdictRefused mark_deposited landed no node ids ([281474976710664, ...]); the new proof red on 06db (0/2), green with D1 (2/2)",
+      "how": "bin/cairn test --exec over test_deposit and the new proof, in wt-06db and wt-185b"
+    }
+  ]
+}
