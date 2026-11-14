@@ -1,0 +1,76 @@
+{
+  "id": "31b76dfeb864",
+  "title": "a red proof in a reseal ladder is recorded and the ladder goes on",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A red proof in a reseal ladder is recorded as red and the ladder goes on to the next target. When the red ticket's cast commit is refused, the tester unstages what it staged and raises the refused cast as a trouble, so nothing is left in the commons index and nothing is lost.",
+  "why": "Measured 2026-11-14 on akiendelllinux, twice, while resealing 049249b867ec's held seals: bin/cairn test --reseal over 72 targets stopped at the first red (test_a_dead_proof_name_is_refused_at_proveme, then test_a_fixme_answer_binds_to_its_kick_back). red_tickets._commit was refused, RedTicketRefused propagated out of run_proof, every later target went unrun, and the cast (2517060264b4) was left staged in the house commons. The workaround was one proof per run.",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces and permanent in records, not fatal to the batch: orchestrator 2026-11-14); outline 9.4.2.3.7.5 (reds don't get lost).",
+  "how": "In red_tickets._commit, a refused git commit runs git reset -q -- <the named paths> and raises RedTicketRefused naming what it unstaged (or that the unstage failed); a new _raise_refused raises the trouble red_tickets:refused:<key> (door, lacks, cast files left on disk) for any refused cast or commit before re-raising, never masking it. In reseal.py, reseal_all catches RedTicketRefused per proof, records {outcome: red, ticketed: False, because: lacks}, and goes on.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a reseal ladder over [a red proof, a green proof], where the red's ticket is refused, reseals the green proof and records the red"
+      },
+      {
+        "n": 2,
+        "claim": "a refused cast commit is loud and unstages exactly what it staged: afterwards git diff --cached in the scratch commons is empty, and the cast files stay on disk"
+      },
+      {
+        "n": 3,
+        "claim": "a refused cast raises a trouble carrying the door and the lacks, never only an exception"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red_tickets._commit unstages its named paths when the commit is refused; _raise_refused raises a trouble for any refused cast or commit before re-raising.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: reseal_all catches RedTicketRefused per proof, records the red unticketed with its lacks, and goes on.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/devices/tester/red_tickets.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof, one tooth per clause, needing no bus and no database.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_refused_red_ticket_does_not_end_the_ladder.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_each_run_tickets_its_new_reds_and_orphans.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_a_refused_red_ticket_does_not_end_the_ladder.py"
+    ],
+    "out": [
+      "the 94b599b2 commons read bug",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "the reseal ladder stopped at its first red, twice; 2517060264b4 left staged in the house commons",
+      "how": "bin/cairn test --reseal --timeout 600 over held0492.txt on akiendelllinux"
+    }
+  ]
+}
