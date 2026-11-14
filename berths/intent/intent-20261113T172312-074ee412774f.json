@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Using the hook's REPO (already the true top, cd'd into) as base would also work, but reseal() is also called outside the hook; dropping GIT_DIR for the one rev-parse fixes the predicate where it lives, for every caller.",
+      "hidden_assumption": "That GIT_DIR is the only env var git sets that moves the top. Measured in a scratch repo 2026-11-13: in a main checkout's hook GIT_DIR is empty and show-toplevel is right; in a linked worktree's hook GIT_DIR is set and show-toplevel from a subdirectory returns the subdirectory, and git diff there lists every unmodified file. GIT_INDEX_FILE must stay, else the predicate stops measuring the commit.",
+      "prior_art": "42075a49c121 built the hold, 143e3974647b the leftover adoption; neither tests a linked worktree. _recorded_bytes (reseal.py:382) already drops GIT_* for its git calls for the same reason (a hook carries GIT_INDEX_FILE and friends), so the pattern is in-house.",
+      "real_collision": "None; it restores what 42075a49c121 declares."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when the new tooth is red on HEAD's reseal.py (an unmodified closure in a linked worktree under GIT_DIR is held) and green after, and the existing four teeth of 42075a49c121 stay green. Wrong intent if a commit in a worktree should not reseal at all, which no outline line says.",
+    "from_idea": "none, because the bug was measured, not imagined: commit 2cab01ad3 in worktree /home/akien/dev/src/cairn-q95 printed 'reseal: 20 held' with every HELD line naming unmodified files (cairn/machines/build_inspector/inspector.py, __init__.py) as unstaged, against PROVED ticket 42075a49c121",
+    "how": "reseal(index_only=True) finds the top with git rev-parse --show-toplevel run from the proof's directory; in a worktree the hook carries GIT_DIR, under which git takes the cwd as the top, so every tracked path reads changed. The top is asked with GIT_DIR and GIT_WORK_TREE dropped (GIT_INDEX_FILE kept, so the commit's index is still what is measured); a tooth in test_a_seal_measures_what_the_commit_carries.py runs the predicate in a scratch linked worktree under the hook's GIT_DIR.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (a seal describes the committed tree; a false hold leaves the commit's seals unwritten, so proven-space cannot be entered from a worktree) and Law 7 (a HELD line naming unmodified files is a wrong record at a diagnostic surface).",
+    "what": "The pre-commit reseal measures a commit made in a linked git worktree against that commit's index at the repo's real top, so an unmodified closure is never held as unstaged."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "every commit in a linked worktree held seals as unstaged: the hook's GIT_DIR makes `git -C <proofs dir> rev-parse --show-toplevel` answer the proofs dir, and diff from there lists every tracked file"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "8736bba03671",
+  "skill": "intent",
+  "title": "The pre-commit reseal measures a commit made in a linked git worktree against that commit's index at the repo's real top",
+  "trace_id": "a55a9231114c",
+  "when": "2026-11-13T17:23:12.792465"
+}

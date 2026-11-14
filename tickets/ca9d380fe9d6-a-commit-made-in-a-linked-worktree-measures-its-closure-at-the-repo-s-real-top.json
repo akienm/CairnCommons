@@ -1,0 +1,67 @@
+{
+  "id": "ca9d380fe9d6",
+  "title": "a commit made in a linked worktree measures its closure at the repo's real top",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The pre-commit reseal holds a proof only when the commit truly lacks part of its closure, in a linked worktree as in a main checkout (restoring 42075a49c121; 143e3974647b's adoption untouched).",
+  "why": "Measured 2026-11-13: commit 2cab01ad3 in linked worktree /home/akien/dev/src/cairn-q95 printed 'reseal: 20 held', each HELD line naming unmodified files (inspector.py, __init__.py, the proof) as unstaged. In a worktree the hook carries GIT_DIR, under which `git -C <proofs dir> rev-parse --show-toplevel` answers the proofs dir; diff from there lists every tracked file (scratch repo /home/akien/.akien/temp/heldprobe.reDb). PROVED 42075a49c121 is red in worktrees.",
+  "traces_to": "Law 8 (a seal describes the committed tree; a false hold leaves it unwritten) and Law 7 (a HELD line naming unmodified files is a wrong record).",
+  "how": "The index_only branch asks rev-parse --show-toplevel with GIT_DIR and GIT_WORK_TREE dropped and GIT_INDEX_FILE kept; a new tooth runs the predicate in a scratch linked worktree under the hook's GIT_DIR.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch linked worktree, with GIT_DIR set as its pre-commit hook sets it, a proof whose closure is unmodified is not held (red on HEAD's reseal.py)"
+      },
+      {
+        "n": 2,
+        "claim": "in the same worktree, a closure file with an unstaged change is held and the hold names that file and no unmodified file"
+      },
+      {
+        "n": 3,
+        "claim": "the four teeth of 42075a49c121 in the same proof stay green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in reseal()'s index_only branch the rev-parse --show-toplevel call runs with an env copied from os.environ minus GIT_DIR and GIT_WORK_TREE; GIT_INDEX_FILE stays so the commit's index is what is measured. dirty_against_index is unchanged.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py gains two teeth under this ticket's PROVES key (clauses 1, 2): a scratch repo (git init, commit a component and proof, git worktree add) and the predicate run with GIT_DIR=<main>/.git/worktrees/<name>, as the hook carries it; clause 3 is the proof's four existing 42075a49c121 teeth.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py",
+        "cairn/devices/tester/reseal.py"
+      ]
+    }
+  ],
+  "fixes": [
+    "cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/proofs/test_a_seal_measures_what_the_commit_carries.py",
+      "cairn/devices/tester/reseal.py"
+    ],
+    "out": [
+      "the hook script cairn/devices/tester/hooks/pre-commit; stage_clean_seals; what a hold means (42075a49c121)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-13",
+      "saw": "20 seals held in worktree cairn-q95, every HELD line naming unmodified files; the same predicate run outside the hook read clean; in a scratch worktree, GIT_DIR set made show-toplevel answer the subdirectory and diff list every unmodified file",
+      "how": "git commit -- <paths> in /home/akien/dev/src/cairn-q95; scratchpad held_probe.sh over a scratch repo"
+    }
+  ]
+}
