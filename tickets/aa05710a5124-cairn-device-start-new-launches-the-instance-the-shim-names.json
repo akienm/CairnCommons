@@ -21,7 +21,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: --new in bin/cairn's start path asks the shim for the name and then routes <device>.<n>.",
+      "text": "D1: --new in bin/cairn's start path asks the shim for the name, then routes <device>.<n>. THE ASK MECHANISM (decided 2026-11-13, a CC mechanism, not Akien's): bin/cairn runs the house venv python (cairn_python, as bin/cmd/question does) on `python -c 'from cairn.tools.base.shim import name_instance; print(name_instance(sys.argv[1]))'` and reads the number from stdout; a refusal (shim.InstanceTaken) is a non-zero exit with its message on stderr and nothing is launched. WHY: name_instance is a module-level function the shim publishes (d13859e2ae46), so calling it through the shim module's public interface keeps RULE 1 (no reaching into shim internals, no globbing instance folders in bash), needs no new shim CLI verb (that would widen the pinned root verb vocabulary and shim.py's bounds), and constructs no shim or instance, which is what a launcher asking before any instance exists needs.",
       "writes_to": [
         "bin/cairn"
       ],
@@ -56,6 +56,11 @@
       "when": "2026-11-13",
       "saw": "bin/cairn's header documents cairn <device>[.<instance>] [verb] [args...], default instance 0; superclaude (cairn/devices/cc/superclaude 262-296) already moves a held instance to the next free one in bash; shim.py:1288 'start' starts only the instance the shim is. There is no generic --new.",
       "how": "read bin/cairn lines 1-30, cairn/devices/cc/superclaude 262-296, cairn/tools/base/shim.py 1156/1288"
+    },
+    {
+      "when": "2026-11-13",
+      "saw": "shim.name_instance and shim.InstanceTaken exist on branch d13859e2ae46-build (79d7f5c4d), stacked on 0f7a8cada1ca (5286ade54); name_instance is a plain module-level function (inspect.isfunction), reading instance folders only through address.",
+      "how": "built and proved d13859e2ae46 in a worktree: its proof is green 2/2 twice, 0/2 on the unfixed shim.py"
     }
   ]
 }
