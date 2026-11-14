@@ -1,0 +1,31 @@
+{
+  "ticket": "<akienasus mints>",
+  "status": "DRAFT v1 by akiendell_cc_0, 2026-11-14, for casting by akienasus. Not cast. Ordered by the orchestrator 2026-11-14 (c).",
+  "title": "a bus spawn at the live home from a foreign checkout is refused, and the live home never follows HOME",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "ensure_bus refuses (raises BusStale, naming both roots) to SPAWN a bus at the live home when this client's class root is not the house root, exactly as _refuse_a_foreign_replace already refuses to REPLACE one; and _live_home() on Windows resolves the account's profile folder from the OS (never from HOME/USERPROFILE), so a scratch HOME can never read as the live home.",
+  "why": "Measured 2026-11-14 on akiendell (repro scratchpad repro_c.py, fake house HOME under %TEMP%, worktree cairn-wt-bi on a4a3-build, no CAIRN_BUS_HOME, no CAIRN_TESTER_TEST_ID): with HOME and USERPROFILE set to a fresh folder, remote._live_home() returned that folder's .cairn/devices/cairn/machines/bus/0 and bus_home() equalled it, so ensure_bus saw home == live, set scratch=False, and _spawn(..., 'detached') started a NON-scratch bus whose code root is the worktree. (That bus did not come up in the fake home within 15s, so the raised ConnectionError and no leaked process were seen.) Two holes: (1) _refuse_a_foreign_replace (3deafc9e36de) guards only replacing a stale live bus; a spawn when NO bus answers has no foreign-root check, so a worktree ask while the house bus is down becomes the house bus; (2) _live_home's Windows branch is os.path.expanduser('~'), which follows HOME/USERPROFILE although its docstring says never from HOME, so on Windows no scratch HOME is ever 'not live'. HYPOTHESIS, not measured: my earlier leaked house-home pair (pids 21704/18960 serving deleted worktree cairn-wt-pf2) was this path; that is built from process lists only and was not reproduced against the real house home (not attempted: it needs the house bus down).",
+  "traces_to": "Law 6 (the house bus is the house's to start), Law 7 (a refusal is loud, naming the roots), Law 4 (the guard already exists for replace; it is policy for spawn until this is physics).",
+  "how": "D1: factor the foreign-root check out of _refuse_a_foreign_replace into one function and call it in ensure_bus before _spawn when home == the live home. D2: _live_home on Windows reads the profile folder from the OS (SHGetKnownFolderPath via ctypes, or the registry ProfileImagePath for the user's SID), never the environment. Red-first: the repro as a tooth (fake house HOME, foreign class root) must refuse; unfixed it spawns.",
+  "falsifier": {"clauses": [
+    {"n": 1, "claim": "ensure_bus called from a class root that is not the house root, at the live home, with no bus answering, raises BusStale naming the house root and its own root, and _spawn is never called"},
+    {"n": 2, "claim": "ensure_bus called from the house root at the live home with no bus answering still spawns (the guard does not block the house)"},
+    {"n": 3, "claim": "on Windows _live_home() is unchanged by HOME and USERPROFILE being set to a scratch folder (it names the account's real profile folder), so home == live is False for a scratch HOME"}
+  ]},
+  "decisions": [
+    {"n": 1, "text": "D1: one shared foreign-root refusal used by replace and spawn.",
+     "writes_to": ["cairn/tools/bus_client/remote.py"], "reads": ["cairn/tools/bus_client/remote.py"]},
+    {"n": 2, "text": "D2: _live_home's Windows branch reads the OS profile folder, not the environment.",
+     "writes_to": ["cairn/tools/bus_client/remote.py"], "reads": ["cairn/tools/bus_client/remote.py"]},
+    {"n": 3, "text": "D3: one proof, one tooth per clause; clause 3 is skipped with a loud reason off Windows.",
+     "writes_to": ["cairn/tools/bus_client/proofs/test_a_foreign_checkout_never_spawns_the_live_bus.py"], "reads": ["cairn/tools/bus_client/proofs/test_a_foreign_root_refuses_a_stale_live_bus.py"]}
+  ],
+  "bounds": {"in": ["cairn/tools/bus_client/remote.py", "cairn/tools/bus_client/proofs/test_a_foreign_checkout_never_spawns_the_live_bus.py"], "out": ["every other component", "the bus server itself"]},
+  "measured": [
+    {"when": "2026-11-14", "saw": "with HOME and USERPROFILE set to a fresh folder, _live_home() == bus_home() == <that folder>/.cairn/devices/cairn/machines/bus/0 (home == live True) and ensure_bus spawned 'detached' from the worktree with scratch False", "how": "python repro_c.py C:/automation/local/cairn-wt-bi under the venv, env scrubbed of CAIRN_BUS_HOME/CAIRN_TESTER_TEST_ID, then Win32_Process scan (no leaked process)"},
+    {"when": "2026-11-14", "saw": "NOT MEASURED: that the earlier leaked house-home bus pair came from this path; the evidence for it is my process lists only", "how": "hypothesis, per the orchestrator's instruction"}
+  ],
+  "node_class": "code-seam",
+  "workflow_and_state": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED",
+  "watchme": "none, because its proof cairn/tools/bus_client/proofs/test_a_foreign_checkout_never_spawns_the_live_bus.py is the whole of its correctness"
+}
