@@ -1,0 +1,67 @@
+{
+  "id": "41fdc9cb5d50",
+  "title": "import_sieve's module_name reads a '/' path as a dotted module on every box",
+  "owning_intention": "cairn/tools/import_sieve/intention+why.json",
+  "intention": "module_name names the same dotted module for the same file on every box.",
+  "why": "Measured 2026-11-13 on akienyoga9i (Windows) at main: module_name('cairn/tools/base/diagnostic.py') answered 'cairn/tools/base/diagnostic', because it split on os.sep and os.sep is a backslash there; its docstring and every caller hand it '/' paths. build_inspector's every_class_reaches_the_diagnostic_mixin then named no module and read DiagnosticBase itself as 'no route': test_every_class_reaches_the_diagnostic_mixin.py red 4 teeth on Windows, sealed green on Linux. With the fix it is green on Windows.",
+  "traces_to": "Law 3; Law 8.",
+  "how": "D1: module_name splits on '/' after replacing os.sep with '/', so a '/' path and a native path both name their dotted module on every box. D2: new proof test_module_name_reads_a_slash_path_on_every_box.py pins the module's os.sep to a backslash, so its teeth red the unfixed split on Linux too.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "under a backslash os.sep, a '/' path and a '/' package __init__ name their dotted module"
+      },
+      {
+        "n": 2,
+        "claim": "under a backslash os.sep, a native backslash path still names its dotted module"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: module_name splits on '/' after replacing os.sep with '/', so a '/' path and a native path both name their dotted module on every box.",
+      "writes_to": [
+        "cairn/tools/import_sieve/sieve.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/sieve.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: new proof test_module_name_reads_a_slash_path_on_every_box.py pins the module's os.sep to a backslash, so its teeth red the unfixed split on Linux too.",
+      "writes_to": [
+        "cairn/tools/import_sieve/proofs/test_module_name_reads_a_slash_path_on_every_box.py"
+      ],
+      "reads": [
+        "cairn/tools/import_sieve/sieve.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/import_sieve/proofs/test_module_name_reads_a_slash_path_on_every_box.py",
+      "cairn/tools/import_sieve/sieve.py"
+    ],
+    "out": [
+      "build_inspector (unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "what": "module_name at main on Windows",
+      "saw": "Measured 2026-11-13 on akienyoga9i (Windows) at main: module_name('cairn/tools/base/diagnostic.py') answered 'cairn/tools/base/diagnostic', because it split on os.sep and os.sep is a backslash there; its docstring and every caller hand it '/' paths. build_inspector's every_class_reaches_the_diagnost",
+      "when": "2026-11-13",
+      "how": "akienyoga9i"
+    },
+    {
+      "what": "the build on akienyoga9i",
+      "saw": "fix: 2 teeth green; hollow (main's split) reds tooth 1, tooth 2 is a regression guard; test_every_class_reaches_the_diagnostic_mixin.py green on Windows",
+      "when": "2026-11-13",
+      "how": "branch module-name-posix-41fdc9cb5d50"
+    }
+  ]
+}
