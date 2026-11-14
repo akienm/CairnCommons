@@ -96,5 +96,234 @@
       "saw": "HYPOTHESIS, not a measurement: the venv launcher starts the real interpreter as a child without those flags, so the child allocates a console; the proof's tooth 2 tests it",
       "how": "none yet - proof clause 2"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "0156856b1fae: Cairn's own spawns open no console on Windows in cairn/tools/windowless_spawn/windowless_spawn.py",
+      "intent": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+      "scope": "in: cairn/tools/windowless_spawn/windowless_spawn.py, cairn/tools/windowless_spawn/intention+why.json, cairn/tools/base/shim.py, cairn/devices/cairn/machines/ground_loop/cli.py, cairn/devices/cairn/machines/ground_loop/heartbeat.py, cairn/devices/cc/shim.py, cairn/machines/web_operator/web_operator.py, cairn/tools/bus_client/remote.py, cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py; out: subprocess.run / check_output call sites, devices/web_server/groundloop/pulse.py and cc/scripts/memory_sync.py, which already carry the flags, Claude Code's own shell and hook children, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/windowless_spawn/windowless_spawn.py",
+          "cairn/tools/windowless_spawn/intention+why.json",
+          "cairn/tools/base/shim.py",
+          "cairn/devices/cairn/machines/ground_loop/cli.py",
+          "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+          "cairn/devices/cc/shim.py",
+          "cairn/machines/web_operator/web_operator.py",
+          "cairn/tools/bus_client/remote.py",
+          "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+        ],
+        "out": [
+          "subprocess.run / check_output call sites",
+          "devices/web_server/groundloop/pulse.py and cc/scripts/memory_sync.py, which already carry the flags",
+          "Claude Code's own shell and hook children",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what cairn/tools/windowless_spawn/windowless_spawn.py does today against the ticket's measurement"
+      ],
+      "holdings": [
+        {
+          "what": "the standing code the build reads: cli.py",
+          "address": "cairn/devices/cairn/machines/ground_loop/cli.py"
+        },
+        {
+          "what": "the standing code the build reads: heartbeat.py",
+          "address": "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+        },
+        {
+          "what": "the standing code the build reads: shim.py",
+          "address": "cairn/devices/cc/shim.py"
+        },
+        {
+          "what": "the standing code the build reads: web_operator.py",
+          "address": "cairn/machines/web_operator/web_operator.py"
+        },
+        {
+          "what": "the standing code the build reads: shim.py",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the standing code the build reads: remote.py",
+          "address": "cairn/tools/bus_client/remote.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "measure": "4 python processes; only children 29212 (ground_loop) and 16184 (bus serve, conhost 16980) have a console window; launchers 25696 and 1648 have none (Get-Process MainWindowHandle and Get-CimInstance Win32_Process conhost parents on akiendell)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1: a new tool windowless_spawn with a charter beside it; the charter is written before BUILDME crosses.",
+          "why": "Measured 2026-11-12 on akiendell: Akien reported 'you keep spinning up python windows, you have at least 4 open now'; of 4 python processes started by bin/cairn's lazy-init, the children 29212 (ground_loop) and 16184 (bus serve) own a console window and the venv launchers that started them do not.",
+          "kind": "build",
+          "fills": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py",
+            "cairn/tools/windowless_spawn/intention+why.json"
+          ]
+        },
+        {
+          "what": "D2: the six Popen sites take **detached_kwargs() and background_python() from the helper.",
+          "why": "Measured 2026-11-12 on akiendell: Akien reported 'you keep spinning up python windows, you have at least 4 open now'; of 4 python processes started by bin/cairn's lazy-init, the children 29212 (ground_loop) and 16184 (bus serve) own a console window and the venv launchers that started them do not.",
+          "kind": "build",
+          "fills": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "uses": [
+            "cairn/tools/base/shim.py",
+            "cairn/devices/cairn/machines/ground_loop/cli.py",
+            "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+            "cairn/devices/cc/shim.py",
+            "cairn/machines/web_operator/web_operator.py",
+            "cairn/tools/bus_client/remote.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/shim.py",
+            "cairn/devices/cairn/machines/ground_loop/cli.py",
+            "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+            "cairn/devices/cc/shim.py",
+            "cairn/machines/web_operator/web_operator.py",
+            "cairn/tools/bus_client/remote.py"
+          ]
+        },
+        {
+          "what": "D3: one proof, one tooth per clause; tooth 2 is the launcher experiment.",
+          "why": "Measured 2026-11-12 on akiendell: Akien reported 'you keep spinning up python windows, you have at least 4 open now'; of 4 python processes started by bin/cairn's lazy-init, the children 29212 (ground_loop) and 16184 (bus serve) own a console window and the venv launchers that started them do not.",
+          "kind": "build",
+          "fills": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1: a new tool windowless_spawn with a charter beside it; the charter is written before BUILDME crosses.",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        },
+        {
+          "what": "D2: the six Popen sites take **detached_kwargs() and background_python() from the helper.",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        },
+        {
+          "what": "D3: one proof, one tooth per clause; tooth 2 is the launcher experiment.",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1: a new tool windowless_spawn with a charter beside it; the charter is written before BUILDME crosses.",
+          "expect": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "falsifier": "(1) the helper's nt kwargs carry CREATE_NO_WINDOW and DETACHED_PROCESS and no start_new_session, and name an interpreter that is not the venv launcher; its posix kwargs carry start_new_session and no creationflags; (2) on Windows a child spawned through the helper from the venv interpreter leaves no process in its tree with a console window; this tooth confirms or kills the venv-launcher hypothesis and reports UNMEASURED on a non-Windows box; (3) none of the six spawn sites calls Popen with a hand-built flag set; each takes its keywords from the helper",
+          "instrument": "bin/cairn test cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+        },
+        {
+          "piece": "D2: the six Popen sites take **detached_kwargs() and background_python() from the helper.",
+          "expect": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "falsifier": "(1) the helper's nt kwargs carry CREATE_NO_WINDOW and DETACHED_PROCESS and no start_new_session, and name an interpreter that is not the venv launcher; its posix kwargs carry start_new_session and no creationflags; (2) on Windows a child spawned through the helper from the venv interpreter leaves no process in its tree with a console window; this tooth confirms or kills the venv-launcher hypothesis and reports UNMEASURED on a non-Windows box; (3) none of the six spawn sites calls Popen with a hand-built flag set; each takes its keywords from the helper",
+          "instrument": "bin/cairn test cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+        },
+        {
+          "piece": "D3: one proof, one tooth per clause; tooth 2 is the launcher experiment.",
+          "expect": "Every long-lived process Cairn spawns starts on Windows with no console window, through one shared spawn helper.",
+          "falsifier": "(1) the helper's nt kwargs carry CREATE_NO_WINDOW and DETACHED_PROCESS and no start_new_session, and name an interpreter that is not the venv launcher; its posix kwargs carry start_new_session and no creationflags; (2) on Windows a child spawned through the helper from the venv interpreter leaves no process in its tree with a console window; this tooth confirms or kills the venv-launcher hypothesis and reports UNMEASURED on a non-Windows box; (3) none of the six spawn sites calls Popen with a hand-built flag set; each takes its keywords from the helper",
+          "instrument": "bin/cairn test cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_a_cairn_spawn_opens_no_console_window.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: a new tool windowless_spawn with a charter beside it; the charter is written before BUILDME crosses.",
+            "D2: the six Popen sites take **detached_kwargs() and background_python() from the helper.",
+            "D3: one proof, one tooth per clause; tooth 2 is the launcher experiment."
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
