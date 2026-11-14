@@ -1,0 +1,60 @@
+{
+  "title": "the bus roster finds a device by its name in any case, so mail from or to 'CC' reaches the cc shim",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "Roster.shim_for resolves a device name case-folded against the fitted device ids (system_word.canon), so 'CC', 'Cc' and 'cc' all find the device folder cairn/devices/cc on a case-sensitive filesystem; a name that is no fitted device in any case still returns None and the bus still bounces it.",
+  "why": "Observed 2026-11-14 by the orchestrator on the Dell: a codemother queueme bounced 54 times in one burst and each bounce raised a trouble whose text reads \"the sender CC could not take the returned letter (no shim answers to 'CC' - a device's bus presence IS cairn/devices/CC/shim.py on disk, and nothing was discovered there)\". The device folder is cairn/devices/cc and the roster looks a name up verbatim (Roster.shim_for -> _load_device_shim -> fitted_device_ids membership), so 'CC' finds nothing on Linux. System words fold case (Akien's standing rule; cairn.tools.system_word.fold). Every bounce to a sender named CC therefore cannot land and becomes a trouble: loud (Law 7 holds) but a flood from one avoidable cause. No existing ticket or question owns it (grep of tickets and questions, 2026-11-14).",
+  "traces_to": "Law 7 (a bounce that cannot land is loud, and here avoidably so), Law 1 (case folding of system words is settled), and the standing rule that system words fold case via cairn.tools.system_word.",
+  "how": "In Roster.shim_for, before the held/disk/discovered lookups, canonicalise name with system_word.canon over fitted_device_ids(root) and use the canonical id for the lookup and the hold; an unmatched name is passed through unchanged. Proof on a scratch tree with a device folder cc, case-sensitive on Linux, red first.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "Roster.shim_for('CC') returns the same shim as shim_for('cc') on a case-sensitive filesystem, so a bounce addressed to CC lands"
+      },
+      {
+        "n": 2,
+        "claim": "a name that is no fitted device in any case (e.g. 'nobody') still returns None, so an undeliverable mail still bounces and raises its trouble"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fold lives in Roster.shim_for through the published system_word tool; the bus server's hold_name is unchanged and keeps raising LookupError for a truly unknown name.",
+      "writes_to": [
+        "cairn/tools/bus_client/roster.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/roster.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: one proof, one tooth per clause; it is red only on a case-sensitive filesystem, so it is measured on Linux (the Dell), and Windows records it NOTRUN.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_the_roster_finds_a_device_by_its_name_in_any_case.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/roster.py",
+      "cairn/tools/bus_client/proofs/test_the_roster_finds_a_device_by_its_name_in_any_case.py"
+    ],
+    "out": [
+      "the bus server",
+      "the bounce and trouble machinery",
+      "the cc device",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "bus server.py hold_name raises LookupError 'no shim answers to <name>' and _raise_undeliverable_bounce (server.py ~432) raises the trouble with 'the sender X could not take the returned letter'; Roster.shim_for looks the name up verbatim; the device folder is cairn/devices/cc. A grep of tickets and questions for the sender-CC bounce found no owner. The orchestrator reported 54 bounces in a 0.2 s burst.",
+      "how": "read cairn/devices/cairn/machines/bus/server.py hold_name and _raise_undeliverable_bounce, cairn/tools/bus_client/roster.py shim_for, and the bounce trouble text in the orchestrator's message; grep of CairnCommons/tickets and questions"
+    }
+  ],
+  "id": "9d4b040eb890"
+}
