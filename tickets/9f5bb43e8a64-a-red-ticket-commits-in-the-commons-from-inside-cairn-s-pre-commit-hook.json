@@ -1,0 +1,66 @@
+{
+  "id": "9f5bb43e8a64",
+  "title": "a red ticket commits in the commons from inside cairn's pre-commit hook",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's red-ticket commit runs its git in the commons with the commons' own index and object store, even when the reseal that cast the ticket runs inside cairn's pre-commit hook, so a red the reseal measured is ticketed instead of refused.",
+  "why": "Measured 2026-11-14 on akiendelllinux: during the 0c2c3f53c2be walk the reseal inside cairn's pre-commit hook raised RedTicketRefused twice, 'git diff --cached in /home/akien/dev/src/CairnCommons: fatal: unable to read 94b599b2c33fdbefc027c926bf780f341831efed'. 94b599b2 is cairn's README.md blob (git -C cairn ls-files -s), absent from the commons. The hook exports GIT_INDEX_FILE for cairn's index, and red_tickets._git spawns git -C <commons> inheriting it, so the commons is read through cairn's index. Every red measured by a hook-run reseal goes unticketed; trouble tester-reseal-could-not-run stands.",
+  "traces_to": "Law 7 (errors are loud and permanent in records of truth: a measured red must reach its ticket); Law 3 (the reseal's measurement is lost when its record cannot be written).",
+  "how": "In cairn/devices/tester/red_tickets.py, _git passes env=cairn.tools.scratch.scratch.git_env() (scratch.py:143, the settled scrub of GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE, GIT_PREFIX, GIT_COMMON_DIR, GIT_OBJECT_DIRECTORY, GIT_ALTERNATE_OBJECT_DIRECTORIES), so `git -C <commons>` locates the commons' own repo; every _git caller targets the commons top. The red-first proof builds a scratch cairn repo and commons repo, exports GIT_INDEX_FILE at cairn's index, and runs the real _git against the commons.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with GIT_INDEX_FILE exported at a scratch cairn repo's index, red_tickets._git ls-files against a scratch commons lists the commons' files, never cairn's"
+      },
+      {
+        "n": 2,
+        "claim": "the environment red_tickets._git hands subprocess.run carries none of the repository-locating GIT_* variables"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red_tickets._git passes env=scratch.git_env(), the one settled scrub (Law 1: no new tuple); its docstring records the 94b599b2 mechanism.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a NEW proof file (the 207c proof is untouched), one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_commons_git_calls_ignore_the_hooks_index.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/proofs/test_the_commons_git_calls_ignore_the_hooks_index.py"
+    ],
+    "out": [
+      "cairn/tools/scratch (read only)",
+      "cairn/tools/artifact (census: not exposed)",
+      "test_each_run_tickets_its_new_reds_and_orphans.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "RedTicketRefused 'git diff --cached in /home/akien/dev/src/CairnCommons: fatal: unable to read 94b599b2c33fdbefc027c926bf780f341831efed' twice in one walk; 94b599b2 is cairn's README.md blob and not in the commons",
+      "how": "walk9.sh 0c2c3f53c2be output on akiendelllinux; git -C ~/dev/src/cairn ls-files -s | grep 94b599b2; git -C ~/dev/src/CairnCommons cat-file -t 94b599b2... fails; red_tickets.py:237 _git inherits os.environ"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "akiendell census: 74 subprocess git calls in 25 files; only red_tickets._git is cross-repo AND runs in the hook's process",
+      "how": "ast over every non-proof .py on origin/main"
+    }
+  ]
+}
