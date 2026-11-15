@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed \u2014 the orchestrator ruled it: cast and build until 5c1e crosses.",
+      "better_approach": "Binding the live run dir writable into the sandbox would also work, but it opens a hole in the instance seal while the run is live; copying after the run, from the tester's own unsealed process, keeps the seal whole and is the smaller change.",
+      "hidden_assumption": "That devices write their run logs at the run's test id under logs/tester/0/runs/ (the bus does since 2a6adebdd79b); a device writing elsewhere stays sealed, which is correct.",
+      "prior_art": "Grepped CairnCommons/tickets and git log --all for instance_bind_flags and swap: 2c9eeab2da87, 3dec3ede2616, c54d744aa9ac, 56b61c10bdbe, 734b22d09f2e and 97175c117de3 build or measure the seal; run_proof already keeps wrote_to_instance as a measurement but discards the bytes; none carries a run's logs out.",
+      "real_collision": "97175c117de3 intends a sealed run's emissions land in the swap, not live: a distinction, not a collision, because only the run's own log directory is carried and into the run's own live directory, never the live logs at large; the instance seal's checks are unchanged."
+    },
+    "exit": "routed_forward",
+    "falsifier": "A sealed run whose proof writes a run-log line has that line in the live logs after the swap is gone, and the swap is still removed. Wrong intent if carrying the run dir out breaches the instance seal for anything outside runs/<test>/.",
+    "from_idea": "none, because the consumers are the origin: tickets 2a6adebdd79b (its measured records that a sealed run's bounce line dies with the swap) and 69cd150dc116; the swap is removed at cairn/devices/tester/device.py run_proof's finally",
+    "how": "In run_proof and run_exec (cairn/devices/tester/device.py), when the tester made the swap, copy <swap>/logs/tester/0/runs/<test>/ into the live run_dir(test)/sealed/ before shutil.rmtree; the tester names only its own run dir, never any device's file (RULE 1; a provider does not know its consumers). An inherited seal carries nothing (the outer run does). A copy failure is recorded, never stops the teardown.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 3 (nothing is known until measured: 69cd's two reds ran sealed and their evidence was deleted with the swap) and Law 7 (errors permanent in records of truth).",
+    "what": "A sealed tester run's own log directory (logs/tester/0/runs/<test>/ inside the swap) is carried into the live run log directory before the swap is removed, so whatever any device wrote there during the run survives the seal."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The instance seal deleted 69cd's evidence; the tester now carries a sealed run's own runs/<test>/ dir out of the swap, so 2a6a's bounce line survives as one case."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3716fd326582",
+  "skill": "intent",
+  "title": "A sealed tester run's own log directory (logs/tester/0/runs/<test>/ inside the swap) is carried into the live run log di",
+  "trace_id": "49e32d6f01c9",
+  "when": "2026-11-14T19:31:52.426763"
+}
