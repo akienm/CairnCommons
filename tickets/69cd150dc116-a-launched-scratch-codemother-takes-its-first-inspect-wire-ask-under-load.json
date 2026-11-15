@@ -1,0 +1,76 @@
+{
+  "id": "69cd150dc116",
+  "title": "a launched scratch CodeMother takes its first inspect_wire ask under load",
+  "owning_intention": "cairn/tools/inspect_wire/intention+why.json",
+  "intention": "A proof that asks a scratch CodeMother launched by inspect_wire.launch gets its answer under load, never an intermittent InspectRefused \"codemother's shim could not take the envelope — it cannot wake a device to receive it\".",
+  "why": "Measured 2026-11-14, n=2: the pre-commit reseal of the tester device (commit b7abd000c) sealed test_the_8p_question_opens_beside_records RED at 17:55:56 on that refusal (tooth test_an_unchanged_file_or_another_skip_beside_them_stays_red, inspect 'resolves_to'), while the same proof runs green 3/3 directly with and without that commit; and 7ea59855b1f4's verdict re-run at 15:14:22 was refused on the same text for test_ask_reaches_a_launched_codemother (inspect 'crossing_named_ticket'). A seal that reds on load, not code, is a hollow red the peers cannot lean on.",
+  "traces_to": "Law 8 — prove, then trust: a flake makes a seal unleanable; Law 3 — an intermittent verdict is not a measurement of the code it seals.",
+  "how": "Reproduce first: N concurrent inspect_wire.launch + ask until the refusal appears on main. Then find why no_receiver's hold_name(codemother, wire=True) on the launched scratch bus returns without the envelope taken, and fix launch's readiness (or its ask) inside inspect_wire. A retry loop in a proof is a plaster and refused. If the cause sits in the bus server (cairn/devices/cairn/machines/bus/server.py), cast a sibling on that component (RULE 1) rather than widening these bounds. Unbuilt: cast with the measurement only (orchestrator, 2026-11-14).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a reproduction of concurrent launched-CodeMother asks reds on main with the 'could not take the envelope' refusal"
+      },
+      {
+        "n": 2,
+        "claim": "the same reproduction is green on every run after the build"
+      },
+      {
+        "n": 3,
+        "claim": "test_ask_reaches_a_launched_codemother stays green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: inspect_wire.launch hands back a CodeMother that takes its first ask (readiness, not retry).",
+      "writes_to": [
+        "cairn/tools/inspect_wire/inspect_wire.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/inspect_wire.py",
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof drives concurrent launches and asks, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/inspect_wire/proofs/test_a_launched_codemother_takes_its_first_ask_under_load.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/inspect_wire/inspect_wire.py",
+      "cairn/tools/inspect_wire/proofs/test_a_launched_codemother_takes_its_first_ask_under_load.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus (a cause there is a sibling ticket)",
+      "the tester's proofs",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "test_the_8p_question_opens_beside_records sealed red 17:55:56 under the pre-commit reseal: InspectRefused inspect 'resolves_to' refused: codemother's shim could not take the envelope — it cannot wake a device to receive it",
+      "how": "git show b7abd000c:cairn/devices/tester/validations/test_the_8p_question_opens_beside_records.json, evidence.stdout_tail"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "the same proof green 3/3 run directly at b7abd000c (29s) and at 66602c8bb without it (26s)",
+      "how": "bin/cairn test --exec 'env PYTHONPATH=. python3 cairn/devices/tester/proofs/test_the_8p_question_opens_beside_records.py' in wt-1919 and wt-287e"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "7ea59855b1f4's verdict re-run refused: inspect 'crossing_named_ticket' refused with the same text, test_ask_reaches_a_launched_codemother",
+      "how": "CairnCommons/tickets/7ea59855b1f4-*.log.jsonl gate_dialog at 2026-11-14T15:14:22"
+    }
+  ]
+}
