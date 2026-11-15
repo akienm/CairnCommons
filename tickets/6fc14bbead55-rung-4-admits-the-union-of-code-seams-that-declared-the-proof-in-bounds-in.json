@@ -1,0 +1,79 @@
+{
+  "id": "6fc14bbead55",
+  "title": "rung 4 admits the union of code-seams that declared the proof in bounds.in",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Rung 4 admits a proof's moved bytes when every code-seam that moved them declared the proof in its cast-time bounds.in, and admits several such tickets together as one union.",
+  "why": "Measured 2026-11-14 (q47): the seal on cairn/tools/import_sieve/proofs/test_import_sieve.py was refused at rung 4. Its ladder opened 2026-11-13T16:24, and since then two code-seams have moved the proof: dd79ed8a1ece (cdb386bc8, 3073fed60) and 149b9a1ab9c4 (2b8400868, 8627334b2). Both name the proof in bounds.in, and the proof text names both. rung4_refusal refuses each alone, saying PROVES does not name it, and refuses None for having no ruling id. Rung 4's why is that a proof's assertions move only under a recorded reason. A code-seam's cast-time bounds.in is that reason, and when two tickets move the proof under one ladder the reason is their union. Orchestrator's adjudication; the design is the orchestrator's per Akien.",
+  "traces_to": "Law 4: rung 4 is the physics. Law 1: a reason already recorded at cast is not asked for again.",
+  "how": "In cairn/devices/tester/reseal.py: (a) _ticket_refusal's rung x admits a code-seam whose bounds.in names the proof, as well as one whose PROVES names it; (b) rung4_refusal splits a comma-separated ruling into ticket ids, every id must admit by its own kind (x for a code-seam, y for a bug) and the proof text must name each, and a list holding a non-ticket id is refused; (c) the removed-teeth check runs once over the union. Red-first proof modelled on test_rung_4_follows_the_ticket_kind.py. (d) the uncovered changers are read from git: each ticket id leading a commit subject that changed the proof after the newest commit holding the bound bytes must be given, or be named by a given bug ticket; untagged commits and working-copy edits are not attributed.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the import_sieve case as a fixture: two code-seams that declare the proof in bounds.in and are named in the proof text, which are the only tickets leading commits that changed it since the ladder's bound bytes, are admitted together as one union"
+      },
+      {
+        "n": 2,
+        "claim": "either one alone is still refused, and the refusal names the uncovered ticket, read from git as a ticket leading a commit that changed the proof since the ladder's bound bytes and not given"
+      },
+      {
+        "n": 3,
+        "claim": "a code-seam that names the proof in neither PROVES nor bounds.in is still refused"
+      },
+      {
+        "n": 4,
+        "claim": "a removed tooth that the proof does not name is still refused under the union"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _ticket_refusal admits a code-seam whose bounds.in or PROVES names the proof; rung4_refusal takes comma-separated ticket ids, each must admit by its own kind (a union may mix code-seams and bugs) and be named in the proof text, and the removed-teeth check runs over the union.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/tools/base/ticket_file.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof builds scratch code-seam tickets and a scratch-git proof under an open ladder, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_rung_4_admits_the_union_of_declaring_code_seams.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_rung_4_follows_the_ticket_kind.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_rung_4_admits_the_union_of_declaring_code_seams.py"
+    ],
+    "out": [
+      "cairn/devices/tester/cli.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "q47 refused the seal on test_import_sieve.py at rung 4. Under reseal.rung4_refusal each of dd79ed8a1ece and 149b9a1ab9c4 alone was refused with 'a code-seam and the proof's PROVES does not name it (x)', and None was refused with 'no ruling id'",
+      "how": "the orchestrator, read-only reseal.rung4_refusal(p, t) per ticket"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "no rung-4 ticket reads bounds.in or takes more than one id: e8be83a46ea9, 6eb235ee813d, 37ddc47686c2, 2dd69b2ba087, 4d9115eb04cd",
+      "how": "grep -ri 'rung 4' CairnCommons/tickets, then grep bounds.in over those five"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "the ladder's bound d7b07ed4cdd5 is the proof's bytes at f942a413f26d's 60e1dd170 and fc56e951f; the commits changing it since are 3073fed60 (dd79ed8a1ece), 2b8400868 and 8627334b2 (149b9a1ab9c4)",
+      "how": "git log --follow on the proof, sha256 of git show <c>:<proof> per commit; orchestrator re-measured"
+    }
+  ]
+}
