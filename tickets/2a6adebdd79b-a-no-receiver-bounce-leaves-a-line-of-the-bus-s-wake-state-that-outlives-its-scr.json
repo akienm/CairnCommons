@@ -1,0 +1,77 @@
+{
+  "id": "2a6adebdd79b",
+  "title": "a no_receiver bounce leaves a line of the bus's wake state that outlives its scratch HOME",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "Every no_receiver bounce the bus server makes appends one JSON line naming the bus's wake state at that instant (hook and _wired before and after the wake, the held shim's class, the bus pid and start time, the reason, the envelope), at a place that outlives the scratch HOME sweep.",
+  "why": "Measured 2026-11-14: 69cd150dc116's two real reds ('codemother's shim could not take the envelope') left no record of the bus's state, because the scratch HOMEs that held their logs were swept; five reproduction shapes were green, and 69cd's D1 rests on a cause the code argues against. Its consumer is 69cd150dc116, which rewrites D1 from the first real line.",
+  "traces_to": "Law 3 (nothing is known until measured) and Law 7 (errors permanent in records of truth).",
+  "how": "In BusProcess.no_receiver (server.py) capture hook_before = to in bus._delivery_hooks and wired_before = to in self._wired, run hold_name as now, then capture hook_after, wired_after and the held shim's class (module.qualname, or None). Capture the bus's start time at BusProcess.__init__ (ISO wall clock, plus /proc/self/stat starttime where it exists). Append one line for both reasons. Inside a test run (CAIRN_TESTER_TEST_ID set) the line goes to log_path('tester', roots={'instance': account_home()/'.cairn'})/'runs'/<test>/'bus-bounces.jsonl', mirroring cairn/devices/tester/runs.py run_dir without importing the tester (RULE 1); otherwise to log_path('cairn', roots=same)/'machines'/'bus'/'0'/'bounces.jsonl'. account_home reads pwd, never HOME, so a scratch-HOME bus writes where the sweep does not reach. An OSError emits bounce_record_failed and never stops the bounce (Law 7). The proof provokes the bounce in a scratch_bus.launch world by posting to a name no shim answers, under a fixture test id, and trashes its fixture run dir after.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a bounce in a scratch-HOME bus with test id T writes exactly one line at the account's tester run dir runs/T/bus-bounces.jsonl naming hook_before, hook_after, wired_before, wired_after, shim_class, bus_pid, bus_started, reason and the envelope id"
+      },
+      {
+        "n": 2,
+        "claim": "the line still reads after the launch block exits and its scratch HOME is swept"
+      },
+      {
+        "n": 3,
+        "claim": "with no test id the line lands in the account bus log, and a delivered ask writes no line"
+      },
+      {
+        "n": 4,
+        "claim": "an unwritable destination still bounces the envelope to its sender and emits bounce_record_failed"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: no_receiver records the wake state before and after hold_name and appends one line, at the account run dir in a test run and the account bus log otherwise; a write failure is loud and never stops the bounce.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/tester/runs.py",
+        "cairn/tools/base/address.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof provokes a no-shim bounce in a scratch_bus.launch world, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_bounce_leaves_a_line_that_outlives_its_scratch_home.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_bounce_leaves_a_line_that_outlives_its_scratch_home.py"
+    ],
+    "out": [
+      "cairn/devices/tester (its run dir is mirrored, never imported)",
+      "cairn/tools/inspect_wire (69cd150dc116 owns its readiness)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-14",
+      "saw": "69cd150dc116's two reds carry only the refusal text; the scratch HOMEs that held their bus logs were swept, and five reproduction shapes (30/30 concurrent launch+ask, 8p proof 3/3 under load, 4 parallel inspect_wire proofs, a cold unheld bus, a SIGKILLed bus) were green",
+      "how": "69cd150dc116's measured entries, commons commit ad15701a; grep of server.py no_receiver: no line is written at a bounce"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "no ticket records the bus's wake state at a bounce",
+      "how": "grep of CairnCommons/tickets and git log --all for no_receiver and bounce: 41f57726a609, bc0bbfd33a71, cd2d27fe3261, d0c8c4b4283e, 7cb1989e7825, b3386f431ae3, b30069239480, c2036433beaf, eff2fb9810de, 4a105acd1190, 60cc220da787, 3bf728e5328d, 6357c2eeff7c, 71d1bbfa98b0 build or route the bounce only"
+    }
+  ]
+}
