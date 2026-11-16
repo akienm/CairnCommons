@@ -1,7 +1,7 @@
 {
   "id": "7a15d4a5dfa3",
   "title": "debug-sink-replaces-silent-device",
-  "owning_intention": "",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
   "intention": "BaseDevice gets a debug_sink property (defaults to self) that every device's logging calls route through. The silent_device sieve checks for self.debug_sink.emit() call sites instead of self.emit(). Each device declares its own sink: most use the default (self), inference_domain overrides with its trail. The module-level _trail.emit() calls in inference_domain/domain.py are replaced by self.debug_sink.emit() routed through the device instance. Harbor_master and charter get their actual emit calls added at the same time, going through the default self sink.",
   "why": "Three devices fail the silent_device sieve (harbor_master, inference_domain, charter). inference_domain already logs through _trail.emit() — a module-level singleton that predates the BaseDevice pattern — but the sieve can't see it because it checks self.emit(). Teaching the sieve about _trail specifically (option 2) works today but requires a new sieve touch for every future logging shape. The debug_sink contract means each device declares its path once and the sieve never needs to learn device-specific internals again. Akien: 'that does bring it into alignment with my head.'",
   "traces_to": [
