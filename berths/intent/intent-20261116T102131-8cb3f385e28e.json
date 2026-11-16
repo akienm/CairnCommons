@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: have import_sites refuse to walk a directory with no .git. That rejects legitimate scratch repos that proofs build without git, and it moves the judgement into a tool other sieves share. A single derivation in the inspector is smaller and matches the existing guard at :4196.",
+      "hidden_assumption": "That a census root not named cairn is always a self-contained repo. A fixture could nest components under another name and expect its parent to be the repo. The falsifier's caller grep checks this.",
+      "prior_art": "inspector.py:4196 already does `root.parent if root.name == \"cairn\" else root` for the proof-coverage scan. 56d1aff4455e D(c) defined the derivation and assumed the census root holds the cairn package. The 6ea3a8548493 FIXME 1 fixture move is the workaround in one proof. Grepped tickets/ and questions/ for census-root/repo_root/walks /tmp: no ticket fixes the inspector side.",
+      "real_collision": "None. 56d1aff4455e's derivation stays correct for every live root (named cairn); this only defines the case it left undefined."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when, with the census root at <tmp>/<name>, encapsulation_holds and no_iou_stands read no file outside <tmp>: a planted breach or IOU beside <tmp> does not appear, and the call is fast. Wrong intent if a live caller relies on a census root not named cairn whose parent IS the repo. Grep every inspect(root=...) caller to check.",
+    "from_idea": "2026-11-16-build-inspector-s-encapsulation-holds-inspector",
+    "how": "One helper in inspector.py derives the repo root from a census root: its parent when the census root is named 'cairn' (the shape 56d1aff4455e D(c) assumed), else the census root itself, the guard inspector.py:4196 already applies. encapsulation_holds and no_iou_stands call it in place of their inline root.parent. A red-first proof plants a breach-shaped .py beside a fixture census root at <tmp>/<name> and shows the sieve does not read it, then shows a live-shaped <tmp>/cairn/<name> fixture still reds a real cross-device import.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 3 (nothing is known until measured): a sieve that reads foreign files measures the wrong thing, and it reports that as the component's own state. RULE 1's encapsulation_holds is meant to see only the repo's own imports. Law 8 indirectly: a gated crossing that costs ~97 s per call put test_transitions past its verdict budget (6ea3a8548493).",
+    "what": "build_inspector's whole-repo sieves (encapsulation_holds, no_iou_stands) judge only the repo the census root belongs to, never the directory that happens to contain a census root that is not <repo>/cairn."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "two inspector sieves derive repo_root as root.parent unconditionally; one (:4196) already guards it \u2014 the same derivation spelled three ways"
+    },
+    {
+      "stratum": "code",
+      "text": "measured cost on a /tmp-placed fixture: 13,947 files, ~97 s per gated crossing"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "c29ce87e6798",
+  "skill": "intent",
+  "title": "build_inspector's whole-repo sieves (encapsulation_holds, no_iou_stands) judge only the repo the census root belongs to,",
+  "trace_id": "2b08eb738855",
+  "when": "2026-11-16T10:21:31.298285"
+}

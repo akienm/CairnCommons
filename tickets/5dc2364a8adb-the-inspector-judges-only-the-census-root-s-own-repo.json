@@ -1,0 +1,72 @@
+{
+  "id": "5dc2364a8adb",
+  "title": "the inspector judges only the census root's own repo",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "build_inspector's whole-repo sieves (encapsulation_holds, no_iou_stands) judge only the repo the census root belongs to: the census root's parent when it is named cairn, else the census root itself, never the directory that happens to contain it.",
+  "why": "Measured 2026-11-16 on ticket 6ea3a8548493. A test_transitions fixture at /tmp/tmpXXX/<name> made encapsulation_holds take /tmp as the repo, and import_sites AST-parsed 13,947 foreign .py files per gated crossing: ~97 s each, 283 of 287 s under cProfile. The proof went past its 300 s verdict budget. 6ea3's FIXME 1 moved that one fixture; the sieve still reads a non-repo as a repo for any caller that lays a census root not named cairn.",
+  "traces_to": "Law 3: a sieve that reads foreign files measures the wrong thing and reports it as the component's state. RULE 1's encapsulation_holds is meant to see only the repo's own imports.",
+  "how": "One helper, _repo_of(census_root), returns census_root.parent when census_root.name == 'cairn', else census_root. That is the guard the proof-coverage scan already applies inline. encapsulation_holds, no_iou_stands and that scan all call it. The red-first proof lays census roots at <tmp>/outer/<name> and <tmp>/cairn/<name> and measures what each sieve reads.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with the census root at <tmp>/outer/<name>, encapsulation_holds hands import_sieve.import_sites the census root, never <tmp>/outer, and a breach-shaped .py planted directly under <tmp>/outer is not read"
+      },
+      {
+        "n": 2,
+        "claim": "with the census root at <tmp>/outer/<name> and <tmp>/outer a git repo with one tracked file carrying an IOU line, no_iou_stands reports no site from that file"
+      },
+      {
+        "n": 3,
+        "claim": "with the live shape <tmp>/cairn/<comp>, both sieves still take <tmp> as the repo, and encapsulation_holds still reds a real cross-device import planted under <tmp>/cairn"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: inspector.py gains _repo_of(census_root: Path) -> Path, returning census_root.parent if census_root.name == 'cairn' else census_root. encapsulation_holds and no_iou_stands keep their loop that walks comp_dir up to the census root and set repo_root = str(_repo_of(root)) in place of str(root.parent). The proof-coverage scan's inline `root.parent if root.name == \"cairn\" else root` becomes _repo_of(root), so the derivation is spelled once.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/tools/import_sieve/sieve.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof cairn/machines/build_inspector/proofs/test_a_census_root_outside_a_repo_reads_only_itself.py has one tooth per clause and is red-first on the base. Fixtures come from scratch_dir, as test_encapsulation_holds.py does. A row is {'dir': <name>, 'component': <name>} with comp_dir = census_root/<name>, as test_no_iou_stands.py builds it. Clause 1 wraps inspector.import_sieve.import_sites in place to record its argument and restores it in finally. Before each call it clears inspector._BREACH_CACHE and inspector._CENSUS_DIRS. Clause 2's repo is git init'd with GIT_TERMINAL_PROMPT=0 and one committed file holding an IOU line.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_a_census_root_outside_a_repo_reads_only_itself.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/proofs/test_encapsulation_holds.py",
+        "cairn/machines/build_inspector/proofs/test_no_iou_stands.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/machines/build_inspector/proofs/test_a_census_root_outside_a_repo_reads_only_itself.py"
+    ],
+    "out": [
+      "cairn/tools/import_sieve/sieve.py",
+      "cairn/tools/base/proofs/test_transitions.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "13,947 .py files AST-parsed per gated crossing, ~97 s each; 283 of 287 s in encapsulation_holds",
+      "how": "cProfile over build_inspector.inspect on a fixture at /tmp/tmpXXX/chartless (scratchpad prof_inspect.py), plus a file count under /tmp"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "every live caller passes a census root named cairn: inspect() defaults to _REPO_ROOT/'cairn', and the build gate passes comp_dir.parent",
+      "how": "grep of inspect( callers in cairn/tools/base/transitions.py and inspector.py"
+    }
+  ]
+}
