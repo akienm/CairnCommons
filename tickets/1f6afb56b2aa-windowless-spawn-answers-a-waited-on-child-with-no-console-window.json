@@ -1,0 +1,85 @@
+{
+  "id": "1f6afb56b2aa",
+  "title": "windowless_spawn answers a waited-on child with no console window",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "windowless_spawn answers a waited-on child with no console window and no detach, so a site like the tester's run_owned takes its flag from the tool instead of hand-building CREATE_NO_WINDOW.",
+  "why": "Measured 2026-11-16 on akiendelllinux: both windowless_spawn seals stand red (test_a_cairn_spawn_opens_no_console_window tooth no_site_hand_builds_a_flag_set, test_every_detached_spawn_takes_its_flags_from_the_helper tooth the_site_check_scans_and_reds_a_hand_built_site), and both name one site: cairn/devices/tester/runs.py hand-builds creationflags / CREATE_NO_WINDOW (ef0c76c4d, ticket 715d2205a2ec). run_owned waits on its child inside a job object, so detached_kwargs is the wrong answer for it, and the tool offered no other.",
+  "traces_to": "Law 1 and RULE 1: one answer for spawn flags in one tool, so a site does not re-derive a Windows flag by hand; the tool's own site check (ticket bce45318b2e0) is how that is kept.",
+  "how": "windowless_spawn.py grows windowless_kwargs(kw=None, os_name=None): a copy of kw, with CREATE_NO_WINDOW OR'd into creationflags on nt and nothing added elsewhere. The site scan in test_a_cairn_spawn_opens_no_console_window.py counts a site taking windowless_kwargs as helped. A red-first proof injects the OS.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on nt windowless_kwargs() is exactly {'creationflags': CREATE_NO_WINDOW}, with no DETACHED_PROCESS and no new process group"
+      },
+      {
+        "n": 2,
+        "claim": "a caller's keywords pass through: its creationflags keep their bits with CREATE_NO_WINDOW added, its other keys stand, and the dict it handed in is unchanged"
+      },
+      {
+        "n": 3,
+        "claim": "off nt windowless_kwargs(kw) equals kw as a copy, and {} for none"
+      },
+      {
+        "n": 4,
+        "claim": "the site scan counts a Popen site taking windowless_kwargs as helped and still reds a hand-built flag beside it"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: windowless_spawn.py gains windowless_kwargs(kw=None, os_name=None); detached_kwargs is unchanged.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: unhelped_sites accepts windowless_kwargs beside detached_kwargs; every hand needle stays.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof injects the OS, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_a_windowless_child_takes_only_the_no_window_flag.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/windowless_spawn.py",
+      "cairn/tools/windowless_spawn/proofs/test_a_cairn_spawn_opens_no_console_window.py",
+      "cairn/tools/windowless_spawn/proofs/test_a_windowless_child_takes_only_the_no_window_flag.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/devices/tester/runs.py (ticket 51f1cd81f253)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "both windowless_spawn seals red, every red line naming cairn/devices/tester/runs.py",
+      "how": "bin/cairn test --exec over the two sibling proofs on akiendelllinux"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof red on the base, all four teeth (no windowless_kwargs; the scan flagged a windowless_kwargs site)",
+      "how": "bin/cairn test --exec over cairn/tools/windowless_spawn/proofs/test_a_windowless_child_takes_only_the_no_window_flag.py in the windowless-kwargs-helper worktree"
+    }
+  ]
+}
