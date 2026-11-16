@@ -1,0 +1,70 @@
+{
+  "id": "b0bb9743a5f4",
+  "title": "red_tickets asks the commons' git, never the hook's",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Every git the tester's red-ticket caster runs against the commons, and the outline check it fires, sees the commons as itself and never the index or git dir of the hook that called the reseal.",
+  "why": "Measured 2026-11-15 by akienasus_cc_0: the 'unable to read 94b599b2c33f' in the commons is cairn's README blob. red_tickets._git handed a reseal's inherited GIT_INDEX_FILE to git -C <commons>, so every land_ours held reseal reported COULD NOT RUN (q57, q62).",
+  "traces_to": "Law 7 (a record of truth is not read against another repo's index), and 207c4074b3d5's commit-in-the-same-act, which can't work under a hook until the commons is asked as itself.",
+  "how": "red_tickets gets one helper that returns os.environ minus every GIT_* variable, as reseal._commits_touching already does. _git and the outline-check subprocess use it. A red-first proof runs _staged and a full cast under a foreign GIT_INDEX_FILE, GIT_DIR and GIT_WORK_TREE.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_staged(commons) under another repo's GIT_INDEX_FILE returns the commons' own staged list"
+      },
+      {
+        "n": 2,
+        "claim": "ticket_what_is_new under a hook's GIT_INDEX_FILE, GIT_DIR and GIT_WORK_TREE commits the cast into the commons, and the hook repo's index and HEAD are untouched"
+      },
+      {
+        "n": 3,
+        "claim": "the outline check the caster fires sees no GIT_* in its environment"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red_tickets gains _no_hook_env(), os.environ minus every GIT_*, as reseal._commits_touching does. _git passes env=_no_hook_env(), and _outline_check builds its env on it.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof builds a scratch hook repo whose index holds a blob the commons lacks, then runs _staged, a full cast and the outline check under that hook's env, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_red_tickets_asks_the_commons_git_not_the_hooks.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/proofs/test_red_tickets_asks_the_commons_git_not_the_hooks.py"
+    ],
+    "out": [
+      "cairn/devices/tester/reseal.py (it keeps GIT_INDEX_FILE for its own question, ca9d380fe9d6)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-15",
+      "saw": "94b599b2c33fdbefc027c926bf780f341831efed is cairn's README.md blob at stage 0 of cairn's index, not a commons object; every land_ours held reseal hit COULD NOT RUN (q57 on 1919, q62 on 8d69)",
+      "how": "akienasus_cc_0 on the Dell: git -C cairn cat-file -t and ls-files -s; relayed 2026-11-15"
+    },
+    {
+      "when": "2026-11-15",
+      "saw": "the proof's tooth 1 reproduced 'fatal: unable to read <blob>' from _staged before the fix",
+      "how": "bin/cairn test --exec over the proof at build-red-tickets-git-scrub, before ed69b0133"
+    }
+  ]
+}
