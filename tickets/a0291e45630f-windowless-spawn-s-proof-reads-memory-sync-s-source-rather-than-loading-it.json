@@ -1,0 +1,61 @@
+{
+  "id": "a0291e45630f",
+  "title": "windowless_spawn's proof reads memory_sync's source rather than loading it",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "windowless_spawn's proof holds memory_sync's spawn and its no-cairn skip by reading memory_sync.py's source, so no tooth of the tool's proof runs a device's code.",
+  "why": "Measured 2026-11-16 at cairn bce45-rebased-on-main @ 3e62b55b5: cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py:51-55 _load() runs cairn/devices/cc/scripts/memory_sync.py through importlib.util.spec_from_file_location, in teeth 2 (:88) and 4 (:143). A tool's proof is executing a device's code, which is the same reach bce45318b2e0's FIXME removed from the pulse tooth, and encapsulation_holds returns [] for cairn/tools/windowless_spawn because it reads only static imports. The orchestrator ruled the pulse tooth's fix, as a separate ticket so bce4 is not held.",
+  "traces_to": "RULE 1 (a proof measures only its own component) and Law 8 (a proof a hollow build couldn't pass).",
+  "how": "Teeth 2 and 4 keep their names and bce45318b2e0's keys. Tooth 2 runs the tool's own unhelped_sites over a scratch copy of memory_sync.py, plus an AST check of push()'s one Popen. Tooth 4 reads by AST the guarded import and its loud, zero-returning ImportError handler. A new tooth reds any import of cairn.devices, or any _load/spec_from_file_location aimed at device code, in this proof. memory_sync.py does not change.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "memory_sync's push() has exactly one Popen, running git ... push -q, which spreads **detached_kwargs() and sets no flag key itself, and windowless_spawn's unhelped_sites finds no unhelped site in a copy of memory_sync.py"
+      },
+      {
+        "n": 2,
+        "claim": "in push() the import of detached_kwargs sits in a try whose ImportError handler prints 'CC MEMORY SYNC' to sys.stderr and returns 0, and no Popen runs inside that try or its handler"
+      },
+      {
+        "n": 3,
+        "claim": "no tooth of the windowless_spawn proof imports cairn.devices or hands device code to _load, spec_from_file_location, run_path or import_module"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the pulse tooth's pattern, applied to memory_sync: a source read, never a load. The teeth keep their names so bce45318b2e0's PROVES keys stand; this ticket adds its own three keys.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/memory_sync.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py"
+    ],
+    "out": [
+      "cairn/devices/cc/scripts/memory_sync.py (read, not changed)",
+      "cairn/machines/build_inspector (encapsulation_holds is not extended here; f6ecce0822eb owns the general dynamic-import check)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "teeth 2 and 4 load cairn/devices/cc/scripts/memory_sync.py through spec_from_file_location at :88 and :143, and encapsulation_holds returns [] for cairn/tools/windowless_spawn",
+      "how": "read the proof at 3e62b55b5; inspector.encapsulation_holds over that tree"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "rewritten proof 5/5 green; clause 3 reds the 3e62b55b5 proof at :88 and :143; copies of memory_sync.py with hand-built flags, flags beside the helper, an unguarded import, a handler returning 1, or a skip printed to stdout each red the tooth they target",
+      "how": "bin/cairn test --exec in worktree wt-msy; in-process probes pointing MEMORY_SYNC at mutated copies"
+    }
+  ]
+}
