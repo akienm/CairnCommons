@@ -1,0 +1,93 @@
+{
+  "id": "39be1c54f091",
+  "title": "a charter lands after its lab twin",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The commit door refuses a cairn commit or land that changes an intention+why.json until the commons beside holds its lab copy, byte for byte, at its HEAD.",
+  "why": "Measured 2026-11-16: since 10-16, 304 intention+why.json writes landed on cairn main; the commons lab (CairnCommons/intentions-congruency-lab) never held 13 of them and 64 more caught up 30 min to 19 h late, so about 25% of charter landings left the lab stale and every proof that reads the lab reds in that window (6fb272ba3d64's test_compiler red and 8c1329759813's PROVEME refusal were one such charter, 424 min stale). Nothing ties a cairn commit to its commons twin.",
+  "traces_to": "Law 4 and Law 5: the thing and the story of the thing may live in two roots but may never contradict each other, and a rule that matters is enforced by the commit door, not by remembering to recompile.",
+  "how": "A tester module cairn/devices/tester/lab_twin.py reads git diff --cached for intention+why.json paths (A, M, D; renames split). For each add or modify it names the lab copy with cairn/tools/intentions_model_compiler/compiler.py's lab_filename over gather_sources, reads the staged bytes (git show :path) and the commons twin at <repo>/../CairnCommons HEAD (git show HEAD:intentions-congruency-lab/<name>), and refuses when the twin is missing or differs. A deleted charter is refused while its copy still stands at commons HEAD. Charters gather_sources skips (proofs/, validations/, dot dirs) need no twin. No commons beside refuses, named. Each refusal line ends 'land the commons lab copy <name> first'. cairn/devices/tester/hooks/pre-commit runs it, blocking, after the first artifact check; a land reaches it through pre-merge-commit (db250e9bf3f9). The proof cairn/devices/tester/proofs/test_a_charter_lands_after_its_lab_twin.py builds a scratch cairn and a scratch CairnCommons side by side, with the real hooks installed by install_hook, the real module and compiler, and A1's passing stub doors, and commits and merges for real.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a commit staging a charter whose lab copy commons HEAD lacks is refused, HEAD unmoved, the refusal naming 'land the commons lab copy <name> first'; red on db250e9bf3f9's build, where it commits"
+      },
+      {
+        "n": 2,
+        "claim": "a twin only in the commons working tree, or committed with other bytes, is refused the same way"
+      },
+      {
+        "n": 3,
+        "claim": "with the twin committed at commons HEAD, byte for byte, the same commit lands"
+      },
+      {
+        "n": 4,
+        "claim": "a non-conflicting merge of a branch that changes a charter with no landed twin is refused through pre-merge-commit, HEAD unmoved"
+      },
+      {
+        "n": 5,
+        "claim": "a commit deleting a charter is refused while commons HEAD still holds its lab copy, naming the removal, and lands once the copy is gone"
+      },
+      {
+        "n": 6,
+        "claim": "a charter under proofs/, which the compiler does not copy, commits with no twin"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/tester/lab_twin.py judges each staged charter against its lab copy at commons HEAD, naming it with the compiler's lab_filename.",
+      "writes_to": [
+        "cairn/devices/tester/lab_twin.py"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/compiler.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/tester/hooks/pre-commit runs it, blocking, after the first artifact check; a land reaches it through pre-merge-commit.",
+      "writes_to": [
+        "cairn/devices/tester/hooks/pre-commit"
+      ],
+      "reads": [
+        "cairn/devices/tester/hooks/pre-merge-commit"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof over a scratch cairn beside a scratch commons, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_charter_lands_after_its_lab_twin.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_merge_runs_the_commit_door.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/lab_twin.py",
+      "cairn/devices/tester/hooks/pre-commit",
+      "cairn/devices/tester/proofs/test_a_charter_lands_after_its_lab_twin.py"
+    ],
+    "out": [
+      "cairn/tools/intentions_model_compiler/compiler.py (read, not changed)",
+      "cairn/tools/artifact/hooks/pre-commit (the commons' hook, a sibling ticket)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "304 charter writes on cairn main since 10-16; the lab never held 13, and 64 caught up more than 30 min late",
+      "how": "for each commit touching an intention+why.json on origin/main since 10-16, the first commons commit whose lab copy held those bytes"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "cairn/devices/tester/proofs/test_a_charter_lands_after_its_lab_twin.py reds 5 of 6 teeth on 595b35854 (A1's build, no lab_twin.py) and is green on the build",
+      "how": "bin/cairn test --exec in a detached worktree at 595b35854 and in wt-pmc, scratch CAIRN_BUS_HOME"
+    }
+  ]
+}
