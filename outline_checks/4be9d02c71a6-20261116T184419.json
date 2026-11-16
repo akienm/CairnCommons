@@ -1,0 +1,58 @@
+{
+  "ticket": "4be9d02c71a6",
+  "at": "2026-11-16T18:44:19+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.170511,
+      "duration_ms": 97282,
+      "is_error": false,
+      "session_id": "b0376296-3047-4584-9531-d2416d4613ae"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/wt-jp/cairn/press_office/CairnComponentOutline.txt",
+  "outline_sha256": "57ec0600f6e7bd1f32e8f74027f324df69514ed5a108f605feac4b14ddf29e4e",
+  "ticket_sha256": "4396e8b4f48711d13945f89f701d48bd808d9e7a5498479779e44b611f57e9ba",
+  "touches": [
+    {
+      "number": "9.4.7",
+      "text": "rehearsal: the cheapest model reads a ticket cold and tries to build it on paper, saying where it got stopped or what is missing."
+    },
+    {
+      "number": "9.4.7.3",
+      "text": "The read is handed the plan steps, the frame (intention, why, falsifier), and what exists and what does not, measured before the read. \"Cold\" means no conversation, history, chart or process, not blind to the disk."
+    },
+    {
+      "number": "9.3.5",
+      "text": "Owns the inspectors and gates (9.4): everything in the code pipeline that checks. The exception is diagnostic_inspector, which is base's (17.1)."
+    },
+    {
+      "number": "9.3.5.1",
+      "text": "Outline check: when a ticket is cast, the cheapest model reads it beside the outline sections it touches. A conflict, or an open question in those sections, becomes a question on the ticket, which holds its build until answered. It reads the outline as it stands each time, so editing the outline costs nothing."
+    },
+    {
+      "number": "9.3.5.1.2",
+      "text": "A ticket's plan is a plan: constraints, tasks, dependencies, resources. Q#100 answered 2026-11-14 (open-91e33982f3d5, open-7c607df497bd): \"when I use microsoft project to make a plan, it has constraints, tasks, dependencies, and resources. that's a plan. a list of decisions does not look like a plan to me.\" Then: \"we will go with this as you've described it for now ... lets go with it as you say and see how it works. i would also say that the shift from decisions to plan steps means that the first decision (on conversion) will shape some of the plan, and later steps may reshape some of those. we should check for coherence at the end. any plan that's too big probably needs to be multiple tickets. real dependencies are things like we can't test the bus envelope shape until the bus works. and will shape ticket order more than anything else. resources are preexisting machines/tools/even design patterns if we need to state them explicitly.\" -amm Then, same day (open-7aee6f89e4d9, open-82f27105184f): \"we can specify a task order, but again it should be based on dependencies. or maybe... rather than tasks should we be focused on outcomes?\" / \"yes indeed i think that's the thing.\" / \"an outcome can hide the how, and i try and specify the how when i'm attached to it, like encapsulation, or the bus being the only communication channel or whichever. yes, we're in agreement. signed -amm\" -amm"
+    },
+    {
+      "number": "9.3.5.1.2.1",
+      "text": "The reading: - A plan is three parts. Constraints: the bounds, plus every how Akien is attached to, carried verbatim (encapsulation, the bus as the only channel, ...): a how he states is a constraint. Then outcomes. Then resources. - An outcome is {n, claim, writes_to, reads, after: [n or a ticket id], via?}. The claim is falsifiable, one proof tooth per outcome. The falsifier's clauses merge into the outcomes; there is no separate falsifier list. Old clause n stays outcome n; outcomes made from decisions number after them. via (optional) names the tool or pattern to use, drawn from resources. - Order comes from after: only real dependencies (\"can't test the bus envelope shape until the bus works\"), which also shape ticket order. Nothing invents them; list order is reading order only. - Resources: pre-existing machines, tools and design patterns, named when they need stating. - The migration is two steps. Mechanical, on every open ticket now: the plan moves to the new field with clause numbers kept, the trail moves whole to the log, by moves to the log. Judgement, when a ticket is next opened for build, never in bulk: each decision becomes an outcome or a constraint, then a coherence check (every step reads as current; a conflict moves to the log or is named). - CC inference: the mechanical step writes each old decision as an outcome numbered after the clauses, carrying its text and no claim; an outcome with no claim is awaiting judgement and holds BUILDME until the judgement step gives it a claim or moves it to constraints. - akienasus_cc_0 - During the change every reader accepts both shapes. Readers are censused first; one sibling ticket per reader component (RULE 1). - The cast door refuses an outcome with no falsifiable claim, and a plan of more than about 7 outcomes, naming children; each refusal is recorded so the ceiling can be tuned (the 7 is CC's guess). - The [?] markers go. - Tickets: aa3e9a70db47 is the migration (rehearsal); d421051bc1f7 is the hand-built worked example; each reader component has its sibling. - akiendelllinux_orchestrator -amm"
+    },
+    {
+      "number": "3.3.4",
+      "text": "The ticket IS its own manager. It carries its workflow and status, and asks each gate whether it can transit. If refused, it gets itself back to design for fixing. If no handler is available to ask, it throws a trouble and waits until we decide. Design is CC and Akien. Akien, 2026-11-11, Q#85: \"you and me. later there will be a specific agent for it, but that's so far off we're not even thinking about it now except 'after the outline is implemented'.\" So until then a refused ticket waits in the trouble lane, which both of us read when a session opens, and nothing posts to a design verb that no machine answers."
+    },
+    {
+      "number": "3.3.4.3",
+      "text": "A ticket's code is a tool or machine; its life is data. All of its state is on disk, so anyone can instantiate it to talk to it, and any dialog is written to the relevant part of the ticket as it happens. To cross a gate the ticket asks that gate to queue it, sending only its fileref: devices/codemother/0/machines/<inspector>/queueme <fileref>. The gate instantiates the ticket from that fileref on its own side. A ticket instance then processes the pass or fail: on a pass it goes on to the next step, alerting the probes watching the gate (3.3.4.2); on a fail it asks design to queue it, the same way. Self-queuing is the abstract ticket's (3.3.2), so every kind inherits it and no caller queues a ticket on its behalf (Akien, same day: \"that could be in the class, rather than the instance :) self queuing\"). WHY: Akien, 2026-11-10: \"now it has to send it's fileref over to the thing that will process it, and a new code instance created over there even tho it's the same thing... because that's good encapsulation. :)\""
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [],
+  "questions_already_open": []
+}
