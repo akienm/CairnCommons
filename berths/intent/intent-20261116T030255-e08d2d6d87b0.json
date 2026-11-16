@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered catching RuntimeError in Ticket.queueme and matching its text. That puts the fix in the wrong component, and every other bus_client caller would keep the wrong kind. The client owns its error mapping, and it already maps LookupError.",
+      "hidden_assumption": "That no caller relies on a bus-process timeout being a RuntimeError. git grep shows the RuntimeError catchers in codemother's stage machines read berths, not the bus, and no code matches 'bus process: TimeoutError'.",
+      "prior_art": "0bcb816d6e9c built the wait-on-the-berth path after a reply timeout. Its proof patches participant.request to raise TimeoutError directly, so it never went through RemoteBus and never saw the wrapping. remote.py already maps LookupError back.",
+      "real_collision": "none: TimeoutError is a subclass of OSError, not RuntimeError, so a caller that caught only RuntimeError around a bus call would now see the exception escape. None was found by grep."
+    },
+    "exit": "routed_forward",
+    "falsifier": "A bus-process 'TimeoutError: <words>' raises TimeoutError with the same words, through RemoteBus and through reach(), far and local. Every other error keeps its kind (RuntimeError or LookupError).",
+    "from_idea": "none, because this was measured, not imagined: q79.log in /tmp/claude-1000/-home-akien-dev-src-cairn/546bccde-fde2-48b2-9435-eaf9605f128f/scratchpad/q79.log, line 24, 'RuntimeError: bus process: TimeoutError: no reply to envelope 09d15224\u2026'",
+    "how": "In cairn/tools/bus_client/remote.py RemoteBus._call, an error starting 'TimeoutError: ' is raised as TimeoutError with the prefix removed, the way 'LookupError: ' is already mapped. A red-first proof replaces remote.exchange and checks the kind through RemoteBus and through reach(), far and local.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7: errors stay what they are in a diagnostic surface. Here a timeout was renamed into a RuntimeError, which hid it from the one caller built to wait it out (ticket 0bcb816d6e9c).",
+    "what": "A timeout inside the bus process reaches the bus_client's caller as a TimeoutError, so a ticket asking a slow chart or verdict gate waits on its own berth instead of dying at the reply timeout."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "149b's PROVED was refused because sail died at 890 s while codemother's verdict was still running. The ticket's 3600 s berth wait never ran, because bus_client renamed the TimeoutError into a RuntimeError."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "d6da8e96ceda",
+  "skill": "intent",
+  "title": "A timeout inside the bus process reaches the bus_client's caller as a TimeoutError, so a ticket asking a slow chart or v",
+  "trace_id": "9dc36335d273",
+  "when": "2026-11-16T03:02:55.164532"
+}

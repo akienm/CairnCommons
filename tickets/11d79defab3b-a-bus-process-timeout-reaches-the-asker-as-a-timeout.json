@@ -1,0 +1,76 @@
+{
+  "id": "11d79defab3b",
+  "title": "a bus-process timeout reaches the asker as a timeout",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "A timeout inside the bus process reaches the bus_client's caller as a TimeoutError, so a ticket asking a slow chart or verdict gate waits on its own berth instead of dying at the reply timeout.",
+  "why": "Measured 2026-11-16: 149b9a1ab9c4's walk died at 890 s with 'RuntimeError: bus process: TimeoutError: no reply to envelope 09d15224… from codemother', while codemother's verdict worker (tid 3020324, started 02:38:08 MST) was still re-running its 74 instruments. Ticket.queueme waits on its berth up to 3600 s after a TimeoutError (0bcb816d6e9c), but RemoteBus._call renamed the timeout into a RuntimeError, so the wait never ran and PROVED was refused [hollow_evidence_absent] over work still in progress.",
+  "traces_to": "Law 7: errors are loud and true at diagnostic surfaces. A timeout renamed into a RuntimeError hid it from the caller built to wait it out.",
+  "how": "In RemoteBus._call (cairn/tools/bus_client/remote.py), beside the LookupError mapping, an error starting 'TimeoutError: ' is raised as TimeoutError with the prefix removed. Every other error keeps its kind.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a call the bus process answers with 'TimeoutError: <words>' raises TimeoutError whose message is exactly <words>"
+      },
+      {
+        "n": 2,
+        "claim": "any other refusal still raises RuntimeError('bus process: ...'), and 'LookupError: ...' still raises LookupError"
+      },
+      {
+        "n": 3,
+        "claim": "a request through reach(), from a far client and from a local one, raises TimeoutError when the bus process timed out"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: RemoteBus._call maps 'TimeoutError: ' back to TimeoutError, beside the LookupError mapping.",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof replaces remote.exchange (as test_a_far_client_reaches_without_hold.py does), one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_bus_process_timeout_reaches_the_asker_as_a_timeout.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_a_far_client_reaches_without_hold.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_a_bus_process_timeout_reaches_the_asker_as_a_timeout.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/machines/ticket",
+      "cairn/devices/codemother"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "q79's 149b walk: 'RuntimeError: bus process: TimeoutError: no reply to envelope 09d15224… from codemother within 890.0s', then clearance refused PROVED [hollow_evidence_absent] and 149b went back to FIXME",
+      "how": "q79.log line 24, akienasus's walk log on the Dell"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "codemother took 09d15224 (machines/verdict/queueme) at 09:38:08.219Z; her thread codemother-verdict-gate (tid 3020324) started 02:38:08 MST and was still alive at 03:03, with a sealed tester child running a 149b instrument (test_proof_coverage.py, --timeout 600)",
+      "how": "the bus logs under ~/.cairn/logs/bus/0, ps -L on bus pid 2973071, pgrep -P 2973071"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof red 2/3 on origin/main (teeth 1 and 3: RuntimeError, not TimeoutError), green 3/3 with the fix; 3 other bus_client proofs green",
+      "how": "bin/cairn test --exec in worktree wt-rto"
+    }
+  ]
+}
