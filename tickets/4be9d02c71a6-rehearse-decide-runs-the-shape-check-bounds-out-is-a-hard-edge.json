@@ -1,0 +1,75 @@
+{
+  "id": "4be9d02c71a6",
+  "title": "rehearse --decide runs the shape check; bounds.out is a hard edge",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "rehearsal.decide refuses a writes_to path that bounds.out names, widens bounds.in by name for a path in neither list, and refuses a plan on which the cast door's shape check finds a lack it did not find before.",
+  "why": "Measured 2026-11-16: 96c1c2ea5ce9 and f695fac922cd took writes outside bounds.in at decide commits afa3a151/149d6c28 and f00cddf1, and decide never ran transitions._shape_lacks. Orchestrator 2026-11-16: 'The bounds' out list is a hard edge (\"out is out\"). So decide refuses outright a write to a path in bounds.out; no widening. Only a path in neither list may widen bounds.in, and the decision line names it as a widening. Keep both small.'",
+  "traces_to": "Law 4: decide was a door into the plan that skipped the cast door's check.",
+  "how": "_bounds_widened raises Refused on a bounds.out write and returns the paths in neither list. Those are added to bounds.in and named in the line's text as '(widens bounds.in: ...)'. _shape before and after: any new lack raises Refused, with nothing written. The backfill widens 96c1 and f695 through cairn artifact write --verb cast, plus one bounds_widened log line each.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in cairn/machines/rehearsal/proofs/test_a_decision_stays_inside_its_bounds.py, a decision writing a path bounds.out names is refused naming it ('out is out'), and the ticket is byte-identical"
+      },
+      {
+        "n": 2,
+        "claim": "in cairn/machines/rehearsal/proofs/test_a_decision_stays_inside_its_bounds.py, a decision writing a path in neither list lands with bounds.in gaining it and the line's text ending '(widens bounds.in: <path>)'; a write inside bounds.in widens nothing"
+      },
+      {
+        "n": 3,
+        "claim": "in cairn/machines/rehearsal/proofs/test_a_decision_stays_inside_its_bounds.py, a decision whose reads resolves to no file is refused through the shape check with the ticket byte-identical, while a lack the ticket already carried does not stop a clean decision"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: decide runs _bounds_widened then the before/after shape check before it writes.",
+      "writes_to": [
+        "cairn/machines/rehearsal/rehearsal.py"
+      ],
+      "reads": [
+        "cairn/machines/rehearsal/rehearsal.py",
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, three teeth.",
+      "writes_to": [
+        "cairn/machines/rehearsal/proofs/test_a_decision_stays_inside_its_bounds.py"
+      ],
+      "reads": [
+        "cairn/machines/rehearsal/rehearsal.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/rehearsal/rehearsal.py",
+      "cairn/machines/rehearsal/proofs/test_a_decision_stays_inside_its_bounds.py"
+    ],
+    "out": [
+      "every other component",
+      "the 18 PROVED tickets that write outside bounds.in (they stay as they are)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "96c1c2ea5ce9 wrote bin/proofs/test_a_declared_instance_is_wired_by_the_command.py and f695fac922cd wrote bin/validations/test_the_instance_address_proof_compares_posix.json outside bounds.in; neither path is in their bounds.out",
+      "how": "set compare of writes_to against bounds over both tickets"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "3 teeth red on origin/main and green on the fix; 11 proofs that call decide green",
+      "how": "PYTHONPATH=. python3 on each proof grepped for decide("
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "backfill applied: one path each widened into bounds.in, plus one bounds_widened log line; a rerun widens nothing",
+      "how": "scratch backfill script, --apply then a dry run"
+    }
+  ]
+}
