@@ -1,18 +1,27 @@
 {
   "id": "b15da5656579",
-  "title": "the artifact journal seals segments at a fixed entry count and verify_chain replays them whole",
+  "title": "the artifact journal keeps the newest entry per path in the repo and every entry in a day trail under ~/.cairn/logs",
   "owning_intention": "cairn/tools/artifact/intention+why.json",
-  "intention": "A root's artifact journal stays under GitHub's per-file limits as it grows: past a fixed entry count the head seals into an ordered segment, and read_journal and verify_chain replay segments then head as one unbroken chain from genesis.",
-  "why": "Measured 2026-11-15: the Dell push of cairn/.artifact-journal.jsonl was 50.04 MB and GitHub warned GH001 (the hard refusal is at 100 MB); on akiendelllinux the same file is 33 MB over 22895 entries. The journal is the who/when record of every record write, and one growing file is a push GitHub will refuse. The orchestrator grepped the corpus and found no ticket on journal size or rotation.",
-  "traces_to": "Law 7: errors are permanent in records of truth, and a record of truth that cannot be pushed is lost off the box. Law 4: the bound is enforced by the appending door, not by remembering to trim.",
-  "how": "The head keeps its path, .artifact-journal.jsonl, so every appender and path reader keeps working. When an append makes entry N*K (counted from genesis, so every box cuts at the same entry), artifact moves the head's entries into .artifact-journal/<NNNN>.jsonl (zero-padded, ordered by name) and starts a new head whose first entry's prev is the sealed segment's last entry sha. read_journal and verify_chain read the sealed segments in name order, then the head. K is a module constant chosen to keep a segment well under 50 MB (about 1.4 KB per entry measured, so K = 20000 gives about 28 MB). The build censuses the six path readers and routes any whole-file replay through read_journal. A red-first proof builds a scratch root with K overridden small.",
+  "intention": "A root's .artifact-journal.jsonl holds one line per record path, that path's newest entry, so it grows only with the record set. Every entry the door writes is also appended to a trail of one file per UTC day under ~/.cairn/logs, which the existing logs sweep ages out at 30 days.",
+  "why": "Akien, 16:47 UTC 2026-11-16, relayed verbatim by the orchestrator: \"then how about this... the latest entry remains in cairn commons, and everything else broken into... per day? per week? inside of our .cairn/logs folder\". The orchestrator chose per day and stopped the segment build. Measured 2026-11-15: the Dell push of cairn/.artifact-journal.jsonl was 50.04 MB and GitHub warned GH001; the hard refusal is at 100 MB. Measured 2026-11-16: the commons journal is 55 MB and grows about 3 MB a day, so segments would only have moved the growth into more files in git.",
+  "traces_to": "Law 5: the address carries what a mind needs now, and the trail past that berths outside the working surface while staying greppable. Law 7: a record of truth that cannot be pushed is lost off the box. Law 4: the bound is kept by the writing door, not by remembering to trim.",
+  "how": "The index line for a path is that path's newest entry, verbatim. Each entry carries entry = sha256 of its own body (the existing _entry_sha). A new entry carries no prev; a migrated entry keeps the prev it had, as an inert field. A write takes the door lock, reads the index, drops the lines for its path, appends the new line, and replaces the file atomically. If the file changed between the read and the replace (a git rewrite that ignored the lock), the entry is parked and JournalLineOrphaned raises, as 0f8aefbba1d0 ruled; reland keeps working. The line order is write order, so the last line is still the newest write. After the index, the same entry is appended to log_path(operator, 0)/tools/artifact/journal/<root name>/<YYYY-MM-DD>.jsonl. Before any line leaves the index, it is appended to its own day file unless that file already holds it. A diagnostic world (set_diagnostic_roots or CAIRN_ARTIFACT_ROOTS) writes its trail to its own \"trail\" key, or beside its first root, never to the live logs. The trail is per box: it holds what this box's doors wrote, and history across boxes is the index's git history. verify_chain becomes verify_journal: each line parses, its entry hashes its body, and no path has two lines. The merge driver takes the union by path; the newer at wins, and a tie goes to the larger entry sha, so the result is the same in either order and is sorted by (at, path). A migrate door verb writes every line of a chained journal into its day file, then sets each past day file's mtime to the end of its day so the sweep ages it by its date. Then it writes the index. Re-running it adds nothing. A new read_trail(root) joins artifact's public interface for readers that need history.",
   "bounds": {
     "in": [
       "cairn/tools/artifact/artifact.py",
-      "cairn/tools/artifact/proofs/test_the_journal_seals_segments_and_the_chain_replays_whole.py"
+      "cairn/tools/artifact/__main__.py",
+      "cairn/tools/artifact/__init__.py",
+      "cairn/tools/artifact/intention+why.json",
+      "cairn/tools/artifact/probes/callers_are_known.py",
+      "cairn/tools/artifact/proofs/test_the_journal_keeps_the_newest_entry_per_path_and_a_day_trail.py",
+      "cairn/tools/artifact/proofs/test_artifact_door.py",
+      "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py",
+      "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+      "cairn/tools/artifact/proofs/test_a_parked_line_is_relanded_through_the_door.py",
+      "cairn/tools/artifact/proofs/test_a_ticket_log_is_append_only.py"
     ],
     "out": [
-      "every other component; a path reader that must change is its own ticket"
+      "every component outside cairn/tools/artifact; a reader outside it that must change is its own ticket (RULE 1), cast from the census in outcome 7"
     ]
   },
   "measured": [
@@ -25,70 +34,143 @@
       "when": "2026-11-15",
       "saw": "33 MB, 22895 entries in cairn/.artifact-journal.jsonl on akiendelllinux",
       "how": "ls -la and wc -l in the wt-207c-dell checkout"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "cairn journal 34 MB, 24252 entries, 1210 distinct paths, newest-per-path 1.0 MB; commons journal 55 MB, 43908 entries, 8891 distinct paths, newest-per-path 10.6 MB. Last 30 days: 14093 and 22163 entries; busiest day 3157 and 7848 entries",
+      "how": "a python pass over both house journals, read-only, keeping the last line per path and bucketing at by UTC date"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "readers of the journal outside artifact: tools/base cast.py sweep_casts and probes/the_casting_door_has_callers.py need every entry; tools/question probes/both_ends_agree.py needs every question and answer event; build_inspector inspector.py _only_own_dialog assumes the working copy is HEAD plus appended lines; gate_class.py:298 and skills/sail/sweep.py suspects read the newest entry and the last line and work unchanged; hollow.py, reseal.py, red_tickets.py, prove.sh, close.sh and installer.py only name the file",
+      "how": "git grep for read_journal, journal_path and .artifact-journal over the cairn tree, each hit read"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "dry run on --shared scratch clones of both house repos into a scratch trail: cairn 24252 entries filed, index 34933118 -> 1678606 bytes; CairnCommons 43908 entries filed, index 55125905 -> 10650678 bytes; a second run on each wrote 0 trail lines and changed 0 bytes; both indexes verify",
+      "how": "scratchpad mig/dry.py calling migrate() under set_diagnostic_roots with a scratch 'trail' key, over git clone --shared of each house repo at 05c2ec055 and its commons HEAD"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "377 lines of the commons journal end in CRLF; the trail re-serializes every line with _line, so those land LF, and their entry sha is computed over the parsed body, so verify holds",
+      "how": "grep -c $'\\r$' over the house commons journal, then verify_journal over the dry-run index"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "on branch journal-keeps-the-newest-entry-per-path the door-run migrated both repos into the live trail: cairn 24242 entries (10 already filed by earlier door writes on the branch), 1210 paths; CairnCommons 43909 entries, 8891 paths, 52 day files; artifact verify reads every line self-hashing",
+      "how": "bin/cairn artifact migrate <root> --why ... from wt-jp/cairn, then bin/cairn artifact verify <root>"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "landing: the house merge driver and hooks run the code where they were installed, so the house trees run the old chain code until they pull; the land must re-run cairn artifact migrate (idempotent) on both repos with this branch's code before the land commit, and the first logs sweep drops day files older than 30 days from the trail (git history keeps them)",
+      "how": "read .git/config merge.artifact-journal.driver and the cairn and commons pre-commit hooks; read cairn/devices/cairn/logs_sweep.py (mtime cutoff)"
     }
   ],
   "outcomes": [
     {
       "n": 1,
-      "claim": "a scratch root whose journal passes the bound K is split on append into a sealed .artifact-journal/0001.jsonl and a head, each holding at most K entries, and verify_chain over the root returns no faults",
-      "writes_to": [],
-      "reads": [],
+      "claim": "after writes to two paths, one of them three times, the index holds exactly two lines, each that path's newest entry with its last line the newest write, and the trail day file for today holds all four entries verbatim",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_the_journal_keeps_the_newest_entry_per_path_and_a_day_trail.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ],
       "after": []
     },
     {
       "n": 2,
-      "claim": "a one-byte edit in the sealed segment makes verify_chain name a fault, and so does a head whose first prev does not equal the sealed segment's last entry sha",
-      "writes_to": [],
-      "reads": [],
-      "after": []
+      "claim": "verify_journal returns no faults over a clean index, names the line when one byte of an entry is edited, and names the path when it has two lines; check_staged refuses the commit while either fault stands",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/__main__.py",
+        "cairn/tools/artifact/__init__.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/__main__.py"
+      ],
+      "after": [
+        1
+      ]
     },
     {
       "n": 3,
-      "claim": "read_journal returns every entry in order across the sealed segments and the head, equal to the entries appended",
-      "writes_to": [],
-      "reads": [],
-      "after": []
+      "claim": "on the index, check_staged refuses staged bytes that are not the newest sha_after, park_hand_edit restores the newest journaled bytes, and genesis journals only paths never journaled, so a hand-edited journaled record is not blessed and its commit is still refused",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "after": [
+        1
+      ]
     },
     {
       "n": 4,
-      "claim": "two roots that append the same entries cut at the same entry and seal byte-identical segments",
-      "writes_to": [],
-      "reads": [],
-      "after": []
+      "claim": "the merge driver over two indexes that each wrote the same path gives one line per path holding the newer entry, with a tie going to the larger entry sha, byte-identical in either order; a pre-migration side carrying many lines per path merges to its newest per path",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/proofs/test_two_journals_meet_without_forking.py"
+      ],
+      "after": [
+        1
+      ]
     },
     {
       "n": 5,
-      "text": "the appender in artifact.py seals the head into .artifact-journal/<NNNN>.jsonl when an append makes entry N*K from genesis; read_journal and verify_chain read the segments in name order, then the head.",
+      "claim": "no line leaves the index without standing in the trail: a write over an unmigrated journal puts that path's older lines in their own day files first, once; and a diagnostic world never writes the live logs trail",
       "writes_to": [
         "cairn/tools/artifact/artifact.py"
       ],
       "reads": [
         "cairn/tools/artifact/artifact.py"
       ],
-      "after": []
+      "after": [
+        1
+      ]
     },
     {
       "n": 6,
-      "text": "census the readers that name .artifact-journal by path (build_inspector/inspector.py, tester red_tickets.py and hollow.py, cc scripts prove.sh and close.sh, the installer). A reader that replays the whole file is routed through read_journal. A reader of the head only is left alone and named in the proof's why. A reader outside artifact that must change is a ticket of its own (RULE 1), cast from the census.",
-      "writes_to": [],
-      "reads": [
-        "cairn/machines/build_inspector/inspector.py",
-        "cairn/devices/tester/red_tickets.py",
-        "cairn/devices/tester/hollow.py",
-        "cairn/devices/cc/scripts/prove.sh",
-        "cairn/devices/cc/scripts/close.sh",
-        "cairn/devices/recovery/machines/installer/installer.py"
+      "claim": "cairn artifact migrate <root> --why writes every line of a chained journal into the day file of its at, sets each past day file's mtime to the end of its day, and writes the newest-per-path index; a second run adds no trail line and changes no byte; a dry run on a scratch clone of each house repo is recorded in measured",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/__main__.py"
       ],
-      "after": []
+      "reads": [
+        "cairn/devices/cairn/logs_sweep.py",
+        "cairn/tools/base/address.py"
+      ],
+      "after": [
+        1,
+        5
+      ]
     },
     {
       "n": 7,
-      "text": "the red-first proof builds a scratch root with K overridden small, one tooth per clause.",
+      "claim": "the artifact proofs that read the chain (test_artifact_door, test_two_journals_meet_without_forking, test_a_journal_line_survives_a_git_rewrite, test_a_parked_line_is_relanded_through_the_door, test_a_ticket_log_is_append_only) are green on the index; callers_are_known counts the trail; read_trail is in artifact's public_interface; and each reader outside artifact that needs every entry is its own ticket. A census read from the trail sees only 30 days, and each sibling ticket says so; the siblings are cast: 3a977523f644 (tools/base cast census), 9b8c7bdfa853 (tools/question both_ends_agree), 8e26b0664bb0 (build_inspector own-dialog excuse)",
       "writes_to": [
-        "cairn/tools/artifact/proofs/test_the_journal_seals_segments_and_the_chain_replays_whole.py"
+        "cairn/tools/artifact/intention+why.json",
+        "cairn/tools/artifact/probes/callers_are_known.py",
+        "cairn/tools/artifact/proofs/test_artifact_door.py",
+        "cairn/tools/artifact/proofs/test_a_journal_line_survives_a_git_rewrite.py",
+        "cairn/tools/artifact/proofs/test_a_parked_line_is_relanded_through_the_door.py",
+        "cairn/tools/artifact/proofs/test_a_ticket_log_is_append_only.py"
       ],
-      "reads": [],
-      "after": []
+      "reads": [
+        "cairn/tools/artifact/intention+why.json",
+        "cairn/tools/base/cast.py",
+        "cairn/tools/question/probes/both_ends_agree.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "after": [
+        1,
+        2
+      ]
     }
   ]
 }

@@ -1,0 +1,60 @@
+{
+  "id": "9b8c7bdfa853",
+  "title": "the question tool's both-ends probe reads the artifact trail, not the index",
+  "owning_intention": "cairn/tools/question/intention+why.json",
+  "intention": "both_ends_agree reads every question and answer event from artifact.read_trail, so an open and its answer on one question file are both seen. The trail is per box and keeps 30 days; this reader sees only that, and says so.",
+  "traces_to": "Law 3: a probe that sees one event per question file cannot measure whether both ends agreed.",
+  "how": "Swap the probe's journal read for door.read_trail(root). The docstring and the finding name the 30-day, per-box horizon. It builds after b15da5656579 lands, which adds read_trail and the index.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "one question opened and answered through a scratch world's door gives the probe both events"
+      },
+      {
+        "n": 2,
+        "claim": "the probe's finding names the 30-day horizon"
+      }
+    ]
+  },
+  "why": "Split from b15da5656579 under RULE 1. Akien, 16:47 UTC 2026-11-16, relayed verbatim by the orchestrator: \"then how about this... the latest entry remains in cairn commons, and everything else broken into... per day? per week? inside of our .cairn/logs folder\". After b15d the journal holds only the newest entry per path and every entry is in a day trail on this box for 30 days.",
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the reader reads as the intention says.",
+      "writes_to": [
+        "cairn/tools/question/probes/both_ends_agree.py"
+      ],
+      "reads": [
+        "cairn/tools/question/probes/both_ends_agree.py",
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/question/proofs/test_both_ends_reads_the_artifact_trail.py"
+      ],
+      "reads": [
+        "cairn/tools/question/probes/both_ends_agree.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/question/probes/both_ends_agree.py",
+      "cairn/tools/question/proofs/test_both_ends_reads_the_artifact_trail.py"
+    ],
+    "out": [
+      "every other component; cairn/tools/artifact is b15da5656579's"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "cairn/tools/question/probes/both_ends_agree.py read the journal in the way b15da5656579 changes",
+      "how": "git grep for read_journal and .artifact-journal over the cairn tree, each hit read (b15da5656579's census)"
+    }
+  ]
+}
