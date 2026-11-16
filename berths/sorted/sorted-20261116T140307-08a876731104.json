@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: that git fires post-merge on the land. Akienasus's land_one.sh lands with 'git merge -q --no-ff', and git runs post-merge after a successful non-squash merge. Second: that recompile_gate.sh with no env compiles the real lab from the repo it sits in. It does: it derives REPO from its own path and calls copy_to_lab with None roots. Third: the hook writes the lab into the commons tree and does not commit it. The lander commits it, as q148 did by hand.",
+    "builder_check": "A Haiku builder needs: (1) the hook file is cairn/tools/intentions_model_compiler/hooks/post-merge, bash, which reads 'git diff --name-only ORIG_HEAD HEAD' and pokes recompile_gate.sh (resolved through readlink -f of the repo's tracked copy) when any name ends in 'intention+why.json' or starts with 'intentions-not-beside-code/', and always exits 0; (2) recompile_gate.sh 'install <repo>' copies the hook into $(git -C <repo> rev-parse --git-common-dir)/hooks/post-merge, chmod +x, and is idempotent; with no args it still compiles as today; (3) the proof uses temp git repos, never the house trees, and points CAIRN_COMMONS_ROOT, CAIRN_CODE_ROOT, CAIRN_LAB_OUT and CAIRN_LOG_DIR at them; (4) PROVES keys '1','2','3'. The ticket carries all of these.",
+    "children": "none, because it is one hook, one install mode and one proof, all in cairn/tools/intentions_model_compiler/",
+    "collision_check": "'intentions-congruency-lab is derived, never authored' (CLAUDE.md IOU): recompile_gate.sh is the lab's legitimate derived writer, and the hook only pokes it, so this is no collision. The gate's charter says it is 'invoked by EVENTS only', and a merge is an event, so that is a distinction recorded. The tester's pre-commit hook (cairn/devices/tester/hooks/pre-commit) occupies a different hook name, so the two do not collide.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Proof cairn/tools/intentions_model_compiler/proofs/test_a_merge_recompiles_the_lab.py over a scratch cairn and CairnCommons pair with the hook installed by the install mode, CAIRN_LAB_OUT pointing at a scratch lab. Clause 1: merging a branch that changes a beside-code intention+why charter leaves the lab copy byte-equal to the merged source. Clause 2: merging a branch that changes no lab source leaves the lab's bytes and mtimes untouched. Clause 3: the install mode lays an executable post-merge into the repo's hooks dir, and a second install changes nothing. Red-first: at base there is no hook and no install mode, so all three are red. Horizon: no test_verify_on_the_real_repo red caused by a landed charter change.",
+    "gates_bound": "code-seam@v2's prove gate: the proof is sealed with its hollow build retaken; on failure it feeds back to TICKETME/FIXME (Laws 3 + 8).",
+    "missing_check": "A pull --rebase does not fire post-merge, so drift after a rebase pull is out of scope, and /intent's read-refresh stays its backstop. Installing the hook on every box is out of scope beyond the install mode; laying it on the fleet is the installer's. The reseal of test_compiler after a recompile is the lander's existing reseal step.",
+    "node_class": "code-seam",
+    "questions": "none, because the gate's own charter cairn/tools/intentions_model_compiler/recompile_gate.sh names its writers as events, and a merge is one",
+    "task_or_ticket": "ticket",
+    "title": "a merge that changes a lab source recompiles the congruency lab",
+    "watchme": "none, because the live horizon is already read by cairn/tools/intentions_model_compiler/proofs/test_compiler.py (test_verify_on_the_real_repo, the tooth whose red bore ticket 6fb272ba3d64), and the new proof is the whole of the hook's correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "No house repo had a post-merge hook, so every landed charter change has drifted the lab until something read-refreshed it."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "9611f1fb5ff1",
+  "skill": "sorted",
+  "title": "a merge that changes a lab source recompiles the congruency lab",
+  "trace_id": "68e83179c4b8",
+  "when": "2026-11-16T14:03:07.391748"
+}
