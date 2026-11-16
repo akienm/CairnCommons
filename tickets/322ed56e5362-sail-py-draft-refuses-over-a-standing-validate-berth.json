@@ -1,0 +1,78 @@
+{
+  "id": "322ed56e5362",
+  "title": "sail.py draft refuses over a standing validate berth",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "A ticket's chart is never redrafted without being re-charted: sail.py draft refuses while a validate berth already stands for the ticket, and --rechart drafts and charts in one act, refusing unless the validate berth moved.",
+  "why": "Measured 2026-11-15 on 8f3d61c0ae47: a redraft rewrote only the plan's chart field, the old validate berth went on claiming the ticket, and the verdict gate (which reads that berth, never the plan) refused twice on a criterion the redraft had removed.",
+  "traces_to": "Law 4: re-chart-after-redraft was a rule only policy held. Law 7: the stale berth was a silent wrong answer.",
+  "how": "draft reads the standing validate berth by both spellings (chain_for_ticket(tid)['validate'] and Ticket.berth('validate')); if one stands it writes nothing and names it. --rechart drafts, runs chart, and returns 1 unless every standing spelling moved. A red-first proof drives a scratch tickets store, a scratch berth store passed as berths_root, and a recording bus.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a validate berth claiming the ticket in the berth store: draft exits 1, names the berth and --rechart, and leaves the plan's bytes unchanged"
+      },
+      {
+        "n": 2,
+        "claim": "a validate berth recorded only in the ticket's chart_claim: draft refuses the same way"
+      },
+      {
+        "n": 3,
+        "claim": "with no validate berth standing, draft writes every chart stage as before"
+      },
+      {
+        "n": 4,
+        "claim": "--rechart over a standing berth drafts, charts every stage, and exits 0 when a new validate berth now claims the ticket"
+      },
+      {
+        "n": 5,
+        "claim": "--rechart whose charting leaves the old validate berth standing exits 1 and says it did not move"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: draft in sail.py reads the standing validate berth by both spellings and refuses without --rechart; --rechart drafts, charts and checks the berth moved.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/sail.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/sail.py",
+        "cairn/tools/chain/chain.py",
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, one tooth per clause, over a scratch tickets store, a scratch berth store and a recording bus.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_a_redraft_over_a_standing_validate_berth_is_charted_or_refused.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/sail.py",
+      "cairn/devices/cc/proofs/test_a_redraft_over_a_standing_validate_berth_is_charted_or_refused.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/tools/chain/chain.py",
+      "codemother's chart gates"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-15",
+      "saw": "after commons commit 77a56d84 redrafted 8f3d61c0ae47's chart field only, chain_for_ticket('8f3d61c0ae47')['validate'] still named validate-20261114T171135-081afd0c1df2.json and the verdict refused twice on the removed criterion",
+      "how": "akienasus_cc_0 ran sail.py verdict on the Dell and read chain_for_ticket"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof red 5/5 on origin/main's sail.py, green 5/5 at b2b618529",
+      "how": "bin/cairn test --exec over the proof in wt-mkdt"
+    }
+  ]
+}
