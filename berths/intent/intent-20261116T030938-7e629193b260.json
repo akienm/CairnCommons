@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered reading each proof's current seal instead of re-running it, as 5243cf9dc630 did for constrain's floor. The outline (9.4.8.1) makes the verdict's run a seal-grade run: it is the independent observation, so reading the seal would remove the check. Considered one worker per ticket instead of one per stage. That shortens the queue wait, but not a single ticket's verdict, and it runs unbounded verdicts side by side. Bounded parallel runs inside one verdict address both.",
+      "hidden_assumption": "That sealed runs are isolated from each other. Measured 2026-11-16 in a pre-commit reseal's process tree: each sealed run binds its own /tmp/cairn-instance-seal-* over ~/.cairn and serves its own scratch bus. Not yet measured: whether 3 heavy proofs at once exceed this box's memory (15 GB, 7 GB used). The build measures it on 149b's 74.",
+      "prior_art": "0d38d0f5a4e3 extracted every command before running any. b0e608f34ccb bounded constrain's discovery to the ticket's component. 11d79defab3b made the asker wait on its berth past the reply timeout. None of them parallelized the verdict's runs.",
+      "real_collision": "none: outline 9.4.8.1 rules where the run happens (under bubblewrap, where the sealer runs), not its order. Each reading is still one run of its own instrument."
+    },
+    "exit": "routed_forward",
+    "falsifier": "With 9 runs of 0.4 s each, observe_instruments returns in under 2 s (serial is 3.6 s), with the readings in the artifact's order. Never more than 3 runs are in flight. An unrunnable instrument still refuses before anything runs.",
+    "from_idea": "none, because this was measured, not imagined: verdict packet ~/.cairn/devices/chart/0/packets/verdict-20261116T030308-49f2a77002cd.json, 74 observed_runs summing 1470 s, run one after another",
+    "how": "In cairn/devices/codemother/machines/verdict/verdict.py observe_instruments, after every command is extracted, run them on a bounded thread pool (width 3), and return the readings in the artifact's order. Each run is already its own sealed, bubblewrapped tester exec with a scratch instance, so runs share no live state. Prove it red-first with an injected runner that sleeps and counts how many are in flight.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 1: the resolver (and the box) is spent on the novel. A big ticket's verdict serially blocks every other ticket's verdict; measured 2026-11-16, 62a8 waited 562 s behind 149b's 1500 s verdict.",
+    "what": "The verdict gate runs a ticket's instruments a few at a time instead of one after another, so a big ticket's verdict, and every ticket queued behind it, finishes in a fraction of the time."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "149b's verdict was 74 instruments, all passing, 1470 s run one after another (median 15 s, max 221 s). 62a8 waited 562 s behind it in the same FIFO. Running 3 at a time should take a big verdict from about 25 min to about 9 min."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "7a16a0351641",
+  "skill": "intent",
+  "title": "The verdict gate runs a ticket's instruments a few at a time instead of one after another, so a big ticket's verdict, an",
+  "trace_id": "d213aba638c8",
+  "when": "2026-11-16T03:09:38.538312"
+}

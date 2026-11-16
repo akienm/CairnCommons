@@ -1,0 +1,85 @@
+{
+  "id": "e56a68e651c2",
+  "title": "the verdict runs its instruments a few at a time",
+  "owning_intention": "cairn/devices/codemother/machines/verdict/intention+why.json",
+  "intention": "The verdict gate runs a ticket's instruments a few at a time instead of one after another, so a big ticket's verdict, and every ticket queued behind it, finishes in a fraction of the time.",
+  "why": "Measured 2026-11-16: 149b9a1ab9c4's verdict ran its 74 instruments one after another in observe_instruments, 1470 s of runs (median 15 s, max 221 s), 1500 s from ask to berth. 62a8ecb673a7's verdict waited 562 s behind it in the one verdict FIFO. Worst case at the declared timeouts is 74 x 600 s = 44,400 s, past the asker's 3600 s berth wait (a bound, not a measurement).",
+  "traces_to": "Law 1: the resolver and the box are spent on the novel. One big verdict serially blocks every other ticket's verdict.",
+  "how": "In observe_instruments, after every command is extracted (0d38d0f5a4e3), run the planned runs on concurrent.futures.ThreadPoolExecutor(max_workers=VERDICT_WIDTH), with VERDICT_WIDTH = 3 as a module constant, and return the readings in planned order. Each run is the tester's sealed, bubblewrapped exec with its own scratch instance, so runs share no live state. Before PROVEME the build measures peak memory over 149b's 74 at width 3 on the Dell, and drops to 2 if it does not fit.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with an injected runner sleeping 0.4 s per run, 9 runnable instruments return from observe_instruments in under 2 s (serial is 3.6 s)"
+      },
+      {
+        "n": 2,
+        "claim": "the readings come back in the artifact's verdicts order, each carrying the run of its own command"
+      },
+      {
+        "n": 3,
+        "claim": "never more than VERDICT_WIDTH runs are in flight at once, counted by the injected runner"
+      },
+      {
+        "n": 4,
+        "claim": "an artifact with one unrunnable instrument still returns every reading with runnable False or True and zero runs made"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: observe_instruments runs its planned runs on a bounded pool of VERDICT_WIDTH (3) and keeps planned order.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/verdict.py",
+        "cairn/devices/codemother/machines/chart_gate/gate.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof drives observe_instruments with an injected sleeping, counting runner over a scratch artifact, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/verdict/verdict.py",
+      "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/devices/codemother/machines/chart_gate",
+      "cairn/devices/tester"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "149b's verdict: 74 observed_runs, all pass, seconds summing 1470 (min 8.0, median 15.3, max 220.7); asked 02:38:08 MST, berthed 03:03:08",
+      "how": "reading ~/.cairn/devices/chart/0/packets/verdict-20261116T030308-49f2a77002cd.json and the bus logs"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "62a8's verdict asked 02:53:46, ran 03:03:08 to 03:05:31 (143 s, 1 instrument plus dispose), so it waited 562 s in the FIFO behind 149b",
+      "how": "verdict-20261116T030531-e5e299bbe098.json against q79's ask time"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "sealed runs are isolated: each binds /tmp/cairn-instance-seal-<pid>-* over ~/.cairn and serves its own scratch bus",
+      "how": "pstree of a pre-commit reseal on akiendelllinux"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "a smaller cost, not fixed here: StageGate._dispose re-runs the hypothesis instruments (2 of 149b's 74) that the door then runs again",
+      "how": "comparing the hypothesize berth's instruments with the validate criteria for 149b"
+    }
+  ]
+}
