@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: every live census root is <repo>/cairn. Checked 2026-11-16: inspect() defaults root to _REPO_ROOT/'cairn' (inspector.py:5287), and the build gate passes comp_dir.parent (transitions.py:1289), which for a live component is <repo>/cairn. The sieve proofs (test_no_iou_stands.py:67) build <tmp>/cairn/<comp>. So the new branch (census root not named cairn, which makes the repo the census root itself) is reached only by fixtures like 6ea3's old one, and live behaviour is unchanged.",
+    "builder_check": "A Haiku builder needs: (1) one helper, _repo_of(census_root: Path) -> Path, returning census_root.parent if census_root.name == 'cairn' else census_root; (2) encapsulation_holds (:4768-4771) and no_iou_stands (:5176-5179) keep their loop that walks comp_dir up to the census root and replace `repo_root = str(root.parent)` with `repo_root = str(_repo_of(root))`; (3) :4196 uses the helper as well, so there is one spelling; (4) clause 1's tooth records the argument by wrapping inspector.import_sieve.import_sites in place (restored in finally), and clears inspector._BREACH_CACHE and _CENSUS_DIRS before each call; (5) fixtures come from scratch_dir (cairn/tools/base/scratch), as test_encapsulation_holds.py:96 does; the git repo in clause 2 is `git init` with GIT_TERMINAL_PROMPT=0, plus one committed file holding an IOU line; (6) a row is {'dir': <name>, 'component': <name>} and comp_dir = census_root/<name>, as test_no_iou_stands.py:67 builds it.",
+    "children": "none, because it is one helper, three call sites and one proof in cairn/machines/build_inspector",
+    "collision_check": "56d1aff4455e decision (c) defined repo_root as 'the parent of the census root (the dir that holds the cairn package)'. This keeps that rule for every root named cairn and defines the case it left undefined, so it is a distinction, not a collision. It agrees with the guard at inspector.py:4196.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Falsifier: cairn/machines/build_inspector/proofs/test_a_census_root_outside_a_repo_reads_only_itself.py, red-first on the base. Clause 1: with the census root at <tmp>/outer/<name>, encapsulation_holds hands import_sieve.import_sites the census root, never <tmp>/outer, and a breach-shaped .py planted at <tmp>/outer is not read. Clause 2: with the census root at <tmp>/outer/<name> inside a git repo at <tmp>/outer holding a tracked IOU line, no_iou_stands reports no site from <tmp>/outer. Clause 3: with the live shape <tmp>/cairn/<comp>, both sieves still take <tmp> as the repo and encapsulation_holds still reds a real cross-device import. Horizon: test_transitions' gated crossings stay ~1 s even with the fixture moved back to <tmp>/<name>.",
+    "gates_bound": "code-seam@v2's prove gate: the proof is sealed with its hollow build retaken; on failure it feeds back to TICKETME/FIXME (Laws 3 + 8).",
+    "missing_check": "no_iou_stands' _iou_grep returns [] when the derived repo root has no .git (inspector.py:5121), so under /tmp it was cheap. It still judged the wrong tree whenever a non-cairn census root sat inside a git repo. It is in scope because it is the same derivation. Other root.parent walks in inspector.py (commons = root.parent.parent at :4188) derive the commons, not the repo, and stay out.",
+    "node_class": "code-seam",
+    "questions": "none, because the rule applied already stands in cairn/machines/build_inspector/inspector.py (the proof-coverage scan's guard) and ticket 6ea3a8548493 measured the cost",
+    "task_or_ticket": "ticket",
+    "title": "the inspector judges only the census root's own repo",
+    "watchme": "none, because the live derivation in cairn/machines/build_inspector/inspector.py is unchanged for every root named cairn, and its correctness is its proof (to be laid beside it in cairn/machines/build_inspector/proofs/)",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "One repo-root derivation spelled three ways in inspector.py; two of them read a non-repo as a repo."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "515b905c8699",
+  "skill": "sorted",
+  "title": "the inspector judges only the census root's own repo",
+  "trace_id": "46ca3924c75e",
+  "when": "2026-11-16T10:22:32.175522"
+}
