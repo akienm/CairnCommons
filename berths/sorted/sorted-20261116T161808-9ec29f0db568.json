@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: that the compile needs only the standard library plus the repo on sys.path. Measured 2026-11-16: env -i PATH=/usr/bin:/bin, /usr/bin/python3.14 (no venv), cwd the repo root, copy_to_lab wrote 130 lab files. Second: that yoga's FAILED line is the stub's. The orchestrator relayed it, and a stub python3 reproduces the same line here (gate rc 0, 0 lab files).",
+    "builder_check": "A Haiku builder needs: (1) in recompile_gate.sh, REPO=\"$(cd \"$HERE/../../..\" && pwd)\", with the comment corrected; (2) a shell function in the gate, _gate_python, trying in order ${CAIRN_VENV:-$HOME/.cairn/venv}/bin/python3, then .../Scripts/python.exe (each if -x), then python3, python, py, each only if `\"$c\" -c 'import sys; sys.exit(0 if sys.version_info[0]==3 else 1)'` exits 0. It prints the first that passes, or nothing and returns 1; (3) when it returns 1, the gate appends '<date> recompile-gate FAILED: no Python 3 interpreter found (tried <venv>/bin/python3, <venv>/Scripts/python.exe, python3, python, py)' and exits 0; (4) else it runs the existing -c body with \"$PY\" instead of python3; (5) the proof above, built with cairn.tools.scratch.scratch.scratch_dir for its worlds and the host interpreter read from sys.executable. Siblings to re-run: test_recompile_gate.py, test_a_merge_recompiles_the_lab.py.",
+    "children": "none, because it is one shell file, cairn/tools/intentions_model_compiler/recompile_gate.sh , plus one proof",
+    "collision_check": "f09cd0588ceb (the post-merge gate: never blocks, loud in the record): kept. The gate still exits 0 and records FAILED. RULE 1: the gate does not source cairn/devices/recovery/bootstrap.sh, whose public_interface names only cairn_wire_instances. It carries the order of cairn_python and _cairn_host_python and cites them. This is a distinction recorded, not a collision. 271146bf067d (a runner names sys.executable) is a neighbour on another component.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Proof cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py, 3 teeth, each running the gate under env -i with a scratch PATH, CAIRN_VENV, CAIRN_LOG_DIR, CAIRN_LAB_OUT, CAIRN_COMMONS_ROOT and CAIRN_CODE_ROOT. (1) No venv, python3 a stub that exits 9009, python the host interpreter: the lab gains files and the log holds no FAILED. (2) Every PATH name a stub, and a venv whose bin/python3 is a wrapper that touches a marker then execs the host interpreter: the marker exists and the lab gains files. (3) No venv and every PATH name a stub: exit 0, and the log's FAILED line says no Python 3 interpreter was found. Red at base: all three, because the base runs PATH's python3 (a stub in every tooth) and never the venv's. Horizon: akienyoga9i's recompile-gate.log gains no FAILED line on its next post-merge after the land.",
+    "gates_bound": "bug@v1's prove gate: the proof is sealed with its hollow build retaken; on failure it feeds back to TICKETME/FIXME (Laws 3 + 8).",
+    "missing_check": "Found at this check, not in the intent: the gate's REPO is $HERE/../.., which is the cairn package dir, not the repo root (its own comment says repo root). Measured: from the package dir a host python raises ModuleNotFoundError: No module named 'cairn'. From the repo root it imports. Only the venv's editable install hid it. So the resolver alone would still fail on yoga, and the build also points REPO at $HERE/../../.. . Nothing else is missing: install mode and the hook template are unchanged.",
+    "node_class": "bug",
+    "questions": "none, because the orchestrator's instruction names the fix (the gate resolves the venv's python the way bin does) and cairn/devices/recovery/bootstrap.sh holds the order to cite",
+    "task_or_ticket": "ticket",
+    "title": "the recompile gate runs a python that runs, from the repo root",
+    "watchme": "none, because the gate's whole correctness is what cairn/tools/intentions_model_compiler/recompile_gate.sh writes to its own log, read by this ticket's proof under cairn/tools/intentions_model_compiler/proofs/ beside test_recompile_gate.py ; the yoga horizon is one read of that log after the land",
+    "workflow": "bug@v1: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "recompile_gate.sh had two defects, not one: a bare python3 (the yoga stub), and REPO pointing at the cairn package dir, not the repo root. The venv's editable install hid the second on every Linux box."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "57055424a8c5",
+  "skill": "sorted",
+  "title": "the recompile gate runs a python that runs, from the repo root",
+  "trace_id": "4a6bd01bbb32",
+  "when": "2026-11-16T16:18:08.449434"
+}
