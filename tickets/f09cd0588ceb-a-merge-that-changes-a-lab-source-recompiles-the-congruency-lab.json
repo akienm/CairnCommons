@@ -1,0 +1,80 @@
+{
+  "id": "f09cd0588ceb",
+  "title": "a merge that changes a lab source recompiles the congruency lab",
+  "owning_intention": "cairn/tools/intentions_model_compiler/intention+why.json",
+  "intention": "A git merge into cairn or CairnCommons that changes a lab source (a beside-code intention+why charter or an intentions-not-beside-code entry) pokes recompile_gate.sh, so intentions-congruency-lab matches its sources the moment the merge lands.",
+  "why": "Measured 2026-11-16 (akienasus_cc_0): 9555's merge 28744a27c changed bin/intention+why.json; the lab copy stayed at 33937 bytes against a source of 34344, so test_compiler's test_verify_on_the_real_repo went red and cost 6fb272ba3d64 a walk; q148 recompiled the lab by hand. The house repos carry pre-commit and commit-msg hooks and no post-merge, so no merge has ever poked the gate.",
+  "traces_to": "Law 1 (the model consult reads a current model instead of re-deriving it). Law 9 (a lab drifted by a merge reads red with nothing wrong in the code).",
+  "how": "A tracked post-merge hook beside the compiler reads the names ORIG_HEAD..HEAD changed and pokes recompile_gate.sh when any is a lab source; recompile_gate.sh gains an 'install <repo>' mode that lays the hook. Red-first proof merges in scratch repos.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch cairn/CairnCommons pair with the hook installed, merging a branch that changes a beside-code intention+why charter leaves the lab copy (CAIRN_LAB_OUT) byte-equal to the merged source"
+      },
+      {
+        "n": 2,
+        "claim": "merging a branch that changes no lab source leaves every lab file's bytes and mtime untouched"
+      },
+      {
+        "n": 3,
+        "claim": "recompile_gate.sh install <repo> lays an executable post-merge into $(git rev-parse --git-common-dir)/hooks, a second install leaves it byte-identical, and recompile_gate.sh with no args still compiles as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/intentions_model_compiler/hooks/post-merge (bash) runs 'git diff --name-only ORIG_HEAD HEAD'; when any name ends in 'intention+why.json' or starts with 'intentions-not-beside-code/' it execs the recompile_gate.sh path baked in at install; it always exits 0 and is silent on success (the gate already records failure to its log, Law 7).",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/hooks/post-merge"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+        "cairn/devices/tester/hooks/pre-commit"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: recompile_gate.sh 'install <repo>' writes the hook into the repo's common hooks dir with the gate's absolute path substituted, chmod +x, idempotent; any other first argument (or none) keeps today's compile path unchanged.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof builds temp git repos only (never the house trees), points CAIRN_COMMONS_ROOT, CAIRN_CODE_ROOT, CAIRN_LAB_OUT and CAIRN_LOG_DIR at them, one tooth per clause, PROVES keys '1','2','3'.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/proofs/test_a_merge_recompiles_the_lab.py"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/proofs/test_recompile_gate.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/intentions_model_compiler/hooks/post-merge",
+      "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+      "cairn/tools/intentions_model_compiler/proofs/test_a_merge_recompiles_the_lab.py"
+    ],
+    "out": [
+      "cairn/tools/intentions_model_compiler/compiler.py",
+      "laying the hook on every fleet box (the installer's)",
+      "committing the recompiled lab (the lander's)",
+      "pull --rebase drift (post-rewrite; /intent's read-refresh backstops it)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "9555's merge 28744a27c changed bin/intention+why.json; lab copy 33937 bytes vs source 34344; test_verify_on_the_real_repo red; .git/hooks holds pre-commit and commit-msg only",
+      "how": "akienasus_cc_0's q146 seal log and byte counts; ls of the house repo's git-common-dir hooks on akiendelllinux"
+    }
+  ]
+}
