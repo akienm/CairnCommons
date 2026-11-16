@@ -1,0 +1,81 @@
+{
+  "id": "e9dc9c77f30d",
+  "title": "the artifact hooks install LF on every box",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "Every hook cairn artifact installs reaches .git/hooks as LF bytes, whatever line endings the box's checkout gave its source.",
+  "why": "akiendell_cc_0 measured 2026-11-16 (read-only): cairn/tools/artifact/hooks/pre-commit is CRLF in akiendell's working tree (git ls-files --eol: i/lf w/crlf attr/; core.autocrlf=true in cairn), with no .gitattributes rule (check-attr eol: unspecified); and neither cairn nor CairnCommons there has any hook installed (.git/hooks holds only samples, core.hooksPath unset), so the artifact door runs nowhere on that box today, and install-hook's shutil.copyfile would lay a CRLF hook that bash refuses on $'\\r'. On Linux the same hooks carry no eol attribute either; only cairn/devices/tester/hooks/pre-commit has one (ticket daaf7ac3e4ec).",
+  "traces_to": "Law 4: the artifact door is physics only where its hook runs, and a CRLF hook on a Windows box does not run.",
+  "how": "Two halves, because an attribute alone does not rewrite a working copy already checked out CRLF. (a) .gitattributes gains 'cairn/tools/artifact/hooks/* text eol=lf', beside the tester's line. (b) In cairn/tools/artifact/__main__.py, every hook install (pre-commit, pre-merge-commit, commit-msg) writes the source's bytes with CRLF folded to LF, through one helper, instead of shutil.copyfile. The proof cairn/tools/artifact/proofs/test_the_artifact_hooks_install_lf_on_every_box.py reads the attribute for every file under cairn/tools/artifact/hooks/, checks out this tree's hooks and .gitattributes in a scratch repo cloned with core.autocrlf=true, and calls the installer in-process over a CRLF copy of each source.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "git check-attr reports eol: lf for every file under cairn/tools/artifact/hooks/; red on the base, where it is unspecified"
+      },
+      {
+        "n": 2,
+        "claim": "a scratch clone with core.autocrlf=true of a repo holding this .gitattributes and the artifact hooks checks out every hook with no CR byte; red on the base"
+      },
+      {
+        "n": 3,
+        "claim": "install-hook and install-title-hook, handed CRLF sources, install pre-commit, pre-merge-commit and commit-msg with no CR byte, each equal to its source with CRLF folded to LF, and executable; red on the base, which copies the CR through"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: .gitattributes gains cairn/tools/artifact/hooks/* text eol=lf.",
+      "writes_to": [
+        ".gitattributes"
+      ],
+      "reads": [
+        ".gitattributes"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: every hook install writes the source bytes with CRLF folded to LF, through one helper.",
+      "writes_to": [
+        "cairn/tools/artifact/__main__.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/__main__.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_the_artifact_hooks_install_lf_on_every_box.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      ".gitattributes",
+      "cairn/tools/artifact/__main__.py",
+      "cairn/tools/artifact/proofs/test_the_artifact_hooks_install_lf_on_every_box.py"
+    ],
+    "out": [
+      "cairn/tools/artifact/hooks/* (their bytes are unchanged)",
+      "cairn/devices/tester (its hooks and their eol line are the tester's)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "akiendell_cc_0 measured 2026-11-16 (read-only): cairn/tools/artifact/hooks/pre-commit is CRLF in akiendell's working tree (git ls-files --eol: i/lf w/crlf attr/; core.autocrlf=true in cairn), with no .gitattributes rule (check-attr eol: unspecified); and neither cairn nor CairnCommons there has any hook installed (.git/hooks holds only samples, core.hooksPath unset), so the artifact door runs nowhere on that box today, and install-hook's shutil.copyfile would lay a CRLF hook that bash refuses on $'\\r'.",
+      "how": "akiendell_cc_0 over Git Bash: od -c and file on .git/hooks/pre-commit and the source, ls .git/hooks, git config core.autocrlf, git check-attr eol text, git ls-files --eol"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "on akiendelllinux, git check-attr eol text reports unspecified for cairn/tools/artifact/hooks/pre-commit and pre-merge-commit, and lf for cairn/devices/tester/hooks/pre-commit",
+      "how": "git check-attr eol text on the three hooks"
+    }
+  ]
+}

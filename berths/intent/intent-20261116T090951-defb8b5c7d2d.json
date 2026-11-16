@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered only the attribute: an existing CRLF working copy stays CRLF until the file is rewritten, so the install would still lay CR. Considered installing through git show of the index blob: it ties install to a git index the installer otherwise never reads; folding CRLF on write is one line and covers both.",
+      "hidden_assumption": "That no hook source needs a CR byte on purpose: they are bash scripts, which a CR breaks. And that the boxes then re-run cairn artifact install-hook, named in the READY.",
+      "prior_art": "ticket daaf7ac3e4ec gave the tester's pre-commit its eol=lf line, and 383ac6351996 made the tester's install write bytes (cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py); this carries both to the artifact tool's hooks.",
+      "real_collision": "None: the installed bytes change only where they held a CR, which bash could not run."
+    },
+    "exit": "routed_forward",
+    "falsifier": "cairn/tools/artifact/proofs/test_the_artifact_hooks_install_lf_on_every_box.py: the attribute reads lf for every artifact hook, an autocrlf=true clone checks them out LF, and the installer lays LF from CRLF sources; red on the base. Horizon: akiendell's next install-hook lays a hook bash runs.",
+    "from_idea": "2026-11-16-the-orchestrator-2026-11-16-yes-cast",
+    "how": "Two halves, because an attribute alone does not rewrite a working copy already checked out CRLF. (a) .gitattributes gains 'cairn/tools/artifact/hooks/* text eol=lf', beside the tester's line. (b) In cairn/tools/artifact/__main__.py, every hook install (pre-commit, pre-merge-commit, commit-msg) writes the source's bytes with CRLF folded to LF, through one helper, instead of shutil.copyfile. The proof cairn/tools/artifact/proofs/test_the_artifact_hooks_install_lf_on_every_box.py reads the attribute for every file under cairn/tools/artifact/hooks/, checks out this tree's hooks and .gitattributes in a scratch repo cloned with core.autocrlf=true, and calls the installer in-process over a CRLF copy of each source.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 4: the artifact door is physics only where its hook runs, and a CRLF hook on a Windows box does not run.",
+    "what": "Every hook cairn artifact installs reaches .git/hooks as LF bytes, whatever line endings the box's checkout gave its source."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The artifact door runs nowhere on akiendell today: no hook is installed, and installing from its CRLF checkout would lay a broken one."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "8ab2c56d1526",
+  "skill": "intent",
+  "title": "Every hook cairn artifact installs reaches .git/hooks as LF bytes, whatever line endings the box's checkout gave its sou",
+  "trace_id": "def907975158",
+  "when": "2026-11-16T09:09:51.001079"
+}
