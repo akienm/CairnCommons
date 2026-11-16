@@ -1,0 +1,110 @@
+{
+  "id": "95557c2ed44f",
+  "title": "cairn cleanup clears the finding troubles whose cause is gone",
+  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
+  "intention": "cairn cleanup re-runs the sieve behind each standing finding trouble over the whole repo and clears the troubles whose sieve no longer fires.",
+  "why": "Measured 2026-11-16: nothing schedules the build inspector's whole-repo sweep, and since 044020db63c0 a one-component run never clears. So inspector-new-finding-history-integrity stood after 74b4209b71ee's dirt was committed (17b738522), until a hand ran the 5m25s sweep and cairn trouble drain. A trouble standing after its cause is gone is a record of truth saying something false (Law 7). cairn cleanup ends every voyage, which is when a fix lands, and its one step was the drain.",
+  "traces_to": "Law 7: a record of truth stays true; a trouble whose cause is gone must clear. Law 1: the voyage that fixed it should not leave the clear to a hand re-deriving it.",
+  "how": "inspector.recheck(identities) maps each inspector-new-finding-<sieve> id to its sieve, runs only those sieves over every census component, and sends clear_trouble by exact identity for each sieve with no finding above baseline (the whole-repo reconcile's rule, _standing_finding_ids). --recheck <id>... is its CLI. bin/cmd/cleanup gains a findings step before troubles: it reads cairn trouble live --json and passes the inspector-new-finding-* ids to --recheck, so the drain folds the clears in the same cleanup.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch world holding one cleared cause and one standing cause, the recheck clears only the cleared cause's trouble, by its exact identity, and leaves the standing one"
+      },
+      {
+        "n": 2,
+        "claim": "the recheck runs only the sieves the troubles name, each over every component"
+      },
+      {
+        "n": 3,
+        "claim": "the rule is the whole-repo reconcile's: a sieve firing only at a baselined site clears, and an identity naming no registered sieve is left standing and reported"
+      },
+      {
+        "n": 4,
+        "claim": "cairn cleanup hands the recheck every standing inspector-new-finding-* trouble id and only those, before the drain"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: recheck(identities, root=, baseline_path=) and --recheck in the inspector; returns rechecked, components, cleared, standing, unknown; clears by exact identity via the raiser's clear_trouble.",
+      "writes_to": [
+        "cairn/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/tools/base/diagnostic.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof for clauses 1-3 in a scratch world, scripted census and sieves, recording raiser.",
+      "writes_to": [
+        "cairn/machines/build_inspector/proofs/test_cleanup_clears_only_the_finding_whose_cause_is_gone.py"
+      ],
+      "reads": [
+        "cairn/machines/build_inspector/proofs/test_finding_baseline_reconcile.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: bin/cmd/cleanup gains the findings step before troubles, and its --summarize and --help name it; the bin charter's cleanup entry says two steps.",
+      "writes_to": [
+        "bin/cmd/cleanup",
+        "bin/intention+why.json"
+      ],
+      "reads": [
+        "bin/cmd/cleanup",
+        "bin/intention+why.json"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: a red-first proof for clause 4: a scratch copy of bin/cmd/cleanup beside a stub cairn and a stub inspector module.",
+      "writes_to": [
+        "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py"
+      ],
+      "reads": [
+        "bin/cmd/cleanup"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/build_inspector/inspector.py",
+      "cairn/machines/build_inspector/proofs/test_cleanup_clears_only_the_finding_whose_cause_is_gone.py",
+      "bin/cmd/cleanup",
+      "bin/intention+why.json",
+      "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py"
+    ],
+    "out": [
+      "every other component",
+      "the trouble device's drain and reconcile",
+      "the whole-repo sweep"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "inspector-new-finding-history-integrity stood after its cause was committed in 17b738522; it cleared only after a hand ran the whole-repo sweep (5m25s) and cairn trouble drain",
+      "how": "python3 -m cairn.machines.build_inspector.inspector on the house tree, then cairn trouble live"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "bin/cmd/cleanup has one step, step troubles \"$CAIRN\" trouble drain; no ticket or question sets an inspector cadence",
+      "how": "reading bin/cmd/cleanup; grep of CairnCommons tickets and questions"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "red on the base: all four teeth red (no recheck in the inspector; cleanup called only the drain)",
+      "how": "both proofs under bin/cairn test --exec with inspector.py and bin/cmd/cleanup at origin/inspector-reconcile-only-on-sweep"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "a live recheck of the six standing finding troubles took 33 s in all (component-color 1.6, encapsulation-holds 7.4, diagnostic-mixin 3.0, intention-fidelity 13.9, no-iou-stands 0.1, working-tree-clean 7.0) over 80 components, and every one still stands",
+      "how": "recheck([id]) per id over the worktree with a recording raiser"
+    }
+  ]
+}
