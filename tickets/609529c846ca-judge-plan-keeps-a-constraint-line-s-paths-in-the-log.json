@@ -1,0 +1,84 @@
+{
+  "id": "609529c846ca",
+  "title": "judge_plan keeps a constraint line's paths in the log",
+  "owning_intention": "skills/sail/intention+why.json",
+  "intention": "A plan line judge_plan judges a constraint keeps its writes_to and reads in the ticket log (kind field, field constraint_paths, value {n, writes_to, reads}), and the three tickets that already lost them are re-filled from the plan at each judge commit's parent.",
+  "why": "Measured 2026-11-16: judge_plan turned constraint lines into bare strings and logged their paths nowhere. 149b9a1ab9c4, 044020db63c0 and 95557c2ed44f lost 84 writes_to and 85 reads paths over 9 lines; the writes survived only in bounds.in, the reads nowhere, and 149b's proof read the emptied plan and sealed red. The orchestrator, 2026-11-16: 'agreed, all four in that order... if nothing reads those fields, the re-fill can land with (1)'.",
+  "traces_to": "Law 7: a plan is a record of truth, and a path dropped from it is lost silently. Law 5: the log keeps what the plan no longer carries.",
+  "how": "judge() collects {n, writes_to, reads} for each line judged a constraint that names any path; apply() logs each through ticket_log.append_log after the falsifier line, before rewrite_ticket. The re-fill reads each ticket's plan at its judge commit's parent (e3d18386, 0b001d69, 211dfce0) and appends the same line for every constraint line that named a path, skipping any n already logged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a line naming writes_to or reads judged a constraint leaves exactly one log line, kind field, field constraint_paths, value {n, writes_to, reads} equal to the line's, and its text joins constraints verbatim"
+      },
+      {
+        "n": 2,
+        "claim": "a constraint line naming no paths logs no constraint_paths line, and a refused packet writes nothing"
+      },
+      {
+        "n": 3,
+        "claim": "149b9a1ab9c4, 044020db63c0 and 95557c2ed44f each carry constraint_paths lines, and every path in each one's bounds.in is named by an outcome's writes_to or a constraint_paths line"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: judge() collects the paths of each pathful constraint line and returns them as constraint_paths; apply() logs each as a field line.",
+      "writes_to": [
+        "skills/sail/judge_plan.py"
+      ],
+      "reads": [
+        "skills/sail/judge_plan.py",
+        "cairn/tools/base/ticket_log.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause; clauses 1-2 in a scratch commons as the 4d8a2c6e91f7 proof builds it, clause 3 reads the live commons beside the checkout.",
+      "writes_to": [
+        "skills/sail/proofs/test_a_constraint_line_keeps_its_paths_in_the_log.py"
+      ],
+      "reads": [
+        "skills/sail/proofs/test_a_decisions_plan_is_judged_into_outcomes_at_build_open.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the re-fill, run once from wt-jp/cairn through ticket_log.append_log, writes 9 lines into the three tickets' .log.jsonl in the commons; it lands in the commons commit beside this build.",
+      "writes_to": [],
+      "reads": [
+        "cairn/tools/base/ticket_log.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "skills/sail/judge_plan.py",
+      "skills/sail/proofs/test_a_constraint_line_keeps_its_paths_in_the_log.py"
+    ],
+    "out": [
+      "the store charter's constraints shape",
+      "the 7 tickets whose bounds.in proof path no outcome names (a cast-time gap)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "judge_plan lost both fields in 3 tickets: 149b9a1ab9c4 (77 writes_to, 77 reads), 044020db63c0 (2, 2), 95557c2ed44f (5, 6); the outcomes migrate lost no writes_to",
+      "how": "each judged plan read at its judge commit's parent against its current plan and log (scratchpad jp_refill.py dry run)"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "nothing reads a constraint's paths: hollow.py reads chart decompose writes_to, clearance.py:804 a top-level writes_to, plan.steps the outcomes",
+      "how": "grep of writes_to readers in cairn/tools and skills"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "on the base, clause 1 is red (no constraint_paths line) and clause 3 red; on the fix, clauses 1-2 green and clause 3 red until the re-fill",
+      "how": "the proof run against judge_plan.py at HEAD and in wt-jp"
+    }
+  ]
+}
