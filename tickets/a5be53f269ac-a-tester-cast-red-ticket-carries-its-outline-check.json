@@ -1,0 +1,74 @@
+{
+  "id": "a5be53f269ac",
+  "title": "a tester-cast red ticket carries its outline check",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Every red or orphan ticket the tester casts carries a ran:true outline-check record, written by codemother's published 'cairn outlinecheck <id>' and committed in the same act as the cast.",
+  "why": "Measured 2026-11-15: 133df5f7de08 and 8d6936a7d080 were cast by cairn/devices/tester/red_tickets.py (decisions[0].by = tester), and akienasus's land of each stopped at the BUILDME lane the_ticket_was_checked_against_the_outline because no outline check had run. red_tickets.py never calls outlinecheck.",
+  "traces_to": "Law 4: a rule enforced at BUILDME is satisfied at the door that casts, not by remembering. Outline 10.3.5.1 and /sorted step 5: the check runs right after the cast.",
+  "how": "In ticket_what_is_new, after the casts and before _commit, run bin/cairn outlinecheck <id> (from the code's own checkout) once per cast, sequentially. Pass env CAIRN_ARTIFACT_ROOTS={cairn: repo, CairnCommons: commons top}, plus CAIRN_REHEARSAL_CLAUDE from ROOTS['claude'] when set. On exit 0 or 1, the first stdout line is the record path: add it and each questions_opened <commons>/questions/<id>.json to the commit's named paths. On any other exit or a crash, raise a tester trouble naming the ticket and the exit, and the cast still commits. The 207c proof needs no reader: its scratch repo has no outline, so its checks fail before any read.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a red ticket cast by ticket_what_is_new in a scratch world with an outline and a fake reader carries a ran:true outline-check record, and inspector.buildme_rides_the_outline_check over it names no lack"
+      },
+      {
+        "n": 2,
+        "claim": "the outline-check record rides the cast's own commit and the commons is clean after the run"
+      },
+      {
+        "n": 3,
+        "claim": "a run that casts three tickets makes exactly three reader calls, and no two overlap"
+      },
+      {
+        "n": 4,
+        "claim": "a reader that fails still lands and commits the cast, and raises a tester trouble naming the ticket"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red_tickets runs the published outline check once per cast, sequentially, before the commit. The record and its opened questions join the named paths; a failed check raises a tester trouble and the cast still commits.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/codemother/machines/outline_check/outline_check.py",
+        "cairn/devices/codemother/machines/outline_check/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof builds the 207c world plus an outline and a fake reader script that counts calls and holds a lock file, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_tester_cast_red_ticket_carries_its_outline_check.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_each_run_tickets_its_new_reds_and_orphans.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/proofs/test_a_tester_cast_red_ticket_carries_its_outline_check.py"
+    ],
+    "out": [
+      "every other component; codemother's outline_check is called only through its CLI"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-15",
+      "saw": "133df5f7de08 and 8d6936a7d080 were refused at the BUILDME lane the_ticket_was_checked_against_the_outline; both were cast by the tester",
+      "how": "the orchestrator's relay of akienasus's q59/q61 results; decisions[0].by in both tickets read from commons origin/main"
+    },
+    {
+      "when": "2026-11-15",
+      "saw": "the tester has made 2 cast commits on commons origin/main, each casting 1 ticket",
+      "how": "git log origin/main --format=%s | grep 'tester: ticketed'"
+    }
+  ]
+}
