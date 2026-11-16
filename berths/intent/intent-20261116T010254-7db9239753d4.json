@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: run the backlog pass before serve_forever accepts clients. A client's wiring drain can still overlap a backlog envelope's take, so that only narrows the race. Readiness in inspect_wire (69cd D1) waits for nothing the bus judges. Waiting on the lock in no_receiver closes every path into the judgement.",
+      "hidden_assumption": "That a take and its receipt both happen under the shim's lock. Read: _locked_hook routes every poke through _drain under that lock, and _wire drains under _holding. Measured by the new proof, which goes green only once no_receiver waits.",
+      "prior_art": "_holding is the bus's own wait-for-a-shim mechanism (ticket 445e66f32ba0, 7778e24dd82e). This reuses it at the one judgement it skipped.",
+      "real_collision": "none: 7cb1989e7825 (the backlog pass) and b3386f431ae3 keep their behaviour, and test_mail_without_a_receiver stays 8/8."
+    },
+    "exit": "routed_forward",
+    "falsifier": "The backlog pass run during a wired shim's take returns nothing to the sender, and the envelope is taken once and receipted. Backlog mail nobody answers still returns. 69cd's refusal stops recurring in seals.",
+    "from_idea": "none, because this was measured, not imagined: ticket 69cd150dc116's bounces in /home/akien/.cairn/logs/tester/0/runs/test-a1aa076d088d/sealed/bus-bounces.jsonl and test-cca0686b07c2/sealed/bus-bounces.jsonl (2026-11-16)",
+    "how": "In cairn/devices/cairn/machines/bus/server.py no_receiver, after hold_name finds a shim, hold the addressee's lock (_holding) before re-checking _still_waiting. A red-first proof in the bus's proofs runs return_the_backlog while a wired shim's device is blocked mid-take.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8: an InspectRefused from load, not code, red-seals proofs a peer must lean on (69cd n=5, holding aa3e, 149b and 62a8). Law 7: a bounce of mail that was delivered is a false record.",
+    "what": "The bus never bounces mail that a wired shim is still taking: no_receiver waits out a take under way before it judges the envelope undeliverable."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "69cd's 'could not take the envelope' was the bus's backlog pass bouncing codemother's first ask mid-take on a fresh bus. no_receiver now waits on her lock."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "92ff4e62bd51",
+  "skill": "intent",
+  "title": "The bus never bounces mail that a wired shim is still taking: no_receiver waits out a take under way before it judges th",
+  "trace_id": "dbabb26e3bfd",
+  "when": "2026-11-16T01:02:54.832203"
+}
