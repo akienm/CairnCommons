@@ -1,0 +1,66 @@
+{
+  "id": "c54fd914f05a",
+  "title": "a tester red cast commits by naming its paths",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's red cast commits by naming its paths, so the commons' path check passes it and the next red in the run casts instead of being held.",
+  "why": "Measured 2026-11-16 sealing two red proofs from the component-color-reseals worktree: both casts (f9c7ac6a69ba, 6fb272ba3d64) landed in the worktree's commons and both commits were refused by the commons' pre-commit hook ('artifact check: commit names its paths ... another session's staged work is in this index (index)'). red_tickets._commit stages by name and then runs a plain git commit -q -m, which hands the hook the shared index, and check_shared_index (ticket 23c822fe8095) refuses it. Each run raised RedTicketRefused and left its cast staged; the second proof's run then took that staged cast for another writer's work and held its red (_hold) instead of casting it.",
+  "traces_to": "Law 7 and outline 9.4.2.3.7.5 (reds don't get lost): a red the tester measured lands as a committed ticket, never as staged dirt that also stops the next red.",
+  "how": "In red_tickets._commit the commit step becomes ['commit', '-q', '-m', message, '--', *named]. A red-first proof arms a scratch commons' pre-commit with check_shared_index and casts one red, then two in sequence.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a red cast under the commons' armed path check makes one commons commit carrying the cast, with nothing left staged"
+      },
+      {
+        "n": 2,
+        "claim": "a second red cast after the first in the same process casts and commits too, and nothing is held"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: red_tickets._commit's commit step names its paths: git commit -q -m <message> -- <named>. Stage-by-name and no-push (207c4074b3d5 D7) stand.",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof copies the world of test_red_tickets_asks_the_commons_git_not_the_hooks.py and arms the scratch commons' pre-commit with check_shared_index; one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_cast_red_commits_past_the_armed_path_check.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_red_tickets_asks_the_commons_git_not_the_hooks.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/proofs/test_a_cast_red_commits_past_the_armed_path_check.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/tools/artifact/artifact.py (read, not changed)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "two tester casts in /home/akien/dev/src/wt-ccr/CairnCommons refused at commit with 'commit names its paths'; the second run held its red behind the first's staged cast",
+      "how": "CAIRN_BUS_HOME=<scratch> bin/cairn test --seal over ground_loop test_heartbeat.py, then intentions_model_compiler test_compiler.py, from the component-color-reseals worktree"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof red on the base: tooth 1 RedTicketRefused with the live words, tooth 2 _hold called with the first cast's five staged files",
+      "how": "bin/cairn test --exec over cairn/devices/tester/proofs/test_a_cast_red_commits_past_the_armed_path_check.py in the red-tickets-commit-names-paths worktree"
+    }
+  ]
+}
