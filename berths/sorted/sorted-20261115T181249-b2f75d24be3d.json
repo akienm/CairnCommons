@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: that the readers outside artifact address only the head path, appending or reading recent entries, and none replays the whole file by itself. Six readers name the file by path: build_inspector/inspector.py, tester red_tickets.py and hollow.py, cc scripts prove.sh and close.sh, and the installer. D1 censuses them, and any whole-file replay is routed through artifact.read_journal, the tool's published reader. A second assumption: GitHub's limit is per file, so segments under the bound clear GH001 even though the repo keeps growing.",
+    "builder_check": "A builder needs: (a) read_journal and verify_chain at cairn/tools/artifact/artifact.py:289 and :313, and the appender in the same file; (b) the bound K as a module constant, chosen so a segment stays well under 50 MB (measured 33 MB over 22895 entries, about 1.4 KB per entry, so K = 20000 gives about 28 MB); (c) the segment path, .artifact-journal/<NNNN>.jsonl beside the head, zero-padded and ordered by name; (d) the census of the six path readers (grep for .artifact-journal); (e) the proof fixture, a scratch root with K overridden small. All five are in the how and decisions.",
+    "children": "none, because the change is the appender, read_journal and verify_chain in cairn/tools/artifact/artifact.py, plus a census of the path readers",
+    "collision_check": "0f8aefbba1d0 (a journal line lands at the path even when git replaced it) holds the head path; unchanged. The merge driver b7d2e05a1c93 merges the head; unchanged unless a merge crosses a cut. Law 5 (history past right-now berths in the commons) is a distinction: the journal is a record of truth that verify_chain replays from genesis, not a working-surface history, so sealed segments stay beside it in the repo.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clause 1: a scratch root whose journal passes the bound K is split on append into a sealed .artifact-journal/0001.jsonl and a head, each holding at most K entries, and verify_chain over the root returns no faults. Clause 2: a one-byte edit in the sealed segment makes verify_chain name the fault, and so does a head whose first prev does not equal the segment's last entry sha. Clause 3: read_journal returns every entry in order across segment and head. Horizon: the live cairn journal, on its next append past the bound, splits, and the next Dell push carries no GH001.",
+    "gates_bound": "code-seam@v2's prove gate: a red-first proof under cairn/tools/artifact/proofs/, hollow-sealed; feeds back to TICKETME/FIXME on failure (Laws 3 + 8).",
+    "missing_check": "The cut must be the same on every box. Boxes append concurrently and merge through the journal merge driver (b7d2e05a1c93), so a cut on the local file size would seal different bytes on different boxes and fork the segments. The cut is at a fixed entry count, counted from genesis: entry N*K closes segment N. The merge driver only touches the head, and a merge that crosses a cut is a case the proof must cover.",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator asked for the cast with the design constraint (verify_chain whole across segments), and the remaining choice (K) is measured at cairn/.artifact-journal.jsonl",
+    "task_or_ticket": "ticket",
+    "title": "the artifact journal seals segments at a fixed entry count and verify_chain replays them whole",
+    "watchme": "none, because its correctness is its proof beside cairn/tools/artifact/artifact.py, and the live consumer is the git push of cairn/.artifact-journal.jsonl, whose GH001 line the integrator reads on every push",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The journal cut must be at a fixed entry count from genesis, not at a local file size, or concurrent boxes seal different segments."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "fa719a395d9b",
+  "skill": "sorted",
+  "title": "the artifact journal seals segments at a fixed entry count and verify_chain replays them whole",
+  "trace_id": "73df3789dc73",
+  "when": "2026-11-15T18:12:49.046220"
+}
