@@ -5,7 +5,7 @@
   "intention": "A git merge into the cairn repo runs the same commit door as a commit: the artifact check that blocks, then the reseal.",
   "why": "Measured 2026-11-16: every land on main skipped the artifact check. A land is a non-conflicting git merge, which runs pre-merge-commit and not pre-commit, and neither repo's .git/hooks holds a pre-merge-commit. 7 of the last 40 cairn main commits and 8 of the last 40 commons main commits are merges.",
   "traces_to": "Law 4 and Law 8: the artifact door is physics only if every path into main passes it, and a land is a path into main.",
-  "how": "Add cairn/devices/tester/hooks/pre-merge-commit, carrying the cairn-reseal-door marker. It unsets GIT_INDEX_FILE and execs the installed pre-commit, found with git rev-parse --git-path hooks/pre-commit. This is git's own pre-merge-commit.sample pattern, so there is one door, not a copy. The unset is needed because MERGE_HEAD is written only after this hook runs, so check_shared_index (artifact.py:994) would refuse every land as a shared-index commit. git merge refuses to start over a staged index (measured rc 2), so the index holds only the merge, and with no GIT_INDEX_FILE the check reads that same index as a hand check. install_hook installs both files: it keeps returning the pre-commit path as path, adds paths, and reports installed when either is copied. verify_hook is green only when both are installed, executable and identical to source. The proof builds a scratch repo holding stub doors at cairn/tools/artifact/__main__.py (refuses a staged path containing 'hand-edit', and writes the GIT_INDEX_FILE it saw to a file outside the repo) and cairn/devices/tester/cli.py, plus empty cairn/tools/artifact/artifact.py and cairn/devices/tester/reseal.py so the hook's guards pass. It installs the hooks with install_hook and merges with --no-ff.",
+  "how": "Add cairn/devices/tester/hooks/pre-merge-commit, carrying the cairn-reseal-door marker. It unsets GIT_INDEX_FILE and execs the installed pre-commit, found with git rev-parse --git-path hooks/pre-commit. This is git's own pre-merge-commit.sample pattern, so there is one door, not a copy. The unset is needed because MERGE_HEAD is written only after this hook runs, so check_shared_index (artifact.py:994) would refuse every land as a shared-index commit. git merge refuses to start over a staged index (measured rc 2), so the index holds only the merge, and with no GIT_INDEX_FILE the check reads that same index as a hand check. install_hook installs both files: it keeps returning the pre-commit path as path, adds paths, and reports installed when either is copied. verify_hook is green only when both are installed, executable and identical to source. The proof builds a scratch repo holding stub doors at cairn/tools/artifact/__main__.py (refuses a staged path containing 'hand-edit', and writes the GIT_INDEX_FILE it saw to a file outside the repo) and cairn/devices/tester/cli.py, plus empty cairn/tools/artifact/artifact.py and cairn/devices/tester/reseal.py so the hook's guards pass. It installs the hooks with install_hook and merges with --no-ff. The tester's eol line in .gitattributes widens from cairn/devices/tester/hooks/pre-commit to cairn/devices/tester/hooks/*, so pre-merge-commit checks out LF on a box with core.autocrlf=true (orchestrator, 2026-11-16).",
   "falsifier": {
     "clauses": [
       {
@@ -19,6 +19,10 @@
       {
         "n": 3,
         "claim": "a non-conflicting merge of a clean branch commits, and the door it ran saw no GIT_INDEX_FILE, so the shared-index guard reads it as a hand check"
+      },
+      {
+        "n": 4,
+        "claim": "a scratch clone with core.autocrlf=true, of a repo holding this tree's .gitattributes and the tester's hooks, checks out every tester hook, pre-merge-commit included, with no CR byte; red on de274f95a, where pre-merge-commit checks out CRLF"
       }
     ]
   },
@@ -52,13 +56,24 @@
         "cairn/devices/tester/proofs/test_a_merge_runs_the_commit_door.py"
       ],
       "reads": []
+    },
+    {
+      "n": 4,
+      "text": "D4: the tester's eol line in .gitattributes covers cairn/devices/tester/hooks/*.",
+      "writes_to": [
+        ".gitattributes"
+      ],
+      "reads": [
+        ".gitattributes"
+      ]
     }
   ],
   "bounds": {
     "in": [
       "cairn/devices/tester/hooks/pre-merge-commit",
       "cairn/devices/tester/reseal.py",
-      "cairn/devices/tester/proofs/test_a_merge_runs_the_commit_door.py"
+      "cairn/devices/tester/proofs/test_a_merge_runs_the_commit_door.py",
+      ".gitattributes"
     ],
     "out": [
       "cairn/devices/tester/hooks/pre-commit",
@@ -77,6 +92,16 @@
       "when": "2026-11-16",
       "saw": "inside pre-merge-commit, GIT_INDEX_FILE=.git/index (or the worktree's index) and MERGE_HEAD does not exist; a refused merge leaves MERGE_HEAD and the merge staged; git merge over a staged unrelated file exits 2 without merging",
       "how": "a scratch repo and a scratch worktree with a recording pre-merge-commit hook"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "reseal._install_one folds CR: a CRLF copy of cairn/devices/tester/hooks/pre-merge-commit (31 CRs) installs with 0, byte-equal to the LF source, because read_text reads universal newlines and the write is newline='\\n'; the gap is the checkout, where pre-merge-commit had no eol attribute and an autocrlf=true clone gave it CRLF (tooth 4 red on de274f95a)",
+      "how": "reseal._install_one over a CRLF scratch copy, counting CR bytes; and the tooth 4 run on de274f95a in a detached worktree"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "akiendell has no hooks installed in cairn or CairnCommons (.git/hooks holds only samples, core.hooksPath unset), and core.autocrlf=true in its cairn",
+      "how": "akiendell_cc_0 over Git Bash, read-only"
     }
   ]
 }
