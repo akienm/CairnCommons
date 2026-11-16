@@ -20,5 +20,12 @@
     "dynamic_import": "New rule kind 'dynamic_import' in catches(). AST pattern: ast.Call where func resolves to importlib.import_module or builtins.__import__ \u2014 both are IMPORT STATEMENTS wearing a function-call costume and the AST distinguishes them by their func. The check reds ANY dynamic import of a guarded module (psycopg2, httpx, etc.), same target list as the existing sole_path rules. A dynamic import of an unguarded module is not a sole-path violation and passes. The binding dict from _alias_modules already resolves 'import importlib; importlib.import_module(...)' to the real name.",
     "subprocess": "New rule kind 'subprocess_dial' in catches(). AST pattern: ast.Call where func resolves to subprocess.run / subprocess.Popen / subprocess.call / subprocess.check_output / subprocess.check_call. The check examines the FIRST POSITIONAL ARG: if it is a list literal (ast.List) or a string literal (ast.Constant), scan its elements for guarded target names \u2014 'psql', 'curl' followed by a URL containing the inference host, etc. A COMPUTED argument (a variable, an f-string) is flagged as OPAQUE rather than passed or failed \u2014 it cannot be cleared and it cannot be convicted, and the finding says so. A subprocess running 'git log' or 'python3 -m pytest' is not a sole-path violation. The guarded subprocess targets are DATA beside the guarded import targets: {'binaries': ['psql', 'pg_dump', 'pg_restore'], 'url_fragments': ['11434', 'api/generate', 'api/chat', 'api/tags']}.",
     "where_it_lives": "Both checks live in import_sieve/sieve.py as new branches in catches(). The import_graph already parses every file; the subprocess check reads the SAME ast.parse tree, so no second walk. The sieve's own header gets updated to remove 'subprocess' and 'dynamic import' from the 'WHAT THIS DOES NOT SEE' list."
-  }
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "a live instance of the dynamic-import residue: cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py:51-55 _load() runs cairn/devices/cc/scripts/memory_sync.py through importlib.util.spec_from_file_location (teeth at :88 and :143), a tool's proof executing a device's code; encapsulation_holds returns [] for cairn/tools/windowless_spawn, because it reads only static import statements, while the same proof's static import of cairn.devices.web_server.groundloop.pulse was red (bce45318b2e0's FIXME)",
+      "how": "read the proof at cairn bce45-rebased-on-main @ 3e62b55b5; inspector.encapsulation_holds({'component': 'cairn/tools/windowless_spawn', ...}) over that tree returned []"
+    }
+  ]
 }
