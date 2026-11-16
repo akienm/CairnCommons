@@ -1,0 +1,82 @@
+{
+  "id": "db250e9bf3f9",
+  "title": "a merge into cairn runs the commit door",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A git merge into the cairn repo runs the same commit door as a commit: the artifact check that blocks, then the reseal.",
+  "why": "Measured 2026-11-16: every land on main skipped the artifact check. A land is a non-conflicting git merge, which runs pre-merge-commit and not pre-commit, and neither repo's .git/hooks holds a pre-merge-commit. 7 of the last 40 cairn main commits and 8 of the last 40 commons main commits are merges.",
+  "traces_to": "Law 4 and Law 8: the artifact door is physics only if every path into main passes it, and a land is a path into main.",
+  "how": "Add cairn/devices/tester/hooks/pre-merge-commit, carrying the cairn-reseal-door marker. It unsets GIT_INDEX_FILE and execs the installed pre-commit, found with git rev-parse --git-path hooks/pre-commit. This is git's own pre-merge-commit.sample pattern, so there is one door, not a copy. The unset is needed because MERGE_HEAD is written only after this hook runs, so check_shared_index (artifact.py:994) would refuse every land as a shared-index commit. git merge refuses to start over a staged index (measured rc 2), so the index holds only the merge, and with no GIT_INDEX_FILE the check reads that same index as a hand check. install_hook installs both files: it keeps returning the pre-commit path as path, adds paths, and reports installed when either is copied. verify_hook is green only when both are installed, executable and identical to source. The proof builds a scratch repo holding stub doors at cairn/tools/artifact/__main__.py (refuses a staged path containing 'hand-edit', and writes the GIT_INDEX_FILE it saw to a file outside the repo) and cairn/devices/tester/cli.py, plus empty cairn/tools/artifact/artifact.py and cairn/devices/tester/reseal.py so the hook's guards pass. It installs the hooks with install_hook and merges with --no-ff.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "install_hook installs pre-merge-commit beside pre-commit, LF, executable and equal to its tracked source; verify_hook is green with both and red with pre-merge-commit removed"
+      },
+      {
+        "n": 2,
+        "claim": "a non-conflicting merge of a branch staging a path the door refuses is refused: git merge exits non-zero, HEAD does not move, and the door's refusal is on stderr; red on origin/main, where the merge commits"
+      },
+      {
+        "n": 3,
+        "claim": "a non-conflicting merge of a clean branch commits, and the door it ran saw no GIT_INDEX_FILE, so the shared-index guard reads it as a hand check"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/tester/hooks/pre-merge-commit unsets GIT_INDEX_FILE and execs the installed pre-commit.",
+      "writes_to": [
+        "cairn/devices/tester/hooks/pre-merge-commit"
+      ],
+      "reads": [
+        "cairn/devices/tester/hooks/pre-commit",
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: install_hook and verify_hook cover both hook files; path stays the pre-commit path.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py",
+        "cairn/devices/tester/proofs/test_the_installed_hook_is_lf_on_every_box.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: one proof, a scratch repo with stub doors, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_merge_runs_the_commit_door.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/hooks/pre-merge-commit",
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_a_merge_runs_the_commit_door.py"
+    ],
+    "out": [
+      "cairn/devices/tester/hooks/pre-commit",
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/hooks/pre-commit (the commons' hook, a sibling ticket)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "7 of the last 40 cairn origin/main commits and 8 of the last 40 commons origin/main commits have two parents; .git/hooks in both repos holds only pre-commit and commit-msg",
+      "how": "git log --format=%p -40 origin/main | awk 'NF>1' | wc -l, and ls .git/hooks, in each repo"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "inside pre-merge-commit, GIT_INDEX_FILE=.git/index (or the worktree's index) and MERGE_HEAD does not exist; a refused merge leaves MERGE_HEAD and the merge staged; git merge over a staged unrelated file exits 2 without merging",
+      "how": "a scratch repo and a scratch worktree with a recording pre-merge-commit hook"
+    }
+  ]
+}
