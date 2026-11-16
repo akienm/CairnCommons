@@ -1,0 +1,96 @@
+{
+  "id": "38dc3a0f93b1",
+  "title": "a proof under no component belongs to its home, so its seal stops at the home and reseals with it",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A proof outside cairn/{tools,machines,devices} (under skills/, bin/ or press_office/) belongs to its home, the directory holding its proofs/. Its seal's closure stops at that home, and a commit touching the home reseals it, the same owner rule a component's proofs obey. No dependent-proof run is added at commit or close.",
+  "why": "Measured 2026-11-16 on main 4df676bab: address.component_of returns None for 70 of 793 sealed proofs (31 bin, 2 press_office, 37 across 13 skills). validation_store therefore kept their whole closure, and reseal.proofs_touching dropped every staged file with no owner. test_sail_door's seal named cairn/machines/learning_block/learning_block.py, f64b87bf0f67's commit c0e3f9428 staled it, and nothing could reseal it. 609529c846ca (q164) and 40e40e8e5d53 (q147, test_sorted_probes) each refused at close on its own home's stale seal, a walk apiece. Akien, outline 9.4.2.3.7.1: commit runs the proofs of the component the ticket changed, and his words: \"we do not want to constantly be running tests 'just in case'. we talked about commit tests and broader test groups to happen once a day and once a week depending on the test. we do not run every possible dependent proof.\"",
+  "traces_to": "Law 9 (a seal that cannot reseal reds a later ticket's close) and outline 9.4.2.3.7.1, with Akien's 2026-10-05 answer 'tool proofs: agreed' (foreground-decisions item 7).",
+  "how": "validation_store._owned_by_the_proofs_component: when the proof has no component, its owner is component_root_for(proof), and the closure keeps the proof plus the ownerless files under that home. reseal.proofs_touching: a staged file with no component is owned by the deepest census home holding it. The red-first proof replays test_sail_door and test_sorted_probes.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "closures taken for skills/sail/proofs/test_sail_door.py and skills/sorted/proofs/test_sorted_probes_report_to_the_watch.py, over a raw list naming learning_block.py, diagnostic.py and the skill's own door.py, keep only the proof and that door.py"
+      },
+      {
+        "n": 2,
+        "claim": "a staged skills/sail/door.py selects test_sail_door under a closure seal and under a pre-closure seal, and a staged bin/cmd/trash selects exactly bin's proof"
+      },
+      {
+        "n": 3,
+        "claim": "a staged learning_block.py selects no home's proof, and a staged diagnostic.py selects exactly the tools/base proof"
+      }
+    ]
+  },
+  "fixes": [
+    "skills/sail/proofs/test_sail_door.py",
+    "skills/sorted/proofs/test_sorted_probes_report_to_the_watch.py"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: validation_store._owned_by_the_proofs_component narrows an ownerless proof's closure to its home (component_root_for), keeping only files no component owns, and never the repo root.",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: reseal.proofs_touching owns a staged file with no component by the deepest census home that holds it and itself has no component.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/tester/proofs/test_an_ownerless_proof_reseals_at_its_home.py, one tooth per clause, rows handed in over real paths.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_an_ownerless_proof_reseals_at_its_home.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_change_reseals_only_its_own_components_proofs.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_an_ownerless_proof_reseals_at_its_home.py"
+    ],
+    "out": [
+      "cairn/tools/base/address.py (component_of is not widened)",
+      "the seal and close gates",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "795/795 latest seals carry evidence.fingerprint_closure; test_sail_door's 21-file closure names cairn/machines/learning_block/learning_block.py, and c0e3f9428 changed it",
+      "how": "a census script over validations/*.json on main 4df676bab, plus git show c0e3f9428 --stat"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "70 of 793 census rows have component_of None: 31 bin, 2 press_office, 37 across 13 skills",
+      "how": "reseal.census plus address.component_of over main 4df676bab"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "pre-merge-commit fires on merge --no-ff, but a git add inside it does not land in the merge commit (left staged)",
+      "how": "a scratch git 2.53.0 repo"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof is red at base on teeth 1 and 2; after the build it is 3/3, and test_a_change_reseals_only_its_own_components_proofs.py (4/4) and test_a_seal_reads_only_its_own_components_files.py (4/4) stay green",
+      "how": "PYTHONPATH=. python3 on branch ownerless-seals"
+    }
+  ]
+}
