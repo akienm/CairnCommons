@@ -1,0 +1,80 @@
+{
+  "id": "239740d9db04",
+  "title": "a refused ask names the refusal, not a missing handler",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "When a gate answers a ticket's queueme and refuses, the trouble the ticket raises says the holder refused, in the same words every time, with the holder's reason in its detail, instead of saying no handler took it.",
+  "why": "Measured 2026-11-16: all 12 occurrences of the 9 live ticket-unqueued-*-at-clearance troubles were codemother's clearance gate answering accepted False with a reason, and every why said 'no handler took it'. That is a false record of truth (Law 7): the reason stayed buried in detail.reply.",
+  "traces_to": "Law 7: errors are permanent in records of truth, and a record of truth never collapses an error into a coherent shape.",
+  "how": "In Ticket.queueme's 'if not queued' branch, a reply with accepted False, no is_bounce, no error and a non-empty reason raises the fixed why '<holder> refused it (its reason is in the detail)', and detail.reason carries the reason (outline 3.4.3.2.1/3: a raiser's error is the same words every time, and what varies goes in the details). A bounce or timeout keeps 'no handler took it'. The identity ticket-unqueued-<id>-at-<gate> is unchanged, so 41a5bae3d01b's clear-on-take still works.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a refused reply (accepted False with a reason) raises a why that says the holder refused and does not say 'no handler took it', the same words for two different reasons, with the reason in detail.reason; the ticket is not queued"
+      },
+      {
+        "n": 2,
+        "claim": "a bounce and a timeout still raise a why saying 'no handler took it'"
+      },
+      {
+        "n": 3,
+        "claim": "the refusal raises ticket-unqueued-<id>-at-<gate>, and a later taken ask clears it"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: queueme words a holder's refusal as a fixed refusal why, the reason in detail.reason; bounce and silence keep the old wording; the identity is unchanged.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof scripts the three reply shapes into a scratch ticket, one tooth per clause, after test_a_taken_ticket_clears_its_unqueued_trouble.py.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_refused_ask_names_the_refusal_not_a_missing_handler.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/ticket.py",
+      "cairn/machines/ticket/proofs/test_a_refused_ask_names_the_refusal_not_a_missing_handler.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/devices/codemother"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "9 live ticket-unqueued-*-at-clearance troubles, 12 occurrences, every reply accepted False with a reason (e.g. 'PROVEME crossing refused: component base reds the build_inspector'); none a bounce, none a timeout",
+      "how": "bin/cairn trouble live --json, reading each occurrence's detail.reply"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof red 1/3 on origin/main (tooth 1: the why said 'no handler took it'), green 3/3 with the fix at 44a4d62bf; the 6 other ticket-machine proofs green",
+      "how": "bin/cairn test --exec over each proof in cairn/machines/ticket/proofs/, worktree wt-unq"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "a second defect, not fixed here: a ticket refused on this box and crossed on another never clears this box's raise, since only a later take on the same box clears it",
+      "how": "reading queueme and the live lane's ticket list against origin/main's PROVED states"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the outline check held the first cut, which put the reason in the why, against outline 3.4.3.2.1 and 3.4.3.2.3 (open-b6dd249b40b7, open-a73d9050a100); reworked at c0944b481: fixed why, reason in detail; red 1/3 against origin/main's ticket.py, green 3/3, the 6 other ticket proofs green",
+      "how": "timeout 600 bin/cairn outlinecheck 239740d9db04; bin/cairn test --exec per proof in wt-unq"
+    }
+  ]
+}
