@@ -6,38 +6,6 @@
   "why": "Akien, outline 5.3.5.2.2 (said 2026-11-13): 'the launcher has to ask the shim to create the instance, and so it's the shim's job to say ... we have a cc_0 instance, so I'll launch it with cc_1'. The launcher asks, the shim names, the launcher launches (orchestrator ruling). --new as the flag for 'on purpose, I want another one' is CC's reading of Q#93, not his words. bin/cairn already routes cairn <device>[.<instance>].",
   "traces_to": "RULE 1 (the dispatcher talks to the shim through its public interface) and CP1.",
   "how": "Add --new to the dispatcher's start path: ask the shim (shim.name_instance, ticket d13859e2ae46) for the instance, then run the same routing as cairn <device>.<n> start. The ask mechanism is the build's first decision. Depends on d13859e2ae46 and 0f7a8cada1ca. superclaude is untouched.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "cairn <device> start --new with <device>_0 live asks the shim for the instance and launches <device>.<n> for the number the shim returns, leaving instance 0 untouched"
-      },
-      {
-        "n": 2,
-        "claim": "when the shim refuses a name, the dispatcher exits non-zero with the refusal on stderr and launches nothing"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: --new in bin/cairn's start path asks the shim for the name, then routes <device>.<n>. THE ASK MECHANISM (decided 2026-11-13, a CC mechanism, not Akien's): bin/cairn runs the house venv python (cairn_python, as bin/cmd/question does) on `python -c 'from cairn.tools.base.shim import name_instance; print(name_instance(sys.argv[1]))'` and reads the number from stdout; a refusal (shim.InstanceTaken) is a non-zero exit with its message on stderr and nothing is launched. WHY: name_instance is a module-level function the shim publishes (d13859e2ae46), so calling it through the shim module's public interface keeps RULE 1 (no reaching into shim internals, no globbing instance folders in bash), needs no new shim CLI verb (that would widen the pinned root verb vocabulary and shim.py's bounds), and constructs no shim or instance, which is what a launcher asking before any instance exists needs.",
-      "writes_to": [
-        "bin/cairn"
-      ],
-      "reads": [
-        "bin/cairn"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: one proof on a scratch HOME, one tooth per clause; red first.",
-      "writes_to": [
-        "bin/proofs/test_cairn_start_new_launches_the_instance_the_shim_names.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "bin/cairn",
@@ -76,6 +44,42 @@
       "when": "2026-11-14",
       "saw": "Q#102 refined, same day (open-b71301827a22, Akien: \"yeah basically --new is the explicit smart rotate which does it implicitly if not specified. --name is also supported and overrides all that if specified.\"). Final reading, outline 5.3.5.2.3: --new rotates explicitly to the next undeclared n; no flag starts cc_0 when free and rotates when cc_0 is taken (running); --name <x> uses exactly x, declaring it if absent; the folder commits through the door in the same act. CC inference flagged: a declared-but-stopped cc_0 is simply started. This ticket reshapes to all three spellings, homed at cairn/devices/cc (superclaude). Parked under the usage pace.",
       "how": "his correction, relayed verbatim by orchestrator; recorded at the question door; outline 5.3.5.2.3"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "cairn <device> start --new with <device>_0 live asks the shim for the instance and launches <device>.<n> for the number the shim returns, leaving instance 0 untouched",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "when the shim refuses a name, the dispatcher exits non-zero with the refusal on stderr and launches nothing",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "text": "--new in bin/cairn's start path asks the shim for the name, then routes <device>.<n>. THE ASK MECHANISM (decided 2026-11-13, a CC mechanism, not Akien's): bin/cairn runs the house venv python (cairn_python, as bin/cmd/question does) on `python -c 'from cairn.tools.base.shim import name_instance; print(name_instance(sys.argv[1]))'` and reads the number from stdout; a refusal (shim.InstanceTaken) is a non-zero exit with its message on stderr and nothing is launched. WHY: name_instance is a module-level function the shim publishes (d13859e2ae46), so calling it through the shim module's public interface keeps RULE 1 (no reaching into shim internals, no globbing instance folders in bash), needs no new shim CLI verb (that would widen the pinned root verb vocabulary and shim.py's bounds), and constructs no shim or instance, which is what a launcher asking before any instance exists needs.",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "bin/cairn"
+      ],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "one proof on a scratch HOME, one tooth per clause; red first.",
+      "writes_to": [
+        "bin/proofs/test_cairn_start_new_launches_the_instance_the_shim_names.py"
+      ],
+      "reads": [],
+      "after": []
     }
   ]
 }

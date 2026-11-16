@@ -5,56 +5,6 @@
   "why": "akienasus, idea 2026-11-13-an-outline-check-only-stands-for-the (commons 94b96196), measured 2026-11-13 on akiendelllinux: the BUILDME lane accepted any ran:true record, so ac71d984ebda crossed BUILDME on a check taken before outline commits 66c17d5a6 and 198f4ef24; 64db27776707, 266d, 17d5, 207c and ee4e were all stale. The opposite failure: the integrator's walk re-ran outlinecheck every time and each re-run opened new questions (2a20 gained open-c64761fc30c3, citing 9.4.2.3.7.1, a line added after its first check). The rule lives only in the integrator's scratch script /tmp/akienasus_ocfresh.py on the Dell; it belongs in the machine. The machine's D2 says the outline is 'read on every run, never cached': this does not cache the outline, it hashes it on every call and reuses a RECORD only while the hash still matches.",
   "traces_to": "Law 3 (a check is a measurement of what it read; a stale one is a claim about documents that have since changed), Law 8 (a hollow green gets leaned on) and Law 1 (a settled answer is not re-derived).",
   "how": "Add fresh(ticket, record, root) -> (bool, reason) and fresh_standing(ticket, root): the newest ran:true record, kept only if fresh. check(ticket, reader, root, force=False) returns the fresh standing record with its existing question ids (via _open_what_stands, which is idempotent: it never opens a question twice) without calling the reader; otherwise it runs as today. The CLI gains --force. The plan fields come from <commons>/tickets/_charter+why.json#plan_fields, never a hand list; when the ticket's revisions cannot be read (no git, no matching revision) the record is stale. Spelled again in the sieve (RULE 1: the sieve reads records and cannot import this machine), so the two predicates carry a cross-reference.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "with a ran:true record whose outline_sha256 equals the outline's hash now and whose ticket plan fields equal those of the revision it read, check() returns that record and its question ids, calls the reader zero times and writes no new record; a change to the ticket's state only (its cursor) leaves it fresh"
-      },
-      {
-        "n": 2,
-        "claim": "when the outline's bytes changed, or a plan field of the ticket changed, or no git revision of the ticket hashes to ticket_sha256, check() calls the reader and writes a new record; --force re-runs a fresh one"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: fresh() and fresh_standing() in outline_check.py, plan fields read from the ticket charter; stale when the read revision cannot be found (ee4e's case).",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/outline_check.py"
-      ],
-      "reads": [
-        "cairn/devices/codemother/machines/outline_check/outline_check.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: check() reuses a fresh standing record unless force=True; the CLI gets --force; reuse returns the record's existing question ids through the idempotent _open_what_stands.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/outline_check.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 3,
-      "text": "D3: one proof over a scratch commons (a git repo) and a scratch outline, with a counting fake reader; one tooth per clause; red first.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/proofs/test_a_stale_outline_check_is_rerun_and_a_fresh_one_reused.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 4,
-      "text": "D4: the machine's existing proof follows the new default, in the same component: its tooth 3 (a rerun) and tooth 7 (a second reader's verdict) ask for a re-run with force / --force, because a fresh record is now reused; its fixtures write LF (they were CRLF on Windows and its ticket fixture failed rewrite_ticket); its journal tooth compares the path as posix. Reuse returns the record's OWN question ids and never calls _open_what_stands, which knows only questions still open and would open a new one for a conflict answered since.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
-      ],
-      "reads": [
-        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/codemother/machines/outline_check/outline_check.py",
@@ -83,5 +33,61 @@
   "id": "a3ac9282bdfa",
   "writes_to": [
     "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "with a ran:true record whose outline_sha256 equals the outline's hash now and whose ticket plan fields equal those of the revision it read, check() returns that record and its question ids, calls the reader zero times and writes no new record; a change to the ticket's state only (its cursor) leaves it fresh",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "when the outline's bytes changed, or a plan field of the ticket changed, or no git revision of the ticket hashes to ticket_sha256, check() calls the reader and writes a new record; --force re-runs a fresh one",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "text": "fresh() and fresh_standing() in outline_check.py, plan fields read from the ticket charter; stale when the read revision cannot be found (ee4e's case).",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "check() reuses a fresh standing record unless force=True; the CLI gets --force; reuse returns the record's existing question ids through the idempotent _open_what_stands.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "one proof over a scratch commons (a git repo) and a scratch outline, with a counting fake reader; one tooth per clause; red first.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_a_stale_outline_check_is_rerun_and_a_fresh_one_reused.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "text": "the machine's existing proof follows the new default, in the same component: its tooth 3 (a rerun) and tooth 7 (a second reader's verdict) ask for a re-run with force / --force, because a fresh record is now reused; its fixtures write LF (they were CRLF on Windows and its ticket fixture failed rewrite_ticket); its journal tooth compares the path as posix. Reuse returns the record's OWN question ids and never calls _open_what_stands, which knows only questions still open and would open a new one for a conflict answered since.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_opens_a_question_per_conflict.py"
+      ],
+      "after": []
+    }
   ]
 }

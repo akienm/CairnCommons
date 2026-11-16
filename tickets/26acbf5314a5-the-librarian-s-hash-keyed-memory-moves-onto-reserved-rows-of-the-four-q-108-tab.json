@@ -6,60 +6,6 @@
   "why": "Measured 2026-11-14: T2 (06db586bedfd) moves the trees tool onto the Q#108 schema (outline 4.3.1.5.1.6), but the live memory is still hash-keyed. cairn_nodes holds 46107 rows (44582 hypothesis, 802 refuted, 723 earned), cairn_embeddings 28496, cairn_links 7, and 17 standing leaf tables plus the keyed inferenceproxy_answers_nodes (16246 rows) carry text hash node_ids and no row column. So once the 06db group lands, T2's code reads none of it, and 2b3d842bc118's clause 6 already reds today on 'SELECT max(row) FROM inferenceproxy_answers_nodes' (UndefinedColumn). The seed's migrate_to_row_ids.py was cut from T2 (its D4) because it targeted the seed's cairn_node_rows, not the four tables.",
   "traces_to": "Law 1 (the settled memory is carried, not re-derived), Law 6 (each leaf is written through its owner's gate under its recorded owner), Law 7 (a node or leaf that cannot be mapped is named in the report, never silently dropped); outline 4.3.1.5.1.6 and 4.3.1.5.1.6.11.",
   "how": "Re-shape the seed's migrate_to_row_ids.py onto the four tables. It runs inside the trees tool, so it uses the tool's own doors (reserve, write_node, _hold_content, leaf_tag, link, the list append). It writes tenant leaf tables only through store's owner-gated doors (add_owned_column from the add-column branch eaf98e8ab, add_owned_index(unique=True) from the add-unique-index branch 891004b36, update) under store.owner_of(table). The legacy table names are injectable, so the proof runs it over store.scratch tables in the legacy shapes.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "every legacy node lands as exactly one DATA row in cairn_mem_nodes at a row handed out by trees.reserve(), kind text, its content as payload (or a blob past INLINE_MAX), meta.provenance and meta.standing equal to the legacy row's provenance and standing, and meta.legacy_id the old hash"
-      },
-      {
-        "n": 2,
-        "claim": "confidence is ABSENT: no migrated node's meta has a confidence key, including a legacy node whose provenance carries one (that value stays verbatim inside meta.provenance), and trees.read_node of a migrated node reads unscored"
-      },
-      {
-        "n": 3,
-        "claim": "THE ROW CLAUSE: after --write every standing leaf table, vector and keyed, has a row bigint column whose values are 1..n with no gaps, no nulls and no duplicates, held by a UNIQUE index laid through store.add_owned_index(unique=True) so a second row with the same value is refused; 'SELECT max(row) FROM <keyed leaf>' returns n; each leaf's node_id is the node's address as digits, its old hash is in legacy_node_id, its table tag came from the tag registry at 0x0100 or above, and the node's in list holds that leaf's address; each leaf's leaf_id is rewritten to trees.leaf_id_for(address, new eid), or leaf_id_for(address, key) for a keyed leaf, the old one kept in an additive legacy_leaf_id column"
-      },
-      {
-        "n": 4,
-        "claim": "embeddings and links follow: each legacy embedding whose node maps lands in cairn_mem_embeddings with embedding_id = trees.embedding_id_for(address, render_method) and the node's address (the legacy row stays untouched in cairn_embeddings, its old id readable there); each legacy link lands as one link row through trees.link with its weight and traversals kept; and re-depositing already-migrated content after --write moves neither the embedding count nor the leaf count"
-      },
-      {
-        "n": 5,
-        "claim": "nothing is dropped: the legacy nodes, embeddings and links tables keep their row counts and contents through --write; a leaf table keeps its row count; an embedding, link or leaf whose hash maps to no node is named by id in the report and left untouched"
-      },
-      {
-        "n": 6,
-        "claim": "content already held at an address (a deposit made after T2 landed) maps the legacy hash onto that address and appends the legacy provenance as an attestation; no second node row is laid"
-      },
-      {
-        "n": 7,
-        "claim": "the dry run writes nothing (every new and legacy table's row count is unchanged), and a second --write lays no row, column, index or tag"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: migrate_to_row_ids.py, re-shaped from the seed (94da6412d) onto cairn_mem_nodes/lists/links/blobs, cairn_mem_embeddings, cairn_mem_content_index and cairn_mem_tags. Order: nodes (reserve, write_node, content index, meta.legacy_id), then embeddings, links and leaves (add_owned_column row and legacy_node_id, fill row 1..n in leaf_id order, then add_owned_index(<leaf>, owner, '<leaf>_row_key', ['row'], unique=True), copy the hash, rewrite node_id, leaf_tag, append the leaf address to the node's in list). Scratch-shaped leaf tables are skipped: they are not standing, and ensure_trees refuses them since 1a3a55a314eb. The report is JSON (counts before and after, laid, mapped onto held content, unmapped ids per table). It exits 1 when a legacy table's count moved during the run or a mapped node did not land. --legacy takes a JSON map of table names, for the proof. Ids follow the address: a migrated embedding's id is trees.embedding_id_for(address, render_method) and a leaf's leaf_id is trees.leaf_id_for(address, eid|key), the old leaf id kept in an additive legacy_leaf_id column, so deposit's lid dedupe recognises migrated content.",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/migrate_to_row_ids.py"
-      ],
-      "reads": [
-        "cairn/devices/librarian/tools/trees/trees.py",
-        "cairn/devices/db_domain/tools/client/store.py",
-        "press_office/CairnComponentOutline.txt"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: the red-first proof, one tooth per clause, test_-named, over store.scratch tables only: scratch legacy nodes/embeddings/links tables in the legacy shapes (including a node whose provenance carries confidence, an orphan embedding and a leaf naming an unknown hash), one scratch vector leaf and one scratch keyed leaf. Clause 3's tooth inserts a duplicate row after --write and asserts the refusal. Clause 6 deposits through trees.deposit first. Red before D1 (the module is absent).",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/proofs/test_the_hash_keyed_memory_moves_onto_rows.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/librarian/tools/trees/migrate_to_row_ids.py",
@@ -95,6 +41,79 @@
       "when": "2026-11-14",
       "saw": "trees.deposit (~line 1080 at 883a44679) computes eid = embedding_id_for(nid, method) and lid = leaf_id_for(nid, eid) from the new int address and dedupes a leaf only on lid; with legacy embedding_id and leaf_id kept (hashes of the old text ids), a re-deposit of migrated content would land a second embedding row and a second leaf for the same node",
       "how": "read of trees.py on wt-26ac (883a44679 + 891004b36) by akiendelllinux_cc_0, relayed by message"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "every legacy node lands as exactly one DATA row in cairn_mem_nodes at a row handed out by trees.reserve(), kind text, its content as payload (or a blob past INLINE_MAX), meta.provenance and meta.standing equal to the legacy row's provenance and standing, and meta.legacy_id the old hash",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "confidence is ABSENT: no migrated node's meta has a confidence key, including a legacy node whose provenance carries one (that value stays verbatim inside meta.provenance), and trees.read_node of a migrated node reads unscored",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "THE ROW CLAUSE: after --write every standing leaf table, vector and keyed, has a row bigint column whose values are 1..n with no gaps, no nulls and no duplicates, held by a UNIQUE index laid through store.add_owned_index(unique=True) so a second row with the same value is refused; 'SELECT max(row) FROM <keyed leaf>' returns n; each leaf's node_id is the node's address as digits, its old hash is in legacy_node_id, its table tag came from the tag registry at 0x0100 or above, and the node's in list holds that leaf's address; each leaf's leaf_id is rewritten to trees.leaf_id_for(address, new eid), or leaf_id_for(address, key) for a keyed leaf, the old one kept in an additive legacy_leaf_id column",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "claim": "embeddings and links follow: each legacy embedding whose node maps lands in cairn_mem_embeddings with embedding_id = trees.embedding_id_for(address, render_method) and the node's address (the legacy row stays untouched in cairn_embeddings, its old id readable there); each legacy link lands as one link row through trees.link with its weight and traversals kept; and re-depositing already-migrated content after --write moves neither the embedding count nor the leaf count",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "claim": "nothing is dropped: the legacy nodes, embeddings and links tables keep their row counts and contents through --write; a leaf table keeps its row count; an embedding, link or leaf whose hash maps to no node is named by id in the report and left untouched",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "claim": "content already held at an address (a deposit made after T2 landed) maps the legacy hash onto that address and appends the legacy provenance as an attestation; no second node row is laid",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 7,
+      "claim": "the dry run writes nothing (every new and legacy table's row count is unchanged), and a second --write lays no row, column, index or tag",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 8,
+      "text": "migrate_to_row_ids.py, re-shaped from the seed (94da6412d) onto cairn_mem_nodes/lists/links/blobs, cairn_mem_embeddings, cairn_mem_content_index and cairn_mem_tags. Order: nodes (reserve, write_node, content index, meta.legacy_id), then embeddings, links and leaves (add_owned_column row and legacy_node_id, fill row 1..n in leaf_id order, then add_owned_index(<leaf>, owner, '<leaf>_row_key', ['row'], unique=True), copy the hash, rewrite node_id, leaf_tag, append the leaf address to the node's in list). Scratch-shaped leaf tables are skipped: they are not standing, and ensure_trees refuses them since 1a3a55a314eb. The report is JSON (counts before and after, laid, mapped onto held content, unmapped ids per table). It exits 1 when a legacy table's count moved during the run or a mapped node did not land. --legacy takes a JSON map of table names, for the proof. Ids follow the address: a migrated embedding's id is trees.embedding_id_for(address, render_method) and a leaf's leaf_id is trees.leaf_id_for(address, eid|key), the old leaf id kept in an additive legacy_leaf_id column, so deposit's lid dedupe recognises migrated content.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/migrate_to_row_ids.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py",
+        "cairn/devices/db_domain/tools/client/store.py",
+        "press_office/CairnComponentOutline.txt"
+      ],
+      "after": []
+    },
+    {
+      "n": 9,
+      "text": "the red-first proof, one tooth per clause, test_-named, over store.scratch tables only: scratch legacy nodes/embeddings/links tables in the legacy shapes (including a node whose provenance carries confidence, an orphan embedding and a leaf naming an unknown hash), one scratch vector leaf and one scratch keyed leaf. Clause 3's tooth inserts a duplicate row after --write and asserts the refusal. Clause 6 deposits through trees.deposit first. Red before D1 (the module is absent).",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/proofs/test_the_hash_keyed_memory_moves_onto_rows.py"
+      ],
+      "reads": [],
+      "after": []
     }
   ]
 }

@@ -6,106 +6,6 @@
   "why": "Measured 2026-11-14 on wt-d32f @883a44679 (T2, 06db586bedfd): the trees tool now takes an injected reserver(kind) / reserver('tag', table) and refuses off the home without one (outline 4.3.1.5.1.1), but nothing answers it. No bus verb hands out a slot, and outline 4.3.1.5.1.6.9 asks for blocks, not per-row asks. T2 also deleted node_id_for and link_id_for and moved provenance and standing into meta, and 12 of the 19 librarian device proofs red on it: ImportError on node_id_for/link_id_for, UndefinedColumn on 'node_id = %s' against cairn_mem_nodes, and summarize's region id joining int addresses as str. ingest.py and the standing_moves_under_live_use probe read the provenance and node_id columns that T2 removed.",
   "traces_to": "Law 6 (only the home librarian hands out a slot; a box asks through its gate, the bus verb), Law 1 (one block per round trip, never one per row), Law 8 (the device's proofs are green on the schema it now runs on); outline 4.3.1.5.1.1, 4.3.1.5.1.6.9.",
   "how": "Two new trees doors, reserve_block(kind, count) (home only, each row held NOTCACHED) and hold_reserved(kind, rows) (lays the rows VOID on the asking box). A new device module cairn/devices/librarian/home_reserver.py holds answer(body), the verb's home half, and BlockReserver(ask, block=1000), the asking half. bus_ask(home) reaches the home's librarian over RemoteBus, and for_this_box() returns None on the home and otherwise a BlockReserver over CAIRN_HOME_HOST:lan_port. LibrarianDevice declares the 'reserve' verb and passes self.reserver() to deposit. Each red device file and proof is then repointed onto read_node, meta and int addresses.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "the home's answer to a block ask is count distinct rows, each held NOTCACHED at the home, and the next block shares no row with it; a tag ask is answered from 0x0100 up, the same tag every time for one table"
-      },
-      {
-        "n": 2,
-        "claim": "on a remote box, deposits through a BlockReserver ask the home once per block, land at rows of that block, and leave the block's unused rows VOID on the remote, while the home holds them NOTCACHED and its own next reserve hands out none of them"
-      },
-      {
-        "n": 3,
-        "claim": "a deposit past the block asks for the next block, and no row is handed out twice"
-      },
-      {
-        "n": 4,
-        "claim": "the answer refuses off the home, refuses an unknown kind or a bad count, and a home that answers no rows is refused by the reserver, with nothing landed"
-      },
-      {
-        "n": 5,
-        "claim": "the librarian device declares the reserve verb, routes it to the answer, and its deposits pass the reserver: none on the home, a BlockReserver off it"
-      },
-      {
-        "n": 6,
-        "claim": "librarian device code reads the four tables: ingest's carried calls come from meta.provenance of DATA nodes (an ingested call is not deposited twice), summarize's region id is computed over node addresses, and the standing_moves_under_live_use probe reads a leaf's node through trees.read_node"
-      },
-      {
-        "n": 7,
-        "claim": "every proof under cairn/devices/librarian/proofs is green on the T2 schema, and none of them, and no librarian device module, names node_id_for, link_id_for, or a 'node_id = ' read of the nodes table"
-      },
-      {
-        "n": 8,
-        "claim": "migrate_to_three_tables.py is gone: it imports node_id_for and builds the old hash-keyed cairn_nodes, and T5 (26acbf5314a5) is the migration now"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: trees.reserve_block and trees.hold_reserved, plus BLOCK_KINDS (nodes, lists, links, blobs).",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/trees.py"
-      ],
-      "reads": [
-        "cairn/devices/librarian/tools/trees/trees.py",
-        "press_office/CairnComponentOutline.txt"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: home_reserver.py (answer, BlockReserver, bus_ask, for_this_box); LibrarianDevice gains the 'reserve' verb and reserver(), and deposit passes it.",
-      "writes_to": [
-        "cairn/devices/librarian/home_reserver.py",
-        "cairn/devices/librarian/device.py"
-      ],
-      "reads": [
-        "cairn/tools/bus_client/remote.py",
-        "cairn/tools/bus_client/tls.py"
-      ]
-    },
-    {
-      "n": 3,
-      "text": "D3: repoint the device code: ingest._carried reads meta->'provenance' of DATA nodes; summarize's region id joins str(address); the standing probe reads trees.read_node. Delete migrate_to_three_tables.py.",
-      "writes_to": [
-        "cairn/devices/librarian/ingest.py",
-        "cairn/devices/librarian/summarize.py",
-        "cairn/devices/librarian/probes/standing_moves_under_live_use.py",
-        "cairn/devices/librarian/migrate_to_three_tables.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 4,
-      "text": "D4: repoint the red librarian proofs. A by-node_id read of NODES_TABLE becomes trees.read_node(addr) (content, provenance, standing). A by-content id becomes the address the deposit returned, or trees.already_held(content). A direct standing or provenance update becomes the meta door (corroborate/refute, or write_node over the same row). link_id_for becomes link()'s returned address.",
-      "writes_to": [
-        "cairn/devices/librarian/proofs/test_librarian_ask.py",
-        "cairn/devices/librarian/proofs/test_librarian_chat.py",
-        "cairn/devices/librarian/proofs/test_librarian_library.py",
-        "cairn/devices/librarian/proofs/test_librarian_loop.py",
-        "cairn/devices/librarian/proofs/test_librarian_structure.py",
-        "cairn/devices/librarian/proofs/test_librarian_summarize.py",
-        "cairn/devices/librarian/proofs/test_librarian_trees.py",
-        "cairn/devices/librarian/proofs/test_proactive_callback.py",
-        "cairn/devices/librarian/proofs/test_the_librarian_owns_the_cross_domain_questions.py",
-        "cairn/devices/librarian/proofs/test_the_librarian_proofs_reach_no_device.py",
-        "cairn/devices/librarian/proofs/test_the_probe_reads_the_tree_the_face_writes.py",
-        "cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 5,
-      "text": "D5: the red-first proof of clauses 1-5 over two sets of store.scratch tables (the home's and the remote's), with the trees module's names patched onto whichever box is answering; plus a sweep proof for clauses 6-8 that runs every librarian proof and greps the device for the dead helpers.",
-      "writes_to": [
-        "cairn/devices/librarian/proofs/test_a_box_reserves_its_slots_from_the_home_in_blocks.py",
-        "cairn/devices/librarian/proofs/test_the_librarian_reads_the_four_tables.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/librarian/tools/trees/trees.py",
@@ -150,6 +50,131 @@
       "when": "2026-11-14",
       "saw": "trees._reserve_row and leaf_tag take reserver(kind) and reserver('tag', table) and raise ReserveRefused off the home without one; the librarian device declares only 'ingest'",
       "how": "read of trees.py and device.py at 883a44679"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "the home's answer to a block ask is count distinct rows, each held NOTCACHED at the home, and the next block shares no row with it; a tag ask is answered from 0x0100 up, the same tag every time for one table",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "on a remote box, deposits through a BlockReserver ask the home once per block, land at rows of that block, and leave the block's unused rows VOID on the remote, while the home holds them NOTCACHED and its own next reserve hands out none of them",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "a deposit past the block asks for the next block, and no row is handed out twice",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "claim": "the answer refuses off the home, refuses an unknown kind or a bad count, and a home that answers no rows is refused by the reserver, with nothing landed",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "claim": "the librarian device declares the reserve verb, routes it to the answer, and its deposits pass the reserver: none on the home, a BlockReserver off it",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "claim": "librarian device code reads the four tables: ingest's carried calls come from meta.provenance of DATA nodes (an ingested call is not deposited twice), summarize's region id is computed over node addresses, and the standing_moves_under_live_use probe reads a leaf's node through trees.read_node",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 7,
+      "claim": "every proof under cairn/devices/librarian/proofs is green on the T2 schema, and none of them, and no librarian device module, names node_id_for, link_id_for, or a 'node_id = ' read of the nodes table",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 8,
+      "claim": "migrate_to_three_tables.py is gone: it imports node_id_for and builds the old hash-keyed cairn_nodes, and T5 (26acbf5314a5) is the migration now",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 9,
+      "text": "trees.reserve_block and trees.hold_reserved, plus BLOCK_KINDS (nodes, lists, links, blobs).",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py",
+        "press_office/CairnComponentOutline.txt"
+      ],
+      "after": []
+    },
+    {
+      "n": 10,
+      "text": "home_reserver.py (answer, BlockReserver, bus_ask, for_this_box); LibrarianDevice gains the 'reserve' verb and reserver(), and deposit passes it.",
+      "writes_to": [
+        "cairn/devices/librarian/home_reserver.py",
+        "cairn/devices/librarian/device.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/bus_client/tls.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 11,
+      "text": "repoint the device code: ingest._carried reads meta->'provenance' of DATA nodes; summarize's region id joins str(address); the standing probe reads trees.read_node. Delete migrate_to_three_tables.py.",
+      "writes_to": [
+        "cairn/devices/librarian/ingest.py",
+        "cairn/devices/librarian/summarize.py",
+        "cairn/devices/librarian/probes/standing_moves_under_live_use.py",
+        "cairn/devices/librarian/migrate_to_three_tables.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 12,
+      "text": "repoint the red librarian proofs. A by-node_id read of NODES_TABLE becomes trees.read_node(addr) (content, provenance, standing). A by-content id becomes the address the deposit returned, or trees.already_held(content). A direct standing or provenance update becomes the meta door (corroborate/refute, or write_node over the same row). link_id_for becomes link()'s returned address.",
+      "writes_to": [
+        "cairn/devices/librarian/proofs/test_librarian_ask.py",
+        "cairn/devices/librarian/proofs/test_librarian_chat.py",
+        "cairn/devices/librarian/proofs/test_librarian_library.py",
+        "cairn/devices/librarian/proofs/test_librarian_loop.py",
+        "cairn/devices/librarian/proofs/test_librarian_structure.py",
+        "cairn/devices/librarian/proofs/test_librarian_summarize.py",
+        "cairn/devices/librarian/proofs/test_librarian_trees.py",
+        "cairn/devices/librarian/proofs/test_proactive_callback.py",
+        "cairn/devices/librarian/proofs/test_the_librarian_owns_the_cross_domain_questions.py",
+        "cairn/devices/librarian/proofs/test_the_librarian_proofs_reach_no_device.py",
+        "cairn/devices/librarian/proofs/test_the_probe_reads_the_tree_the_face_writes.py",
+        "cairn/devices/librarian/proofs/test_a_bare_librarian_opens_its_chat.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 13,
+      "text": "the red-first proof of clauses 1-5 over two sets of store.scratch tables (the home's and the remote's), with the trees module's names patched onto whichever box is answering; plus a sweep proof for clauses 6-8 that runs every librarian proof and greps the device for the dead helpers.",
+      "writes_to": [
+        "cairn/devices/librarian/proofs/test_a_box_reserves_its_slots_from_the_home_in_blocks.py",
+        "cairn/devices/librarian/proofs/test_the_librarian_reads_the_four_tables.py"
+      ],
+      "reads": [],
+      "after": []
     }
   ]
 }

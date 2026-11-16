@@ -6,59 +6,6 @@
   "why": "Measured 2026-11-12 on akiendell: test_trim_keeps_the_newest_lines: expected exactly 10 lines after trim, got 201 on Windows; every other case of test_logger_for_bash.py ran green, line-451 trace-wire case included",
   "traces_to": "Law 3: the red was measured at 201 lines on Windows and both teeth ran red on the unedited file; Law 7: a diagnostic surface may fail but must never take down the script it observes (the logger's own charter).",
   "how": "In logtrim replace `flock -x -w 5 9 || exit 0` with: run flock; on rc 127 (not installed) go on unlocked, on rc 1 (timeout) return 0 from the function, never exit. Red-first proof bin/proofs/test_logtrim_trims_without_flock.py shadows flock with a shell function returning 127 and 1: (1) with 127 the 200-line log is cut to 10 and the caller survives; (2) with 1 the caller survives and no line is cut.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "with flock absent (rc 127) logtrim cuts a 200-line log to 10 and the caller shell survives, where the unedited logger leaves 201 and kills the caller"
-      },
-      {
-        "n": 2,
-        "claim": "with flock timing out (rc 1) the caller shell survives and no line is cut, where the unedited logger exits the caller"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: the fix at bin/logger_for_bash, bin/proofs/test_logtrim_trims_without_flock.py",
-      "writes_to": [
-        "bin/logger_for_bash",
-        "bin/proofs/test_logtrim_trims_without_flock.py"
-      ],
-      "reads": [
-        "bin/logger_for_bash"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: one proof, one tooth per clause; red first.",
-      "writes_to": [
-        "bin/proofs/test_logtrim_trims_without_flock.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 3,
-      "text": "re-cross BUILDME and PROVEME on Linux: the Windows crossings (their certs stand in CairnCommons/certificates) never reached main's bin/history.json; no code change",
-      "by": "cc",
-      "step": "FIXME 1",
-      "source": "rehearsal",
-      "at": "2026-11-13T10:43:17+00:00",
-      "writes_to": [],
-      "reads": []
-    },
-    {
-      "n": 4,
-      "text": "take the hollow on Linux after the re-cross (bin/cairn test --hollow b3f999c452a1 --seal); the anchor stays at the first build commit; no code change",
-      "by": "cc",
-      "step": "FIXME 2",
-      "source": "rehearsal",
-      "at": "2026-11-13T10:44:10+00:00",
-      "writes_to": [],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "bin/logger_for_bash",
@@ -238,5 +185,56 @@
         }
       ]
     }
-  }
+  },
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "with flock absent (rc 127) logtrim cuts a 200-line log to 10 and the caller shell survives, where the unedited logger leaves 201 and kills the caller",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "with flock timing out (rc 1) the caller shell survives and no line is cut, where the unedited logger exits the caller",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "text": "the fix at bin/logger_for_bash, bin/proofs/test_logtrim_trims_without_flock.py",
+      "writes_to": [
+        "bin/logger_for_bash",
+        "bin/proofs/test_logtrim_trims_without_flock.py"
+      ],
+      "reads": [
+        "bin/logger_for_bash"
+      ],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "one proof, one tooth per clause; red first.",
+      "writes_to": [
+        "bin/proofs/test_logtrim_trims_without_flock.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "re-cross BUILDME and PROVEME on Linux: the Windows crossings (their certs stand in CairnCommons/certificates) never reached main's bin/history.json; no code change",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "text": "take the hollow on Linux after the re-cross (bin/cairn test --hollow b3f999c452a1 --seal); the anchor stays at the first build commit; no code change",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    }
+  ]
 }

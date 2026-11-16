@@ -6,39 +6,6 @@
   "why": "Akien, outline 5.3.5.2.2 (said 2026-11-13): 'the launcher has to ask the shim to create the instance, and so it's the shim's job to say ... we have a cc_0 instance, so I'll launch it with cc_1'. The launcher asks, the shim names, the launcher launches (orchestrator ruling 2026-11-13); the shim has no per-instance launch path (shim.py:1288 starts the one instance it is), so this ticket is the naming half only. Refusing an explicit live name is CC's reading of Q#93, not his words. Split from b38af5fd1852 under RULE 1; depends on 0f7a8cada1ca.",
   "traces_to": "CP1 (an unroutable duplicate name must be impossible, not tolerated) and outline 5.3.5.2.",
   "how": "Add shim.name_instance(device_id, requested=None, roots=None) -> int. No requested: address.next_free_instance(device_id, roots). requested: return it if address.instances(device_id, roots) does not hold it, else raise InstanceTaken naming it (CC's reading of Q#93). Reads instance folders only through the address tool (0f7a8cada1ca), never by globbing devices/<device>/ in shim.py. One proof over a scratch roots dict, one tooth per clause.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "name_instance(device) with no requested number returns the lowest instance number the device does not have ([0, 2] gives 1, none gives 0), callable without a running shim or instance"
-      },
-      {
-        "n": 2,
-        "claim": "name_instance(device, requested) returns requested when it is free and raises InstanceTaken naming it when that instance already exists, so two never share a name (CC's reading of Q#93, not Akien's words)"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: a module-level name_instance in shim.py that reads instances only through cairn.tools.base.address; InstanceTaken for an explicit live name.",
-      "writes_to": [
-        "cairn/tools/base/shim.py"
-      ],
-      "reads": [
-        "cairn/tools/base/shim.py",
-        "cairn/tools/base/address.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: one proof over a scratch roots dict, one tooth per clause; red first. Needs 0f7a8cada1ca on main first (address.instances / next_free_instance).",
-      "writes_to": [
-        "cairn/tools/base/proofs/test_the_shim_names_the_instance_it_would_take.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/tools/base/shim.py",
@@ -76,6 +43,43 @@
       "when": "2026-11-14",
       "saw": "Q#102 refined, same day (open-b71301827a22, Akien: \"yeah basically --new is the explicit smart rotate which does it implicitly if not specified. --name is also supported and overrides all that if specified.\"). Final reading, outline 5.3.5.2.3: --new rotates explicitly to the next undeclared n; no flag starts cc_0 when free and rotates when cc_0 is taken (running); --name <x> uses exactly x, declaring it if absent; the folder commits through the door in the same act. CC inference flagged: a declared-but-stopped cc_0 is simply started. This ticket is the implicit rotation (no flag, cc_0 running -> cc_1). Plan rewrite parked under the usage pace.",
       "how": "his correction, relayed verbatim by orchestrator; recorded at the question door; outline 5.3.5.2.3"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "name_instance(device) with no requested number returns the lowest instance number the device does not have ([0, 2] gives 1, none gives 0), callable without a running shim or instance",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "name_instance(device, requested) returns requested when it is free and raises InstanceTaken naming it when that instance already exists, so two never share a name (CC's reading of Q#93, not Akien's words)",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "text": "a module-level name_instance in shim.py that reads instances only through cairn.tools.base.address; InstanceTaken for an explicit live name.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/base/address.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "one proof over a scratch roots dict, one tooth per clause; red first. Needs 0f7a8cada1ca on main first (address.instances / next_free_instance).",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_the_shim_names_the_instance_it_would_take.py"
+      ],
+      "reads": [],
+      "after": []
     }
   ]
 }

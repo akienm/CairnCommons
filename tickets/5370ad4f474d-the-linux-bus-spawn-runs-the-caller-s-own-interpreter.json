@@ -6,43 +6,6 @@
   "why": "Measured 2026-11-13 (Linux census): under PATH=/usr/bin:/bin the bare 'python3' at remote.py:214 found the system python, the bus died at bus.py:73 -> store.py:55 import psycopg2 (bus.log), and 29 proofs read 'no bus'.",
   "traces_to": "Law 3 (measured, 29 reds) and CP6 (the spawn's safety is built, not borrowed from PATH).",
   "how": "remote.py:214 (_spawn) and :276 (_setsid) take windowless_spawn.background_python() for argv[0], bound at call time like _detached (:262). A new proof stubs systemd-run/Popen, captures argv from both paths under a PATH with no python3, and asserts argv[0] == sys.executable.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "_spawn's systemd-run argv runs sys.executable, not 'python3', under a PATH holding no python3"
-      },
-      {
-        "n": 2,
-        "claim": "_setsid's Popen argv runs sys.executable under the same PATH"
-      },
-      {
-        "n": 3,
-        "claim": "the tooth reds when either path's argv[0] is put back to 'python3'"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
-      "writes_to": [
-        "cairn/tools/bus_client/remote.py"
-      ],
-      "reads": [
-        "cairn/tools/bus_client/remote.py",
-        "cairn/tools/windowless_spawn/windowless_spawn.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started.",
-      "writes_to": [
-        "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py",
@@ -228,5 +191,49 @@
         "unknowns": "claude"
       }
     }
-  }
+  },
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "_spawn's systemd-run argv runs sys.executable, not 'python3', under a PATH holding no python3",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "_setsid's Popen argv runs sys.executable under the same PATH",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "the tooth reds when either path's argv[0] is put back to 'python3'",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "remote.py _spawn and _setsid bind background_python at call time (ticket 0156856b1fae's lazy import) and use it as argv[0].",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "proof test_the_linux_bus_spawn_runs_the_callers_interpreter.py, one tooth per clause, subprocess stubbed, no bus started.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_the_linux_bus_spawn_runs_the_callers_interpreter.py"
+      ],
+      "reads": [],
+      "after": []
+    }
+  ]
 }

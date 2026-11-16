@@ -6,69 +6,6 @@
   "why": "Orchestrator ruling, 2026-11-14, on a CC mechanism: the tester seal's why is 'a proof's writes reach only scratch'. The Windows seal is STRICTER (measured: a Low subject is DENIED a write to the checkout), and labelling the checkout Low is rejected because it opens the repo to every Low process on the box. So Linux comes up to match, rather than Windows coming down. Measured 2026-11-14: isolation.NoIsolation.wrap binds / writable (--dev-bind / /), so a subject today can write the checkout on Linux.",
   "traces_to": "Law 8 (a proof that dirties the tree it vouches for is not a proof a hollow build couldn't pass), RULE 1 (a ticket's build and its proofs measure only their component; a write to the checkout reaches every component), CP6.",
   "how": "bwrap binds the repo checkout read-only (--ro-bind over the --dev-bind / /) in the tester's Linux seal, so a subject's write into the checkout meets EROFS; the swap and temp stay writable. Red-first: one proof. After the bind is built, D3's whole-suite Linux sweep is the census: every EROFS red it finds is cast as its own red, grouped by component. Sibling of 56b61c10bdbe (orchestrator ruling 2026-11-14: Windows stays stricter, Linux comes up to match).",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "a stand-in proof run under bin/cairn test on Linux that writes a fresh-token file under the checkout it runs from gets OSError EROFS, and no file naming the token exists in the checkout afterwards"
-      },
-      {
-        "n": 2,
-        "claim": "the same stand-in can write its scratch dir and its swapped ~/.cairn (the seal does not only deny)"
-      },
-      {
-        "n": 3,
-        "claim": "a nested bin/cairn test inside a sealed run still runs, inherits the read-only checkout and the swap (c54d744aa9ac), and its own records land in the swap, not in the checkout"
-      },
-      {
-        "n": 4,
-        "claim": "the seal check reports the checkout bind: check_instance_seal's probe attempts a write under the checkout and must get EROFS. If the write is allowed, the seal reads BREACHED, never sealed."
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1 THE BIND: instance_bind_flags (or NoIsolation.wrap, wherever the swap flags are assembled) adds --ro-bind <checkout> <checkout>, where checkout is the git toplevel of the proof's own path, resolved by the tester before the wrap. The order is load-bearing: after --dev-bind / /, and before the swap bind and the venv binds, so a swap or venv under the checkout still binds writable. Git worktrees resolve their own toplevel. The shared .git common dir of a worktree is also bound read-only.",
-      "writes_to": [
-        "cairn/devices/tester/isolation.py"
-      ],
-      "reads": [
-        "cairn/devices/tester/isolation.py",
-        "cairn/devices/tester/device.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2 THE CHECK: the instance-seal probe gains a checkout condition. A write under the checkout must raise EROFS; if it is allowed, the result is BREACHED. The inherited path (_check_inherited_instance_seal) asks the mount table whether the checkout is a read-only mount.",
-      "writes_to": [
-        "cairn/devices/tester/isolation.py"
-      ],
-      "reads": [
-        "cairn/devices/tester/isolation.py"
-      ]
-    },
-    {
-      "n": 3,
-      "text": "D3 THE CENSUS IS THE SWEEP: the orchestrator's count of proofs that write the checkout is taken dynamically. Once D1 is built, the whole suite is swept on Linux (never on Windows), and every red whose output carries EROFS (or PermissionError) on a path under the checkout is listed by component. akienasus casts those as reds, grouped by component. They are fixes, not exemptions (orchestrator ruling 2026-11-14). The static pass (measured below) cannot stand in for this.",
-      "writes_to": [
-        "cairn/devices/tester/proofs/test_a_linux_tester_run_cannot_write_the_checkout.py"
-      ],
-      "reads": [
-        "cairn/devices/tester/device.py"
-      ]
-    },
-    {
-      "n": 4,
-      "text": "D4 THE PROOF: tester/proofs/test_a_linux_tester_run_cannot_write_the_checkout.py holds teeth 1-4, red-first. It runs on Linux with bwrap only, and elsewhere SKIPS LOUDLY, naming the platform.",
-      "writes_to": [
-        "cairn/devices/tester/proofs/test_a_linux_tester_run_cannot_write_the_checkout.py"
-      ],
-      "reads": [
-        "cairn/devices/tester/isolation.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/tester/isolation.py",
@@ -91,6 +28,81 @@
       "when": "2026-11-14",
       "saw": "isolation.py: NoIsolation.wrap with a swap returns bwrap --dev-bind / / + instance_bind_flags(swap): the checkout is writable to the subject.",
       "how": "measured by akienyoga9i_cc_0 on akienyoga9i"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "a stand-in proof run under bin/cairn test on Linux that writes a fresh-token file under the checkout it runs from gets OSError EROFS, and no file naming the token exists in the checkout afterwards",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "the same stand-in can write its scratch dir and its swapped ~/.cairn (the seal does not only deny)",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "a nested bin/cairn test inside a sealed run still runs, inherits the read-only checkout and the swap (c54d744aa9ac), and its own records land in the swap, not in the checkout",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "claim": "the seal check reports the checkout bind: check_instance_seal's probe attempts a write under the checkout and must get EROFS. If the write is allowed, the seal reads BREACHED, never sealed.",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "D1 THE BIND: instance_bind_flags (or NoIsolation.wrap, wherever the swap flags are assembled) adds --ro-bind <checkout> <checkout>, where checkout is the git toplevel of the proof's own path, resolved by the tester before the wrap. The order is load-bearing: after --dev-bind / /, and before the swap bind and the venv binds, so a swap or venv under the checkout still binds writable. Git worktrees resolve their own toplevel. The shared .git common dir of a worktree is also bound read-only.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py",
+        "cairn/devices/tester/device.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 6,
+      "text": "D2 THE CHECK: the instance-seal probe gains a checkout condition. A write under the checkout must raise EROFS; if it is allowed, the result is BREACHED. The inherited path (_check_inherited_instance_seal) asks the mount table whether the checkout is a read-only mount.",
+      "writes_to": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 7,
+      "text": "D3 THE CENSUS IS THE SWEEP: the orchestrator's count of proofs that write the checkout is taken dynamically. Once D1 is built, the whole suite is swept on Linux (never on Windows), and every red whose output carries EROFS (or PermissionError) on a path under the checkout is listed by component. akienasus casts those as reds, grouped by component. They are fixes, not exemptions (orchestrator ruling 2026-11-14). The static pass (measured below) cannot stand in for this.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_linux_tester_run_cannot_write_the_checkout.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 8,
+      "text": "D4 THE PROOF: tester/proofs/test_a_linux_tester_run_cannot_write_the_checkout.py holds teeth 1-4, red-first. It runs on Linux with bwrap only, and elsewhere SKIPS LOUDLY, naming the platform.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_linux_tester_run_cannot_write_the_checkout.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/isolation.py"
+      ],
+      "after": []
     }
   ]
 }

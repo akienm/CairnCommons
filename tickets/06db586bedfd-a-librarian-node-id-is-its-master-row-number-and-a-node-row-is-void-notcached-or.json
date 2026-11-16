@@ -1,102 +1,11 @@
 {
   "id": "06db586bedfd",
-  "title": "the librarian's memory is four row-addressed tables \u2014 nodes, lists, links, blobs \u2014 each row VOID, NOTCACHED or DATA under a gen",
+  "title": "the librarian's memory is four row-addressed tables — nodes, lists, links, blobs — each row VOID, NOTCACHED or DATA under a gen",
   "owning_intention": "cairn/devices/librarian/tools/trees/intention+why.json",
   "intention": "The trees tool holds the Q#108 schema (outline 4.3.1.5.1.6): nodes, lists, links and blobs, each row addressed by node_address (T1, a90747de35d2), carrying a gen and one of three states; reads take a Ref and a stale gen reads Gone; void walks the node's in list; a link is one row held by both endpoints' lists; deposit returns a node address and the node's in list holds the leaf back; meta holds provenance and standing, and confidence is absent until scored.",
   "why": "Akien, Q#108 (2026-11-14, outline 4.3.1.5.1.6): 'nodes have to be fast, really fast. row ids are fastest. for lists of anything, we should stick with row ids.' Q#104 (4.3.1.5.1.2): a node id is its master row number, never a search. Confidence ruled absent until scored (orchestrator, 2026-11-14): an invented default is an unmeasured claim wearing a measurement's clothes (Law 3).",
   "traces_to": "Law 1 (every pointer a direct row fetch); Law 3 (confidence absent until measured); Law 7 (a stale ref reads loud Gone, never the new tenant).",
   "how": "Re-scope of the seed branch ticket-06db-row-ids @94da6412d onto T1's codec. D1: four tables cairn_mem_nodes/lists/links/blobs (row bigint PK = row half of the address, gen int, state CHECK, nodes kind/payload/blob/meta jsonb/out/in/seq; lists owner/items bigint[]/weights real[]/next; links a/b/weight/traversals; blobs kind/bytes), with row CHECKs (state one of three; DATA node has payload or blob; VOID row data cleared; weights length = items length). D2: write/read/void per table; read(Ref) raises Gone on gen mismatch; void bumps gen, walks `in`, removes itself from each source's `out`, clears data. Gap rows NOTCACHED, read-through via injected master-fetch, lowest-VOID reuse and injected home-reserver kept from the seed. D3: link(a,b,w) one link row whose address joins a.out and b.in; linked(); traverse bumps traversals. D4: lists chain to `next` past a chunk size. D5: a payload past the inline size goes to a blob, node.blob its address. D6: seq from one sequence, moved on every node write. D7: deposit/deposit_keyed return a node address; the leaf stores it, and the node's `in` list holds the leaf's address back (leaf addressing per outline 4.3.1.5.1.6.6: each leaf table gains an additive row bigint column and keeps leaf_id; its table tag is assigned at its birth by an injected tag-registry callable the home librarian answers, from 0x0100 upward; tags.json pins only the core four). D8: meta carries provenance and standing; confidence is never written by deposit. D9: dedup through librarian_content_index pending Q#109. D10: repoint test_a_node_without_an_embedding_is_found_by_its_key and every in-tool caller of node_id_for/link_id_for; node_id_for deleted. Migration moves out to T5.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "deposit into a scratch leaf returns a node address whose tag is nodes and whose row reads DATA with kind and payload; the leaf row stores that address, and the node's in list holds the leaf's address; the leaf table carries an additive row bigint column beside leaf_id, and its tag came from the injected tag registry, 0x0100 or above"
-      },
-      {
-        "n": 2,
-        "claim": "a write at row 123 into a node table whose last row is 12 lays rows 13..122 NOTCACHED and row 123 DATA; a read of row 50 with a master-fetch returns the master's data and leaves row 50 DATA locally"
-      },
-      {
-        "n": 3,
-        "claim": "void(a) removes a from the out list of every source named in a's in list, leaves the row VOID with data cleared and gen bumped; read(Ref(a, old gen)) raises Gone, never the next tenant's data; the next home reserve hands that row back before any new row"
-      },
-      {
-        "n": 4,
-        "claim": "on a remote box (CAIRN_HOME_HOST set) reserve asks the injected home-reserver and never mints a row; with none given it refuses naming the home host, and nothing lands"
-      },
-      {
-        "n": 5,
-        "claim": "a state outside VOID/NOTCACHED/DATA, a DATA node with neither payload nor blob, a VOID row still holding data, and a list whose weights length differs from its items, are each refused by the table CHECK and by the write door, naming the field"
-      },
-      {
-        "n": 6,
-        "claim": "link(a, b, w) writes exactly one link row; its address is in a's out list and b's in list; traverse bumps traversals on that one row; linked(a) and linked(b) both name it"
-      },
-      {
-        "n": 7,
-        "claim": "a list past one chunk chains through next and reads back as one ordered sequence of addresses with its weights parallel"
-      },
-      {
-        "n": 8,
-        "claim": "a payload past the inline size lands in a blob of the given kind, the node's blob names its address and its payload is empty, and reading the node returns the bytes"
-      },
-      {
-        "n": 9,
-        "claim": "seq strictly increases across every node write, void included, so a reader asking for rows past seq s gets exactly the rows written after s"
-      },
-      {
-        "n": 10,
-        "claim": "a freshly deposited node's meta carries provenance and standing and has no confidence key, and the node reads as 'unscored'; no write path fills a default"
-      },
-      {
-        "n": 11,
-        "claim": "the same content deposited twice, into two trees, lands one node row (found through librarian_content_index) and two leaves, and the second deposit appends an attestation (held on Q#109)"
-      },
-      {
-        "n": 12,
-        "claim": "test_a_node_without_an_embedding_is_found_by_its_key runs green over the address API, and no name node_id_for remains in the trees tool"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1-D9: the four tables, their CHECKs and doors, Ref/Gone, void-walks-in, links, list chains, blobs, seq, deposit returning an address with the leaf back-pointer, meta without a confidence default, dedup via the content index.",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/trees.py"
-      ],
-      "reads": [
-        "cairn/devices/librarian/tools/trees/trees.py",
-        "cairn/tools/node_address/node_address.py",
-        "cairn/devices/db_domain/tools/client/store.py",
-        "press_office/CairnComponentOutline.txt"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D10: repoint the sibling proof to the address API.",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 3,
-      "text": "The red-first proof, one tooth per clause, over store.scratch tables only (rewritten from the seed's 7 teeth).",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/proofs/test_a_node_id_is_its_master_row_number.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 4,
-      "text": "The seed's migrate_to_row_ids.py leaves this ticket (it moves to T5, re-shaped to the four tables); this ticket deletes it from the branch.",
-      "writes_to": [
-        "cairn/devices/librarian/tools/trees/migrate_to_row_ids.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/librarian/tools/trees/trees.py",
@@ -123,6 +32,133 @@
       "when": "2026-11-14",
       "saw": "Q#109, Q#110 and Q#111 answered by Akien; leaf addresses settled as a CC mechanism at outline 4.3.1.5.1.6.6",
       "how": "akienasus_cc_0: CairnCommons/questions/open-29caf5836f36.json, open-654cda1ea7a6.json, open-8ea0b27c9fcd.json"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "deposit into a scratch leaf returns a node address whose tag is nodes and whose row reads DATA with kind and payload; the leaf row stores that address, and the node's in list holds the leaf's address; the leaf table carries an additive row bigint column beside leaf_id, and its tag came from the injected tag registry, 0x0100 or above",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "a write at row 123 into a node table whose last row is 12 lays rows 13..122 NOTCACHED and row 123 DATA; a read of row 50 with a master-fetch returns the master's data and leaves row 50 DATA locally",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "void(a) removes a from the out list of every source named in a's in list, leaves the row VOID with data cleared and gen bumped; read(Ref(a, old gen)) raises Gone, never the next tenant's data; the next home reserve hands that row back before any new row",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "claim": "on a remote box (CAIRN_HOME_HOST set) reserve asks the injected home-reserver and never mints a row; with none given it refuses naming the home host, and nothing lands",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "claim": "a state outside VOID/NOTCACHED/DATA, a DATA node with neither payload nor blob, a VOID row still holding data, and a list whose weights length differs from its items, are each refused by the table CHECK and by the write door, naming the field",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "claim": "link(a, b, w) writes exactly one link row; its address is in a's out list and b's in list; traverse bumps traversals on that one row; linked(a) and linked(b) both name it",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 7,
+      "claim": "a list past one chunk chains through next and reads back as one ordered sequence of addresses with its weights parallel",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 8,
+      "claim": "a payload past the inline size lands in a blob of the given kind, the node's blob names its address and its payload is empty, and reading the node returns the bytes",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 9,
+      "claim": "seq strictly increases across every node write, void included, so a reader asking for rows past seq s gets exactly the rows written after s",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 10,
+      "claim": "a freshly deposited node's meta carries provenance and standing and has no confidence key, and the node reads as 'unscored'; no write path fills a default",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 11,
+      "claim": "the same content deposited twice, into two trees, lands one node row (found through librarian_content_index) and two leaves, and the second deposit appends an attestation (held on Q#109)",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 12,
+      "claim": "test_a_node_without_an_embedding_is_found_by_its_key runs green over the address API, and no name node_id_for remains in the trees tool",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 13,
+      "text": "D1-D9: the four tables, their CHECKs and doors, Ref/Gone, void-walks-in, links, list chains, blobs, seq, deposit returning an address with the leaf back-pointer, meta without a confidence default, dedup via the content index.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/trees.py"
+      ],
+      "reads": [
+        "cairn/devices/librarian/tools/trees/trees.py",
+        "cairn/tools/node_address/node_address.py",
+        "cairn/devices/db_domain/tools/client/store.py",
+        "press_office/CairnComponentOutline.txt"
+      ],
+      "after": []
+    },
+    {
+      "n": 14,
+      "text": "repoint the sibling proof to the address API.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/proofs/test_a_node_without_an_embedding_is_found_by_its_key.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 15,
+      "text": "The red-first proof, one tooth per clause, over store.scratch tables only (rewritten from the seed's 7 teeth).",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/proofs/test_a_node_id_is_its_master_row_number.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 16,
+      "text": "The seed's migrate_to_row_ids.py leaves this ticket (it moves to T5, re-shaped to the four tables); this ticket deletes it from the branch.",
+      "writes_to": [
+        "cairn/devices/librarian/tools/trees/migrate_to_row_ids.py"
+      ],
+      "reads": [],
+      "after": []
     }
   ]
 }

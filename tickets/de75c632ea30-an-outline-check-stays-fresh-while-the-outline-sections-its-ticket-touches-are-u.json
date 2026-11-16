@@ -5,56 +5,6 @@
   "why": "The orchestrator, 2026-11-14, after a3ac9282bdfa (whole-outline freshness): measured on akiendell 2026-11-13, 384 of the 404 tickets with an outline check are stale on outline change alone, so once a3ac lands nearly every walk re-runs the check, about 384 reader calls, because the outline is edited in place constantly. The outline already says the check reads the ticket 'beside the outline sections it touches' and 'reads the outline as it stands each time, so editing the outline costs nothing' (outline 9.3.5.1, which was 10.3.5.1 when cast: numbers drift); a check should therefore stand for the sections it read, not the whole file. CC's mechanism, decided here and not Akien's.",
   "traces_to": "Law 1 (do not re-derive the settled: an edit elsewhere settled nothing about this ticket), Law 3 (a check is a measurement of what it read) and outline 9.3.5.1; companion to a3ac9282bdfa.",
   "how": "BUILDS STACKED ON a3ac9282bdfa. New records gain `touched_sha256`: sha256 of the touched sections' text as parsed when read, for each touched number in order the entry's number and text and every entry beneath it (numbers starting with n.), joined by newlines (the [Q#n] tags are part of the entry text, so a Q added, removed or reworded on or beneath a touched line changes it). fresh() keeps a3ac's order: whole-outline hash equal -> the outline condition holds; otherwise, if the record has touched_sha256 and at least one touched number, recompute it over the current outline for the same numbers: every number must still resolve and the hash must equal, else stale; a record without touched_sha256, or with no touched numbers, stays stale on any outline change. The ticket plan condition is unchanged.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "an edit to an outline section the ticket does not touch leaves its stored check fresh: check() reuses it with zero reader calls and writes no record"
-      },
-      {
-        "n": 2,
-        "claim": "an edit to a touched section stales it: a changed touched line, a line added beneath it, a [Q#n] added on or beneath it, or a touched number that no longer resolves, re-runs the check; so does a record with no section hash or with no touched number when the outline changed anywhere"
-      },
-      {
-        "n": 3,
-        "claim": "a change to a ticket plan field stales the check even when the outline is unchanged"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: the record carries touched_sha256, written when the read succeeded and touched at least one resolving number; it is an additive record field (the original D11 field list grows by one), no field is removed.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/outline_check.py"
-      ],
-      "reads": [
-        "cairn/devices/codemother/machines/outline_check/outline_check.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: fresh() recomputes the section hash over the current outline for the recorded touched numbers when the whole-outline hash differs. A record with no section hash (every stored record predates the field) derives it from the outline version it read, found in git by its outline_sha256 through one cached `git cat-file --batch` over the outline's history; an outline version that was never committed (the outline is edited in place) cannot be found and the record reads stale. A zero-touch record keeps the whole-outline rule.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/outline_check.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 3,
-      "text": "D3: ACCEPTED GAPS, stated so they are not lost. (a) A NEW outline line elsewhere that the ticket would have touched, or contradicts, is not noticed by a section-scoped check that never saw it; the whole-outline rule caught that and this one does not (mitigation: --force; the integrator's choice). (b) Numbers drift when a section is inserted before a touched one: the touched number then points at another entry, its text differs, and the record reads stale, which is conservative but spends a re-run.",
-      "writes_to": [],
-      "reads": []
-    },
-    {
-      "n": 4,
-      "text": "D4: one proof over a scratch commons that is a git repo, one tooth per clause; red first. The cbf1d333984f sieve spells the same predicate and must follow this change.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/outline_check/proofs/test_an_outline_edit_elsewhere_leaves_a_check_fresh.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/codemother/machines/outline_check/outline_check.py",
@@ -79,5 +29,64 @@
       "how": "census scripts over <commons>/outline_checks with outline_check.fresh() on the stacked branch; a renumbering probe over the same records"
     }
   ],
-  "id": "de75c632ea30"
+  "id": "de75c632ea30",
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "an edit to an outline section the ticket does not touch leaves its stored check fresh: check() reuses it with zero reader calls and writes no record",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "an edit to a touched section stales it: a changed touched line, a line added beneath it, a [Q#n] added on or beneath it, or a touched number that no longer resolves, re-runs the check; so does a record with no section hash or with no touched number when the outline changed anywhere",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "a change to a ticket plan field stales the check even when the outline is unchanged",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "the record carries touched_sha256, written when the read succeeded and touched at least one resolving number; it is an additive record field (the original D11 field list grows by one), no field is removed.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "fresh() recomputes the section hash over the current outline for the recorded touched numbers when the whole-outline hash differs. A record with no section hash (every stored record predates the field) derives it from the outline version it read, found in git by its outline_sha256 through one cached `git cat-file --batch` over the outline's history; an outline version that was never committed (the outline is edited in place) cannot be found and the record reads stale. A zero-touch record keeps the whole-outline rule.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "text": "ACCEPTED GAPS, stated so they are not lost. (a) A NEW outline line elsewhere that the ticket would have touched, or contradicts, is not noticed by a section-scoped check that never saw it; the whole-outline rule caught that and this one does not (mitigation: --force; the integrator's choice). (b) Numbers drift when a section is inserted before a touched one: the touched number then points at another entry, its text differs, and the record reads stale, which is conservative but spends a re-run.",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 7,
+      "text": "one proof over a scratch commons that is a git repo, one tooth per clause; red first. The cbf1d333984f sieve spells the same predicate and must follow this change.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_an_outline_edit_elsewhere_leaves_a_check_fresh.py"
+      ],
+      "reads": [],
+      "after": []
+    }
+  ]
 }

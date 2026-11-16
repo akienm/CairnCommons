@@ -6,26 +6,6 @@
   "why": "Measured 2026-11-14 on akiendell: test_scratch_cannot_outlive_its_process.py reads 4 failed, 2 passed: three of the failures are AttributeError os.fork (lines 127 and 158) and one is test_the_moved_proofs_stay_green (the moved proofs' own bus reds). os.fork does not exist on Windows, so the proofs that simulate a dead minter with a forked child cannot run there, and the Windows sweep (store.process_start read /proc and answered None for every pid) had NO tooth until 5b940b1c4fbe's own proof: the bug stood undetected as long as the only sweep proofs were POSIX-only.",
   "traces_to": "Law 8 (a proof that cannot run on a box proves nothing there), Law 3.",
   "how": "Replace the os.fork child with subprocess.Popen of a small python child that mints the scratch table and exits or is killed, keeping every assertion the proof makes; red-first is the AttributeError today, green once the child is a subprocess and 5b940b1c4fbe's Windows branch is in.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "the three forked-minter teeth run on Windows and read green, over a real sweep"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: the subprocess child replaces os.fork in the proof; every assertion stays.",
-      "writes_to": [
-        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
-      ],
-      "reads": [
-        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
@@ -40,6 +20,26 @@
       "when": "2026-11-14",
       "saw": "test_scratch_cannot_outlive_its_process.py reads 4 failed, 2 passed: three of the failures are AttributeError os.fork (lines 127 and 158) and one is test_the_moved_proofs_stay_green (the moved proofs' own bus reds).",
       "how": "census_sweep_run.py: the proof run plain on a worktree of origin/main and on win-process-start; AttributeError: module 'os' has no attribute 'fork'"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "the three forked-minter teeth run on Windows and read green, over a real sweep",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "text": "the subprocess child replaces os.fork in the proof; every assertion stays.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+      ],
+      "after": []
     }
   ]
 }

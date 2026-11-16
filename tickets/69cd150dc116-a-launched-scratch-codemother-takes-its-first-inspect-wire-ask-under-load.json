@@ -6,45 +6,6 @@
   "why": "Measured 2026-11-14, n=2: the pre-commit reseal of the tester device (commit b7abd000c) sealed test_the_8p_question_opens_beside_records RED at 17:55:56 on that refusal (tooth test_an_unchanged_file_or_another_skip_beside_them_stays_red, inspect 'resolves_to'), while the same proof runs green 3/3 directly with and without that commit; and 7ea59855b1f4's verdict re-run at 15:14:22 was refused on the same text for test_ask_reaches_a_launched_codemother (inspect 'crossing_named_ticket'). A seal that reds on load, not code, is a hollow red the peers cannot lean on.",
   "traces_to": "Law 8 — prove, then trust: a flake makes a seal unleanable; Law 3 — an intermittent verdict is not a measurement of the code it seals.",
   "how": "Reproduce first: N concurrent inspect_wire.launch + ask until the refusal appears on main. Then find why no_receiver's hold_name(codemother, wire=True) on the launched scratch bus returns without the envelope taken, and fix launch's readiness (or its ask) inside inspect_wire. A retry loop in a proof is a plaster and refused. If the cause sits in the bus server (cairn/devices/cairn/machines/bus/server.py), cast a sibling on that component (RULE 1) rather than widening these bounds. Unbuilt: cast with the measurement only (orchestrator, 2026-11-14).",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "a reproduction of concurrent launched-CodeMother asks reds on main with the 'could not take the envelope' refusal"
-      },
-      {
-        "n": 2,
-        "claim": "the same reproduction is green on every run after the build"
-      },
-      {
-        "n": 3,
-        "claim": "test_ask_reaches_a_launched_codemother stays green"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: inspect_wire.launch hands back a CodeMother that takes its first ask (readiness, not retry).",
-      "writes_to": [
-        "cairn/tools/inspect_wire/inspect_wire.py"
-      ],
-      "reads": [
-        "cairn/tools/inspect_wire/inspect_wire.py",
-        "cairn/devices/cairn/machines/bus/server.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: the red-first proof drives concurrent launches and asks, one tooth per clause.",
-      "writes_to": [
-        "cairn/tools/inspect_wire/proofs/test_a_launched_codemother_takes_its_first_ask_under_load.py"
-      ],
-      "reads": [
-        "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/tools/inspect_wire/inspect_wire.py",
@@ -116,6 +77,52 @@
       "when": "2026-11-16",
       "saw": "the cause is in the bus, not inspect_wire: serve's bus-backlog thread runs return_the_backlog beside the first ask, reads codemother's envelope as undelivered while she is still taking it under her shim lock, and no_receiver bounces it. D1 (readiness in inspect_wire) waits for nothing the bus judges. The fix is sibling 5bcba6e06917 (no_receiver waits on the addressee's lock), built at cairn 4846dcb4d",
       "how": "read server.py no_receiver/return_the_backlog/serve; 5bcb's proof reproduces the field's exact refusal on origin/main and is green with the fix"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "a reproduction of concurrent launched-CodeMother asks reds on main with the 'could not take the envelope' refusal",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "the same reproduction is green on every run after the build",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "test_ask_reaches_a_launched_codemother stays green",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "inspect_wire.launch hands back a CodeMother that takes its first ask (readiness, not retry).",
+      "writes_to": [
+        "cairn/tools/inspect_wire/inspect_wire.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/inspect_wire.py",
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "the red-first proof drives concurrent launches and asks, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/inspect_wire/proofs/test_a_launched_codemother_takes_its_first_ask_under_load.py"
+      ],
+      "reads": [
+        "cairn/tools/inspect_wire/proofs/test_ask_reaches_a_launched_codemother.py"
+      ],
+      "after": []
     }
   ]
 }

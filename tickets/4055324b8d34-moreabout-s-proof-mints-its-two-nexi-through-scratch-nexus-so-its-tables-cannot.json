@@ -6,36 +6,6 @@
   "why": "The proof names orient_ma_<pid>_<HHMMSS> tables with nexus_table() at import (lines 50-53) and drops them in _cleanup(); a run killed before its finally leaves both standing with no scratch row, so the sweep can never take them. Measured: three orient_ma tables stand live with no cairn_scratch row.",
   "traces_to": "Law 7 (a proof's leak is loud and swept, never silent); ticket 201a37bf1613 (a scratch table cannot outlive its process).",
   "how": "D1: _NEXUS and _NEXUS_FAR are entered through scratch_nexus('orient_ma'/'orient_far', owner=moreabout.OWNER) on first use inside the run (an ExitStack the _main closes), never at import; _TABLES and _cleanup's hand DROP and registry DELETE go. Every tooth keeps its claim. A new tooth (clause 2) reads store.scratch_rows() while the run holds them and finds both tables registered under this pid.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "every existing tooth of test_chart_moreabout.py runs green over nexi minted by scratch_nexus"
-      },
-      {
-        "n": 2,
-        "claim": "while the run holds them, both nexus tables have a cairn_scratch row under this pid, and no name in the proof mints or drops a table by hand"
-      },
-      {
-        "n": 3,
-        "claim": "a run killed mid-proof (SIGKILL after the first deposit) leaves both tables for the pid sweep: store's sweep drops them on its next run"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: the two nexi come from scratch_nexus; the hand cleanup and the import-time names go; the registry and kill teeth join.",
-      "writes_to": [
-        "skills/moreabout/proofs/test_chart_moreabout.py"
-      ],
-      "reads": [
-        "skills/moreabout/proofs/test_chart_moreabout.py",
-        "cairn/tools/tree/tree.py",
-        "cairn/devices/db_domain/tools/client/store.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "skills/moreabout/proofs/test_chart_moreabout.py"
@@ -56,6 +26,42 @@
       "when": "2026-11-14",
       "saw": "lines 50-53 build _TABLES with nexus_table() at import; _cleanup drops them in _main's finally",
       "how": "read of skills/moreabout/proofs/test_chart_moreabout.py"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "every existing tooth of test_chart_moreabout.py runs green over nexi minted by scratch_nexus",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "while the run holds them, both nexus tables have a cairn_scratch row under this pid, and no name in the proof mints or drops a table by hand",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "a run killed mid-proof (SIGKILL after the first deposit) leaves both tables for the pid sweep: store's sweep drops them on its next run",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "the two nexi come from scratch_nexus; the hand cleanup and the import-time names go; the registry and kill teeth join.",
+      "writes_to": [
+        "skills/moreabout/proofs/test_chart_moreabout.py"
+      ],
+      "reads": [
+        "skills/moreabout/proofs/test_chart_moreabout.py",
+        "cairn/tools/tree/tree.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "after": []
     }
   ]
 }

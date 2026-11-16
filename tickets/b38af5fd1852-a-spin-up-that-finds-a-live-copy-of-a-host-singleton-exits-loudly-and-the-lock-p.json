@@ -6,47 +6,6 @@
   "why": "Measured 2026-11-12 on akiendell: live box: bus.lock held=True and ground_loop run.lock held=True (singleton.held); one bus launcher+child pair (1648->16184) and one ground_loop shim+child pair (23396->4904), no duplicates; the bus child 16184 owns conhost 16980, the ground_loop child 4904 none seen",
   "traces_to": "Law 1 (one claim tool, not one per site); Law 4 (the kernel lock, not a convention); Law 7 (the loser refuses loudly); the orchestrator's note that I-the-command-lazy-inits-the-system.md rejects a host-local lock with no instance name.",
   "how": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/base/singleton.py claim, keyed by cairn instance, and prove each by a second claimant that exits.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "a second ground loop started while the first is live exits 0 with nothing on stdout or stderr and leaves the first running; with --force it kills the old one and holds the claim"
-      },
-      {
-        "n": 2,
-        "claim": "the ground loop's lock path contains the cairn instance segment (devices/cairn/0/...), not a host-global path"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: --force is guard.force_claim (kills the record's pid, retries the claim); the runner _claim returns (claim, exit_code); the loser's exit is 0 and silent; a failed --force is loud, exit 3 (EXIT_FORCE_FAILED).",
-      "writes_to": [
-        "cairn/devices/cairn/machines/ground_loop/guard.py",
-        "cairn/devices/cairn/machines/ground_loop/__main__.py"
-      ],
-      "reads": [
-        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: ground_loop's own proof moves with it: test_the_doors_loser_exits_zero_and_says_nothing replaces the exit-3 tooth (PROVES bae622881f03 clause 7), and the no-takeover tooth now expects exit 0 and silence.",
-      "writes_to": [
-        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
-      ],
-      "reads": []
-    },
-    {
-      "n": 3,
-      "text": "D3: one new proof, one tooth per clause.",
-      "writes_to": [
-        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
-      ],
-      "reads": []
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/cairn/machines/ground_loop/guard.py",
@@ -92,5 +51,51 @@
     "cairn/devices/cairn/machines/ground_loop/__main__.py",
     "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
     "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "a second ground loop started while the first is live exits 0 with nothing on stdout or stderr and leaves the first running; with --force it kills the old one and holds the claim",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "the ground loop's lock path contains the cairn instance segment (devices/cairn/0/...), not a host-global path",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "text": "--force is guard.force_claim (kills the record's pid, retries the claim); the runner _claim returns (claim, exit_code); the loser's exit is 0 and silent; a failed --force is loud, exit 3 (EXIT_FORCE_FAILED).",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/guard.py",
+        "cairn/devices/cairn/machines/ground_loop/__main__.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "ground_loop's own proof moves with it: test_the_doors_loser_exits_zero_and_says_nothing replaces the exit-3 tooth (PROVES bae622881f03 clause 7), and the no-takeover tooth now expects exit 0 and silence.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
+      ],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "one new proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+      ],
+      "reads": [],
+      "after": []
+    }
   ]
 }

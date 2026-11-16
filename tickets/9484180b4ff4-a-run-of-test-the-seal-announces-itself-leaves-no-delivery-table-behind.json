@@ -6,42 +6,6 @@
   "why": "Measured 2026-11-14 on akiendell's cairn database: 24 tables named seal_ann_<pid>_<n>_delivery stand, owner bus, 0 rows, no cairn_scratch row, and their transit tables (seal_ann_<pid>_<n>) are gone. REPRODUCED ON DEMAND: one run of the proof (venv python, bare) took the count from 21 to 24, three leaked _delivery tables per run, which is the three fixture buses its teeth open (_fixture_bus -> scratch_bus('seal_ann')). A plain scratch_bus used and exited leaks nothing (measured: bus._ensure() and a post, then the exit: zero tables left), so the leak is specific to how this proof uses the bus. The same class was measured on 2026-09-06 (2,424 orphan _delivery tables, ticket 201a37bf1613, whose fix registers the companion at _ensure); this is a path that fix does not reach. Nothing in the proof reads the database after itself, so nothing noticed for as many runs as the 24 tables.",
   "traces_to": "Law 4 (a proof must not outlive its run: the scratch door exists for this), Law 9 (a green proof that litters the database is green over a leak).",
   "how": "Step 1, the bisect, recorded in the ticket's measured: run each tooth alone and list seal_ann_* before and after, to find which fixture path creates a _delivery table that is never registered as a scratch companion (candidates: the CLI child's own BusDevice on the same table name running _ensure after the parent's family is dropped; _SCRATCH never closed; the tell path). Step 2, the fix where the bisect lands: in the proof's fixture if it is the fixture (the bus is entered and closed per tooth, and the child never holds the table past it); the ticket is split into the store or the bus's own ticket if the bisect lands there, per RULE 1. Step 3, a new proof with one tooth that counts tables named seal_ann_% before and after one run of the leaking proof's three fixture shapes, and asserts the difference is zero. Red-first: the tooth reds today with a difference of 3.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "after one full run of test_the_seal_announces_itself, the number of tables whose name starts seal_ann_ is the same as before it (today: +3)"
-      },
-      {
-        "n": 2,
-        "claim": "a bus the fixture opens and the run kills mid-way leaves its delivery companion to the next sweep, not to nobody: a _delivery table with no cairn_scratch row is named by the new tooth as an orphan"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: the bisect and its fix at the leaking fixture path, inside the tester's own proof.",
-      "writes_to": [
-        "cairn/devices/tester/proofs/test_the_seal_announces_itself.py"
-      ],
-      "reads": [
-        "cairn/devices/tester/proofs/test_the_seal_announces_itself.py",
-        "cairn/devices/cairn/machines/bus/bus.py",
-        "cairn/devices/db_domain/tools/client/store.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: the new proof, one tooth per clause, reading the database's table list before and after.",
-      "writes_to": [
-        "cairn/devices/tester/proofs/test_a_seal_announcement_run_leaves_no_table_behind.py"
-      ],
-      "reads": [
-        "cairn/devices/tester/proofs/test_the_seal_announces_itself.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/tester/proofs/test_the_seal_announces_itself.py",
@@ -73,6 +37,46 @@
       "when": "2026-11-14",
       "saw": "UNMEASURED: which of the proof's three fixture buses, and which path inside it, creates the unregistered _delivery table; whether Linux leaks the same (the count above is Windows only)",
       "how": "hypothesis, labelled; the bisect is step 1"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "after one full run of test_the_seal_announces_itself, the number of tables whose name starts seal_ann_ is the same as before it (today: +3)",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "a bus the fixture opens and the run kills mid-way leaves its delivery companion to the next sweep, not to nobody: a _delivery table with no cairn_scratch row is named by the new tooth as an orphan",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "text": "the bisect and its fix at the leaking fixture path, inside the tester's own proof.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_seal_announces_itself.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_the_seal_announces_itself.py",
+        "cairn/devices/cairn/machines/bus/bus.py",
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "the new proof, one tooth per clause, reading the database's table list before and after.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_seal_announcement_run_leaves_no_table_behind.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_the_seal_announces_itself.py"
+      ],
+      "after": []
     }
   ]
 }

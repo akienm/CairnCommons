@@ -6,44 +6,6 @@
   "why": "The librarian row-id migration (T5) gives 39 leaf tables a `row bigint` column. The row is the identity (Q#104, outline 4.3.1.5.1.6: node ids are master row numbers), so a duplicate row is a wrong-data read the database should refuse, not a convention. The ADD-COLUMN door takes a bare type and cannot carry UNIQUE by design, so the guarantee rides the index door, the one the store already has for an owner-gated index.",
   "traces_to": "Law 4 (identity enforced by the database, not by a caller), Law 6 (the owner alone gates its table's schema), Law 7 (a duplicate is refused loudly).",
   "how": "D1: a keyword `unique` on add_owned_index; CREATE UNIQUE INDEX IF NOT EXISTS; before it, a pg_class/pg_index read of the name: standing with a different uniqueness raises SchemaChangeRefused (never a silent IF NOT EXISTS no-op that leaves a non-unique index where a unique one was asked for). A build over duplicate rows lets Postgres's own UniqueViolation raise (the statement is atomic: no index is left). NULLs stay distinct under a unique index, so a column still being filled is unconstrained until it is. D2: a proof, three teeth.",
-  "falsifier": {
-    "clauses": [
-      {
-        "n": 1,
-        "claim": "the owner's unique index refuses a second row holding the same value, accepts distinct values, and asking again is a no-op; NULLs stay distinct"
-      },
-      {
-        "n": 2,
-        "claim": "a non-owner is refused with OwnershipError and no index exists afterwards"
-      },
-      {
-        "n": 3,
-        "claim": "a name standing as a non-unique index asked for as unique raises SchemaChangeRefused and stays non-unique; a unique build over rows holding a duplicate raises and leaves no index"
-      }
-    ]
-  },
-  "decisions": [
-    {
-      "n": 1,
-      "text": "D1: the unique keyword and the standing-index check in add_owned_index.",
-      "writes_to": [
-        "cairn/devices/db_domain/tools/client/store.py"
-      ],
-      "reads": [
-        "cairn/devices/db_domain/tools/client/store.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: the proof, one tooth per clause, over scratch tables the store drops at exit.",
-      "writes_to": [
-        "cairn/devices/db_domain/proofs/test_a_unique_index_through_the_door_refuses_a_duplicate_row.py"
-      ],
-      "reads": [
-        "cairn/devices/db_domain/proofs/test_an_owned_index_is_owner_gated.py"
-      ]
-    }
-  ],
   "bounds": {
     "in": [
       "cairn/devices/db_domain/tools/client/store.py",
@@ -70,6 +32,51 @@
       "when": "2026-11-14",
       "saw": "UNMEASURED: that every one of the 39 leaf tables is free of duplicate row values at migration time (a duplicate makes the build raise, by design); T5's own measurement",
       "how": "hypothesis, labelled"
+    }
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "the owner's unique index refuses a second row holding the same value, accepts distinct values, and asking again is a no-op; NULLs stay distinct",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "a non-owner is refused with OwnershipError and no index exists afterwards",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 3,
+      "claim": "a name standing as a non-unique index asked for as unique raises SchemaChangeRefused and stays non-unique; a unique build over rows holding a duplicate raises and leaves no index",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 4,
+      "text": "the unique keyword and the standing-index check in add_owned_index.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 5,
+      "text": "the proof, one tooth per clause, over scratch tables the store drops at exit.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_a_unique_index_through_the_door_refuses_a_duplicate_row.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_an_owned_index_is_owner_gated.py"
+      ],
+      "after": []
     }
   ]
 }
