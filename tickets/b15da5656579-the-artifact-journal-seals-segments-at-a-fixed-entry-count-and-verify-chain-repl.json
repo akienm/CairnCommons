@@ -1,0 +1,83 @@
+{
+  "id": "b15da5656579",
+  "title": "the artifact journal seals segments at a fixed entry count and verify_chain replays them whole",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "A root's artifact journal stays under GitHub's per-file limits as it grows: past a fixed entry count the head seals into an ordered segment, and read_journal and verify_chain replay segments then head as one unbroken chain from genesis.",
+  "why": "Measured 2026-11-15: the Dell push of cairn/.artifact-journal.jsonl was 50.04 MB and GitHub warned GH001 (the hard refusal is at 100 MB); on akiendelllinux the same file is 33 MB over 22895 entries. The journal is the who/when record of every record write, and one growing file is a push GitHub will refuse. The orchestrator grepped the corpus and found no ticket on journal size or rotation.",
+  "traces_to": "Law 7: errors are permanent in records of truth, and a record of truth that cannot be pushed is lost off the box. Law 4: the bound is enforced by the appending door, not by remembering to trim.",
+  "how": "The head keeps its path, .artifact-journal.jsonl, so every appender and path reader keeps working. When an append makes entry N*K (counted from genesis, so every box cuts at the same entry), artifact moves the head's entries into .artifact-journal/<NNNN>.jsonl (zero-padded, ordered by name) and starts a new head whose first entry's prev is the sealed segment's last entry sha. read_journal and verify_chain read the sealed segments in name order, then the head. K is a module constant chosen to keep a segment well under 50 MB (about 1.4 KB per entry measured, so K = 20000 gives about 28 MB). The build censuses the six path readers and routes any whole-file replay through read_journal. A red-first proof builds a scratch root with K overridden small.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a scratch root whose journal passes the bound K is split on append into a sealed .artifact-journal/0001.jsonl and a head, each holding at most K entries, and verify_chain over the root returns no faults"
+      },
+      {
+        "n": 2,
+        "claim": "a one-byte edit in the sealed segment makes verify_chain name a fault, and so does a head whose first prev does not equal the sealed segment's last entry sha"
+      },
+      {
+        "n": 3,
+        "claim": "read_journal returns every entry in order across the sealed segments and the head, equal to the entries appended"
+      },
+      {
+        "n": 4,
+        "claim": "two roots that append the same entries cut at the same entry and seal byte-identical segments"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the appender in artifact.py seals the head into .artifact-journal/<NNNN>.jsonl when an append makes entry N*K from genesis; read_journal and verify_chain read the segments in name order, then the head.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: census the readers that name .artifact-journal by path (build_inspector/inspector.py, tester red_tickets.py and hollow.py, cc scripts prove.sh and close.sh, the installer). A reader that replays the whole file is routed through read_journal. A reader of the head only is left alone and named in the proof's why. A reader outside artifact that must change is a ticket of its own (RULE 1), cast from the census.",
+      "writes_to": [],
+      "reads": [
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/tester/hollow.py",
+        "cairn/devices/cc/scripts/prove.sh",
+        "cairn/devices/cc/scripts/close.sh",
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof builds a scratch root with K overridden small, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_the_journal_seals_segments_and_the_chain_replays_whole.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/proofs/test_the_journal_seals_segments_and_the_chain_replays_whole.py"
+    ],
+    "out": [
+      "every other component; a path reader that must change is its own ticket"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-15",
+      "saw": "cairn/.artifact-journal.jsonl at 50.04 MB with GitHub GH001 on the Dell push",
+      "how": "the integrator's git push output, relayed by the orchestrator"
+    },
+    {
+      "when": "2026-11-15",
+      "saw": "33 MB, 22895 entries in cairn/.artifact-journal.jsonl on akiendelllinux",
+      "how": "ls -la and wc -l in the wt-207c-dell checkout"
+    }
+  ]
+}

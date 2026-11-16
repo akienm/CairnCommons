@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: git LFS for the journal (adds a service dependency; GitHub is hosting-only per the project), and gzip of old lines (still one growing file). A rotation that keeps the head's path is the smallest change: the path readers (inspector.py, tester red_tickets.py and hollow.py, cc prove.sh and close.sh, the installer) and the merge driver all address the head.",
+      "hidden_assumption": "That nothing reads the whole journal by path. The path readers above may replay it themselves rather than calling read_journal; the build must census them (grep for .artifact-journal) and route any whole-file reader through read_journal, or the cut hides old entries from it.",
+      "prior_art": "In house: ticket 0f8aefbba1d0 (a journal line lands at the path even when git replaced it) and the journal merge driver b7d2e05a1c93 both assume one file; the orchestrator grepped the corpus and found no journal size or rotation ticket. In the field, this is log rotation with a hash-chained ledger: the seal carries the last hash forward, as in Certificate Transparency's tree heads.",
+      "real_collision": "None real. The merge driver merges the head and would be unchanged. A sealed segment is immutable, so two boxes splitting at different points would collide; that is a distinction the build must settle (split at a deterministic entry count, not on the local file size)."
+    },
+    "exit": "routed_forward",
+    "falsifier": "A scratch journal past the bound is split into a sealed segment plus a head, each under the bound, and verify_chain over the root returns no faults. Editing one byte of the sealed segment, or the head's first prev, makes verify_chain name the fault at the seam. The live journal on a box past the bound is split on its next append, and the push carries no GH001 warning.",
+    "from_idea": "none, because this was measured, not imagined: the GitHub GH001 large-file warning on the Dell push of cairn/.artifact-journal.jsonl at 50.04 MB (relayed by the orchestrator 2026-11-15; 33 MB, 22895 lines on akiendelllinux the same day), owned by cairn/tools/artifact/artifact.py",
+    "how": "The journal at a root becomes segmented. The head stays at .artifact-journal.jsonl, so every appender and path reader keeps working. When the head passes a byte bound, artifact seals it into .artifact-journal/<NNNN>.jsonl, and the new head's first entry chains prev to the sealed segment's last entry sha. read_journal and verify_chain read the sealed segments in order, then the head. A red-first proof in cairn/tools/artifact/proofs builds a scratch root over the bound and shows the chain replays whole across the cut, and that a broken link at the seam is named.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 (errors are permanent in records of truth): the journal is the who/when record of every record write, and a push GitHub refuses at 100 MB loses it. Law 4: the bound is enforced by the door that appends, not by remembering to trim.",
+    "what": "cairn's artifact journal stays under GitHub's per-file limits as it grows, with verify_chain still replaying one unbroken chain from genesis."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "cairn/.artifact-journal.jsonl: 50.04 MB on the Dell push (GH001 warns at 50 MB, refuses at 100 MB); 33 MB, 22895 lines here."
+    },
+    {
+      "stratum": "code",
+      "text": "Split at a deterministic entry count so every box seals the same segment bytes; a size-based cut would fork the segments across boxes."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "75317b7addcd",
+  "skill": "intent",
+  "title": "cairn's artifact journal stays under GitHub's per-file limits as it grows, with verify_chain still replaying one unbroke",
+  "trace_id": "7b98ecee059e",
+  "when": "2026-11-15T18:12:19.117966"
+}
