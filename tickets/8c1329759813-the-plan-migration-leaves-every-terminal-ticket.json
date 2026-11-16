@@ -1,0 +1,97 @@
+{
+  "id": "8c1329759813",
+  "title": "the plan migration leaves every terminal ticket",
+  "owning_intention": "cairn/machines/rehearsal/intention+why.json",
+  "intention": "The plan migration selects only tickets still in flight: a ticket whose cursor stands at a terminal is never opened for write. The terminal set is the class definition's (path ends plus dispositions) united with the grammar's TERMINAL_STATES.",
+  "why": "Measured 2026-11-16: plan_migration._proved called a ticket open whenever its workflow lacked '[PROVED]'. On the house commons that selected 264 tickets, 52 of them at a terminal cursor (38 SUPERSEDED, 11 RETIRED, 3 DROPPED). akienasus's dry run over its commons would have rewritten 26 terminal tickets (21 SUPERSEDED, 2 RETIRED, 3 DROPPED). A terminal ticket's plan is a record of a finished voyage, not work to migrate.",
+  "traces_to": "Law 5: a finished voyage's record is not rewritten. Law 1: the terminal set is read from the class, not kept as a second hardcoded list.",
+  "how": "In cairn/machines/rehearsal/plan_migration.py, _proved becomes _terminal: parse the ticket's workflow (parse_workflow), load its class with transitions.load_class_def(root=<root>/node_classes), and treat the last state of each workflow version plus the class's dispositions, united with workflow_grammar.TERMINAL_STATES, as terminal. A class with no definition refuses the run. aa3e's proof world copies the live node_classes in, as a real commons carries them.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a scratch commons with one code-seam ticket each at PROVED, SUPERSEDED, RETIRED, DROPPED, KILLED and ABSORBED plus one at BUILDME selects only the BUILDME ticket, dry and live, and every terminal ticket's files are byte-identical after the live run"
+      },
+      {
+        "n": 2,
+        "claim": "a scratch class's own path end is terminal (its ticket is left alone), while a state neither the class nor the grammar calls terminal is selected"
+      },
+      {
+        "n": 3,
+        "claim": "a ticket whose class has no definition under the commons refuses the run, naming the class"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: migrate's selector reads each class's terminal set (path ends plus dispositions) from <root>/node_classes, united with workflow_grammar.TERMINAL_STATES.",
+      "writes_to": [
+        "cairn/machines/rehearsal/plan_migration.py"
+      ],
+      "reads": [
+        "cairn/machines/rehearsal/plan_migration.py",
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/workflow_grammar.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof in a scratch commons, one tooth per clause.",
+      "writes_to": [
+        "cairn/machines/rehearsal/proofs/test_the_migration_leaves_every_terminal_ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/rehearsal/proofs/test_every_open_plan_takes_the_outcomes_shape.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: aa3e's proof world copies the live node_classes in.",
+      "writes_to": [
+        "cairn/machines/rehearsal/proofs/test_every_open_plan_takes_the_outcomes_shape.py"
+      ],
+      "reads": [
+        "cairn/machines/rehearsal/proofs/test_every_open_plan_takes_the_outcomes_shape.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/rehearsal/plan_migration.py",
+      "cairn/machines/rehearsal/proofs/test_the_migration_leaves_every_terminal_ticket.py",
+      "cairn/machines/rehearsal/proofs/test_every_open_plan_takes_the_outcomes_shape.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/tools/base/workflow_grammar.py's TERMINAL_STATES"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "264 tickets selected by _proved on the house commons, 52 at a terminal cursor (38 SUPERSEDED, 11 RETIRED, 3 DROPPED); 212 with the class terminal sets; 1072 of 1072 workflows parse; no unknown class",
+      "how": "a read-only script over ~/dev/src/CairnCommons/tickets calling plan_migration._plans and _proved"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "akienasus's dry run would rewrite 26 terminal tickets (21 SUPERSEDED, 2 RETIRED, 3 DROPPED)",
+      "how": "akienasus's report migpre/dry.json, relayed by the orchestrator"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the new proof red 3/3 on origin/main, green 3/3 with the fix; aa3e's proof green 9/9 with node_classes in its world",
+      "how": "bin/cairn test --exec in worktree wt-mig"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "the class-only selector (e59b5b818) still selected 3 terminal tickets on the house commons: 0524c3b8b379 (code-seam KILLED), 7f69c66ebc14 (bug KILLED), feb8bda8adf4 (code-seam ABSORBED); with the grammar's TERMINAL_STATES united in, the dry run selects 208, matching akienasus's census",
+      "how": "akienasus's dry run of e59b5b818 (migpre/dry8c.json, mig_check.py), and migrate(dry_run=True) over ~/dev/src/CairnCommons in worktree wt-mig"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "separate finding, not fixed here: no node class (bug, code-seam, concept-piece, host-seam, skill) declares KILLED or ABSORBED in its dispositions, though the grammar calls both terminal and live tickets stand at them",
+      "how": "reading dispositions in ~/dev/src/CairnCommons/node_classes/*.json against workflow_grammar.TERMINAL_STATES"
+    }
+  ]
+}
