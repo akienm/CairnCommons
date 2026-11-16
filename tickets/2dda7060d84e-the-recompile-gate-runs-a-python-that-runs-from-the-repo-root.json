@@ -1,0 +1,76 @@
+{
+  "id": "2dda7060d84e",
+  "title": "the recompile gate runs a python that runs, from the repo root",
+  "owning_intention": "cairn/tools/intentions_model_compiler/intention+why.json",
+  "intention": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then python3, python, py), so a stub python3 or an absent venv never stops the lab from recompiling.",
+  "why": "On akienyoga9i, python3 is the MS Store stub and ~/.cairn/venv is absent, so every post-merge poke logs 'recompile-gate FAILED' and the lab never regenerates (orchestrator, 2026-11-16). Reproduced here: under a stub python3 the gate exits 0, logs the stub's message, and writes 0 lab files. A second defect sits behind it: REPO is $HERE/../.., the cairn package dir, and from there a python with no venv cannot import cairn. Only the venv's editable install hid that.",
+  "traces_to": "Law 7 (the FAILED line is permanent in the record and repeats on every merge) and Law 1 (/intent consults the lab, so a lab that never recompiles makes the next mind re-derive the settled).",
+  "how": "In recompile_gate.sh, point REPO at $HERE/../../.., and add a resolver carrying the order of cairn/devices/recovery/bootstrap.sh's cairn_python and _cairn_host_python. It is cited, not sourced: recovery publishes only cairn_wire_instances (RULE 1). When none runs, the gate exits 0 and logs FAILED naming the candidates tried. Red-first proof beside test_recompile_gate.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with no venv, python3 on PATH a stub that exits 9009 and python the host interpreter, the gate writes the lab and its log gains no FAILED line"
+      },
+      {
+        "n": 2,
+        "claim": "with every PATH name a stub and a venv whose bin/python3 is a wrapper over the host interpreter, the gate runs the wrapper and writes the lab"
+      },
+      {
+        "n": 3,
+        "claim": "with no venv and every PATH name a stub, the gate exits 0 and logs a FAILED line saying no Python 3 interpreter was found"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: recompile_gate.sh sets REPO to $HERE/../../.. (the repo root, as its comment already says). A _gate_python function tries ${CAIRN_VENV:-$HOME/.cairn/venv}/bin/python3, then .../Scripts/python.exe (each if executable), then python3, python, py (each only if it runs `import sys; sys.exit(0 if sys.version_info[0]==3 else 1)` and exits 0). It runs the existing compile body with that interpreter. With none, it appends '<date> recompile-gate FAILED: no Python 3 interpreter found (tried ...)' and exits 0. Install mode and hooks/post-merge are unchanged.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+        "cairn/devices/recovery/bootstrap.sh"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof runs the gate under env -i in scratch worlds (cairn.tools.scratch.scratch.scratch_dir), with PATH of stub scripts plus links to sys.executable, and with CAIRN_VENV, CAIRN_LOG_DIR, CAIRN_LAB_OUT, CAIRN_COMMONS_ROOT and CAIRN_CODE_ROOT set. One tooth per clause; PROVES keys 1..3. Siblings re-run: test_recompile_gate.py, test_a_merge_recompiles_the_lab.py.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/proofs/test_recompile_gate.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+      "cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+    ],
+    "out": [
+      "cairn/devices/recovery/bootstrap.sh (cited, not sourced or changed)",
+      "cairn/tools/intentions_model_compiler/hooks/post-merge",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "under PATH with python3 a stub (exit 9009) and python the host 3.14, no venv: gate rc 0, log 'recompile-gate FAILED: Python was not found; run without arguments to install from the Microsoft Store', 0 lab files",
+      "how": "a scratchpad script running recompile_gate.sh under env -i with CAIRN_VENV, CAIRN_LOG_DIR and CAIRN_LAB_OUT pointed at scratch"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "with no venv, from the cairn package dir, /usr/bin/python3.14 raises ModuleNotFoundError: No module named 'cairn'; from the repo root copy_to_lab writes 130 lab files",
+      "how": "env -i PATH=/usr/bin:/bin in each directory over the wt-ygr worktree pair"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "in the same stub world, bootstrap.sh's cairn_python answers python",
+      "how": "env -i bash sourcing cairn/devices/recovery/bootstrap.sh and calling cairn_python"
+    }
+  ]
+}
