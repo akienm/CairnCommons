@@ -72,5 +72,181 @@
       "saw": "in the same stub world, bootstrap.sh's cairn_python answers python",
       "how": "env -i bash sourcing cairn/devices/recovery/bootstrap.sh and calling cairn_python"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "2dda7060d84e: the recompile gate runs a python that runs, from the repo root in cairn/tools/intentions_model_compiler/recompile_gate.sh (home: cairn/tools/intentions_model_compiler)",
+      "intent": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then python3, python, py), so a stub python3 or an absent venv never stops the lab from recompiling.",
+      "scope": "in: cairn/tools/intentions_model_compiler/recompile_gate.sh, cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py; out: cairn/devices/recovery/bootstrap.sh (cited, not sourced or changed), cairn/tools/intentions_model_compiler/hooks/post-merge, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+          "cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+        ],
+        "out": [
+          "cairn/devices/recovery/bootstrap.sh (cited, not sourced or changed)",
+          "cairn/tools/intentions_model_compiler/hooks/post-merge",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what cairn/tools/intentions_model_compiler/recompile_gate.sh does today against the ticket's measurement"
+      ],
+      "holdings": [
+        {
+          "what": "the standing code the build reads: bootstrap.sh",
+          "address": "cairn/devices/recovery/bootstrap.sh"
+        },
+        {
+          "what": "the standing code the build reads: test_recompile_gate.py",
+          "address": "cairn/tools/intentions_model_compiler/proofs/test_recompile_gate.py"
+        },
+        {
+          "what": "the standing code the build reads: recompile_gate.sh",
+          "address": "cairn/tools/intentions_model_compiler/recompile_gate.sh"
+        }
+      ],
+      "absences": [
+        {
+          "what": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then py",
+          "measure": "under PATH with python3 a stub (exit 9009) and python the host 3.14, no venv: gate rc 0, log 'recompile-gate FAILED: Python was not found; run without arguments to install from the Microsoft Store', 0 lab files (a scratchpad script running recompile_gate.sh under env -i with CAIRN_VENV, CAIRN_LOG_DIR and CAIRN_LAB_OUT pointed at scratch)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1: recompile_gate.sh sets REPO to $HERE/../../.. (the repo root, as its comment already says). A _gate_python function tries ${CAIRN_VENV:-$HOME/.cairn/venv}/b",
+          "why": "On akienyoga9i, python3 is the MS Store stub and ~/.cairn/venv is absent, so every post-merge poke logs 'recompile-gate FAILED' and the lab never regenerates (orchestrator, 2026-11-16). Reproduced here: under a stub python3 the gate exits 0, logs the stub's message, and writes 0 lab files. A second ",
+          "kind": "build",
+          "fills": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then py",
+          "uses": [
+            "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+            "cairn/devices/recovery/bootstrap.sh"
+          ],
+          "writes_to": [
+            "cairn/tools/intentions_model_compiler/recompile_gate.sh"
+          ]
+        },
+        {
+          "what": "D2: the proof runs the gate under env -i in scratch worlds (cairn.tools.scratch.scratch.scratch_dir), with PATH of stub scripts plus links to sys.executable, an",
+          "why": "On akienyoga9i, python3 is the MS Store stub and ~/.cairn/venv is absent, so every post-merge poke logs 'recompile-gate FAILED' and the lab never regenerates (orchestrator, 2026-11-16). Reproduced here: under a stub python3 the gate exits 0, logs the stub's message, and writes 0 lab files. A second ",
+          "kind": "build",
+          "fills": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then py",
+          "uses": [
+            "cairn/tools/intentions_model_compiler/proofs/test_recompile_gate.py"
+          ],
+          "writes_to": [
+            "cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1: recompile_gate.sh sets REPO to $HERE/../../.. (the repo root, as its comment already says). A _gate_python function tries ${CAIRN_VENV:-$HOME/.cairn/venv}/b",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        },
+        {
+          "what": "D2: the proof runs the gate under env -i in scratch worlds (cairn.tools.scratch.scratch.scratch_dir), with PATH of stub scripts plus links to sys.executable, an",
+          "why_now": "built on the far box; the proof is green twice there and the build is on main"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1: recompile_gate.sh sets REPO to $HERE/../../.. (the repo root, as its comment already says). A _gate_python function tries ${CAIRN_VENV:-$HOME/.cairn/venv}/b",
+          "expect": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then python3, python, py), so a stub python3 or an absent venv never stops the lab from recompiling.",
+          "falsifier": "(1) with no venv, python3 on PATH a stub that exits 9009 and python the host interpreter, the gate writes the lab and its log gains no FAILED line; (2) with every PATH name a stub and a venv whose bin/python3 is a wrapper over the host interpreter, the gate runs the wrapper and writes the lab; (3) with no venv and every PATH name a stub, the gate exits 0 and logs a FAILED line saying no Python 3 interpreter was found",
+          "instrument": "bin/cairn test cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+        },
+        {
+          "piece": "D2: the proof runs the gate under env -i in scratch worlds (cairn.tools.scratch.scratch.scratch_dir), with PATH of stub scripts plus links to sys.executable, an",
+          "expect": "recompile_gate.sh runs the lab compile from the repo root with the first interpreter that actually runs Python 3, in the order bin/ resolves it (the venv's bin/python3, its Scripts/python.exe, then python3, python, py), so a stub python3 or an absent venv never stops the lab from recompiling.",
+          "falsifier": "(1) with no venv, python3 on PATH a stub that exits 9009 and python the host interpreter, the gate writes the lab and its log gains no FAILED line; (2) with every PATH name a stub and a venv whose bin/python3 is a wrapper over the host interpreter, the gate runs the wrapper and writes the lab; (3) with no venv and every PATH name a stub, the gate exits 0 and logs a FAILED line saying no Python 3 interpreter was found",
+          "instrument": "bin/cairn test cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_the_gate_runs_a_python_that_runs.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1: recompile_gate.sh sets REPO to $HERE/../../.. (the repo root, as its comment already says). A _gate_python function tries ${CAIRN_VENV:-$HOME/.cairn/venv}/b",
+            "D2: the proof runs the gate under env -i in scratch worlds (cairn.tools.scratch.scratch.scratch_dir), with PATH of stub scripts plus links to sys.executable, an"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
