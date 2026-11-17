@@ -1,0 +1,75 @@
+{
+  "id": "3f2692580b2f",
+  "title": "the lab checks out LF on every box",
+  "owning_intention": "cairn/tools/intentions_model_compiler/intention+why.json",
+  "intention": "CairnCommons/.gitattributes carries 'intentions-congruency-lab/** text eol=lf', so the lab checks out LF on every box and a recompile on a core.autocrlf=true box leaves the tree clean.",
+  "why": "Measured on yoga 2026-11-16 (2dda7060d84e's live fire, relayed by the orchestrator): with core.autocrlf=true the gate writes the lab LF over a CRLF checkout, leaving 98 of 131 lab files stat-dirty with an empty diff (--ignore-cr-at-eol: 0 changes). Every drain check and dirty=0 gate on a Windows box after a recompile reads dirt that is not real.",
+  "traces_to": "Law 7 (a diagnostic surface reading phantom dirt is a surface lying) and Law 3 (the drain check measures what is not there).",
+  "how": "One line in CairnCommons/.gitattributes beside the journal merge-driver line. A red-first proof reads the commons' attributes for a lab path and, in a scratch repo with core.autocrlf=true and the commons' .gitattributes copied in, finds a lab file rewritten LF after a checkout reads clean.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "git check-attr on the commons reports text set and eol lf for a path under intentions-congruency-lab/"
+      },
+      {
+        "n": 2,
+        "claim": "in a scratch repo with core.autocrlf=true and the commons' .gitattributes, a committed lab file checked out and rewritten LF leaves git status --porcelain empty"
+      },
+      {
+        "n": 3,
+        "claim": "the journal merge-driver attribute still reads merge=cairn-journal for .artifact-journal.jsonl"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: append 'intentions-congruency-lab/** text eol=lf' to CairnCommons/.gitattributes with a comment citing this ticket; the merge-driver line stays.",
+      "writes_to": [
+        "CairnCommons/.gitattributes"
+      ],
+      "reads": [
+        "CairnCommons/.gitattributes"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof finds the commons through cairn.tools.artifact roots() (falling back to ~/dev/src/CairnCommons), runs git with GIT_CONFIG_NOSYSTEM=1 and a scratch HOME so the box's config cannot steer it, one tooth per clause, PROVES keys 1..3.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/proofs/test_the_lab_checks_out_lf_under_autocrlf.py"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/proofs/test_the_gate_runs_a_python_that_runs.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "CairnCommons/.gitattributes",
+      "cairn/tools/intentions_model_compiler/proofs/test_the_lab_checks_out_lf_under_autocrlf.py"
+    ],
+    "out": [
+      "cairn/tools/intentions_model_compiler/compiler.py (writes LF unchanged)",
+      "cairn/.gitattributes (tickets 88e30cde9bd4, daaf7ac3e4ec)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "98 of 131 lab files stat-dirty with an empty diff after a recompile on yoga (core.autocrlf=true)",
+      "how": "the orchestrator's live fire of 2dda7060d84e, git status and git diff --ignore-cr-at-eol, relayed"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "scratch repo, autocrlf=true: without the attribute a CRLF checkout rewritten LF reads ' M'; with 'lab/** text eol=lf' it checks out LF and reads clean",
+      "how": "git init in the scratchpad on akiendelllinux, od -c and git status --porcelain"
+    },
+    {
+      "when": "2026-11-16",
+      "saw": "CairnCommons/.gitattributes on origin/main holds only the journal merge-driver line; lab index 131/131 i/lf",
+      "how": "git show origin/main:.gitattributes; git ls-files --eol intentions-congruency-lab"
+    }
+  ]
+}
