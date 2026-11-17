@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Alternatives: make the compiler write CRLF on Windows (couples the compiler to the box's git config; wrong layer), or set core.autocrlf=false per box (a per-box setting the installer would have to lay and every new box would miss). The attribute is one line, versioned, and travels with the repo: this is it.",
+      "hidden_assumption": "That existing CRLF checkouts heal: on a box already checked out CRLF, the attribute takes effect at the next checkout of each file; until then git may report the files modified once (renormalisation). The orchestrator's measurement says the gate rewrites them LF anyway, which after the attribute matches the index, so status goes clean. Also assumed: the lab's index is LF today (measured: 131 of 131 i/lf w/lf on this box).",
+      "prior_art": "In-house: 88e30cde9bd4 (source files are LF on every box, FIXME:waiting) and daaf7ac3e4ec (hook source checks out LF, BUILDME:waiting) are the same remedy for the cairn repo's .gitattributes; neither touches CairnCommons. 2c3ea22bc266 pins autocrlf=false in a fixture repo. CairnCommons/.gitattributes on origin/main holds only the journal merge-driver line (measured). Field: gitattributes 'text eol=lf' is git's documented per-path override of core.autocrlf.",
+      "real_collision": "None found. The journal merge-driver line (ticket b7d2e05a1c93) is a different attribute on a different path and stays. The lab is derived-never-authored; this changes its bytes on disk on Windows, not its content."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when a recompile on a core.autocrlf=true box leaves git status clean over the lab; the proof's autocrlf scratch-repo tooth is red on the base and green on the build. Wrong intent if the lab must be CRLF on Windows for some reader (none known: the lab is read by Python json/text readers that accept both).",
+    "from_idea": "2026-11-16-lab-line-endings-from-the-orchestrator-relayed",
+    "how": "Add the one attribute line to CairnCommons/.gitattributes beside the journal merge-driver line. A red-first proof in cairn/tools/intentions_model_compiler/proofs reads the commons' attributes for a lab path (git check-attr: text set, eol lf), and in a scratch repo with core.autocrlf=true and the commons' .gitattributes copied in, commits a lab file, checks it out, rewrites it LF as the compiler does, and finds git status clean.",
+    "shape": "aside \u2014 to the fleet's Windows walks (2dda7060d84e's live fire on yoga measured it)",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 \u2014 errors are loud at diagnostic surfaces: a dirty=0 gate reading 98 phantom files is a diagnostic surface lying, and noise it trains every reader to ignore. Also Law 3: the drain check measures dirt that is not real.",
+    "what": "CairnCommons carries a .gitattributes line 'intentions-congruency-lab/** text eol=lf', so the lab checks out LF on every box and a recompile on a core.autocrlf=true box leaves the tree clean."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The yoga live fire (2dda) measured 98 of 131 lab files stat-dirty with an empty diff under core.autocrlf=true; the commons had no eol attribute for the lab."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "cb7004d24a6f",
+  "skill": "intent",
+  "title": "CairnCommons carries a .gitattributes line 'intentions-congruency-lab/** text eol=lf', so the lab checks out LF on every",
+  "trace_id": "0531ca4f16b3",
+  "when": "2026-11-16T17:11:48.949677"
+}
