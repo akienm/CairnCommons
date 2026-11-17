@@ -1,0 +1,244 @@
+{
+  "id": "552743c64b81",
+  "title": "the question proof's BUILDME tooth reads its own lane, not the whole gate",
+  "owning_intention": "cairn/tools/question/intention+why.json",
+  "intention": "Tooth 3 of the question proof measures only its own BUILDME lane: an open question makes buildme_has_no_open_questions refuse the crossing, and once answered that lane no longer refuses, whatever other lanes say.",
+  "why": "Measured 2026-11-17: with no open question on 9adc6fddf185 the questions lane reads none, but the crossing is refused by the_ticket_was_checked_against_the_outline (added by ticket c66b25d122e6), so the tooth that asserts the whole gate passes is red over a lane it does not test. Akien approved narrowing it: \"sounds good to me\".",
+  "traces_to": "Law 9 (a red measures distance from the spec, and this one measured an unrelated lane); Law 3 (a tooth measures its own subject).",
+  "how": "In teeth_door step 3 of the proof, read the bracketed finding [buildme_has_no_open_questions] in the refusal in both cases instead of requiring raised is None; reseal.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a question open on the ticket, the questions lane is red and the BUILDME refusal names [buildme_has_no_open_questions]"
+      },
+      {
+        "n": 2,
+        "claim": "once the question is answered, the questions lane reads none and no BUILDME refusal names [buildme_has_no_open_questions], whatever other lanes refuse"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: tooth 3 in teeth_door reads MARK = '[buildme_has_no_open_questions]': open, lanes[lane] not in (None,'none') and MARK in raised; answered, lanes[lane] == 'none' and (raised is None or MARK not in raised). The PROVES key stays as 9adc6fddf185 clause 3's address.",
+      "writes_to": [
+        "cairn/tools/question/proofs/test_question.py"
+      ],
+      "reads": [
+        "cairn/tools/question/proofs/test_question.py",
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: reseal through bin/cairn test --reseal, which writes the validation beside the proof.",
+      "writes_to": [
+        "cairn/tools/question/validations/test_question.json"
+      ],
+      "reads": [
+        "cairn/tools/question/validations/test_question.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/question/proofs/test_question.py",
+      "cairn/tools/question/validations/test_question.json"
+    ],
+    "out": [
+      "cairn/tools/base/transitions.py and every lane of the BUILDME gate",
+      "the outline check state of ticket 9adc6fddf185",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-17",
+      "saw": "with no open question, inspect_entry('9adc6fddf185') reads only the_ticket_was_checked_against_the_outline as closing, and the refusal names [buildme_rides_the_outline_check]",
+      "how": "the proof's gate subprocess run by hand over an empty scratch questions store"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "narrow tooth 3 of cairn/tools/question/proofs/test_question.py to the questions lane of the BUILDME gate, then reseal",
+      "ticket": "552743c64b81",
+      "intent": "Tooth 3 reads only the finding of buildme_has_no_open_questions: red and named in the refusal while a question is open, absent once it is answered; the proof then reseals green.",
+      "scope": "IN: teeth_door step 3 of the proof and its validation. OUT: transitions.py and every other lane, ticket 9adc6fddf185's outline-check state, every other component.",
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "552743c64b81",
+      "constraints": [
+        {
+          "kind": "law",
+          "source": "CLAUDE.md",
+          "text": "A deterministic red is fixed, or it carries a decision from Akien."
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/552743c64b81-the-question-proof-s-buildme-tooth-reads-its-own-lane-not-the-whole-gate.json",
+          "text": "the tooth reads its own lane's bracketed finding; the PROVES key stays as 9adc6fddf185 clause 3's address"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/question/proofs/test_question.py",
+          "cairn/tools/question/validations/test_question.json"
+        ],
+        "out": [
+          "cairn/tools/base/transitions.py and every lane of the BUILDME gate",
+          "the outline check state of ticket 9adc6fddf185",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "552743c64b81",
+      "sought": [
+        "the tooth's gate subprocess",
+        "how the refusal names each finding",
+        "the proof's standing seal"
+      ],
+      "holdings": [
+        {
+          "what": "the tooth and its gate subprocess",
+          "address": "cairn/tools/question/proofs/test_question.py"
+        },
+        {
+          "what": "the entry gate and its lanes",
+          "address": "cairn/tools/base/transitions.py"
+        },
+        {
+          "what": "the standing red seal",
+          "address": "cairn/tools/question/validations/test_question.json"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a tooth that reads only the questions lane's finding",
+          "measure": "tooth 3 requires g_done['raised'] is None (read 2026-11-17)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "552743c64b81",
+      "sub_problems": [
+        {
+          "what": "narrow tooth 3 to the questions lane",
+          "why": "the tooth reds on a lane it does not test",
+          "kind": "build",
+          "fills": "a tooth that reads only the questions lane's finding",
+          "uses": [
+            "cairn/tools/question/proofs/test_question.py",
+            "cairn/tools/base/transitions.py"
+          ],
+          "writes_to": [
+            "cairn/tools/question/proofs/test_question.py"
+          ]
+        },
+        {
+          "what": "reseal the proof",
+          "why": "the seal records red",
+          "kind": "compose",
+          "uses": [
+            "cairn/tools/question/validations/test_question.json"
+          ],
+          "writes_to": [
+            "cairn/tools/question/validations/test_question.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "552743c64b81",
+      "order": [
+        {
+          "what": "narrow tooth 3 to the questions lane",
+          "why_now": "the seal reads it"
+        },
+        {
+          "what": "reseal the proof",
+          "why_now": "last: it measures the narrowed tooth"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "552743c64b81",
+      "hypotheses": [
+        {
+          "piece": "narrow tooth 3 to the questions lane",
+          "expect": "tooth 3 passes: the open case names [buildme_has_no_open_questions], the answered case does not",
+          "falsifier": "tooth 3 reds",
+          "instrument": "bin/cairn test cairn/tools/question/proofs/test_question.py"
+        },
+        {
+          "piece": "reseal the proof",
+          "expect": "the reseal reads green and the hollow reading reds",
+          "falsifier": "the seal reads red, or hollow passes",
+          "instrument": "bin/cairn test --hollow 552743c64b81"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "552743c64b81",
+      "criteria": [
+        {
+          "claim": "the question proof is green, its BUILDME tooth reading only the questions lane",
+          "instrument": "bin/cairn test cairn/tools/question/proofs/test_question.py",
+          "covers": [
+            "narrow tooth 3 to the questions lane",
+            "reseal the proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
