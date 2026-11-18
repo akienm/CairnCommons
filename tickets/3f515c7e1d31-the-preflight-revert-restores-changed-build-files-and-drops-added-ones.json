@@ -1,0 +1,89 @@
+{
+  "id": "3f515c7e1d31",
+  "title": "the preflight revert restores changed build files and drops added ones",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "preflight's build-reverted run reverts every build file to the pre-build commit: a changed file goes back to its pre-build bytes and an added file is removed, so the hollow reading it prints is never falsely green.",
+  "why": "Measured 2026-11-18 on ticket b7068b1ba431: preflight.sh reverts with `git checkout $PRE -- files || <rm the files absent at $PRE>`. One build file was new, so the checkout failed whole and the fallback only deleted it; verdict.py stayed at HEAD and the reverted run read teeth 1, 2 and 4 green. The hollow had to be taken by hand.",
+  "traces_to": "Law 8: nothing enters proven-space without a proof a hollow build couldn't pass.",
+  "how": "New cairn/devices/cc/scripts/revert_build.sh <pre> <files...>, run in the cwd: per file, `git cat-file -e <pre>:<f>` then `git checkout -q <pre> -- <f>`, else `rm -f <f>`. preflight.sh's revert line becomes `bash <scripts>/revert_build.sh $PRE \"$@\"` inside the worktree. The proof builds a scratch git repo under tmp_path.",
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/revert_build.sh",
+      "cairn/devices/cc/scripts/preflight.sh",
+      "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+    ],
+    "out": [
+      "cairn/devices/cc/scripts/prove.sh",
+      "cairn/devices/tester",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "with test_a_red_is_re_run_alone.py new and verdict.py changed, preflight's reverted run left verdict.py at HEAD and read teeth 1, 2, 4 green; a hand revert in a worktree read all 5 red",
+      "how": "preflight.sh verdict 2b73a62f3 <proof> <files> on akiendelllinux, then git checkout per file by hand"
+    }
+  ],
+  "constraints": [
+    "the revert is per file, never one checkout over the whole list",
+    "preflight.sh calls revert_build.sh and keeps no inline revert",
+    "the proof runs revert_build.sh in a scratch git repo with git -c user.name/user.email, one tooth per outcome"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "over a build that modifies m and adds n, revert_build.sh <pre> m n leaves m at its pre-build bytes",
+      "writes_to": [
+        "cairn/devices/cc/scripts/revert_build.sh",
+        "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/preflight.sh"
+      ],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "and leaves n absent",
+      "writes_to": [
+        "cairn/devices/cc/scripts/revert_build.sh",
+        "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/preflight.sh"
+      ],
+      "after": [
+        1
+      ]
+    },
+    {
+      "n": 3,
+      "claim": "a build that only modifies files is reverted to the pre-build bytes",
+      "writes_to": [
+        "cairn/devices/cc/scripts/revert_build.sh",
+        "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/preflight.sh"
+      ],
+      "after": [
+        1
+      ]
+    },
+    {
+      "n": 4,
+      "claim": "preflight.sh invokes revert_build.sh for its reverted run and runs no git checkout of its own",
+      "writes_to": [
+        "cairn/devices/cc/scripts/preflight.sh",
+        "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/preflight.sh"
+      ],
+      "after": [
+        1
+      ]
+    }
+  ]
+}

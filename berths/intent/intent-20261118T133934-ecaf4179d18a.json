@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Deleting preflight's hollow half in favour of bin/cairn test --hollow was looked at; --hollow needs the chart's writes_to and a crossed BUILDME, and preflight is the earlier, cheaper check run before PROVEME. Fixing the one line keeps the cheap check honest.",
+      "hidden_assumption": "That git checkout <pre> -- <files> fails as a whole when one path is absent at <pre>; measured on b7068 (the fallback ran and verdict.py stayed at HEAD).",
+      "prior_art": "bin/cairn test --hollow reverts per file through the journal; this is the same per-file rule in a 10-line script, so it does not rebuild the tester.",
+      "real_collision": "none"
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when, over a scratch build that modifies m and adds n, the revert leaves m at its pre-build bytes and n gone, a modify-only build reverts too, and preflight.sh calls revert_build.sh. Wrong intent if bin/cairn test --hollow already serves every preflight caller, making preflight's revert dead weight.",
+    "from_idea": "none, because it was measured on ticket b7068b1ba431 in cairn/devices/cc/scripts/preflight.sh (its revert left verdict.py at HEAD)",
+    "how": "The revert moves out of preflight.sh into cairn/devices/cc/scripts/revert_build.sh <pre> <files...>, which per file checks it out from <pre> when it exists there and removes it otherwise; preflight.sh calls it. A proof runs it in a scratch git repo over a build that modifies one file and adds another.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build couldn't pass): a revert that leaves the build in place makes the hollow reading green, the false green a peer leans on.",
+    "what": "preflight's build-reverted run reverts every build file to the pre-build commit, the changed files as well as the new ones, so its hollow reading is never falsely green."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "preflight.sh's `git checkout $PRE -- files || <rm new files>` reverts nothing when any file is new: the checkout fails whole and the fallback only deletes. Its reverted run read teeth 1, 2, 4 green on b7068."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "13b2f0863978",
+  "skill": "intent",
+  "title": "preflight's build-reverted run reverts every build file to the pre-build commit, the changed files as well as the new on",
+  "trace_id": "6825f6b89a66",
+  "when": "2026-11-18T13:39:34.181027"
+}
