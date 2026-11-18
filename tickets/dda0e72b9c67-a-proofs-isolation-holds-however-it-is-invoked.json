@@ -9,8 +9,8 @@
   "bounds": {
     "in": [
       "cairn/tools/scratch/scratch.py",
-      "cairn/tools/bus_client/remote.py",
       "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py",
       "bin/proofs/test_a_proof_run_by_any_spelling_is_sealed.py",
       "cairn/tools/scratch/probes/windows_proof_runs_stay_off_live_cairn.py"
     ],
@@ -34,12 +34,32 @@
     },
     {
       "when": "2026-11-18",
-      "saw": "the 11-16 00:57 MST fixture folders (testing-5bcb-slow 00:57:17, testing-c203-mutual-a 00:57:43, testing-ee88c2126abc-x 00:57:49, testing-a1d2-x 00:57:53) came from SEALED tester runs, not a bare hand: runs test-583145bce4fb and test-1baa6e9786d8 (07:56:36-07:56:59Z, akienasus q75 reseal/walk) recorded the bus serving with HOME=/home/akien; the bus is spawned by `systemd-run --user` (remote.py:233), whose unit runs outside bwrap's --bind of ~/.cairn. The only akienasus ssh login in the window (00:57:32) lasted <1 s; akienasus's raw ssh proof runs (11-14 08:12Z, 09:54Z; 11-16 05:50-05:51Z) ran no bus proof and match no fixture time; the 11-12 19:49 window has no akienasus proof run on the Dell",
-      "how": "bus-bounces.jsonl under ~/.cairn/logs/tester/0/runs/<id>/sealed (fields home, test); last_known.json mtimes; Dell journalctl sshd; akienasus transcript tool calls in both windows; grep systemd-run in cairn/tools"
+      "saw": "CORRECTS the earlier entry naming sealed tester runs: the 11-16 00:57 MST fixture folders were written by BARE proof runs from a Dell-local CC session (3c92a7d8, worktree /home/akien/dev/src/wt-race): `timeout 200 env PYTHONPATH=. python3 <bus proof>` at 07:56:31, 07:57:17, 07:57:24, 07:57:58Z. The bus logged the caller as pid 2917713, `python3 cairn/devices/cairn/machines/bus/proofs/test_a_bounce_leaves_a_line_that_outlives_its_scratch_home.py`, test=None, scratch home tagged with the HOST pid namespace 4026531836; its namespace guard ran (readlink unit 00:57:25) and found it beside the manager. HOME=/home/akien in a bounce line is no evidence of escape: the seal keeps HOME and binds a swap over ~/.cairn.",
+      "how": "~/.cairn/logs/bus.log stop line (caller_pid, caller_cmd); bounces.jsonl test field; journalctl --user units 00:56-00:58; Dell transcript 3c92a7d8 tool calls"
     },
     {
       "when": "2026-11-18",
-      "saw": "inside `bin/cairn test --exec` on akiendelllinux: live ~/.cairn dev=66306 ino=29109833; sealed ~/.cairn dev=50; `systemd-run --user --wait --pipe stat ~/.cairn` from inside the seal reads dev=66306 ino=29109833 (the live tree); `setsid -w stat ~/.cairn` reads dev=50 (the swap). A systemd-run unit escapes the seal; a setsid child stays in it.",
+      "saw": "the 11-12 19:4x MST fixture window matches bare runs by Dell-local session 546bccde at 2026-11-13T02:42:06Z and 02:49:07Z: `for p in <ticket and bus proofs>; do timeout 300 python3 $p; done` in scratch worktrees; the proof path rides a shell variable, which no text gate can read",
+      "how": "Dell transcript 546bccde tool calls in the window"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "today's proofgate.judge rewrites `cd <wt> && timeout 200 env PYTHONPATH=. python3 <proof> | head` to `cairn test --exec`; bin/cmd/proofgate has no commit since 2026-11-15, so why the 11-16 run went bare is unmeasured (hook not firing in that session is the hypothesis)",
+      "how": "proofgate.judge on the Dell over the transcript's spelling; git log -- bin/cmd/proofgate"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "inside `cairn test --exec`, remote._beside_the_manager() returns False (own mnt ns 4026533108, manager's 4026531832), so a sealed caller's scratch bus takes setsid; outside it returns True",
+      "how": "scratchpad beside_probe.py run bare and under cairn test --exec on akiendelllinux"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "the tester's bwrap (isolation.py:757, and instance_bind_flags) passes neither --die-with-parent nor --unshare-pid: a sealed `cairn test --exec` runs in the host pid namespace (pid:[4026531836]). Of two setsid children it started, the one carrying CAIRN_TESTER_TEST_ID was gone 4 s after the run returned, and the one with the id stripped (env -u) outlived the sandbox, still in the run's mount namespace (mnt 4026532367, ~/.cairn dev 40 vs live 2050), holding the swap mounted until ended by hand. The collector is bf3c16162827's kill_what_it_started (tester/runs.py:188, called at device.py:826 for --seal and :1023 for --exec): it TERMs, then KILLs, every /proc process whose environ carries the run's id. A setsid loop spawned by Popen inherits the environment, so it carries the id and is collected by pid with no change to the tester.",
+      "how": "akienasus, bin/cairn test --exec starting `setsid python3 -c sleep` with and without the id; ps, readlink /proc/<pid>/ns/mnt, stat /proc/<pid>/root/home/akien/.cairn after the run; grep of isolation.py and runs.py"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "inside `bin/cairn test --exec` on akiendelllinux: live ~/.cairn dev=66306 ino=29109833; sealed ~/.cairn dev=50; `systemd-run --user --wait --pipe stat ~/.cairn` from inside the seal reads dev=66306 ino=29109833 (the live tree); `setsid -w stat ~/.cairn` reads dev=50 (the swap). A systemd-run unit escapes the seal; a setsid child stays in it. CORRECTED 2026-11-18 (orchestrator, re-measured): right about systemd-run itself, wrong about the bus taking that path; remote._beside_the_manager() is False under the seal, so remote.py:233 already spawns with setsid; the unguarded systemd-run spawn is the ground loop, cairn/tools/base/shim.py:189.",
       "how": "orchestrator, stat of ~/.cairn from a sealed exec, direct and through each spawn spelling"
     }
   ],
@@ -86,13 +106,15 @@
     },
     {
       "n": 6,
-      "text": "D6: a process a sealed run spawns stays in the seal: when CAIRN_TESTER_TEST_ID is set, cairn/tools/bus_client/remote.py (bus spawn) and cairn/tools/base/shim.py:199 (loop spawn) start the child with setsid inside the run, not via `systemd-run --user`, whose unit the user manager starts OUTSIDE bwrap's mount namespace and so sees the live ~/.cairn (measured 2026-11-18: systemd-run child dev=66306 = live, setsid child dev=50 = swap). Bounds: only the two spawn sites, remote.py:233 and shim.py:199. Its tooth: inside a sealed run, the scratch bus process's ~/.cairn stat carries the swap's st_dev, not the live one.",
+      "text": "D6: a loop a sealed run spawns stays in the seal: cairn/tools/base/shim.py's ground-loop spawn (systemd-run at :189) takes the namespace guard the bus spawn already has (remote._beside_the_manager, remote.py:354), so under a swap it spawns with setsid, inheriting the run's environment and so its CAIRN_TESTER_TEST_ID. The tester's stop already collects it by pid (bf3c16162827, kill_what_it_started; measured 2026-11-18), so no tester change. Re-aim cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py to 2120e74dcf44's why, measured by pid and not by a manager record (orchestrator ruling 2026-11-18: the unit was the means, not the outcome): the loop a sealed run starts carries the run's test id, runs in the run's mount namespace, and is not running once the run ends; 45c168cc1ff1 clause 2 says the same. Bounds: cairn/tools/base/shim.py and that proof.",
       "writes_to": [
-        "cairn/tools/bus_client/remote.py",
-        "cairn/tools/base/shim.py"
+        "cairn/tools/base/shim.py",
+        "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py"
       ],
       "reads": [
-        "cairn/devices/tester/isolation.py"
+        "cairn/devices/tester/isolation.py",
+        "cairn/devices/tester/runs.py",
+        "cairn/tools/bus_client/remote.py"
       ],
       "after": []
     },
