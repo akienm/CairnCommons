@@ -1,0 +1,273 @@
+{
+  "id": "68d8d3add713",
+  "title": "stop ends the database proxy's relay whether or not its face is up",
+  "owning_intention": "cairn/devices/dbproxy/intention+why.json",
+  "intention": "`cairn database stop` ends the relay process its record names, whether or not the proxy's face is up in this bus; the shim reads the relay's record when no face is up and adopts a live relay rather than calling it not running.",
+  "why": "Measured 2026-11-18 on akienlivingroom, twice (at 7c07ae3a4 and ddf670792): a relay outlived the face host that spawned it and `cairn database stop` answered 'database is not running' while that relay held 5432; Stop-Process was the only way to end it. With the face up, stop dropped only the in-process face and never ended the relay. A status mouth said not running over a listening relay.",
+  "traces_to": "Law 7 (a status surface must not say not running over a live relay) and Law 6 (the proxy owns its relay, so its stop is the one way to end it).",
+  "how": "DatabaseProxyShim gains _relay(): the face's state() when it is up, else the record at dbproxy.__main__.record_path() read the same way (a listening record whose pid is dead reads stopped). running is True when _relay() reads listening; a live relay with no face is adopted by bringing the face up (its wake is a no-op over a listening relay), so the base hot path always has a face. _stop_device ends the record's pid through _kill(pid) (os.kill with SIGTERM, which is TerminateProcess on Windows), then defers to the base to drop the face. The base resolver is unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with the face down and the relay's recorded pid alive, `stop` ends that pid and says 'stopped database'"
+      },
+      {
+        "n": 2,
+        "claim": "with the face up and the relay alive, `stop` ends the relay's pid and the face reads down"
+      },
+      {
+        "n": 3,
+        "claim": "with the relay's recorded pid dead and the face down, `stop` says 'database is not running' and ends nothing"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: dbproxy/shim.py: _relay reads the record without a face; running adopts a live relay; _stop_device ends the relay's pid through _kill.",
+      "writes_to": [
+        "cairn/devices/dbproxy/shim.py"
+      ],
+      "reads": [
+        "cairn/devices/dbproxy/shim.py",
+        "cairn/devices/dbproxy/device.py",
+        "cairn/devices/dbproxy/__main__.py",
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof swaps record_path for a scratch file and _kill for a recorder, one tooth per clause, shaped like cairn/devices/dbproxy/proofs/test_start_rewakes_a_dead_relay_under_a_live_face.py.",
+      "writes_to": [
+        "cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py"
+      ],
+      "reads": [
+        "cairn/devices/dbproxy/proofs/test_start_rewakes_a_dead_relay_under_a_live_face.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py",
+      "cairn/devices/dbproxy/shim.py"
+    ],
+    "out": [
+      "cairn/tools/base/shim.py (the base resolver is unchanged)",
+      "cairn/devices/dbproxy/device.py (wake and state are unchanged)",
+      "cairn/devices/dbproxy/__main__.py (the record's shape is unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "cairn database stop said 'database is not running' while an orphaned relay held 5432; with the face up, stop left the relay listening",
+      "how": "akienlivingroom_cc_0 read the listeners on 5432 before and after cairn database stop, at 7c07ae3a4 and at ddf670792"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "make cairn database stop end the database proxy's relay whether or not its face is up",
+      "ticket": "68d8d3add713",
+      "intent": "DatabaseProxyShim reads the relay's record with no face up, adopts a live relay, and stop ends the relay's pid.",
+      "scope": "IN: dbproxy/shim.py, one dbproxy proof. OUT: the base shim's resolver, device.py's wake and state, the record's shape, every other component.",
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "68d8d3add713",
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/68d8d3add713-stop-ends-the-database-proxy-s-relay-whether-or-not-its-face-is-up.json",
+          "text": "with the face down and the relay's recorded pid alive, stop ends that pid and says 'stopped database'"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/68d8d3add713-stop-ends-the-database-proxy-s-relay-whether-or-not-its-face-is-up.json",
+          "text": "the base resolver's stop branch is unchanged"
+        },
+        {
+          "kind": "charter",
+          "source": "cairn/devices/dbproxy/intention+why.json",
+          "text": "the database proxy is the one door a box's processes reach their database by"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/dbproxy/shim.py",
+          "cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py"
+        ],
+        "out": [
+          "cairn/tools/base/shim.py",
+          "cairn/devices/dbproxy/device.py",
+          "cairn/devices/dbproxy/__main__.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "68d8d3add713",
+      "sought": [
+        "the base resolver's stop branch",
+        "BaseShim._stop_device and the relay record",
+        "the face's state() and wake()",
+        "an in-process proof harness"
+      ],
+      "holdings": [
+        {
+          "what": "stop: 'not running' unless self.running, else _stop_device()",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "state() reading a dead pid as stopped; wake() spawning when not listening",
+          "address": "cairn/devices/dbproxy/device.py"
+        },
+        {
+          "what": "DatabaseProxyShim with running and _ensure_device over the face",
+          "address": "cairn/devices/dbproxy/shim.py"
+        },
+        {
+          "what": "record_path naming the relay record",
+          "address": "cairn/devices/dbproxy/__main__.py"
+        },
+        {
+          "what": "an in-process shim proof with a recording face",
+          "address": "cairn/devices/dbproxy/proofs/test_start_rewakes_a_dead_relay_under_a_live_face.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a stop that ends the relay",
+          "measure": "2026-11-18: dbproxy/shim.py defines no _stop_device; stop answered 'not running' on akienlivingroom over a listening orphaned relay"
+        },
+        {
+          "what": "a proof driving stop over an orphaned relay",
+          "measure": "grep for stop over cairn/devices/dbproxy/proofs found no tooth that stops a relay with no face up"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "68d8d3add713",
+      "sub_problems": [
+        {
+          "what": "the orphaned-relay proof",
+          "why": "red-first: stop says not running over a live relay",
+          "kind": "build",
+          "fills": "a proof driving stop over an orphaned relay",
+          "uses": [
+            "cairn/devices/dbproxy/proofs/test_start_rewakes_a_dead_relay_under_a_live_face.py"
+          ],
+          "writes_to": [
+            "cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py"
+          ]
+        },
+        {
+          "what": "the relay-ending stop",
+          "why": "an orphaned relay could only be ended by hand",
+          "kind": "build",
+          "fills": "a stop that ends the relay",
+          "uses": [
+            "cairn/tools/base/shim.py",
+            "cairn/devices/dbproxy/device.py",
+            "cairn/devices/dbproxy/shim.py",
+            "cairn/devices/dbproxy/__main__.py"
+          ],
+          "writes_to": [
+            "cairn/devices/dbproxy/shim.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "68d8d3add713",
+      "order": [
+        {
+          "what": "the orphaned-relay proof",
+          "why_now": "red first"
+        },
+        {
+          "what": "the relay-ending stop",
+          "why_now": "turns it green"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "68d8d3add713",
+      "hypotheses": [
+        {
+          "piece": "the orphaned-relay proof",
+          "expect": "teeth 1 and 2 red before the fix, tooth 3 green",
+          "falsifier": "tooth 1 or 2 green before the fix",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py"
+        },
+        {
+          "piece": "the relay-ending stop",
+          "expect": "all three teeth green twice after the fix",
+          "falsifier": "any tooth red",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "68d8d3add713",
+      "criteria": [
+        {
+          "claim": "stop ends an orphaned relay, ends the relay under a live face and drops the face, and says not running over a dead relay",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_stop_ends_the_relay_with_or_without_a_face.py",
+          "covers": [
+            "the relay-ending stop",
+            "the orphaned-relay proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}

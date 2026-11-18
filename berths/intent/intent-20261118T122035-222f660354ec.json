@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Having the relay exit on its own when its face host dies would tie the relay's life to one bus process, and the relay is its own process by design (outline 2.3.2); a stop that reads the record is the smaller fix.",
+      "hidden_assumption": "That SIGTERM through os.kill ends the relay on Windows as TerminateProcess; the launcher parent may linger and is measured at live fire.",
+      "prior_art": "ticket cad4a0d27e0a made running read the relay under a live face; this extends the same reading to no face.",
+      "real_collision": "None: the base _stop_device docstring names exactly this override."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when (1) with the face down and the relay's recorded pid alive, `stop` ends that pid and says 'stopped database'; (2) with the face up and the relay alive, `stop` ends the relay's pid and the face reads down; (3) with the relay's recorded pid dead and the face down, `stop` says 'database is not running' and ends nothing.",
+    "from_idea": "none, because the defect is measured in the live-fires of tickets 9166782e6101 and cad4a0d27e0a",
+    "how": "DatabaseProxyShim gains _relay(): the face's state() when it is up, else the record at dbproxy.__main__.record_path() read the same way (a listening record whose pid is dead reads stopped). running is True when _relay() reads listening; a live relay with no face is adopted by bringing the face up (its wake is a no-op over a listening relay), so the base hot path always has a face. _stop_device ends the record's pid through _kill(pid) (os.kill with SIGTERM, which is TerminateProcess on Windows), then defers to the base to drop the face. The base resolver is unchanged.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 (a status surface must not say not running over a live relay) and Law 6 (the proxy owns its relay, so its stop is the one way to end it).",
+    "what": "`cairn database stop` ends the relay process its record names, whether or not the proxy's face is up in this bus; the shim reads the relay's record when no face is up and adopts a live relay rather than calling it not running."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "`cairn database stop` now ends the relay, including one orphaned by a face host that exited; before, it said not running over a listening 5432."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "2a1760f2a969",
+  "skill": "intent",
+  "title": "`cairn database stop` ends the relay process its record names, whether or not the proxy's face is up in this bus; the sh",
+  "trace_id": "64dae800e519",
+  "when": "2026-11-18T12:20:35.572454"
+}
