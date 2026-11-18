@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: the bus can start and carry 'database start' while the database is refused, because the bus opens its table lazily (bus.py:333) and DatabaseProxyDevice wakes without touching the store; read 2026-11-18. A refusal inside the bus process itself would send the wake back to that same process and time out loudly rather than hang silently.",
+    "builder_check": "A Haiku builder needs: psycopg2.OperationalError's text for a refusal contains 'Connection refused' (Linux) or 'actively refused' / 'could not connect' with 10061 (Windows), so _refused matches 'refused' case-folded; _conn_args() returns {'host': sockdir} for a socket dial and host/port/passfile for TCP; the bus target string is module:Class; RemoteBus().verbs returns a dict with 'exit' and 'text'; the proof must never dial a real port, so it monkeypatches store.psycopg2.connect, store._wake_proxy and time.sleep.",
+    "children": "none, because the change is one dial helper in cairn/devices/db_domain/tools/client/store.py and one proof, cairn/devices/db_domain/tools/client/proofs/test_a_refused_dial_wakes_the_database_proxy.py",
+    "collision_check": "No intention or Law collides: the change is inside one new component and its own proof (RULE 1).",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Proof cairn/devices/db_domain/tools/client/proofs/test_a_refused_dial_wakes_the_database_proxy.py, one tooth per clause: (1) a refused TCP loopback dial wakes the proxy exactly once and the dial is retried until it connects; (2) a socket dial that fails, and a TCP failure that is not a refusal, raise at once and never wake; (3) a wake that fails, or a refusal still standing after the retry window, raises the refusal naming why; (4) the wake asks the bus for start on cairn.devices.dbproxy.shim:DatabaseProxyShim, a class that exists, and store.py imports nothing from cairn.devices.dbproxy. Red first, green twice. Horizon: this build.",
+    "gates_bound": "code-seam@v2's prove gate: the proof green twice, sealed, hollow retaken; on failure it feeds back to FIXME (Laws 3 + 8).",
+    "missing_check": "Every clause has its tooth in the named proof; the out bound names what is deliberately left (wake, sync, client tool).",
+    "node_class": "code-seam",
+    "questions": "none, because the decision is CC's, recorded at outline 11.3.9 in cairn/devices/cairn/requirements/11-proxy-devices.md",
+    "task_or_ticket": "ticket",
+    "title": "a refused loopback dial wakes the database proxy through the bus",
+    "watchme": "none, because its proof (cairn/devices/db_domain/tools/client/proofs/test_a_refused_dial_wakes_the_database_proxy.py, shaped like cairn/devices/db_domain/tools/client/proofs/test_the_passfile_survives_a_repointed_instance_root.py) is the whole of its correctness; the live reading is a db call on akienlivingroom after its proxy is stopped",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Cast after dbproxy v0 (a22eb3c25ccd) proved: its charter filed this edge to db_domain."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "b81d279f1a66",
+  "skill": "sorted",
+  "title": "a refused loopback dial wakes the database proxy through the bus",
+  "trace_id": "6060ee1b3dc4",
+  "when": "2026-11-18T10:41:31.088516"
+}

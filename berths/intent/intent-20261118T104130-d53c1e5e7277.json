@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Spawning python -m cairn.devices.dbproxy straight from the store would skip the bus, but the bus is the only device-to-device path and a subprocess hides from the import sieve. Starting the proxy at boot is a daemon, which the command-lazy-inits rule refuses. One bus wake from the store is the smallest honest way.",
+      "hidden_assumption": "That the refusal text says 'refused' on every platform; Windows psycopg2 reports WSAECONNREFUSED as 'actively refused' text, which still contains it.",
+      "prior_art": "the store already falls back from socket to TCP by itself (ticket 3dc005de27cf); the bus's no_receiver wake (ticket 7cb1989e7825) wakes an addressee for mail, but a dial is not mail.",
+      "real_collision": "None: 11.3.1 makes the proxy the only way to the database, and the wake only starts that one way."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when (1) a refused TCP loopback dial wakes the proxy exactly once and the dial is retried until it connects; (2) a socket dial that fails, and a TCP failure that is not a refusal, raise at once and never wake; (3) a wake that fails, or a refusal still standing after the retry window, raises the refusal naming why; (4) the wake asks the bus for start on cairn.devices.dbproxy.shim:DatabaseProxyShim, a class that exists, and store.py imports nothing from cairn.devices.dbproxy.",
+    "from_idea": "none, because the wake is stated at outline 11.3.9 in cairn/devices/cairn/requirements/11-proxy-devices.md",
+    "how": "store.py gains _dial(dbname): psycopg2.connect over _conn_args(); on an OperationalError whose text says the connection was refused, and only when the dial is TCP (no 'host' socket dir), it calls _wake_proxy() once per process and retries every 0.5 s until _WAKE_SECONDS (60) pass. _wake_proxy imports cairn.tools.bus_client.remote at call time and runs ensure_bus() then RemoteBus().verbs('cairn.devices.dbproxy.shim:DatabaseProxyShim', ['start']), a string target, so store.py imports no cairn.devices.dbproxy. A wake that raises, or answers a non-zero exit, re-raises the refusal with the wake's failure attached. ensure_database() and connect() dial through _dial.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Outline 11.3.9 and 11.3.7 (every box's processes reach the database through its own proxy); outline 5.8.3.2.1 (the device is woken when it is needed); Law 7 (a failed wake is loud).",
+    "what": "When the db client's TCP loopback dial (no Postgres socket on the box) is refused, the client asks the bus once to start the database proxy and retries the dial for up to 60 s; any other failure, or a wake that fails, raises at once naming why (outline 11.3.9)."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A refused loopback dial wakes the database proxy through the bus once and retries up to 60 s; other failures stay loud and immediate."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "5988ac7092ba",
+  "skill": "intent",
+  "title": "When the db client's TCP loopback dial (no Postgres socket on the box) is refused, the client asks the bus once to start",
+  "trace_id": "75ef4536d046",
+  "when": "2026-11-18T10:41:30.888081"
+}
