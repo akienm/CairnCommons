@@ -1,0 +1,252 @@
+{
+  "id": "8c5fdb750b75",
+  "title": "a charter's answers_as outranks a stray instance-space dir of that name",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "bin/cairn maps a typed word to the folder whose charter declares it as answers_as whenever no class folder carries that word, even when instance-space holds a directory of that name, so cairn database and cairn inference keep resolving after their shims have run (outline 11.3.2, 11.4.2).",
+  "why": "Measured 2026-11-18: BaseShim._last_known_path (cairn/tools/base/shim.py:1152) writes instance_path(device_id), and the proxies' device_id is their answers_as name, so the first run creates ~/.cairn/devices/inference/0/last_known.json (on akiendelllinux) and ~/.cairn/devices/database/0/ (on akienlivingroom). bin/cairn:348 looks answers_as up only when neither a class folder NOR an instance dir carries the word, so from then on `cairn inference show` answers 'no such device or command: inference' (measured live on akiendelllinux, and over a scratch instance root: both aliases red, the folder name green).",
+  "traces_to": "Outline 11.3.2 and 11.4.2 (the device names on the command line); Law 7 (the diagnostic surface names the real lack, and 'no such device' for a declared device is the wrong one).",
+  "how": "bin/cairn: the answers_as block's condition drops `&& ! -d \"$INSTANCE_ROOT/$device\"`, so the lookup runs whenever the class folder is absent. A word no charter declares is unchanged (the loop rewrites nothing). The proof runs bin/cairn as a subprocess over a scratch CAIRN_INSTANCE_ROOT from the scratch door, holding stray inference/0/last_known.json and database/0/last_known.json, with a stub CAIRN_BUS_MOUTH that records its argv, shaped like bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with stray instance-space dirs named inference and database, `cairn inference show` and `cairn database show` reach the bus mouth with argv [<typed name>, show] and never print 'no such device'"
+      },
+      {
+        "n": 2,
+        "claim": "a typed folder name (inferenceproxy) still resolves as itself and reaches the bus mouth with argv [inferenceproxy, show]"
+      },
+      {
+        "n": 3,
+        "claim": "a word that no folder carries and no charter declares still reads 'no such device or command' and never reaches the bus mouth"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: bin/cairn: the answers_as lookup runs whenever no class folder carries the typed word; the instance-dir test is dropped.",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "bin/cairn",
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof runs bin/cairn over a scratch instance root with stray dirs and a stub bus mouth, one tooth per clause, shaped like bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py.",
+      "writes_to": [
+        "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+      ],
+      "reads": [
+        "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn",
+      "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+    ],
+    "out": [
+      "cairn/tools/base/shim.py (where a shim keeps last_known is its own ticket)",
+      "the proxies' code",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "bin/cairn inference show printed 'no such device or command: inference' with ~/.cairn/devices/inference/0/last_known.json present; over a scratch instance root with stray inference/ and database/ dirs both aliases red and inferenceproxy reached the mouth",
+      "how": "ran bin/cairn on akiendelllinux at 319dfbaa2, live and with CAIRN_INSTANCE_ROOT and CAIRN_BUS_MOUTH at a scratch root"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "make cairn inference and cairn database resolve even when instance-space holds a stray directory of that name",
+      "ticket": "8c5fdb750b75",
+      "intent": "bin/cairn's answers_as lookup runs whenever no class folder carries the typed word, so a stray instance dir the shim wrote cannot seal the alias.",
+      "scope": "IN: bin/cairn's answers_as block and one bin proof. OUT: the shim's last_known address, the proxies, every other component.",
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "8c5fdb750b75",
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/8c5fdb750b75-a-charter-s-answers-as-outranks-a-stray-instance-space-dir-of-that-name.json",
+          "text": "with stray instance-space dirs named inference and database, cairn inference show and cairn database show reach the bus mouth with argv [<typed name>, show]"
+        },
+        {
+          "kind": "charter",
+          "source": "bin/intention+why.json",
+          "text": "bin is the launcher's component; its proofs run bin/cairn through the scratch door"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/cairn",
+          "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+        ],
+        "out": [
+          "cairn/tools/base/shim.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "8c5fdb750b75",
+      "sought": [
+        "the answers_as block in bin/cairn",
+        "where the stray dir comes from",
+        "a bin proof with a stub bus mouth"
+      ],
+      "holdings": [
+        {
+          "what": "the answers_as block (ticket f942a413f26d)",
+          "address": "bin/cairn"
+        },
+        {
+          "what": "the shim's last_known path keyed by device_id",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "a bin proof with a stub CAIRN_BUS_MOUTH",
+          "address": "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "an answers_as lookup that a stray instance dir cannot shadow",
+          "measure": "2026-11-18: bin/cairn inference show printed no such device with ~/.cairn/devices/inference/0/last_known.json present"
+        },
+        {
+          "what": "a proof that runs the alias over a scratch root holding stray dirs",
+          "measure": "grep answers_as over bin/proofs returned nothing"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "8c5fdb750b75",
+      "sub_problems": [
+        {
+          "what": "the stray-dir proof",
+          "why": "red-first: the alias reds over a scratch root with stray dirs",
+          "kind": "build",
+          "fills": "a proof that runs the alias over a scratch root holding stray dirs",
+          "uses": [
+            "bin/proofs/test_a_word_with_no_script_goes_onto_the_bus.py"
+          ],
+          "writes_to": [
+            "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+          ]
+        },
+        {
+          "what": "the lookup condition",
+          "why": "the instance-dir test let a stray dir shadow the charter's name",
+          "kind": "build",
+          "fills": "an answers_as lookup that a stray instance dir cannot shadow",
+          "uses": [
+            "bin/cairn",
+            "cairn/tools/base/shim.py"
+          ],
+          "writes_to": [
+            "bin/cairn"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "8c5fdb750b75",
+      "order": [
+        {
+          "what": "the stray-dir proof",
+          "why_now": "red first"
+        },
+        {
+          "what": "the lookup condition",
+          "why_now": "turns it green"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "8c5fdb750b75",
+      "hypotheses": [
+        {
+          "piece": "the stray-dir proof",
+          "expect": "clause 1 red before the fix, clauses 2 and 3 green",
+          "falsifier": "clause 1 green before the fix",
+          "instrument": "bin/cairn test bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+        },
+        {
+          "piece": "the lookup condition",
+          "expect": "all three teeth green twice after the fix",
+          "falsifier": "any tooth red",
+          "instrument": "bin/cairn test bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "8c5fdb750b75",
+      "criteria": [
+        {
+          "claim": "a declared answers_as resolves past a stray instance dir, a folder name resolves as itself, an undeclared word is still no such device",
+          "instrument": "bin/cairn test bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py",
+          "covers": [
+            "the lookup condition",
+            "the stray-dir proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
