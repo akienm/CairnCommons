@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Three assumptions carry the plan. (1) The cause is a race, not a failed kill: RemoteBus.shutdown() (cairn/tools/bus_client/remote.py:533) sends op shutdown and returns when the bus answers, then launch()'s finally exits and scratch_dir's sweep runs while the detached pythonw bus (and the ground_loop it woke under the scratch HOME) are still alive. The sweep then has to end them. This is a hypothesis built from the code plus one measurement, and the red-first proof has to show it before the fix. (2) The two 'bus serve' pids are one bus: the venv pythonw.exe launcher plus its child (the sweep's twin path, scratch.py ~line 309), so one wait covers both. (3) Linux shows nothing because it spawns through setsid or systemd, which exits faster, or because nobody has watched for it there. That is unmeasured, so the proof runs on both platforms and is not marked Windows-only.",
+    "builder_check": "A Haiku builder needs these answered. (a) How do I find the bus pid? RemoteBus doesn't keep one, because _spawn uses Popen detached and throws it away. Read it from what holds the scratch address or HOME, the same way scratch._nt_holders and _posix_holders do. Or add a stats/pid op the bus already answers (check `stats` first). (b) What do I wait on? Every holder of the HOME and the address dirs is gone, polled at 0.1 s, bounded at 30 s. (c) What if the wait times out? Raise loudly (Law 7), naming the pids. Never kill silently: the sweep remains the only killer. (d) The proof: a red-first test in scratch_bus/proofs that runs launch('codemother'), and after the block asserts that no process holds that block's HOME or address. Before the fix it reds on Windows, measured 2026-11-17. (e) Run it with PYTHONPATH=. and the venv python, and never run the whole suite on Windows.",
+    "children": "none, because the change is one wait in cairn/devices/cairn/tools/scratch_bus/scratch_bus.py launch() plus its proof. If the proof shows the bus server never ends its ground_loop, that becomes a finding in this ticket's voyage, not a child.",
+    "collision_check": "Checked against RULE 1. scratch_bus is a tool the cairn device publishes, so the wait goes in its own launch(). If the bus server fails to end its children, that part belongs to the bus machine (cairn/devices/cairn/machines/bus), still inside the same device. Checked against the scratch tool: the sweep (cairn/tools/scratch/scratch.py) is the last-resort reaper and is not changed, so there's no overlap of whys. Checked against Law 7: today the sweep prints the leak to stderr at a diagnostic surface, so the error is loud. This ticket makes it not happen; it doesn't silence it. No decision or answered question conflicts.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Falsified if, after `with launch('codemother'):` exits normally on Windows, any process whose command line names that block's scratch HOME or bus address is still alive, so the sweep prints 'outlived its run ... ended it' for that dir. It also fails if the fix makes the block's exit wait more than 30 s. Horizon: the red-first proof in cairn/devices/cairn/tools/scratch_bus/proofs/ at PROVEME on Windows, plus no 'outlived its run' line from a launch() block in the next Windows seal of codemother's proofs.",
+    "gates_bound": "code-seam gate-set: a red-first deterministic proof in cairn/devices/cairn/tools/scratch_bus/proofs/, hollow-sealed at PROVEME. On failure it feeds back to this ticket (FIXME). Proved by the tester's verdict and seal.",
+    "missing_check": "Open points I've named instead of glossing over. The bus's own shutdown path might never reap the ground_loop it woke. If so, the fix is in the bus machine's serve shutdown (RULE 1: the bus machine owns that), and launch() only waits for the exit. The builder has to tell which by reading the proof's result, because nothing is decided yet. The sweep is not a fault: it is the safety net that caught this, and it stays as it is.",
+    "node_class": "code-seam",
+    "questions": "none, because the whole change is a CC mechanism inside a tool CC gates (charter cairn/devices/cairn/tools/scratch_bus/intention+why.json), and the orchestrator named it a red on 2026-11-17",
+    "task_or_ticket": "ticket",
+    "title": "scratch_bus.launch leaves its bus and the bus's children alive past shutdown on Windows",
+    "watchme": "none, because its proof under cairn/devices/cairn/tools/scratch_bus/proofs/ is the whole of its correctness. The live reading is the scratch sweep's own 'outlived its run' line in cairn/tools/scratch/scratch.py, which already prints whenever this recurs.",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "On Windows a scratch_bus.launch('codemother') block leaves two bus-serve pythonw processes and a ground_loop alive after shutdown. The scratch sweep catches and ends them, so proofs stay green, but every launch leaks until the sweep runs. Measured on akienlivingroom on 2026-11-17."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "541c053b3dfe",
+  "skill": "sorted",
+  "title": "scratch_bus.launch leaves its bus and the bus's children alive past shutdown on Windows",
+  "trace_id": "881710f68367",
+  "when": "2026-11-17T18:16:08.682937"
+}

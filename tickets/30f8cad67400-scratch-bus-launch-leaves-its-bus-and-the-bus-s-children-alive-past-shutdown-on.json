@@ -1,0 +1,66 @@
+{
+  "id": "30f8cad67400",
+  "title": "scratch_bus.launch leaves its bus and the bus's children alive past shutdown on Windows",
+  "owning_intention": "cairn/devices/cairn/tools/scratch_bus/intention+why.json",
+  "intention": "When a scratch_bus.launch() block exits, every process it started is already gone (the bus and anything the bus woke under the scratch HOME), so the scratch sweep never has to end one.",
+  "why": "Measured 2026-11-17 on akienlivingroom (Windows 11): when a launch('codemother') block exited, the scratch sweep printed 'outlived its run ... ended it' three times: two pythonw 'bus serve' processes and one ground_loop, all under that block's scratch dirs. The proof stays green only because the safety net reaps what the tool left behind.",
+  "traces_to": "Law 7 (errors are loud): the leak is loud only because the sweep exists. Law 8: a green that depends on a reaper hides a defect from the peers that lean on it.",
+  "how": "After RemoteBus.shutdown(), launch() waits (polling at 0.1 s, bounded at 30 s) until nothing holds the block's scratch HOME or bus address, then lets scratch_dir sweep them. If the wait times out it raises, naming the pids. If the red-first proof shows the bus server never ends the ground_loop it woke, the bus machine's serve shutdown ends its children before exiting.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "after a normal exit from 'with launch(\"codemother\")', no process holds that block's scratch HOME or bus address, so the sweep ends nothing for those dirs"
+      },
+      {
+        "n": 2,
+        "claim": "the block's exit, shutdown included, finishes within 30 s"
+      },
+      {
+        "n": 3,
+        "claim": "if something still holds the dirs when the wait ends, launch() raises naming the pids rather than returning quietly"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: launch() waits after shutdown for the HOME and address holders to be gone, bounded, and raises on timeout. The sweep stays the only killer.",
+      "writes_to": [
+        "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py",
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof with one tooth per clause, run under PYTHONPATH=. with the venv python.",
+      "writes_to": [
+        "cairn/devices/cairn/tools/scratch_bus/proofs/test_a_launched_bus_is_gone_when_its_block_ends.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/tools/scratch_bus/proofs/test_a_launched_device_wakes_on_a_scratch_bus.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py",
+      "cairn/devices/cairn/tools/scratch_bus/proofs/test_a_launched_bus_is_gone_when_its_block_ends.py"
+    ],
+    "out": [
+      "cairn/tools/scratch/scratch.py (the sweep stays as it is)",
+      "every other component; the bus machine's serve shutdown is touched only if the proof shows it never ends its children, and then it is recorded in this voyage"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-17",
+      "saw": "the scratch sweep ended pids 6988 and 2660 (pythonw -m cairn.devices.cairn.machines.bus serve --home ...bus-scratch.0-11012-...) and 4784 (pythonw -m cairn.devices.cairn.machines.ground_loop under launch-codemother-scratch.0-11012-...) after the block had exited with rc 0",
+      "how": "PYTHONPATH=. venv python: 'with launch(\"codemother\"): ...' on akienlivingroom, reading the sweep's stderr"
+    }
+  ]
+}
