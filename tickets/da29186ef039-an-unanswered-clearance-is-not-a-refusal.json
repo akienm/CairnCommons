@@ -1,0 +1,271 @@
+{
+  "id": "da29186ef039",
+  "title": "an unanswered clearance is not a refusal",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "sail.py cross says a clearance that never answered inside its wait is unanswered, not refused, and exits 3; close.sh names that commit 'clearance unanswered' and points at the ticket's cursor, which is the record.",
+  "why": "Measured 2026-11-18 on ticket 8c5fdb750b75: sail.py printed 'clearance refused 8c5fdb750b75: no reply ... within 120.0s' twice, and close.sh committed 'PROVED refused at clearance'. The gate had not refused: it was still sweeping, and minutes later it crossed the ticket to PROVED (build gate clean, 43 sieves), writing bin/state.json and the ticket's cursor. A record said refused where the truth was unanswered.",
+  "traces_to": "Law 7 (errors are permanent and true in records of truth; a commit message is one) and close.sh's own rule: the commit is named for what the gate did, never for what was asked.",
+  "how": "sail.py cross: when queueme's reply carries an error and no accepted key (Ticket.queueme puts {'error': str(exc)} there on a TimeoutError), print 'clearance did not answer <id> within <N>s: the gate may still cross it; the ticket's cursor is the record' and return 3. A reply with accepted False still prints 'clearance refused' and returns 1. close.sh: RC 3 commits as 'clearance unanswered', prints how to read the cursor, and exits 3. The proof drives sail.cross with a bus that raises TimeoutError, shaped like cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a clearance whose bus request raises TimeoutError makes sail.py cross return 3 and say 'did not answer', and never 'refused'"
+      },
+      {
+        "n": 2,
+        "claim": "a clearance answering accepted False still makes sail.py cross return 1 and say 'refused' with the gate's reason"
+      },
+      {
+        "n": 3,
+        "claim": "close.sh names an RC 3 crossing 'clearance unanswered' and exits 3, and its 'PROVED refused' commit is reached only on another non-zero RC"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: sail.py: cross returns 3 with 'did not answer' when the clearance reply is an error with no accepted key.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/sail.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/sail.py",
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: close.sh: RC 3 commits 'clearance unanswered' and exits 3.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof drives sail.cross with a TimeoutError bus and an accepted False bus, and reads close.sh's branches, one tooth per clause, shaped like cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py",
+      "cairn/devices/cc/scripts/close.sh",
+      "cairn/devices/cc/scripts/sail.py"
+    ],
+    "out": [
+      "cairn/machines/ticket/ticket.py (the reply shape is unchanged)",
+      "codemother's clearance gate",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "sail.py printed 'clearance refused' on a 120 s timeout; the same crossing later landed PROVED with a clean build gate",
+      "how": "ran close.sh 8c5fdb750b75 twice, then read the ticket's state.json and bin/state.json"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "make sail.py cross and close.sh say a clearance that never answered is unanswered, never refused",
+      "ticket": "da29186ef039",
+      "intent": "A clearance timeout exits 3 with 'did not answer' and close.sh commits 'clearance unanswered'; a real refusal still exits 1 and says refused.",
+      "scope": "IN: sail.py cross, close.sh's cross branch, one cc proof. OUT: ticket.py's reply shape, codemother's gate, every other component.",
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "da29186ef039",
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/da29186ef039-an-unanswered-clearance-is-not-a-refusal.json",
+          "text": "a clearance whose bus request raises TimeoutError makes sail.py cross return 3 and say 'did not answer', and never 'refused'"
+        },
+        {
+          "kind": "charter",
+          "source": "cairn/devices/cc/intention+why.json",
+          "text": "close.sh names each commit for what the gate did, never for what was asked"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/scripts/sail.py",
+          "cairn/devices/cc/scripts/close.sh",
+          "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py"
+        ],
+        "out": [
+          "cairn/machines/ticket/ticket.py",
+          "codemother's clearance gate",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "da29186ef039",
+      "sought": [
+        "sail.py cross's reply handling",
+        "how a timeout reaches the reply",
+        "a proof harness for sail.cross"
+      ],
+      "holdings": [
+        {
+          "what": "cross() and _said()",
+          "address": "cairn/devices/cc/scripts/sail.py"
+        },
+        {
+          "what": "Ticket.queueme putting {'error': str(exc)} on TimeoutError",
+          "address": "cairn/machines/ticket/ticket.py"
+        },
+        {
+          "what": "the sail scratch world and recording bus",
+          "address": "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+        },
+        {
+          "what": "close.sh's cross line",
+          "address": "cairn/devices/cc/scripts/close.sh"
+        }
+      ],
+      "absences": [
+        {
+          "what": "an unanswered clearance said as unanswered",
+          "measure": "2026-11-18: sail.py printed 'clearance refused' on 8c5fdb750b75's 120 s timeout"
+        },
+        {
+          "what": "a proof driving cross with a silent bus",
+          "measure": "the sail gates proof's bus never raises; grep TimeoutError over cairn/devices/cc/proofs returned only the chart wait"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "da29186ef039",
+      "sub_problems": [
+        {
+          "what": "the silent-bus proof",
+          "why": "red-first: a timeout reads refused, close.sh has no RC 3 branch",
+          "kind": "build",
+          "fills": "a proof driving cross with a silent bus",
+          "uses": [
+            "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py"
+          ]
+        },
+        {
+          "what": "the unanswered branch",
+          "why": "silence was said as a refusal",
+          "kind": "build",
+          "fills": "an unanswered clearance said as unanswered",
+          "uses": [
+            "cairn/devices/cc/scripts/sail.py",
+            "cairn/machines/ticket/ticket.py",
+            "cairn/devices/cc/scripts/close.sh"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/sail.py",
+            "cairn/devices/cc/scripts/close.sh"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "da29186ef039",
+      "order": [
+        {
+          "what": "the silent-bus proof",
+          "why_now": "red first"
+        },
+        {
+          "what": "the unanswered branch",
+          "why_now": "turns it green"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "da29186ef039",
+      "hypotheses": [
+        {
+          "piece": "the silent-bus proof",
+          "expect": "clauses 1 and 3 red before the fix, clause 2 green",
+          "falsifier": "clause 1 green before the fix",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py"
+        },
+        {
+          "piece": "the unanswered branch",
+          "expect": "all three teeth green twice after the fix",
+          "falsifier": "any tooth red",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "da29186ef039",
+      "criteria": [
+        {
+          "claim": "a timed-out clearance is unanswered (rc 3), a refusing clearance is still refused (rc 1), and close.sh names rc 3 'clearance unanswered'",
+          "instrument": "bin/cairn test cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py",
+          "covers": [
+            "the unanswered branch",
+            "the silent-bus proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
