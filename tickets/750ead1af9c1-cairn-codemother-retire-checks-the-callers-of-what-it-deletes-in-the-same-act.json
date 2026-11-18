@@ -1,0 +1,434 @@
+{
+  "id": "750ead1af9c1",
+  "title": "cairn codemother retire checks the callers of what it deletes, in the same act",
+  "owning_intention": "cairn/devices/codemother/machines/retire/intention+why.json",
+  "intention": "cairn codemother retire <path>... deletes code only after measuring, in the same act, that nothing calls it: it runs the proofs of the files that name each target, restores every target and names the caller when one reds, and reports what it could not measure. Nothing checks afterwards.",
+  "why": "Outline 1.3.7.1.1, Akien 2026-11-17: a retirement checks its callers in the same act as the deletion, and nothing checks afterwards; he chose a command over a per-verdict check (option a). Measured the same day: bin/proofs/test_retired_components_are_gone.py keeps eight retirements' worth of stays-gone teeth, and its one red (be4c6edef91b) is a measured fixture that only names a retired path.",
+  "traces_to": "Law 4 (outline 1.3.7.1.1 enforced by a command, not by habit); Law 5 (a standing proof that a thing stays gone is history kept as code).",
+  "how": "retire.py in a new codemother machine: namers(repo, targets), proofs_for(repo, namers), retire(repo, targets, runner) moves the targets to a temp folder, runs the proofs, moves them back on any red. cairn/devices/codemother/bin/retire is 'cairn codemother retire'. First use: run it on bin/proofs/test_retired_components_are_gone.py and bin/validations/test_retired_components_are_gone.json, expect the refusal naming test_every_built_probe_spec_names_a_file.py, repoint its _PRESENT and the three comments, run it again; then be4c6edef91b crosses RETIRED.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch git repo, a target whose namers' proofs stay green is deleted, and the report names the namers, the proofs run and the namers not run"
+      },
+      {
+        "n": 2,
+        "claim": "a target one of whose namers' proofs reds is restored byte for byte, the exit is 1, and the red proof is named as the caller"
+      },
+      {
+        "n": 3,
+        "claim": "a code namer with no proof beside it is reported as unmeasured, and history.json, state.json, validations/ and dot-files are never namers"
+      },
+      {
+        "n": 4,
+        "claim": "cairn codemother retire with no target exits 2 and prints its usage"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: retire.py. namers: repo files (os.walk; skip dot-dirs, __pycache__, *.egg-info, validations/, history.json, state.json, verdict-*.json and the targets themselves) whose text holds a target's repo path, or for a .py file or a folder under cairn/ or skills/ its dotted module. proofs_for: namers matching */proofs/test_*.py, plus for a code namer (.py, .sh, or a file under a bin/) every proofs/test_*.py of the nearest ancestor holding intention+why.json; a code namer with neither is unmeasured; prose and json namers are not run. retire(repo, targets, runner=None): refuse a missing target; move each into a TemporaryDirectory; runner(repo, proofs) -> {path: 'green'|'red'} (default bin/cairn test <proofs>, parsing '^\\s+(green|red)\\s+(\\S+)$'); any red or a proof the runner did not report moves every target back; exit 0 retired, 1 restored, 2 usage. It never commits.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/retire/__init__.py",
+        "cairn/devices/codemother/machines/retire/retire.py",
+        "cairn/devices/codemother/machines/retire/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/joined.py",
+        "cairn/devices/codemother/machines/outline_check/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/codemother/bin/retire, the shape of cairn/devices/codemother/bin/outline, so the verb is 'cairn codemother retire <path>...'. Outline 1.3.7.1.1 gains a child line naming the command.",
+      "writes_to": [
+        "cairn/devices/codemother/bin/retire",
+        "cairn/devices/cairn/requirements/01-the-rungs.md"
+      ],
+      "reads": [
+        "cairn/devices/codemother/bin/outline"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over a scratch git repo with the runner injected (each fixture proof is a two-line python file that exits 0 or 1, run by a runner that runs it with python3).",
+      "writes_to": [
+        "cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_the_joined_outline_shows_every_open_question.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: first use. Run retire on the proof and its validation and record the refusal; repoint _PRESENT in the probe-spec proof to bin/cairn and rewrite the three comments to say the retirement was checked when deleted (outline 1.3.7.1.1); run retire again; be4c6edef91b crosses RETIRED.",
+      "writes_to": [
+        "bin/proofs/test_retired_components_are_gone.py",
+        "bin/validations/test_retired_components_are_gone.json",
+        "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py",
+        "cairn/tools/question/proofs/test_question.py",
+        "skills/whatslefttodo/proofs/test_whatslefttodo.py",
+        "cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+      ],
+      "reads": [
+        "bin/proofs/test_retired_components_are_gone.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/retire/__init__.py",
+      "cairn/devices/codemother/machines/retire/retire.py",
+      "cairn/devices/codemother/machines/retire/intention+why.json",
+      "cairn/devices/codemother/bin/retire",
+      "cairn/devices/cairn/requirements/01-the-rungs.md",
+      "cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py",
+      "bin/proofs/test_retired_components_are_gone.py",
+      "bin/validations/test_retired_components_are_gone.json",
+      "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py",
+      "cairn/tools/question/proofs/test_question.py",
+      "skills/whatslefttodo/proofs/test_whatslefttodo.py",
+      "cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+    ],
+    "out": [
+      "cairn/devices/tester/proofs/test_the_network_seal_is_retired.py and any other standing stays-gone proof",
+      "committing inside the command",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-17",
+      "saw": "bin/proofs/test_retired_components_are_gone.py carries eight retirement tickets' teeth; its red tooth nothing_names_ruling is hit only by a fixture list in cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py; four files name the proof, one as a sample present path",
+      "how": "running the proof under bin/cairn test; grep -rln over the repo"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "cairn codemother retire <path>... deletes code only after running the proofs of the files that name it, restores it and names the caller on any red; its first use retires bin/proofs/test_retired_components_are_gone.py",
+      "ticket": "750ead1af9c1",
+      "intent": "A new codemother machine and shortcut make outline 1.3.7.1.1 a command: list a target's namers, move the target aside, run the namers' proofs (and the proofs of components whose code names it), move it back on any red naming the caller, report namers it could not measure. First use retires the standing stays-gone proof and its validation.",
+      "scope": "IN: the retire machine (retire.py, charter, proof), codemother's bin/retire, a child line under 1.3.7.1.1, the first use (the old proof, its validation, the four namers it touches). OUT: other standing stays-gone proofs, committing inside the command, every other component.",
+      "confidence": 0.8,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "750ead1af9c1",
+      "constraints": [
+        {
+          "kind": "law",
+          "source": "CLAUDE.md",
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass."
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/750ead1af9c1-cairn-codemother-retire-checks-the-callers-of-what-it-deletes-in-the-same-act.json",
+          "text": "a retirement checks its callers in the same act as the deletion, and nothing checks afterwards (outline 1.3.7.1.1)"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/750ead1af9c1-cairn-codemother-retire-checks-the-callers-of-what-it-deletes-in-the-same-act.json",
+          "text": "the command never commits; the caller commits by path"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/750ead1af9c1-cairn-codemother-retire-checks-the-callers-of-what-it-deletes-in-the-same-act.json",
+          "text": "repo-root bin/ holds only the launcher; the shortcut lives in codemother's bin (outline 5.4.3.7)"
+        },
+        {
+          "kind": "memory",
+          "source": "/home/akien/.claude/projects/-home-akien-dev-src-cairn/memory/new-component-charter-before-buildme.md",
+          "text": "a new component's charter exists before BUILDME"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/retire/__init__.py",
+          "cairn/devices/codemother/machines/retire/retire.py",
+          "cairn/devices/codemother/machines/retire/intention+why.json",
+          "cairn/devices/codemother/bin/retire",
+          "cairn/devices/cairn/requirements/01-the-rungs.md",
+          "cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py",
+          "bin/proofs/test_retired_components_are_gone.py",
+          "bin/validations/test_retired_components_are_gone.json",
+          "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py",
+          "cairn/tools/question/proofs/test_question.py",
+          "skills/whatslefttodo/proofs/test_whatslefttodo.py",
+          "cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+        ],
+        "out": [
+          "cairn/devices/tester/proofs/test_the_network_seal_is_retired.py and other standing stays-gone proofs",
+          "committing inside the command",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.8,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "750ead1af9c1",
+      "sought": [
+        "codemother's machines and bin for a retire verb",
+        "the old retirement proof's naming walk",
+        "the four files naming the old proof",
+        "the shortcut shape in codemother's bin",
+        "the tester's output line shape"
+      ],
+      "holdings": [
+        {
+          "what": "the naming walk to adapt (skips records, validations, dot-files)",
+          "address": "bin/proofs/test_retired_components_are_gone.py"
+        },
+        {
+          "what": "the old proof's seal",
+          "address": "bin/validations/test_retired_components_are_gone.json"
+        },
+        {
+          "what": "the shortcut shape",
+          "address": "cairn/devices/codemother/bin/outline"
+        },
+        {
+          "what": "a codemother machine charter to copy",
+          "address": "cairn/devices/codemother/machines/outline_check/intention+why.json"
+        },
+        {
+          "what": "the proof shape with main()",
+          "address": "cairn/devices/codemother/machines/outline_check/proofs/test_the_joined_outline_shows_every_open_question.py"
+        },
+        {
+          "what": "the rule",
+          "address": "cairn/devices/cairn/requirements/01-the-rungs.md"
+        },
+        {
+          "what": "a file naming the old proof",
+          "address": "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py"
+        },
+        {
+          "what": "a file naming the old proof",
+          "address": "cairn/tools/question/proofs/test_question.py"
+        },
+        {
+          "what": "a file naming the old proof",
+          "address": "skills/whatslefttodo/proofs/test_whatslefttodo.py"
+        },
+        {
+          "what": "a file naming the old proof",
+          "address": "cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a command that deletes code after checking its callers",
+          "measure": "ls cairn/devices/codemother/bin and machines/ hold no retire (2026-11-17)"
+        },
+        {
+          "what": "a proof of the retire command",
+          "measure": "no retire machine exists, so no proofs/ beside it (2026-11-17)"
+        }
+      ],
+      "unknowns": [
+        "whether every real caller has a proof; the command reports code namers without one as unmeasured"
+      ],
+      "confidence": 0.8,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "750ead1af9c1",
+      "sub_problems": [
+        {
+          "what": "write the retire machine and its charter",
+          "why": "the rule becomes a command",
+          "kind": "build",
+          "uses": [
+            "bin/proofs/test_retired_components_are_gone.py",
+            "cairn/devices/codemother/machines/outline_check/intention+why.json"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/retire/__init__.py",
+            "cairn/devices/codemother/machines/retire/retire.py",
+            "cairn/devices/codemother/machines/retire/intention+why.json"
+          ],
+          "fills": "a command that deletes code after checking its callers"
+        },
+        {
+          "what": "the shortcut and the outline line",
+          "why": "Akien and CC type one command",
+          "kind": "compose",
+          "uses": [
+            "cairn/devices/codemother/bin/outline",
+            "cairn/devices/cairn/requirements/01-the-rungs.md"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/bin/retire",
+            "cairn/devices/cairn/requirements/01-the-rungs.md"
+          ]
+        },
+        {
+          "what": "the proof, one tooth per clause",
+          "why": "nothing is green until a hollow build fails it",
+          "kind": "build",
+          "uses": [
+            "cairn/devices/codemother/machines/outline_check/proofs/test_the_joined_outline_shows_every_open_question.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py"
+          ],
+          "fills": "a proof of the retire command"
+        },
+        {
+          "what": "first use: retire the old proof",
+          "why": "the standing stays-gone proof is history kept as code",
+          "kind": "compose",
+          "uses": [
+            "bin/proofs/test_retired_components_are_gone.py",
+            "bin/validations/test_retired_components_are_gone.json",
+            "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py",
+            "cairn/tools/question/proofs/test_question.py",
+            "skills/whatslefttodo/proofs/test_whatslefttodo.py",
+            "cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+          ],
+          "writes_to": [
+            "bin/proofs/test_retired_components_are_gone.py",
+            "bin/validations/test_retired_components_are_gone.json",
+            "cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py",
+            "cairn/tools/question/proofs/test_question.py",
+            "skills/whatslefttodo/proofs/test_whatslefttodo.py",
+            "cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.8,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "750ead1af9c1",
+      "order": [
+        {
+          "what": "the proof, one tooth per clause",
+          "why_now": "red-first, before BUILDME"
+        },
+        {
+          "what": "write the retire machine and its charter",
+          "why_now": "the proof's subject"
+        },
+        {
+          "what": "the shortcut and the outline line",
+          "why_now": "the first use runs through it"
+        },
+        {
+          "what": "first use: retire the old proof",
+          "why_now": "last: it needs the command proven"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.8,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "750ead1af9c1",
+      "hypotheses": [
+        {
+          "piece": "write the retire machine and its charter",
+          "expect": "a green-namer target is deleted, a red-namer target restored and its caller named, an unproven code namer reported",
+          "falsifier": "tooth 1, 2 or 3 reds",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py"
+        },
+        {
+          "piece": "the shortcut and the outline line",
+          "expect": "cairn codemother retire with no target exits 2 with usage",
+          "falsifier": "tooth 4 reds",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py"
+        },
+        {
+          "piece": "the proof, one tooth per clause",
+          "expect": "green on the build, red hollow",
+          "falsifier": "hollow passes",
+          "instrument": "bin/cairn test --hollow 750ead1af9c1"
+        },
+        {
+          "piece": "first use: retire the old proof",
+          "expect": "the first run is refused naming the probe-spec proof; after the repoint the old proof and its validation are gone and the four namers stay green",
+          "falsifier": "the old proof still exists, or a namer reds",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py cairn/tools/question/proofs/test_question.py skills/whatslefttodo/proofs/test_whatslefttodo.py cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.8,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "750ead1af9c1",
+      "criteria": [
+        {
+          "claim": "cairn codemother retire deletes only after the namers' proofs stay green, and restores and names the caller on a red",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py",
+          "covers": [
+            "write the retire machine and its charter",
+            "the shortcut and the outline line",
+            "the proof, one tooth per clause"
+          ]
+        },
+        {
+          "claim": "after the first use the old retirement proof is gone, and every namer that was green before the deletion stays green (test_question.py was red before it, on a BUILDME-lane tooth this ticket does not touch)",
+          "instrument": "test ! -e bin/proofs/test_retired_components_are_gone.py && bin/cairn test cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py skills/whatslefttodo/proofs/test_whatslefttodo.py cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py",
+          "covers": [
+            "first use: retire the old proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.8,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "verdict": {
+      "verdicts": [
+        {
+          "claim": "cairn codemother retire deletes only after the namers' proofs stay green, and restores and names the caller on a red",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py",
+          "outcome": "pass",
+          "evidence": "claimed pass by CC; the verdict door's own re-run of this instrument is the reading, recorded beside it as observed_runs",
+          "discriminating_observation": "Live first use on 2026-11-17: once the ten forwarding orders were repointed, cairn codemother retire deleted the stays-gone proof and removed its validation through the artifact door. The probe-spec census, whatslefttodo and the cairn-page proofs stay green. An earlier run refused and restored the targets when a census proof turned red."
+        },
+        {
+          "claim": "after the first use the old retirement proof is gone, and every namer that was green before the deletion stays green (test_question.py was red before it, on a BUILDME-lane tooth this ticket does not touch)",
+          "instrument": "test ! -e bin/proofs/test_retired_components_are_gone.py && bin/cairn test cairn/tools/base/proofs/test_every_built_probe_spec_names_a_file.py skills/whatslefttodo/proofs/test_whatslefttodo.py cairn/devices/cairn/proofs/test_the_cairn_page_carries_the_heartbeat.py",
+          "outcome": "pass",
+          "evidence": "claimed pass by CC; the verdict door's own re-run of this instrument is the reading, recorded beside it as observed_runs",
+          "discriminating_observation": "Live first use on 2026-11-17: once the ten forwarding orders were repointed, cairn codemother retire deleted the stays-gone proof and removed its validation through the artifact door. The probe-spec census, whatslefttodo and the cairn-page proofs stay green. An earlier run refused and restored the targets when a census proof turned red."
+        }
+      ]
+    }
+  }
+}
