@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Changing the base shim's start to always call a device hook would touch every device; the proxy is the only face whose real process is a separate child, so the override belongs to it.",
+      "hidden_assumption": "That the relay record's pid is the relay itself; on Windows the launcher is a parent, and the record holds the python child's pid.",
+      "prior_art": "ticket 9166782e6101 built the client side of the wake; ticket a22eb3c25ccd built the face's wake() that this calls again.",
+      "real_collision": "None: the start verb keeps its root meaning, start what is not running; only what 'running' reads changes."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when (1) with the face up and the relay's recorded pid dead, `start` calls the face's wake() and says 'started database', never 'already running'; (2) with the face up and the relay alive, `start` says 'already running' and wakes nothing; (3) with the face down, `start` brings the face up, whose construction is the wake.",
+    "from_idea": "none, because the defect is measured in the live-fire of ticket 9166782e6101",
+    "how": "DatabaseProxyShim overrides the running property: the base presence AND the face's state() reading 'listening' (state() already reads a dead pid as stopped). It overrides _ensure_device: with the face down it defers to the base (construction is the wake); with the face up it calls the face's wake(). The base resolver's start branch is unchanged.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7 (a status surface must not say running over a dead relay) and outline 11.3.7 (every box reaches its database through its own proxy).",
+    "what": "The database proxy's shim reads 'running' as the relay being alive, not as its face being up: `cairn database start`, and the db client's bus wake that sends it, re-wakes a relay that died under a live face, and says 'already running' only while the relay listens."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "`cairn database start` now restarts a relay that crashed while the proxy's face stayed up; before, it said 'already running' over a dead 5432."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "5aee386439a9",
+  "skill": "intent",
+  "title": "The database proxy's shim reads 'running' as the relay being alive, not as its face being up: `cairn database start`, an",
+  "trace_id": "1fb773def3a8",
+  "when": "2026-11-18T12:13:34.270817"
+}

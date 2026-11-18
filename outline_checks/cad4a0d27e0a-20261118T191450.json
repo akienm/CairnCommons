@@ -1,0 +1,98 @@
+{
+  "ticket": "cad4a0d27e0a",
+  "at": "2026-11-18T19:14:50+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1579191,
+      "duration_ms": 72635,
+      "is_error": false,
+      "session_id": "fea50a82-e39c-48dd-86f6-eb13d6b43626"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "d3ce2f32be0987e6725f234a353e588ede014bee06da1a44886f742596de05e7",
+  "ticket_sha256": "bc38a96c96276761d6ed5cd2ce5b235a79a96631762a34266cefc9481bf1476f",
+  "touches": [
+    {
+      "number": "11.3",
+      "text": "DATABASE PROXY DEVICE (cairn/devices/dbproxy/)"
+    },
+    {
+      "number": "11.3.1",
+      "text": "The only way to the database. WHY: the authentication is wrapped up in it, and every table has exactly one owner who gates every write; an ownerless table can't be made (Postgres refuses it)."
+    },
+    {
+      "number": "11.3.7",
+      "text": "Every box runs its own instance of the database proxy, and everything on that box talks only to it (4.3.1.5.1.4.1.1). Each box's proxy is its own instance (1.3.4), so this agrees with 5.5.3.8 (\"a device runs on one box\"): no instance is duplicated, the class has one instance per box, like the foundational set of 5.5.3.8.1. WHY: the local read is fast, and the cache it fills is every box's backup. -amm; the fit with 5.5.3.8 - akienasus_cc_0"
+    },
+    {
+      "number": "11.3.9",
+      "text": "When a client's loopback dial to the proxy is refused (no socket on the box), the client wakes the proxy once through the bus (database start) and retries for up to 60 s. Any other failure, or a wake that fails, is raised at once and names why. WHY: the command lazy-inits the system (5.8.3.2.1), and after a reboot nothing else starts the proxy. - CC"
+    },
+    {
+      "number": "5.8.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "5.8.3.2",
+      "text": "The shim always starts its device. Nothing else does."
+    },
+    {
+      "number": "5.8.3.2.1",
+      "text": "It wakes the device when it's not running and is needed."
+    },
+    {
+      "number": "5.8.3.2.3",
+      "text": "It answers what it can itself; when it can't (eg a health question it holds no answer to), it wakes the device and asks."
+    },
+    {
+      "number": "5.3.5",
+      "text": "There is no central supervisor. Each part starts what it needs by trying to use it: sending a message starts the bus if it is down, a message arriving wakes its shim, the shim wakes its device. Many very small supervisors, each one detect-and-start. WHY: a supervisor is one more thing to keep up, and the system must come up from any part that is touched."
+    },
+    {
+      "number": "5.3.5.1",
+      "text": "The detect-and-start lives in one tool, the waker, and it sits inside connect: every client's connect is a wake attempt, so no caller can forget one. A probe watches and reports; the waker acts."
+    },
+    {
+      "number": "5.3.5.4",
+      "text": "A wake waits until the part answers, at most 60 s (5.5.3.9). Repeated failures back off, then file a trouble (5.8.3.2.2), so a crash loop cannot spin."
+    },
+    {
+      "number": "2.4.8",
+      "text": "start - start the device"
+    },
+    {
+      "number": "2.4.9",
+      "text": "stop - stop the device"
+    },
+    {
+      "number": "9.3.5",
+      "text": "Owns the inspectors and gates (9.4): everything in the code pipeline that checks. The exception is diagnostic_inspector, which is base's (17.1)."
+    },
+    {
+      "number": "9.4.2",
+      "text": "tester"
+    },
+    {
+      "number": "9.4.2.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "9.4.2.3.3",
+      "text": "Seals: one current validation per proof, beside the proof. A seal holds while the code it measured is unchanged."
+    },
+    {
+      "number": "19.6",
+      "text": "RULE 1, ENCAPSULATION: every component talks to every other only through that component's public interface: a device's is the bus plus any client tool it publishes; a machine's or tool's is what its entry declares. Nothing outside a device reaches into its code, skills included. A ticket builds inside its own component, and its proofs measure only that component. WHY: it limits a change to the component that made it."
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [],
+  "questions_already_open": []
+}
