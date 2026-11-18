@@ -5,11 +5,12 @@
   "intention": "The verdict gate runs a ticket's instruments a few at a time instead of one after another, so a big ticket's verdict, and every ticket queued behind it, finishes in a fraction of the time.",
   "why": "Measured 2026-11-16: 149b9a1ab9c4's verdict ran its 74 instruments one after another in observe_instruments, 1470 s of runs (median 15 s, max 221 s), 1500 s from ask to berth. 62a8ecb673a7's verdict waited 562 s behind it in the one verdict FIFO. This fixes 149b-class verdicts. It does not fix the worst case at the declared timeouts, 74 x 600 s = 44,400 s, which width 3 only divides and which stays past the asker's 3600 s berth wait (a bound, not a measurement). A verdict-wide bound is its own ticket and is not cast here.",
   "traces_to": "Law 1: the resolver and the box are spent on the novel. One big verdict serially blocks every other ticket's verdict.",
-  "how": "In observe_instruments, after every command is extracted (0d38d0f5a4e3), run the planned runs on concurrent.futures.ThreadPoolExecutor(max_workers=VERDICT_WIDTH), VERDICT_WIDTH = 3 a module constant, and return the readings in planned order. Admission is by memory: a run starts only while MemAvailable is at least 2 x SEAL_SWAP_BYTES + a 1 GB floor, read from /proc/meminfo through an injectable reader; otherwise it waits for a running slot to free. Each observed run carries started and ended epochs. Before PROVEME the build samples MemAvailable, Shmem and df /tmp every 5 s through one real 149b verdict and records them in measured. Q#119 (open-059b4201de27) decides what a red does at width 3; BUILDME waits on it and on 6ea3a8548493, which moves the one live write among these proofs to scratch.",
+  "how": "In observe_instruments, after every command is extracted (0d38d0f5a4e3), run the planned runs on concurrent.futures.ThreadPoolExecutor(max_workers=VERDICT_WIDTH), VERDICT_WIDTH = 3 a module constant, and return the readings in planned order. Admission is by memory: a run starts only while MemAvailable is at least 2 x SEAL_SWAP_BYTES + a 1 GB floor, read from /proc/meminfo through an injectable reader; otherwise it waits for a running slot to free. Each observed run carries started and ended epochs. Before PROVEME the build samples MemAvailable, Shmem and df /tmp every 5 s through one real 149b verdict and records them in measured. HYPOTHESIS (outline 9.4.8.1.1, 0.6.1; from Q#119): three runs at once share the repo, /tmp, the network and git, so a red can come from a neighbour. A reading whose run disagrees with its expect_exit is re-run once, alone, after the pool has drained; both runs stand on the reading, and a red that agrees alone is a contention red, which the verdict records and does not refuse on. The WATCHME measures whether the re-run catches real contention and what it costs. BUILDME waits on 6ea3a8548493, which moves the one live write among these proofs to scratch.",
   "bounds": {
     "in": [
       "cairn/devices/codemother/machines/verdict/verdict.py",
-      "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+      "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py",
+      "cairn/devices/codemother/machines/verdict/probes/a_red_re_run_alone_catches_contention.py"
     ],
     "out": [
       "every other component",
@@ -129,7 +130,7 @@
     },
     {
       "n": 10,
-      "text": "a red-first proof drives observe_instruments with an injected sleeping, counting runner and an injected meminfo reader over a scratch artifact, one tooth per clause.",
+      "text": "a red-first proof drives observe_instruments with an injected sleeping, counting runner and an injected meminfo reader over a scratch artifact, one tooth per clause, plus the re-run, contention and probe clauses (11-15).",
       "writes_to": [
         "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
       ],
@@ -137,6 +138,69 @@
         "cairn/devices/codemother/machines/verdict/verdict.py"
       ],
       "after": []
+    },
+    {
+      "n": 11,
+      "claim": "with an injected runner whose first run of one command disagrees and whose second agrees, that reading carries run and run_alone, and the alone run starts only after every pooled run has ended, with nothing else in flight",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 12,
+      "claim": "a red that agrees alone is marked contention true and the verdict does not refuse on it; a red that disagrees alone too is marked contention false and refuses as before",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 13,
+      "claim": "a reading that agreed on its first run is not re-run: the injected runner counts zero extra runs",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 14,
+      "claim": "each re-run reading names the neighbours whose started/ended interval overlapped its first run",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 15,
+      "claim": "the probe, over scratch verdict berths before and after an era floor, counts only post-era re-runs and returns the pairs, the contention count and re-run seconds against all run seconds",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 16,
+      "text": "after the pool drains, observe_instruments re-runs each disagreeing reading once, alone, and records run_alone, contention and neighbours; _observed_entries judges a contention red by its alone run.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ],
+      "after": [
+        7,
+        9
+      ]
+    },
+    {
+      "n": 17,
+      "text": "the WATCHME probe reads post-era verdict berths and returns the carrier's pairs and totals.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/verdict/probes/a_red_re_run_alone_catches_contention.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/verdict.py",
+        "cairn/devices/codemother/machines/verdict/probes/the_instrument_is_re_run_not_reported.py"
+      ],
+      "after": [
+        16
+      ]
     }
   ]
 }
