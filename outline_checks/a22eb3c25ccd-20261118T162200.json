@@ -1,0 +1,89 @@
+{
+  "ticket": "a22eb3c25ccd",
+  "at": "2026-11-18T16:22:00+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.22596,
+      "duration_ms": 155702,
+      "is_error": false,
+      "session_id": "402e1c56-4d74-4359-834f-2338aebc92cb"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "f113db6a18dcc3ccad851419e66fc8d110a0c05774751c2519441bfe3929d433",
+  "ticket_sha256": "e6f7ea84afb45bc1331077e8708677a2873ed8f110e7a7237d9ea9c43338bac9",
+  "touches": [
+    {
+      "number": "11.3",
+      "text": "DATABASE PROXY DEVICE (cairn/devices/dbproxy/)"
+    },
+    {
+      "number": "11.3.1",
+      "text": "The only way to the database. WHY: the authentication is wrapped up in it, and every table has exactly one owner who gates every write; an ownerless table can't be made (Postgres refuses it)."
+    },
+    {
+      "number": "11.3.2",
+      "text": "Device name on the command line and bus: database (eg cairn database show)."
+    },
+    {
+      "number": "11.3.3",
+      "text": "Its main customer is the librarian, which owns the graph trees; other devices reach the trees through the librarian's commands, not the database proxy, which keeps its bus traffic small."
+    },
+    {
+      "number": "11.3.4",
+      "text": "Publishes a client tool (connect, read, write, query ...) that talks to the database over its socket, no bus hop: faster (2.3.7.1.1)."
+    },
+    {
+      "number": "11.3.5",
+      "text": "Postgres itself is a host service, installed and upgraded by Recovery (6.3.5); Rescue when it won't start."
+    },
+    {
+      "number": "11.3.6",
+      "text": "Who holds tables: every table of learning is a tree in the memory model (4.3.1.5), owned by the librarian and delegated to the devices that learn. A table that is not learning is an exception and names why; the bus's message table is the first (5.5.3.4.1)."
+    },
+    {
+      "number": "11.3.7",
+      "text": "Every box runs its own instance of the database proxy, and everything on that box talks only to it (4.3.1.5.1.4.1.1). Each box's proxy is its own instance (1.3.4), so this agrees with 5.5.3.8 (\"a device runs on one box\"): no instance is duplicated, the class has one instance per box, like the foundational set of 5.5.3.8.1. WHY: the local read is fast, and the cache it fills is every box's backup. -amm; the fit with 5.5.3.8 - akienasus_cc_0"
+    },
+    {
+      "number": "2.3.2",
+      "text": "An internal device is its own process. An external device depends on what it wraps (5.8.3.7)."
+    },
+    {
+      "number": "2.3.7.1.1",
+      "text": "Database: because faster (11.3.4)."
+    },
+    {
+      "number": "4.3.1.5.1.4",
+      "text": "The sync is the backup, and a local database is a cache of the master. A local call for a node or tree the box does not hold is fed from the master and populates the local copy. If the box holds 12 rows and is asked for row 123, the rows between are added as NOTCACHED."
+    },
+    {
+      "number": "4.3.1.5.1.4.1.1",
+      "text": "The full copy is a byproduct of the cache, not a separate backup. Every box runs its own database proxy (11.3.7), and a device, machine or tool only ever talks to its local one. A read is answered locally when the row is local and current; otherwise the local proxy gets it from another host's proxy, returns it, and caches it locally in the background. Sleep cycles also sync the databases across hosts, so NOTCACHED is a transient state and every box slowly builds a full copy. WHY: the cache already makes every copy, so there is no separate backup to make, and the same caching keeps every read as fast as possible. -amm"
+    },
+    {
+      "number": "5.8.3.1",
+      "text": "Every device has a shim. Each shim is its own process, one per instance, and connects to the bus as a client. WHY: in the bus process, updating one shim meant bringing the whole bus down, and one shim's stall was everyone's. Separate, a shim restarts itself when its own files change, like the ground loop, and the bus stays up."
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "2.3.2",
+      "text": "An internal device is its own process. An external device depends on what it wraps (5.8.3.7).",
+      "ticket_says": "proxy 'runs inside the bus process, so it spawns nothing'",
+      "why": "Outline states 'An internal device is its own process.' The proxy is an internal device (engineered to work with Cairn, not an external wrap like Claude Code). Running inside the bus process means it is not its own process, contradicting the requirement that internal devices are independent processes."
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [
+    "4.3.1.5.1.4.1.1.1"
+  ],
+  "questions_opened": [
+    "open-7b13d8ebfcb0"
+  ],
+  "questions_already_open": []
+}

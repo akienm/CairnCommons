@@ -1,0 +1,370 @@
+{
+  "id": "a22eb3c25ccd",
+  "title": "the database proxy forwards 127.0.0.1:5432 to the box's own Postgres",
+  "owning_intention": "cairn/devices/dbproxy/intention+why.json",
+  "intention": "A new device, the database proxy (cairn/devices/dbproxy/, answering as `database`, instance 0 on each box), listens on 127.0.0.1:5432 and runs as its own process and forwards every connection byte for byte to the box's own Postgres on its local port (5433 by default), so a cache box's processes reach their database at the one address the client dials.",
+  "why": "Measured 2026-11-17 on akienlivingroom: Postgres was moved to 5433 (loopback only) so that 5432 belongs to the proxy (outline 11.3.7, one proxy per box and everything on the box talks only to it), and with no proxy built every db call there fails 'Connection refused' at 127.0.0.1:5432 (the db client dials _TCP_PORT 5432 when there is no socket, store.py _conn_args). cairn/devices/ holds no dbproxy folder.",
+  "traces_to": "Outline 11.3 and 11.3.7 (the database proxy device, one instance per box); Law 6 (the proxy is the one door the box's database is reached by).",
+  "how": "v0 is a forwarder and nothing else, and it is its own process (outline 2.3.2). forward.py holds a threaded TCP relay: accept on 127.0.0.1:<listen>, dial 127.0.0.1:<upstream>, pump both ways, close both when either end closes, and count connections and refusals. `python -m cairn.devices.dbproxy` runs it in the foreground; holding the listen port is its singleton, and it writes its record (pid, ports, state, counts) to ~/.cairn/devices/dbproxy/0/relay.json on start and on each connection. Ports: CAIRN_DBPROXY_LISTEN_PORT (default 5432) and CAIRN_DBPROXY_POSTGRES_PORT (default 5433). Where the listen port is already held (the home box, where Postgres itself listens on 5432) the process records state 'held' and exits 0, forwarding nothing. device.py's DatabaseProxyDevice is the face the bus wakes on `cairn database start`: if the record's pid is not alive it spawns the process detached and windowless (windowless_spawn: background_pythonw and detached_kwargs, so no console on Windows, outline 5.3.5.3.2), and state() reads the record. shim.py answers as `database`; the charter declares answers_as `database`; 0/bin/dbproxy is the self-named launcher.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "bytes written to the relay reach the upstream and the upstream's reply comes back, for two concurrent connections kept apart"
+      },
+      {
+        "n": 2,
+        "claim": "the listener is bound to 127.0.0.1 only"
+      },
+      {
+        "n": 3,
+        "claim": "when the listen port is already held (the home box), `python -m cairn.devices.dbproxy` exits 0, its record says held, and it forwards nothing"
+      },
+      {
+        "n": 4,
+        "claim": "when the upstream refuses, the client's connection is closed and the record counts the refusal"
+      },
+      {
+        "n": 5,
+        "claim": "the device is its own process: waking the device spawns a process whose pid is not the waker's, that listens on the listen port and writes its record; a second wake spawns nothing more; on Windows the spawn takes background_pythonw and detached_kwargs"
+      },
+      {
+        "n": 6,
+        "claim": "the device answers as `database`: the shim's device_id and the charter's answers_as are both `database`"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the charter, written through the artifact door before BUILDME: component dbproxy, answers_as database, runtime_role device, owner CC.",
+      "writes_to": [
+        "cairn/devices/dbproxy/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/cairn/requirements/11-proxy-devices.md"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: forward.py: the threaded relay (listen and upstream ports as arguments, counters, an on_change callback for the record, stop() closes the listener); __main__.py runs it in the foreground, writes relay.json, records 'held' and exits 0 on EADDRINUSE.",
+      "writes_to": [
+        "cairn/devices/dbproxy/__init__.py",
+        "cairn/devices/dbproxy/forward.py",
+        "cairn/devices/dbproxy/__main__.py"
+      ],
+      "reads": []
+    },
+    {
+      "n": 3,
+      "text": "D3: device.py and shim.py: DatabaseProxyDevice spawns `python -m cairn.devices.dbproxy` detached and windowless when the record's pid is not alive, and reads the record for state(); DatabaseProxyShim answers as database; 0/bin/dbproxy launches like inferenceproxy's.",
+      "writes_to": [
+        "cairn/devices/dbproxy/device.py",
+        "cairn/devices/dbproxy/shim.py",
+        "cairn/devices/dbproxy/0/bin/dbproxy"
+      ],
+      "reads": [
+        "cairn/devices/inferenceproxy/shim.py",
+        "cairn/devices/inferenceproxy/0/bin/inferenceproxy",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof drives the relay over ephemeral ports with a fake upstream, runs the process under a scratch HOME, and wakes the device there, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/dbproxy/0/bin/dbproxy",
+      "cairn/devices/dbproxy/__init__.py",
+      "cairn/devices/dbproxy/__main__.py",
+      "cairn/devices/dbproxy/device.py",
+      "cairn/devices/dbproxy/forward.py",
+      "cairn/devices/dbproxy/intention+why.json",
+      "cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py",
+      "cairn/devices/dbproxy/shim.py"
+    ],
+    "out": [
+      "the db client waking the proxy on a refused connection (db_domain's own ticket)",
+      "the home-to-remote sync (ticket 3ef8654a8027)",
+      "owner gates and the published client tool (outline 11.3.4)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-17",
+      "saw": "Connection refused at 127.0.0.1:5432 for every db call on akienlivingroom, Postgres on 5433, no cairn/devices/dbproxy/",
+      "how": "akienlivingroom_cc_0's report over the bus, and ls cairn/devices/ on akiendelllinux"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "build the database proxy device v0 at cairn/devices/dbproxy: its own process relaying 127.0.0.1:5432 to the box's Postgres port, answering as database",
+      "ticket": "a22eb3c25ccd",
+      "intent": "A new device dbproxy (answers as database) whose own process relays TCP from 127.0.0.1:5432 to 127.0.0.1:<Postgres port, default 5433>, records itself in instance space, exits 0 recording 'held' where 5432 is taken, and is spawned windowless by its bus face when not running.",
+      "scope": "IN: cairn/devices/dbproxy/ (charter, relay, process entry, device, shim, launcher, proof). OUT: the db client's wake on refused, the home-to-remote sync, owner gates, the published client tool, every other component.",
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "a22eb3c25ccd",
+      "constraints": [
+        {
+          "kind": "outline",
+          "source": "cairn/devices/cairn/requirements/02-device.md",
+          "text": "2.3.2 An internal device is its own process."
+        },
+        {
+          "kind": "outline",
+          "source": "cairn/devices/cairn/requirements/11-proxy-devices.md",
+          "text": "11.3.7 Every box runs its own instance of the database proxy, and everything on that box talks only to it."
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/a22eb3c25ccd-the-database-proxy-forwards-127-0-0-1-5432-to-the-box-s-own-postgres.json",
+          "text": "the relay binds loopback only and never raises on the home box where Postgres holds 5432"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/dbproxy/intention+why.json",
+          "cairn/devices/dbproxy/__init__.py",
+          "cairn/devices/dbproxy/forward.py",
+          "cairn/devices/dbproxy/__main__.py",
+          "cairn/devices/dbproxy/device.py",
+          "cairn/devices/dbproxy/shim.py",
+          "cairn/devices/dbproxy/0/bin/dbproxy",
+          "cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py"
+        ],
+        "out": [
+          "the db client's wake on a refused connection (cairn/devices/db_domain/tools/client/store.py)",
+          "the home-to-remote sync (ticket 3ef8654a8027)",
+          "owner gates and the published client tool (outline 11.3.4)",
+          "every other component"
+        ]
+      },
+      "unknowns": [
+        "whether the Windows box's bus process passes CAIRN_DBPROXY_POSTGRES_PORT through; the 5433 default covers akienlivingroom"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "a22eb3c25ccd",
+      "sought": [
+        "a TCP relay anywhere in cairn/",
+        "the sibling proxy device's shape",
+        "the windowless spawn helper",
+        "how the client dials the database",
+        "the bus's start verb"
+      ],
+      "holdings": [
+        {
+          "what": "the sibling proxy's shim (device_id, _bare, _start_device)",
+          "address": "cairn/devices/inferenceproxy/shim.py"
+        },
+        {
+          "what": "background_pythonw and detached_kwargs",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        },
+        {
+          "what": "the client's TCP branch dials 127.0.0.1:5432 (_conn_args)",
+          "address": "cairn/devices/db_domain/tools/client/store.py"
+        },
+        {
+          "what": "the root start verb and _ensure_device",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the dbproxy charter, answers_as database",
+          "address": "cairn/devices/dbproxy/intention+why.json"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a TCP relay in the repo",
+          "measure": "grep -rn 'socket.socket(' cairn/ --include=*.py finds no TCP relay, only the bus broker's UDS (2026-11-18)"
+        },
+        {
+          "what": "a dbproxy process that holds the listen port as its singleton",
+          "measure": "ls cairn/devices/dbproxy/ holds only the charter (2026-11-18)"
+        },
+        {
+          "what": "a device face that answers as database and spawns its process",
+          "measure": "no shim.py under cairn/devices/dbproxy/ (2026-11-18)"
+        },
+        {
+          "what": "a proof of the database proxy",
+          "measure": "no proofs/ under cairn/devices/dbproxy/ (2026-11-18)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "a22eb3c25ccd",
+      "sub_problems": [
+        {
+          "what": "the relay",
+          "why": "the bytes have to cross",
+          "kind": "build",
+          "fills": "a TCP relay in the repo",
+          "uses": [],
+          "writes_to": [
+            "cairn/devices/dbproxy/__init__.py",
+            "cairn/devices/dbproxy/forward.py"
+          ]
+        },
+        {
+          "what": "the process and its record",
+          "why": "the outline makes the device its own process (2.3.2)",
+          "kind": "build",
+          "fills": "a dbproxy process that holds the listen port as its singleton",
+          "uses": [],
+          "writes_to": [
+            "cairn/devices/dbproxy/__main__.py"
+          ]
+        },
+        {
+          "what": "the device face, shim and launcher",
+          "why": "cairn database start is how it is woken",
+          "kind": "build",
+          "fills": "a device face that answers as database and spawns its process",
+          "uses": [
+            "cairn/devices/inferenceproxy/shim.py",
+            "cairn/tools/windowless_spawn/windowless_spawn.py",
+            "cairn/tools/base/shim.py",
+            "cairn/devices/dbproxy/intention+why.json"
+          ],
+          "writes_to": [
+            "cairn/devices/dbproxy/device.py",
+            "cairn/devices/dbproxy/shim.py",
+            "cairn/devices/dbproxy/0/bin/dbproxy"
+          ]
+        },
+        {
+          "what": "the proof",
+          "why": "nothing is known until measured",
+          "kind": "build",
+          "fills": "a proof of the database proxy",
+          "uses": [],
+          "writes_to": [
+            "cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "a22eb3c25ccd",
+      "order": [
+        {
+          "what": "the proof",
+          "why_now": "red first: the proof stands before the code"
+        },
+        {
+          "what": "the relay",
+          "why_now": "the process and the face both run it"
+        },
+        {
+          "what": "the process and its record",
+          "why_now": "the face spawns it"
+        },
+        {
+          "what": "the device face, shim and launcher",
+          "why_now": "last: it composes the process"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "a22eb3c25ccd",
+      "hypotheses": [
+        {
+          "piece": "the proof",
+          "expect": "reds before the code exists, greens twice after",
+          "falsifier": "greens with no dbproxy code",
+          "instrument": "bin/cairn test --hollow a22eb3c25ccd"
+        },
+        {
+          "piece": "the relay",
+          "expect": "two concurrent echoes round-trip apart; loopback bind; refused upstream closes the client",
+          "falsifier": "a byte lost or crossed, or a non-loopback bind",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py"
+        },
+        {
+          "piece": "the process and its record",
+          "expect": "with the port held the process exits 0 recording held",
+          "falsifier": "it raises or exits nonzero",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py"
+        },
+        {
+          "piece": "the device face, shim and launcher",
+          "expect": "a wake spawns one separate listening process and a second wake spawns none",
+          "falsifier": "two processes, or the waker's own pid listening",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "a22eb3c25ccd",
+      "criteria": [
+        {
+          "claim": "the database proxy proof is green: relay, loopback, held, refused, own process, answers as database",
+          "instrument": "bin/cairn test cairn/devices/dbproxy/proofs/test_the_database_proxy_forwards_to_postgres.py",
+          "covers": [
+            "the relay",
+            "the process and its record",
+            "the device face, shim and launcher",
+            "the proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}

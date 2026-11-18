@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked at pgbouncer and a Postgres listen_addresses change: pgbouncer is a host install that Cairn does not own, and moving Postgres back to 5432 undoes 11.3.7. A stdlib relay is the smallest thing that makes the proxy the box's one door, and the later client tool and owner gate grow on it.",
+      "hidden_assumption": "That the bus process stays up once woken, so a relay on its threads lives as long as the box's Cairn does; a bus restart drops it until something wakes it again, which is the db client's ticket.",
+      "prior_art": "cairn/devices/inferenceproxy is the sibling proxy device (shim, device, charter answers_as); no TCP relay exists in the repo (grep for socket.accept over cairn/ finds the bus's UDS broker only).",
+      "real_collision": "None: db_domain's client dials 5432 already; the proxy only occupies the address the client dials."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when (1) bytes written to the proxy reach the upstream and the upstream's reply comes back, for two concurrent connections kept apart; (2) the listener is bound to 127.0.0.1 only; (3) when the listen port is already held (the home box), the device wakes without raising, its state names the port as held, and it forwards nothing; (4) when the upstream refuses, the client's connection is closed and the device's state counts the refusal; (5) the device answers as `database`: the shim's device_id and the charter's answers_as are both `database`.",
+    "from_idea": "none, because the device is specified at outline 11.3 in cairn/devices/cairn/requirements/11-proxy-devices.md",
+    "how": "v0 is a forwarder and nothing else: forward.py holds a threaded TCP relay (accept on 127.0.0.1:<listen>, dial 127.0.0.1:<upstream>, pump both ways, close both on either end's close). device.py's DatabaseProxyDevice starts it at wake and reports listening/held/connections/refused in state(); settings() names both ports. The upstream port is CAIRN_DBPROXY_POSTGRES_PORT, default 5433. On a box where 5432 is already held (the home box, where Postgres itself listens) the device wakes without raising and its state says the port is held and it forwards nothing. shim.py's device_id is `database`; the charter declares answers_as `database`; 0/bin/dbproxy is the self-named launcher. It runs inside the bus process, so it spawns nothing and opens no window (outline 5.3.5.3.2).",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Outline 11.3 and 11.3.7 (the database proxy device, one instance per box); Law 6 (the proxy is the one door the box's database is reached by).",
+    "what": "A new device, the database proxy (cairn/devices/dbproxy/, answering as `database`, instance 0 on each box), listens on 127.0.0.1:5432 and forwards every connection byte for byte to the box's own Postgres on its local port (5433 by default), so a cache box's processes reach their database at the one address the client dials."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "dbproxy v0 is a byte relay only; the wake and the sync are their own tickets."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "8507458ee9a1",
+  "skill": "intent",
+  "title": "A new device, the database proxy (cairn/devices/dbproxy/, answering as `database`, instance 0 on each box), listens on 1",
+  "trace_id": "3169d5a181a0",
+  "when": "2026-11-18T09:19:22.350884"
+}
