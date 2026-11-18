@@ -9,7 +9,8 @@
   "bounds": {
     "in": [
       "cairn/devices/codemother/machines/verdict/verdict.py",
-      "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+      "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py",
+      "cairn/devices/codemother/machines/verdict/proofs/test_chart_verdict.py"
     ],
     "out": [
       "every other component",
@@ -47,6 +48,16 @@
       "when": "2026-11-16",
       "saw": "MemAvailable 6.19 GB with 12 scratch buses running, 6.38 GB after stopping them",
       "how": "/proc/meminfo on akiendelllinux"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "test_chart_verdict.py red on main before this build: its tree-free tooth still listed the chain contract and script_argv without the cairn.tools.base.plan (a56464ac8) and sys (4376fc18e) imports landed 2026-11-14, under a 2026-11-13 green seal; the pool's threading import is a third name for the same tooth",
+      "how": "bin/cairn test cairn/devices/codemother/machines/verdict/proofs, and import_map over plan.py (['__future__']) and script_argv.py (+ 'sys')"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "one real 149b9a1ab9c4 verdict (74 instruments) observed at width 3 on akiendelllinux: 744.8 s wall against 2127.3 s of summed run seconds (1470 s serial on 2026-11-16, so a run is ~1.45x slower beside two neighbours); 74 of 74 agree; peak 3 in flight; MemAvailable 8.06 GB -> min 4.08 GB; Shmem 0.73 -> 4.55 GB; /tmp +3.92 GB. A sealed run's copy is ~1.27 GB of tmpfs, not the 596 MB swap first read, so SEAL_SWAP_BYTES is 1300 MiB",
+      "how": "observe_instruments over ~/.cairn/devices/chart/0/packets/verdict-20261116T132125-62b1e6f2dd1c.json with the default sealed runner, /proc/meminfo and shutil.disk_usage('/tmp') sampled every 5 s; nothing written"
     }
   ],
   "outcomes": [
@@ -98,5 +109,273 @@
     "admission by memory in verdict.py: up to VERDICT_WIDTH, a run starts only while MemAvailable >= 2 x SEAL_SWAP_BYTES + 1 GB (SEAL_SWAP_BYTES = the measured ~596 MB swap); the meminfo reader is injectable. The first run is always admitted, so a tight box degrades to serial, never to zero.",
     "each observed run records started and ended epochs beside seconds.",
     "a red-first proof drives observe_instruments with an injected sleeping, counting runner and an injected meminfo reader over a scratch artifact, one tooth per clause."
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "the verdict runs its instruments a few at a time",
+      "intent": "observe_instruments in the codemother verdict machine runs a verdict's planned instrument runs on a bounded pool of three, admitted by available memory, keeping planned order and stamping each run's started/ended epochs, so a big verdict finishes in a fraction of its serial time.",
+      "scope": "IN: verdict.py's observe_instruments and one new verdict proof. OUT: the re-run-alone of a red (child b7068b1ba431), run_instrument's sealed exec, the tester device, the chart gate's FIFO, a verdict-wide time bound, every other component.",
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/e56a68e651c2-the-verdict-runs-its-instruments-a-few-at-a-time.json",
+          "text": "never more than VERDICT_WIDTH (3) runs in flight; readings return in the artifact's verdicts order"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/e56a68e651c2-the-verdict-runs-its-instruments-a-few-at-a-time.json",
+          "text": "a run starts only while MemAvailable >= 2 x SEAL_SWAP_BYTES + 1 GB, read through an injectable reader; the first run is always admitted"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/e56a68e651c2-the-verdict-runs-its-instruments-a-few-at-a-time.json",
+          "text": "every command is extracted before any is run (0d38d0f5a4e3); an unrunnable instrument still makes zero runs"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/e56a68e651c2-the-verdict-runs-its-instruments-a-few-at-a-time.json",
+          "text": "a red at width 3 is recorded as it came; the alone re-run is child b7068b1ba431's"
+        },
+        {
+          "kind": "charter",
+          "source": "cairn/devices/codemother/machines/verdict/intention+why.json",
+          "text": "the verdict runs what the artifact says it ran; runner stays injectable"
+        },
+        {
+          "kind": "law",
+          "source": "/home/akien/dev/src/cairn/CLAUDE.md",
+          "text": "RULE 1: the sealed exec is reached through the tester's published interface, never rebuilt here"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/verdict/verdict.py",
+          "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+        ],
+        "out": [
+          "cairn/devices/tester",
+          "cairn/devices/codemother/machines/chart_gate",
+          "cairn/devices/codemother/machines/verdict/probes",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    },
+    "survey": {
+      "sought": [
+        "observe_instruments' serial loop",
+        "run_instrument's sealed exec and its record",
+        "_observed_entries' checks",
+        "a swap-size constant",
+        "a proof driving observe_instruments with an injected runner",
+        "a memory-admission reader"
+      ],
+      "holdings": [
+        {
+          "what": "observe_instruments: extracts every command, then runs planned readings one after another through an injectable runner",
+          "address": "cairn/devices/codemother/machines/verdict/verdict.py"
+        },
+        {
+          "what": "run_instrument: bounded sealed exec via bin/cairn test --exec, record with command/exit/seconds/tail",
+          "address": "cairn/devices/codemother/machines/verdict/verdict.py"
+        },
+        {
+          "what": "a proof that drives the verdict's instruments through an injected runner",
+          "address": "cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py"
+        },
+        {
+          "what": "the run-under-the-seal proof",
+          "address": "cairn/devices/codemother/machines/verdict/proofs/test_an_instrument_runs_under_the_seal.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a bounded pool in observe_instruments",
+          "measure": "grep ThreadPool over verdict.py: no match (2026-11-18)"
+        },
+        {
+          "what": "memory admission and SEAL_SWAP_BYTES",
+          "measure": "grep -rn SEAL_SWAP_BYTES over cairn/: no match; grep meminfo over verdict.py: no match (2026-11-18)"
+        },
+        {
+          "what": "started and ended epochs on a run",
+          "measure": "run_instrument's records carry seconds only (verdict.py:243-257, read 2026-11-18)"
+        },
+        {
+          "what": "a proof of the pool",
+          "measure": "ls verdict/proofs: no test_the_verdict_runs_its_instruments_a_few_at_a_time.py (2026-11-18)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the pool proof",
+          "kind": "build",
+          "fills": "a proof of the pool",
+          "why": "red-first: the serial loop fails the timing, width and overlap teeth",
+          "uses": [
+            "cairn/devices/codemother/machines/verdict/proofs/test_the_instrument_is_run.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+          ]
+        },
+        {
+          "what": "the bounded pool",
+          "kind": "build",
+          "fills": "a bounded pool in observe_instruments",
+          "why": "149b's 74 instruments ran 1470 s serially",
+          "uses": [
+            "cairn/devices/codemother/machines/verdict/verdict.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/verdict/verdict.py"
+          ]
+        },
+        {
+          "what": "memory admission",
+          "kind": "build",
+          "fills": "memory admission and SEAL_SWAP_BYTES",
+          "why": "three sealed runs each copy the instance; a tight box must degrade to serial",
+          "uses": [
+            "cairn/devices/codemother/machines/verdict/verdict.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/verdict/verdict.py"
+          ]
+        },
+        {
+          "what": "run epochs",
+          "kind": "build",
+          "fills": "started and ended epochs on a run",
+          "why": "overlap must be measurable, and b7068 names neighbours by it",
+          "uses": [
+            "cairn/devices/codemother/machines/verdict/verdict.py"
+          ],
+          "writes_to": [
+            "cairn/devices/codemother/machines/verdict/verdict.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the pool proof",
+          "why_now": "red first, so the teeth are seen to bite the serial loop"
+        },
+        {
+          "what": "run epochs",
+          "why_now": "the overlap tooth and the pool both read them"
+        },
+        {
+          "what": "the bounded pool",
+          "why_now": "the core change, timing and width teeth turn green"
+        },
+        {
+          "what": "memory admission",
+          "why_now": "gates the pool's starts, so it sits on the pool"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the pool proof",
+          "expect": "teeth 1, 3 (counts 1 <= 3 trivially green), 5 and 6 red or erroring against the serial loop; 2 and 4 green",
+          "falsifier": "tooth 1 or 6 green before the pool",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+        },
+        {
+          "piece": "run epochs",
+          "expect": "every run carries started and ended with ended >= started",
+          "falsifier": "a run missing either epoch",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+        },
+        {
+          "piece": "the bounded pool",
+          "expect": "9 runs at 0.4 s finish under 2 s, at most 3 in flight, planned order kept",
+          "falsifier": "over 2 s, or a fourth concurrent run counted",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+        },
+        {
+          "piece": "memory admission",
+          "expect": "with the reader low only one run is in flight, and starts resume when it rises",
+          "falsifier": "a second run starts while the reader is low",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "observe_instruments runs at most three at a time, admitted by memory, in planned order, each run stamped with started and ended",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/verdict/proofs/test_the_verdict_runs_its_instruments_a_few_at_a_time.py",
+          "covers": [
+            "the pool proof",
+            "run epochs",
+            "the bounded pool",
+            "memory admission"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      },
+      "ticket": "e56a68e651c2"
+    }
+  }
 }
