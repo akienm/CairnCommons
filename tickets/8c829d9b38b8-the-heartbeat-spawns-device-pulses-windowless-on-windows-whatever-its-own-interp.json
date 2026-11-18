@@ -1,0 +1,63 @@
+{
+  "id": "8c829d9b38b8",
+  "title": "the heartbeat spawns device pulses windowless on Windows whatever its own interpreter",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "Each beat's pulse child on Windows runs windowless (pythonw plus detached_kwargs), even when the loop itself was started under python.exe, so a mis-started loop cannot flash a console every beat.",
+  "why": "cairn/devices/cairn/machines/ground_loop/heartbeat.py:146 spawns pulses with [sys.executable, path]. Under a python.exe loop sys.executable is python.exe, and each pulse would get its own conhost, a window per beat, which matches the recurring pop-ups Akien reported 2026-11-16 on akienlivingroom. HYPOTHESIS (Law 3): the repeated pop-ups and their stop are measured; that each pulse owned a conhost is not, so the proof must red first. __main__.py:120's os.execv(sys.executable, ...) re-exec has the same shape. Fields drafted by akienlivingroom_cc_0, 2026-11-17.",
+  "traces_to": "CP4 (the box serves him: his media box); Law 3 (the conhost-per-pulse cause is a labelled hypothesis until the red-first proof measures it).",
+  "how": "On nt, heartbeat's pulse spawn uses windowless_spawn.background_pythonw() instead of sys.executable, with the tool's detached kwargs; off nt it is unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Windows, with the loop running under python.exe, a beat's pulse child is pythonw.exe and owns no conhost"
+      },
+      {
+        "n": 2,
+        "claim": "off Windows the pulse argv is unchanged"
+      },
+      {
+        "n": 3,
+        "claim": "the pulse still runs and its result is recorded as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: heartbeat's pulse Popen takes its interpreter from windowless_spawn.background_pythonw() on nt; sys.executable elsewhere.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof drives one beat with os_name nt and executable python.exe injected, and a real beat off nt, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py"
+    ],
+    "out": [
+      "__main__.py's execv (a finding for the voyage if the proof shows it)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "repeated pop-ups while the python.exe-started loop ran, none after the stop",
+      "how": "Akien's report on akienlivingroom, plus Get-CimInstance Win32_Process and Stop-Process"
+    }
+  ]
+}

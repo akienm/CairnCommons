@@ -1,0 +1,62 @@
+{
+  "id": "e9bda7d08e39",
+  "title": "superclaude starts the ground loop windowless on Windows",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "On Windows, superclaude's fallback spawn of the ground loop runs it under the venv pythonw.exe, so the loop owns no console and nothing appears on the desktop.",
+  "why": "Measured 2026-11-16 on akienlivingroom, the media box. Akien: \"something keeps popping up while were trying to watch videos. whatevr it is, make it stop\". The live loop was `python3 -m cairn.devices.cairn.machines.ground_loop` (pids 16556 and 10972) with a visible console; after CC stopped it the pop-ups stopped. The spawner is cairn/devices/cc/superclaude:683, `_sc_spawn_detached \"$_sc_loop_log\" python3 -m ...ground_loop`: DETACHED_PROCESS|CREATE_NO_WINDOW through python3, the pattern windowless_spawn.background_pythonw's docstring measured on akiendell 2026-11-13 to still own a conhost. The shim's fallback (cairn/tools/base/shim.py:237) and ground_loop/cli.py:123 already use background_pythonw(); superclaude is the one spawner that does not. Fields drafted by akienlivingroom_cc_0, 2026-11-17.",
+  "traces_to": "CP4 (the box serves him: it is his media box); one spawner spelling (cairn/tools/windowless_spawn).",
+  "how": "On Windows, superclaude spawns the loop through the interpreter background_pythonw() resolves (the venv pythonw.exe beside the cairn venv's python): call the tool from the heredoc, or resolve the path the way the tool does. The Linux setsid branch is untouched.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Windows the process tree superclaude's fallback spawns holds no conhost.exe and no python.exe, only pythonw.exe"
+      },
+      {
+        "n": 2,
+        "claim": "the spawned loop still claims the singleton and its log lands in $_sc_loop_log"
+      },
+      {
+        "n": 3,
+        "claim": "the Linux setsid branch is byte-identical"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the Windows branch of the ground-loop fallback spawns through the interpreter background_pythonw() resolves; the setsid branch is unchanged.",
+      "writes_to": [
+        "cairn/devices/cc/superclaude"
+      ],
+      "reads": [
+        "cairn/devices/cc/superclaude",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof reads the spawn's argv on Windows (and on a Windows box the live tree), one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_superclaude_spawns_the_loop_windowless.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_superclaude_spawns_the_loop_windowless.py",
+      "cairn/devices/cc/superclaude"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-16",
+      "saw": "a console window for `python3 -m ...ground_loop` (pids 16556/10972) during video playback; no pop-ups after the stop",
+      "how": "Get-CimInstance Win32_Process command lines on akienlivingroom, then Stop-Process"
+    }
+  ]
+}

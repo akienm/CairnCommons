@@ -1,0 +1,71 @@
+{
+  "id": "2e9bead0314b",
+  "title": "cairn install puts repo-root bin on the Windows user PATH",
+  "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
+  "intention": "On Windows, `cairn install` makes sure <repo>/bin is on the persisted user Path, without duplicating it or disturbing existing entries, so `cairn` resolves in any new PowerShell with no hand step.",
+  "why": "Measured 2026-11-15 on akienlivingroom: `cairn superclaude` in PowerShell gave \"The term 'cairn' is not recognized\"; the User Path held only WindowsApps and ~/.local/bin. Outline 5.4.3.7 makes repo-root bin/ \"the one thing on PATH\", but nothing on Windows puts it there: the installer setx's CAIRN_HOME_HOST (installer.py ask_cairn_home) and never touches Path. bin/proofs/test_cairn_resolves_from_powershell.py checks only PATHEXT resolution inside bin/, so it is green on a box where cairn cannot be found. CC added it by hand ([Environment]::SetEnvironmentVariable, not setx, which truncates at 1024). Fields drafted by akienlivingroom_cc_0, 2026-11-17.",
+  "traces_to": "Outline 5.4.3.7 (repo-root bin is the one thing on PATH); Law 4 (a rule that matters is enforced by physics).",
+  "how": "A new ensure_bin_on_path(*, dry_run, repo=None, env_reader=None, env_writer=None) beside ensure_journal_merge_driver in installer.py, called from install() and listed in the dry run. It reads HKCU\\Environment Path with winreg, compares case-insensitively after os.path.normcase and stripping the trailing separator, and if bin is absent writes existing.rstrip(';') + ';' + bin as REG_EXPAND_SZ, then broadcasts WM_SETTINGCHANGE 'Environment' with SendMessageTimeoutW. Never setx. Off Windows it returns not_applicable. The proof injects the reader and writer, so the real registry is never touched.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with HKCU Path lacking bin, install() leaves bin on the Path exactly once"
+      },
+      {
+        "n": 2,
+        "claim": "a second run adds nothing"
+      },
+      {
+        "n": 3,
+        "claim": "every existing Path entry stays byte-identical and in the same order"
+      },
+      {
+        "n": 4,
+        "claim": "a dry run writes nothing and reports the step"
+      },
+      {
+        "n": 5,
+        "claim": "off Windows the step is not_applicable and writes nothing"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ensure_bin_on_path beside ensure_journal_merge_driver, called from install() and listed in the dry run; winreg read, normcase compare, REG_EXPAND_SZ write, WM_SETTINGCHANGE broadcast; reader and writer injectable.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof drives install() with an injected reader and writer over a fake Path, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_install_puts_bin_on_the_windows_path.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_install_puts_bin_on_the_windows_path.py"
+    ],
+    "out": [
+      "bin/ (bin/proofs/test_cairn_resolves_from_powershell.py stays: it measures a different claim)",
+      "Linux rc files",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-15",
+      "saw": "\"'cairn' is not recognized\" in PowerShell and a User Path without <repo>/bin",
+      "how": "`cairn superclaude` in PowerShell on akienlivingroom, then [Environment]::GetEnvironmentVariable('Path','User')"
+    }
+  ]
+}
