@@ -1,15 +1,15 @@
 {
   "id": "3ef8654a8027",
   "title": "a remote box's database syncs the home box's learning",
-  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "owning_intention": "cairn/devices/dbproxy/intention+why.json",
   "intention": "A remote box keeps its own database and syncs it with the home box's (outline 11.3.5.1): every learning table the home box holds is on the remote box with the same owner and the same node rows, so live-tree reads and proofs mean the same on every box.",
   "why": "Measured 2026-11-12: akienasus's local db holds one *_nodes table and none of codemother's trees, while akiendelllinux's codemother_orient_nodes holds 688 rows. So 2b3d842bc118's clause_4_the_live_tables_are_hers reds on akienasus ('codemother_orient_nodes owner=None rows=0/531'), and outline 11.3.5.1 has no ticket.",
   "traces_to": "Outline 11.3.5.1 (a remote box syncs its db with the home box's; the local copy is fast and the sync is the backup) and 4.3.1.5.1.1 (a row number is the same on every box).",
-  "how": "HELD FOR A DESIGN PASS before BUILDME (orchestrator, 2026-11-12: cast, don't build). The sync's unit is the outline's one long node list (4.3.1.5.1; open-675330928c01), whose rows are the same on every box with slots reserved from the home box (4.3.1.5.1.1), plus the trees that index it, owned by the librarian and delegated (11.3.6), not the built per-nexus <owner>_<nexus>_nodes tables. Open: its transport (postgres replication versus a row copy over the bus through db_domain), and its direction (home to remote only, or both ways with home-reserved slots). The proof measures the outcome, which is fixed: tables, owners and node rows match the home box after a sync.",
+  "how": "HELD FOR A DESIGN PASS before BUILDME (orchestrator, 2026-11-12: cast, don't build). The sync's unit is the outline's one long node list (4.3.1.5.1; open-675330928c01), whose rows are the same on every box with slots reserved from the home box (4.3.1.5.1.1), plus the trees that index it, owned by the librarian and delegated (11.3.6), not the built per-nexus <owner>_<nexus>_nodes tables. Its direction is home to remote (outline 11.3.5.1.1) and its owner is the database proxy (11.3.5.1.2, Q#106). Open: its transport (postgres replication versus a row copy between the proxies). The proof measures the outcome, which is fixed: tables, owners and node rows match the home box after a sync.",
   "bounds": {
     "in": [
-      "cairn/devices/db_domain/sync.py",
-      "cairn/devices/db_domain/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
+      "cairn/devices/dbproxy/sync.py",
+      "cairn/devices/dbproxy/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
     ],
     "out": [
       "cairn/devices/librarian (the slot reservation of 4.3.1.5.1.1 is the design pass's to place)",
@@ -57,21 +57,21 @@
     },
     {
       "n": 4,
-      "text": "the sync lives in db_domain, the database proxy device (outline 11.3); its mechanism is the design pass's to settle.",
+      "text": "the sync lives in dbproxy, the database proxy device (outline 11.3), and is owned by it: the proxies are cooperatively the database's admins, so the sync's writes into tables other devices own are transparent to those owners (Q#106, Akien 2026-11-18); its mechanism is the design pass's to settle.",
       "writes_to": [
-        "cairn/devices/db_domain/sync.py"
+        "cairn/devices/dbproxy/sync.py"
       ],
       "reads": [
-        "cairn/devices/db_domain/intention+why.json",
+        "cairn/devices/dbproxy/intention+why.json",
         "press_office/CairnComponentOutline.txt"
       ],
       "after": []
     },
     {
       "n": 5,
-      "text": "the proof, one tooth per clause 1-2, beside db_domain; clause 3 is 2b3d842bc118's tooth run on akienasus.",
+      "text": "the proof, one tooth per clause 1-2, beside dbproxy; clause 3 is 2b3d842bc118's tooth run on akienasus.",
       "writes_to": [
-        "cairn/devices/db_domain/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
+        "cairn/devices/dbproxy/proofs/test_a_remote_box_syncs_the_home_box_learning.py"
       ],
       "reads": [
         "cairn/devices/codemother/proofs/test_codemother_learning_lands_in_its_own_tables.py"
