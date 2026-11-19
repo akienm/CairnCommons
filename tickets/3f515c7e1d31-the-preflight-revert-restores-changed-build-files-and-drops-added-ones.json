@@ -88,13 +88,200 @@
   ],
   "chart": {
     "orient": {
-      "request": "the preflight revert restores changed build files and drops added ones",
+      "request": "the preflight revert in cairn/devices/cc/scripts/preflight.sh restores changed build files and drops added ones",
       "intent": "cairn/devices/cc/scripts/preflight.sh reverts each build file to the pre-build commit one at a time through a new revert_build.sh: a changed file returns to its pre-build bytes and an added file is removed, so its build-reverted proof run is never falsely green.",
       "scope": "IN: cairn/devices/cc/scripts/revert_build.sh (new), the revert line of cairn/devices/cc/scripts/preflight.sh, the proof cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py. OUT: prove.sh, the tester's hollow reading, every other component.",
       "confidence": 0.95,
       "provenance": {
         "intent": "claude",
         "scope": "claude"
+      },
+      "ticket": "3f515c7e1d31"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/3f515c7e1d31-the-preflight-revert-restores-changed-build-files-and-drops-added-ones.json",
+          "text": "the revert is per file, never one checkout over the whole list"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/3f515c7e1d31-the-preflight-revert-restores-changed-build-files-and-drops-added-ones.json",
+          "text": "preflight.sh calls revert_build.sh and keeps no inline revert"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/3f515c7e1d31-the-preflight-revert-restores-changed-build-files-and-drops-added-ones.json",
+          "text": "the proof runs revert_build.sh in a scratch git repo with git -c user.name/user.email, one tooth per outcome"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cc/scripts/revert_build.sh",
+          "cairn/devices/cc/scripts/preflight.sh",
+          "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+        ],
+        "out": [
+          "cairn/devices/cc/scripts/prove.sh",
+          "cairn/devices/tester",
+          "every other component"
+        ]
+      },
+      "confidence": 0.95,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      },
+      "ticket": "3f515c7e1d31",
+      "unknowns": []
+    },
+    "survey": {
+      "sought": [
+        "preflight's build-reverted run",
+        "a per-file build revert"
+      ],
+      "holdings": [
+        {
+          "what": "preflight.sh, whose reverted run is one git checkout over every build file with an rm fallback",
+          "address": "cairn/devices/cc/scripts/preflight.sh"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a revert that restores changed build files and drops added ones, per file",
+          "measure": "ls cairn/devices/cc/scripts at cairn 613aa1359: no revert_build.sh; preflight.sh's revert is `git checkout -q $PRE -- \"$@\" || <rm absent>` (one checkout, fails whole on an added file)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude"
+      },
+      "ticket": "3f515c7e1d31"
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the red-first proof",
+          "kind": "compose",
+          "why": "binds the four outcomes to teeth before the build",
+          "uses": [
+            "cairn/devices/cc/scripts/preflight.sh"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+          ]
+        },
+        {
+          "what": "the per-file revert script",
+          "kind": "build",
+          "fills": "a revert that restores changed build files and drops added ones, per file",
+          "why": "per file, so one added file cannot sink the whole revert",
+          "uses": [
+            "cairn/devices/cc/scripts/preflight.sh"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/revert_build.sh"
+          ]
+        },
+        {
+          "what": "preflight calls the script",
+          "kind": "compose",
+          "why": "preflight's reverted run is the caller that read falsely green",
+          "uses": [
+            "cairn/devices/cc/scripts/preflight.sh"
+          ],
+          "writes_to": [
+            "cairn/devices/cc/scripts/preflight.sh"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "survey_ref": "floor",
+        "sub_problems": "claude"
+      },
+      "ticket": "3f515c7e1d31"
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the red-first proof",
+          "why_now": "red first: the teeth bind before the build"
+        },
+        {
+          "what": "the per-file revert script",
+          "why_now": "turns teeth 1-3 green"
+        },
+        {
+          "what": "preflight calls the script",
+          "why_now": "turns tooth 4 green; depends on the script existing"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "decompose_ref": "floor",
+        "order": "claude"
+      },
+      "ticket": "3f515c7e1d31"
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the red-first proof",
+          "expect": "all four teeth red at HEAD",
+          "falsifier": "a tooth green at HEAD",
+          "instrument": "bin/cairn test --seal cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+        },
+        {
+          "piece": "the per-file revert script",
+          "expect": "teeth 1-3 green: m restored, n dropped, a modify-only build restored",
+          "falsifier": "m stays at its build bytes or n survives",
+          "instrument": "bin/cairn test --seal cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+        },
+        {
+          "piece": "preflight calls the script",
+          "expect": "tooth 4 green: preflight calls revert_build.sh and runs no git checkout itself",
+          "falsifier": "a git checkout line left in preflight.sh",
+          "instrument": "bin/cairn test --seal cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "triage_ref": "floor",
+        "hypotheses": "claude"
+      },
+      "ticket": "3f515c7e1d31"
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "revert_build.sh restores a changed file, drops an added one and restores a modify-only build, and preflight.sh reverts only through it",
+          "instrument": "bin/cairn test --seal cairn/devices/cc/proofs/test_a_build_revert_restores_changed_files_and_drops_added_ones.py",
+          "covers": [
+            "the red-first proof",
+            "the per-file revert script",
+            "preflight calls the script"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "hypothesize_ref": "floor",
+        "criteria": "claude"
       },
       "ticket": "3f515c7e1d31"
     }
