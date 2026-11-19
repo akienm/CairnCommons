@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Restoring the instance-dir short-circuit was looked at; ticket 8c5fdb750b75 removed it on purpose (the shim keeps last_known under the answers_as name, so a stray instance dir would seal the alias). One grep keeps that rule and drops the forks.",
+      "hidden_assumption": "That grep -l lists files in argument order, so the first hit is the glob-order first match the loop took; GNU grep does, and the charters declare each answers_as once.",
+      "prior_art": "cairn/tools/rack folder_of reads the same answers_as field in Python; bin/cairn is bash on the hot path and cannot import it without a python start (~30 ms), so one grep is the cheap mirror.",
+      "real_collision": "none: 8c5fdb750b75 keeps its rule; only the cost changes."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when test_happy_path_costs_under_10ms reads under 10 ms on main with the fix, red without it, and test_a_declared_name_outranks_a_stray_instance_dir.py stays green. Wrong intent if the cost is contention (a re-run alone turns green) rather than the forks.",
+    "from_idea": "none, because it was measured on ticket 8c5fdb750b75 in bin/cairn (commit 7ada27cdb dropped the instance-dir short-circuit)",
+    "how": "Replace bin/cairn's per-charter grep loop with one grep -lE over cairn/devices/*/intention+why.json, guarded with || true under set -euo pipefail, taking the first match in glob order. The existing tooth test_happy_path_costs_under_10ms in bin/proofs/test_cairn_floor.py is the proof; its PROVES gains this ticket's key.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build could not pass): test_cairn_floor reads red on main, so the floor's sealed claim no longer holds; Law 9: a red is fixed or carries a decision.",
+    "what": "bin/cairn looks up a declared answers_as name with one grep over the device charters, so a device that lives only in instance space costs the dispatcher under the floor's 10 ms budget again."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-18: test_cairn_floor happy path +17.6 to +21.6 ms at HEAD, +3.1 and +3.6 ms at 7ada27cdb's parent; 7ada27cdb dropped the instance-dir short-circuit, so 16 forked greps run per instance-only device."
+    },
+    {
+      "stratum": "code",
+      "text": "Under set -euo pipefail a no-match grep in a command substitution ends bin/cairn silently; the one-grep form needs || true (the first draft made cairn test exit with no output)."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "433122ad9c70",
+  "skill": "intent",
+  "title": "bin/cairn looks up a declared answers_as name with one grep over the device charters, so a device that lives only in ins",
+  "trace_id": "4497a47620c1",
+  "when": "2026-11-18T17:55:21.424697"
+}

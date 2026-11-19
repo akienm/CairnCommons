@@ -1,0 +1,56 @@
+{
+  "id": "78a600419a21",
+  "title": "bin/cairn looks up a declared device name with one grep",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "bin/cairn looks up a declared answers_as name with one grep over the device charters, so the dispatcher's happy path costs under the floor's 10 ms budget again.",
+  "why": "Measured 2026-11-18: test_cairn_floor's happy path reads +17.6 to +21.6 ms at HEAD against a 10 ms budget. Bisected to 7ada27cdb (ticket 8c5fdb750b75), which dropped the instance-dir short-circuit, so a device that lives only in instance space runs 16 forked greps, one per charter. This is n=4 of 'a land leaves another proof's seal stale': 7ada27cdb landed without resealing test_cairn_floor.",
+  "traces_to": "Law 8: nothing enters proven-space without a proof a hollow build could not pass; Law 9: a deterministic red is fixed or carries a decision.",
+  "how": "In bin/cairn, where $CLASS_ROOT/$device is absent, replace the per-charter grep loop with one grep -lE '^  \"answers_as\": \"<device>\",?$' over \"$CLASS_ROOT\"/*/intention+why.json, guarded with || true (set -euo pipefail ends the script on a no-match), taking the first file and its parent folder name as the device. bin/proofs/test_cairn_floor.py's PROVES gains this ticket's id, outcome 1 -> test_happy_path_costs_under_10ms.",
+  "bounds": {
+    "in": [
+      "bin/cairn",
+      "bin/proofs/test_cairn_floor.py"
+    ],
+    "out": [
+      "every other component",
+      "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py (run as a regression, unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "happy path +19.8, +21.6, +17.6 ms at HEAD (budget 10 ms)",
+      "how": "bin/cairn test bin/proofs/test_cairn_floor.py, three runs on akiendelllinux"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "+3.6, +3.1 ms at 7ada27cdb^; +18.2, +17.5 ms at 7ada27cdb",
+      "how": "the same proof in a detached worktree at each commit"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "+4.7, +5.2, +5.0 ms with the one-grep draft at load ~2.2; bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py green 2/2",
+      "how": "the draft in a scratch worktree, test_cairn_floor three runs and the regression twice"
+    }
+  ],
+  "constraints": [
+    "8c5fdb750b75's rule stands: a declared answers_as name outranks a stray instance dir; bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py stays green",
+    "no new proof: the existing tooth test_happy_path_costs_under_10ms is the proof and reads red at HEAD"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "the dispatcher's happy path costs under 10 ms over the floor's 15 runs (test_happy_path_costs_under_10ms green), with the declared-name lookup done by one grep",
+      "writes_to": [
+        "bin/cairn",
+        "bin/proofs/test_cairn_floor.py"
+      ],
+      "reads": [
+        "bin/cairn",
+        "bin/proofs/test_cairn_floor.py",
+        "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+      ],
+      "after": []
+    }
+  ]
+}
