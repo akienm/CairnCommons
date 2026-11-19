@@ -1,0 +1,87 @@
+{
+  "id": "60ca4c6a9b50",
+  "title": "a close names the crossing the gate answered",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "close.sh's commit subject for a crossing that did not reach PROVED names what clearance actually did, the target phase and whether it was accepted or refused, so a commit never says 'PROVED refused' over an accepted crossing or a refusal at another phase.",
+  "why": "Measured 2026-11-19 on 79aa8b19a840: three CairnCommons commits made by close.sh are subjected '79aa8b19a840: PROVED refused at clearance' while the clearance replies on the ticket's log say otherwise. f51888e9 (09:44:44) follows a reply accepted=True target=BUILDME; 105278a2 (09:45:03) follows accepted=True target=PROVEME; c7000c0c (10:16:00) follows accepted=False target=BUILDME (fixme_gate refused). close.sh:32-34 commits the fixed string 'PROVED refused at clearance' for every outcome other than '-> [PROVED]', including RC 0. A commit subject is a record of what happened (Law 7), and two of the three narrate a refusal that never happened.",
+  "traces_to": "Law 7 — errors are loud at diagnostic surfaces and permanent in records of truth; a commit subject that names the wrong outcome stays wrong in git forever.",
+  "how": "sail.py cross's refusal line names the target the clearance reply carried ('clearance refused <id> at <TARGET>: <said>'). close.sh's not-PROVED branch reads the outcome from sail.py's own output: on RC 0 the bracketed cursor of the printed workflow ('<T> crossed at clearance, not yet PROVED', exit 4); on RC 1 the target in the refusal line ('<T> refused at clearance', exit 1; 'the crossing refused at clearance' when no target is named). The literal 'commit_all \"PROVED refused at clearance\"' stays for a refusal at PROVED, so da29186ef039's tooth 3 stays green unchanged. A red-first proof runs sail.cross against a refusing fake bus, and runs close.sh's not-PROVED block as written, extracted from the file, under bash with commit_all stubbed to print its subject.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "sail.py cross, given a clearance reply {accepted: false, target: BUILDME, reason: R}, returns 1 and its refusal line contains 'refused <id> at BUILDME' and R"
+      },
+      {
+        "n": 2,
+        "claim": "close.sh's not-PROVED block, run as written with RC 0 and OUT a workflow whose cursor is [PROVEME], commits exactly the subject 'PROVEME crossed at clearance, not yet PROVED', never a subject containing 'refused', and exits 4"
+      },
+      {
+        "n": 3,
+        "claim": "the same block with RC 1 commits 'BUILDME refused at clearance' when OUT says 'clearance refused <id> at BUILDME: ...', 'PROVED refused at clearance' when it says '... at PROVED: ...', and 'the crossing refused at clearance' when no target is named; each exits 1"
+      },
+      {
+        "n": 4,
+        "claim": "with RC 0 and OUT carrying '-> [PROVED]' the block commits nothing and falls through"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: sail.py cross, the refusal err line (today line 214, 'clearance refused {tid}: {_said(reply)}') becomes f\"clearance refused {tid} at {reply.get('target') or 'its next phase'}: {_said(reply)}\". Nothing else in sail.py changes.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/sail.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/sail.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: close.sh's block that today begins 'if [ $RC -ne 0 ] || ! echo \"$OUT\" | grep -q -- '-> \\[PROVED\\]'; then' and ends at the next line that is exactly 'fi' becomes, keeping its first two lines (the if and the diagnostic echo): on RC 0, T=$(echo \"$OUT\" | grep -o '\\[[A-Z]\\+' | tail -1 | tr -d '['); commit_all \"${T:-a phase} crossed at clearance, not yet PROVED\"; echo a '--- CROSSED TO ... NOT YET PROVED: close again to climb' line; exit 4. Otherwise T=$(echo \"$OUT\" | grep -o \"refused $ID at [A-Z]\\+\" | tail -1 | awk '{print $NF}'); if [ \"$T\" = PROVED ] then commit_all \"PROVED refused at clearance\" (that literal stays, da29186ef039's proof reads it) else commit_all \"${T:-the crossing} refused at clearance\"; echo '--- ${T:-CROSSING} REFUSED'; exit 1. Every inner if is one line or indented, so the block's own closing 'fi' is still the first column-0 'fi' after it. The header comment (line 2-3) adds: exit 4 = a crossing was accepted short of PROVED. commit_all (lines 13-21) is not touched: d3b8cdf81a41 owns its staging line.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof cairn/devices/cc/proofs/test_a_close_names_the_crossing_the_gate_answered.py keys PROVES {'60ca4c6a9b50': {'1'..'4'}} one tooth each. Tooth 1 borrows the scratch world of test_sail_queues_the_ticket_at_codemothers_gates.py by path at call time, as test_an_unanswered_clearance_is_not_a_refusal.py does (h._world('PROVEME'), h._Bus([{'body': {...}}]), h._quiet()). Teeth 2-4 read close.sh, take the lines from the one starting 'if [ $RC -ne 0 ] ||' through the first line that is exactly 'fi', and run them with bash -c under: commit_all() { echo \"SUBJECT:$1\"; }; ID=60ca4c6a9b50; RC=<n>; OUT=<text>; <block>; echo FELL_THROUGH — asserting the SUBJECT lines and the exit code. Red at HEAD: tooth 1 (no 'at BUILDME'), teeth 2 and 3 (the block commits 'PROVED refused at clearance'). A __main__ runner prints PASS/FAIL per tooth and exits 1 on any FAIL.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_a_close_names_the_crossing_the_gate_answered.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py",
+        "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/sail.py",
+      "cairn/devices/cc/scripts/close.sh",
+      "cairn/devices/cc/proofs/test_a_close_names_the_crossing_the_gate_answered.py"
+    ],
+    "out": [
+      "close.sh's commit_all body (d3b8cdf81a41's staging line)",
+      "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py (its tooth 3 must stay green unchanged)",
+      "prove.sh",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "commons f51888e9 and 105278a2 subjected '79aa8b19a840: PROVED refused at clearance' follow clearance replies accepted=True target=BUILDME and accepted=True target=PROVEME; c7000c0c, same subject, follows accepted=False target=BUILDME",
+      "how": "git log -1 --format='%ci %s' for each sha in CairnCommons, matched by time to the gate=clearance lines of tickets/79aa8b19a840-*.log.jsonl (reply.accepted, reply.target)"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "close.sh:32-34 commits 'PROVED refused at clearance' whenever RC != 0 or OUT lacks '-> [PROVED]', RC 0 included; sail.py:214 says 'clearance refused <id>: <said>' without the target",
+      "how": "cat -n cairn/devices/cc/scripts/close.sh and sed -n of sail.py cross() on akiendelllinux at cairn 5640ad30c"
+    }
+  ]
+}
