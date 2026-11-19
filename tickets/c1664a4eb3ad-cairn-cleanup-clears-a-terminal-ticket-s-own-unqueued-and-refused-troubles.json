@@ -1,0 +1,92 @@
+{
+  "id": "c1664a4eb3ad",
+  "title": "cairn cleanup clears a terminal ticket's own unqueued and refused troubles",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "bin/cmd/cleanup gains a tickets step before the drain: it hands the live ticket-unqueued-* and ticket-refused-* trouble ids to python3 -m cairn.machines.ticket.ticket --recheck, and the ticket machine's new recheck() has each ticket that stands at a terminal state, with the raise standing on its own trail, emit clear_trouble for it; the drain folds the clears.",
+  "why": "Measured 2026-11-19: ticket-unqueued-8c5fdb750b75-at-clearance stands live although 8c5fdb750b75 is PROVED. Its two clearance asks timed out (11-18 11:04 and 11:06) while the gate still carried it to PROVED, and the trouble clears only when a later ask at the same gate is taken (41a5bae3d01b) or passed (794835a34ec9). A terminal ticket asks no gate again, so nothing is left to clear it. Ticket 17b087f2483f's bounds named this as its sibling ticket at cairn/machines/ticket.",
+  "traces_to": "Law 7: a record of truth stays true. A trouble that stands after its cause is gone tells the inbox reader something false, and the drain cannot fold a clear nobody sends.",
+  "how": "Add recheck(ids, *, tickets_dir=None, roots=None) to cairn/machines/ticket/ticket.py. It parses ticket-(unqueued|refused)-<tid>-at-<gate>, resolves the ticket with Ticket.at, and clears the trouble when is_terminal(cursor state) and _stands_raised(identity) both hold. It returns {cleared, standing, unknown}. Add a __main__ --recheck <ids...> [--tickets-dir, default $CAIRN_TICKETS_DIR] that calls the named module's recheck, never __main__'s, because a Ticket built under __main__ names its trail after __main__. Add a tickets step to bin/cmd/cleanup between seals and troubles, and add 'tickets' to --summarize's counted names. The red-first proof is cairn/machines/ticket/proofs/test_a_terminal_ticket_clears_its_ticket_troubles.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a ticket at PROVED whose unqueued trouble stands raised: recheck clears it, and the newest record naming it on the ticket's trail is the clear"
+      },
+      {
+        "n": 2,
+        "claim": "a ticket still under way (FIXME) keeps its raised trouble, and a terminal ticket with nothing raised is sent no clear: both read standing"
+      },
+      {
+        "n": 3,
+        "claim": "in a scratch HOME, a PROVED ticket's unqueued trouble is drained OPEN, bin/cairn cleanup's tickets line reports it cleared, and cairn trouble live no longer lists it"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the ticket machine clears its own troubles; terminal means workflow_grammar.is_terminal on the cursor state, and the raise must stand on the ticket's own trail (_stands_raised), so a ticket that raised nothing sends nothing.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py",
+        "cairn/tools/base/workflow_grammar.py",
+        "cairn/tools/base/diagnostic.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cleanup reaches the ticket machine as a subprocess CLI (python3 -m cairn.machines.ticket.ticket --recheck), the same shape as the findings and seals steps; the CLI calls the named module's recheck so the trail is the ticket's own, not __main__'s.",
+      "writes_to": [
+        "bin/cmd/cleanup",
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "bin/cmd/cleanup"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof is red-first: teeth 1 and 2 run recheck in-process over a scratch store and scratch roots, and tooth 3 runs bin/cairn cleanup in a scratch HOME with CAIRN_TICKETS_DIR at the store and its own CAIRN_BUS_UNIT, stopped and reset-failed in finally.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_terminal_ticket_clears_its_ticket_troubles.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/proofs/test_a_taken_ticket_clears_its_unqueued_trouble.py",
+        "cairn/tools/scratch/scratch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/ticket.py",
+      "bin/cmd/cleanup",
+      "cairn/machines/ticket/proofs/test_a_terminal_ticket_clears_its_ticket_troubles.py"
+    ],
+    "out": [
+      "cairn/devices/trouble (folds, unchanged)",
+      "cairn/tools/base/diagnostic.py (read, unchanged)",
+      "the seal-red and finding troubles (17b087f2483f, the inspector)",
+      "a refused trouble on a ticket still under way (it clears when its gate passes)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "ticket-unqueued-8c5fdb750b75-at-clearance live while 8c5fdb750b75 is PROVED; read-only probe: _step PROVED, _stands_raised True; 287e241f61f3 and 0c2c3f53c2be read FIXME and would stand",
+      "how": "cairn trouble live; Ticket.at(...)._stands_raised over the live store, read only"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "the drafted proof: red at HEAD (ImportError on recheck; tooth 3 red); red with the cleanup tickets step removed (tooth 3); red with the __main__ CLI removed (tooth 3); green twice as built",
+      "how": "bin/cairn test <proof> in worktree ticket-troubles-terminal, each revert restored from a saved copy"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "the CLI first read every id standing: under python -m the Ticket class is __main__'s and its trail is named after __main__",
+      "how": "HOME=<scratch> python3 -m cairn.machines.ticket.ticket --recheck <id> after an in-process raise read _stands_raised True"
+    }
+  ]
+}
