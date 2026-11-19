@@ -1,0 +1,68 @@
+{
+  "id": "58e242c8be4f",
+  "title": "a tester run casts reds only into its own checkout's commons",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A tester run casts a red ticket only into the commons that belongs to its own checkout. When <repo>.parent/CairnCommons resolves into another checkout (a symlink), it casts nothing there, raises StoreUnreachable naming the symlink and its target, and the red stays in the run's own record.",
+  "why": "Measured 2026-11-19: a tester --reseal run in worktree wt-93fa, whose CairnCommons was a symlink to the house commons, cast red ticket 1d547c70f1c3 and its sorted berth into the house commons, staged and uncommitted. The red named a proof that exists only on branch cc0/93fa-move. It blocked the PROVED closes of 266d39d56d06, 17d5, 1e99 and a4892 on working_tree_clean until it was withdrawn (CairnCommons 271e3e32).",
+  "traces_to": "Law 6: everything has exactly one owner, and the owner alone gates writes to it. The house commons is not a worktree run's to write.",
+  "how": "In cairn/devices/tester/red_tickets.py, _commons_top (line 269; its only caller is ticket_what_is_new, line 412) resolves the store path. If the store's realpath is not under the unresolved <repo>.parent/CairnCommons, where repo is _repo(), it raises StoreUnreachable('*', 'commit', [...]), naming the symlink and its target. cairn/devices/tester/device.py:949 already catches StoreUnreachable, so the run goes on. The red-first proof cairn/devices/tester/proofs/test_a_red_casts_only_into_its_own_commons.py builds two scratch git repos under tmp_path, marked testing.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch checkout whose CairnCommons is a symlink to a second scratch commons, ticket_what_is_new over a red raises StoreUnreachable naming the symlink and its target, and the second commons gains no file"
+      },
+      {
+        "n": 2,
+        "claim": "in the same symlinked setup, cast_ticket through the symlinked store lands, so only red casting is guarded and the deliberate symlink setups of the chart doors and hollow runs keep working"
+      }
+    ],
+    "wrong_intent": "a worktree's own reds are meant to land in the house commons"
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _commons_top refuses a store whose realpath leaves <repo>.parent/CairnCommons, raising StoreUnreachable with the symlink and its target in its lacks (clause 1).",
+      "writes_to": [
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/tester/proofs/test_a_red_casts_only_into_its_own_commons.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof's second tooth casts a ticket through cast_ticket into the same symlinked store and finds it landed, so the guard is scoped to red casting (clause 2).",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_red_casts_only_into_its_own_commons.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/proofs/test_a_red_casts_only_into_its_own_commons.py"
+    ],
+    "out": [
+      "the chart doors and hollow runs, which keep using a symlinked commons",
+      "every other caller of the ticket store"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "a wt-93fa reseal with a symlinked CairnCommons cast 1d547c70f1c3 and a sorted berth into the house commons, blocking four PROVED closes",
+      "how": "git -C ~/dev/src/CairnCommons status --short; the withdrawal is CairnCommons 271e3e32"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "_commons_top has one caller, ticket_what_is_new at red_tickets.py:412",
+      "how": "grep -rn _commons_top --include=*.py over the cairn repo"
+    }
+  ]
+}
