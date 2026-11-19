@@ -1,0 +1,86 @@
+{
+  "id": "d3b8cdf81a41",
+  "title": "a close or prove commits only its own ticket's commons records",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "close.sh and prove.sh stage, in the commons, only the records that belong to the ticket they are crossing (plus the shared journal), so a crossing never commits another ticket's records under its own subject.",
+  "why": "Measured 2026-11-19: close.sh:18 and prove.sh:13 run 'git add -A tickets/ certificates/ questions/ outline_checks/ [berths/] .artifact-journal.jsonl' over the whole commons. 17 commons commits since 2026-10-15 under a close.sh/prove.sh subject carry a foreign ticket's records: aa7d25c1 'dd0f3e0e7225: hollow sealed, verdict' commits only tickets/4de7baf7e255-sleep-cycle-token.state.json; 718f7c0c3 '06f4cff87495: PROVED refused at clearance' carries 0f8aefbba1d0; b881b1e12 (ae0d88a55edb) carries a9709b744bf5 + f695fac922cd; e264a648e (0c2c3f53c2be) carries e1fb0e0bc945's outline_check and question. A record committed under the wrong ticket's subject is a false record of who wrote it.",
+  "traces_to": "Law 6 — everything has exactly one owner, and the owner alone gates writes to it; Law 7 — records of truth are permanent, so a misattributed commit stays wrong.",
+  "how": "A helper cairn/devices/cc/scripts/commons_paths.py <id>, run with cwd = the commons, reads 'git status --porcelain -uall' and prints the dirty paths that belong to <id>: tickets/<id>-*, certificates/<id>-*, outline_checks/<id>-*, questions/*.json and berths/**/*.json whose top-level 'ticket' equals <id>, and .artifact-journal.jsonl. close.sh's and prove.sh's commons staging line becomes: (cd $CC && P=$(python3 $C/cairn/devices/cc/scripts/commons_paths.py $ID) && [ -n \"$P\" ] && git add -- $P && git commit ... -- $P). The proof builds a scratch git commons dirty with own and foreign files in all five dirs and runs the helper and each script's real staging line (the line containing 'commons_paths.py', extracted from the script) with bash.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch commons dirty with own and foreign records in tickets/, certificates/, questions/, outline_checks/ and berths/, commons_paths.py <id> prints every own path and the journal, and no foreign path"
+      },
+      {
+        "n": 2,
+        "claim": "close.sh's commons staging line, run as written against that scratch commons, commits exactly the own paths plus the journal, and the foreign paths stay dirty"
+      },
+      {
+        "n": 3,
+        "claim": "prove.sh's commons staging line, run the same way, commits exactly the own paths plus the journal, and the foreign paths stay dirty"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: commons_paths.py <id> selects the ticket's own dirty commons paths: by id prefix in tickets/, certificates/, outline_checks/; by top-level 'ticket' field in questions/ and berths/; the journal always if dirty. A JSON it cannot parse is not selected and is named on stderr.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/commons_paths.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: close.sh's commit_all stages the commons through the helper instead of 'git add -A <dirs>'.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: prove.sh's commit_all does the same.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/prove.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/prove.sh"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof keys PROVES to clauses 1-3, one tooth each, over a scratch git commons in a tmp dir; red at HEAD (no helper, the old lines sweep the foreign files).",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_a_close_commits_only_its_own_tickets_records.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/proofs/test_an_unanswered_clearance_is_not_a_refusal.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/commons_paths.py",
+      "cairn/devices/cc/scripts/close.sh",
+      "cairn/devices/cc/scripts/prove.sh",
+      "cairn/devices/cc/proofs/test_a_close_commits_only_its_own_tickets_records.py"
+    ],
+    "out": [
+      "the cairn-side 'git add -u' in commit_all",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "17 commons commits since 2026-10-15 under a close.sh/prove.sh step subject carry another ticket's files (aa7d25c1, 718f7c0c3, b881b1e12, e264a648e, ...)",
+      "how": "git log --since=2026-10-15 in CairnCommons, filtered to subjects '<id>: hollow sealed, verdict|PROVED refused at clearance|clearance unanswered|PROVED — |proof sealed|PROVEME', each commit's tickets/ paths compared to its subject id"
+    }
+  ]
+}
