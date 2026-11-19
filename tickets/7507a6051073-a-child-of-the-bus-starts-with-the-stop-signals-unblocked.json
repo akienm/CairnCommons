@@ -1,0 +1,95 @@
+{
+  "id": "7507a6051073",
+  "title": "a child of the bus starts with the stop signals unblocked",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "Every child the bus or a device it holds spawns starts with SIGHUP, SIGINT and SIGTERM unblocked, while the bus's sigwaitinfo thread still names each stop's sender. A WATCHME brings cc_0 the live bus's blocked descendants and its nameless stops to review the hypothesis.",
+  "why": "Measured 2026-11-19: _signal_stops blocks the stop signals for the bus's life (73c58a1dcad7 D3), and a blocked mask survives fork and exec, so every instrument a verdict held by the bus ran started deaf to SIGTERM; 287e241f61f3's verdict red on the ground_loop --force tooth was this, not its build.",
+  "traces_to": "Law 3 and Law 8: a verdict's instruments must measure the code, not a mask they inherited; outline 0.6.1 (a CC-answerable choice is a hypothesis with a WATCHME).",
+  "how": "HYPOTHESIS (outline 0.6.1): the fix site is the bus's own spawning, not each child. In cairn/devices/cairn/machines/bus/server.py, _signal_stops calls _children_start_clean() right after its SIG_BLOCK: it wraps subprocess.Popen._execute_child so the calling thread unblocks HUP, INT and TERM around the fork and restores its mask after, and registers once an at-fork after_in_child hook (gated by a module flag) that unblocks them in an os.fork child. _undo restores _execute_child and clears the flag before restoring the mask. Cost: a stop signal landing in the window takes the Python-handler fallback and is recorded with sender_pid null. The WATCHME probe cairn/devices/cairn/machines/bus/probes/a_child_of_the_bus_starts_clean.py reads the live bus's descendants' SigBlk and the post-PROVED signal stops with no sender, and brings them to cc_0 to review the hypothesis.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a subprocess child spawned from a bus thread while serve() stands reads none of HUP, INT, TERM in SigBlk, while that thread still blocks all three"
+      },
+      {
+        "n": 2,
+        "claim": "a sleep child spawned so, sent SIGTERM, exits by SIGTERM within 5 s"
+      },
+      {
+        "n": 3,
+        "claim": "an os.fork child of a bus thread reads none of HUP, INT, TERM in SigBlk"
+      },
+      {
+        "n": 4,
+        "claim": "a SIGTERM sent to the bus by a child it spawned is recorded in stops.jsonl as cause signal with that child's pid as sender_pid"
+      },
+      {
+        "n": 5,
+        "claim": "the WATCHME probe's survey over a scratch bus home and /proc counts the blocked descendants and the post-era nameless signal stops, and holds only when none is blocked and at most 1 is nameless"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the fix site is the bus's spawning (a hypothesis, outline 0.6.1): _signal_stops calls _children_start_clean() after its SIG_BLOCK, wrapping Popen._execute_child and registering one gated at-fork child hook; _undo reverses both first.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof is red-first and runs the real serve() at a scratch home through a driver that replaces serve_forever with a worker thread's spawning, one tooth per clause; the server is imported only by the driver.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_child_of_the_bus_starts_with_the_stop_signals_unblocked.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the WATCHME probe berths beside the bus, declaring a module-level PROBE (cairn.tools.base.probe.Probe) with carry and enough, to codemother's watchme verb; it reads files only (/proc and the bus home).",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/probes/a_child_of_the_bus_starts_clean.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/probes/a_red_re_run_alone_catches_contention.py",
+        "cairn/tools/base/probe.py"
+      ]
+    }
+  ],
+  "constraints": [
+    "the sigwaitinfo thread's mask is never unblocked: only the spawning thread's, for the fork, and the child's",
+    "the probe berths at cairn/devices/cairn/machines/bus/probes/a_child_of_the_bus_starts_clean.py, declaring a module-level PROBE with carry and enough, and reads only /proc and the live bus home after this ticket's PROVED crossing"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_child_of_the_bus_starts_with_the_stop_signals_unblocked.py",
+      "cairn/devices/cairn/machines/bus/probes/a_child_of_the_bus_starts_clean.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/ground_loop (its proof is the repro, unchanged)",
+      "cairn/tools/base/shim.py (its Popen fallback is covered, unchanged)",
+      "cairn/devices/codemother/machines/verdict (unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "the live bus reads SigBlk 0x4003 for its life; 287e241f61f3's verdict re-ran the ground_loop proof from under it and the --force tooth timed out after 15 s on a child that SIGTERM could not stop",
+      "how": "akienasus_cc_0 walking 287e241f61f3 (trouble ticket-refused-287e241f61f3-at-verdict); server.py _signal_stops' pthread_sigmask(SIG_BLOCK) read at HEAD 5c4c5c69d"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "the drafted proof at HEAD: teeth 1-3 red (a subprocess child alive 5 s after SIGTERM, an os.fork child blocking HUP INT TERM), tooth 4 green; with the patch, green twice; with the probe removed, tooth 5 red; the 73c58a1dcad7 stop-cause proof green beside it; the ground_loop --force proof green when run by a subprocess spawned under the patched mask",
+      "how": "PYTHONPATH=. bin/cairn test in worktree ~/dev/src/wt-sig/cairn at 5c4c5c69d"
+    }
+  ]
+}

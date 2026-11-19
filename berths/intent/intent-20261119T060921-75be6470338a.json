@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Three sites were weighed: unblock in each child (preexec_fn at every Popen site: many callers, and preexec_fn is unsafe with threads); drop the block and name the sender otherwise (loses D3 of 73c58a1dcad7); or unblock at the bus's own spawn. The last is one place and keeps D3, so it is the hypothesis.",
+      "hidden_assumption": "That every spawn in the bus process goes through subprocess.Popen or os.fork. os.posix_spawn or a C extension would bypass both; the WATCHME reads live descendants for exactly that.",
+      "prior_art": "73c58a1dcad7 added the block for sigwaitinfo (D3). The orchestrator's lean (the bus's own child spawns, the mask unblocked between fork and exec) is this. CPython's _posixsubprocess runs no at-fork hooks without preexec_fn (measured: SigBlk 0x4000 persisted), hence the _execute_child wrap.",
+      "real_collision": "D3 of 73c58a1dcad7 (sender named): kept, tooth 4 guards it; the window's cost is what the WATCHME measures."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when a child the bus spawns reads no stop signal in SigBlk and dies of SIGTERM, and a SIGTERM still names its sender; wrong if some live descendant still starts blocked.",
+    "from_idea": "none, because ticket 287e241f61f3 was refused at verdict (trouble ticket-refused-287e241f61f3-at-verdict) and cairn/devices/cairn/machines/bus/server.py _signal_stops is the measured cause: the ground_loop --force tooth timing out under the bus's mask",
+    "how": "Unblock the stop signals on the spawning thread around Popen's fork and in an at-fork child hook, from cairn/devices/cairn/machines/bus/server.py's _signal_stops; red-first proof cairn/devices/cairn/machines/bus/proofs/test_a_child_of_the_bus_starts_with_the_stop_signals_unblocked.py; WATCHME probe cairn/devices/cairn/machines/bus/probes/a_child_of_the_bus_starts_clean.py.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 3 and Law 8: a verdict's instruments run under the bus, and a mask they inherit makes a sound proof red there; outline 5.5.3.2 (every part can be stopped alone).",
+    "what": "Every process the bus, or a device it holds, spawns starts with SIGHUP, SIGINT and SIGTERM unblocked, while the bus keeps blocking them for its sigwaitinfo thread."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A signal mask is inherited across fork and exec; a long-lived blocker must unblock for its children or every instrument it runs is deaf to SIGTERM."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "f2b36ea72097",
+  "skill": "intent",
+  "title": "Every process the bus, or a device it holds, spawns starts with SIGHUP, SIGINT and SIGTERM unblocked, while the bus keep",
+  "trace_id": "98384b398259",
+  "when": "2026-11-19T06:09:21.728784"
+}
