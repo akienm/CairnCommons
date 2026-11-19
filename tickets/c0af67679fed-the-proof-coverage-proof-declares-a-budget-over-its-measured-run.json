@@ -1,0 +1,57 @@
+{
+  "id": "c0af67679fed",
+  "title": "the proof_coverage proof declares a budget over its measured run",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "The proof_coverage proof declares a PROOF_TIMEOUT_S over its measured run, so a run on the tester's default budget seals it instead of timing out.",
+  "why": "Measured 2026-11-19 on akiendelllinux: 8e2018855b31's walk hollow at 00:12 timed out at the tester's 120 s default for a proof that declares no PROOF_TIMEOUT_S (cairn/devices/tester/cli.py:543), so clearance refused PROVED and kicked the ticket to FIXME; the walk's seal step timed out again at 00:32 ('1 proof · 0 green · 0 red · 1 timeout'). Two diagnostic runs under --timeout 1200 took 174 s and 166 s; the sealed hollow took 270 s. A proof that never finishes leaves no reading, so every default-budget caller turns a green proof into a timeout.",
+  "traces_to": "Law 3 (nothing is known until measured): a proof that never finishes yields no reading, and clearance refuses the ticket on hollow_evidence_absent. Law 9: a timeout is red, never green.",
+  "how": "The builder needs (a) the file, cairn/tools/proof_coverage/proofs/test_proof_coverage.py; (b) the place: module level after the imports, beside PROVES, as `PROOF_TIMEOUT_S = 900  # measured 174 s / 166 s runs, 270 s hollow, 2026-11-19 (ticket <id>)`, a plain int literal as the peers spell it (test_address_sieve.py:27); (c) one tooth that reads its own source and finds PROOF_TIMEOUT_S as an int above 270, appended to the proof's teeth; (d) a PROVES entry for this ticket mapping '1' to that tooth; (e) runs only through `bin/cairn test`.",
+  "writes_to": [
+    "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
+  ],
+  "constraints": [
+    "every existing PROVES entry and tooth function in the proof stays unchanged",
+    "the tester's 120 s default (cairn/devices/tester/cli.py:543) is not changed"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "the proof declares a module-level PROOF_TIMEOUT_S, an int above the measured 270 s hollow run, so a default-budget run of it finishes",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proofs/test_proof_coverage.py",
+        "cairn/devices/tester/cli.py"
+      ],
+      "after": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proofs/test_proof_coverage.py"
+    ],
+    "out": [
+      "cairn/devices/tester/",
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "8e2018855b31's 00:12 walk hollow timed out at the 120 s default ('timed out after 120s. Declare PROOF_TIMEOUT_S in the proof')",
+      "how": "walk on akiendelllinux; cairn/devices/tester/cli.py:543; cairn 0f016cac4"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "the 00:32 walk seal step timed out again: '1 proof · 0 green · 0 red · 1 timeout'",
+      "how": "bin/cairn test --seal of the proof inside 8e2018855b31's walk"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "two runs took 174 s and 166 s; the sealed hollow took 270 s",
+      "how": "bin/cairn test --timeout 1200 twice, timed; cairn test --hollow 8e2018855b31 --seal --timeout 1200 (real 4m29.6s)"
+    }
+  ]
+}
