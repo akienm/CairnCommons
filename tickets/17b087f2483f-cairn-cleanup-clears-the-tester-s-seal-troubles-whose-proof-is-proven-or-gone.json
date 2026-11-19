@@ -113,5 +113,234 @@
       "saw": "24 live; red-tickets-held-red 7/7 proven; seal-red 2/4 proof gone, 2/4 red; ticket-unqueued/refused 1/9 terminal",
       "how": "bin/cairn trouble live --json, then per trouble validation_store.standing() / proof index by seal_trouble_identity / ticket workflow_and_state (scratch measure.py)"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "cairn cleanup clears the tester's seal-red and red-tickets-held-red troubles whose proof is proven or gone",
+      "intent": "bin/cmd/cleanup gains a 'seals' step before the drain: it hands the live seal-red-* and red-tickets-held-red-* trouble ids to the tester's CLI (cairn test --recheck-troubles), and the tester's new recheck module emits clear_trouble for each whose proof validation_store.standing() reads proven or whose proof file no longer exists; the trouble drain folds the clears.",
+      "scope": "IN: cairn/devices/tester/recheck.py, cairn/devices/tester/cli.py, bin/cmd/cleanup, the proof cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py. OUT: cairn/tools/validation_store/validation_store.py and cairn/devices/tester/red_tickets.py (read, unchanged), cairn/devices/trouble (folds, unchanged), the ticket-unqueued/refused kinds (sibling ticket), red-tickets-outline-check-*.",
+      "confidence": 0.95,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "ticket": "17b087f2483f"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/17b087f2483f-cairn-cleanup-clears-the-tester-s-seal-troubles-whose-proof-is-proven-or-gone.json",
+          "text": "the tester emits clear_trouble; it never writes the trouble store, and the drain folds (Law 6, precedent 95557c2ed44f)"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/17b087f2483f-cairn-cleanup-clears-the-tester-s-seal-troubles-whose-proof-is-proven-or-gone.json",
+          "text": "the proven predicate is validation_store.standing, and the proof is recovered from the identity alone"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/17b087f2483f-cairn-cleanup-clears-the-tester-s-seal-troubles-whose-proof-is-proven-or-gone.json",
+          "text": "bin/cmd/cleanup reaches the tester only through its CLI as a subprocess, never by importing its code (RULE 1, encapsulation_holds)"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/recheck.py",
+          "cairn/devices/tester/cli.py",
+          "bin/cmd/cleanup",
+          "cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+        ],
+        "out": [
+          "cairn/tools/validation_store/validation_store.py",
+          "cairn/devices/tester/red_tickets.py",
+          "cairn/devices/trouble",
+          "every other component"
+        ]
+      },
+      "confidence": 0.95,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      },
+      "ticket": "17b087f2483f",
+      "unknowns": []
+    },
+    "survey": {
+      "sought": [
+        "the seal trouble identities",
+        "the proven predicate",
+        "cleanup's existing recheck step",
+        "a scratch-world trouble proof"
+      ],
+      "holdings": [
+        {
+          "what": "seal_trouble_identity and standing, the seal-red name and the proven predicate",
+          "address": "cairn/tools/validation_store/validation_store.py"
+        },
+        {
+          "what": "red_keys and _hold, which raise red_tickets:held:red:<rel>::<tooth>",
+          "address": "cairn/devices/tester/red_tickets.py"
+        },
+        {
+          "what": "cleanup's recheck_findings step and its step runner",
+          "address": "bin/cmd/cleanup"
+        },
+        {
+          "what": "the tester's CLI entry",
+          "address": "cairn/devices/tester/cli.py"
+        },
+        {
+          "what": "a scratch world that raises through a fixture and drains through TroubleShim",
+          "address": "cairn/devices/trouble/proofs/test_an_ssh_hand_does_not_operator_close.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a recheck that clears the tester's seal-red and held-red troubles whose proof is proven or gone",
+          "measure": "git cat-file -e 0d06d1824:cairn/devices/tester/recheck.py: does not exist"
+        },
+        {
+          "what": "a cleanup step and CLI flag that reach the tester's recheck",
+          "measure": "git grep recheck-troubles 0d06d1824 -- cairn/devices/tester/cli.py: 0 matches; bin/cmd/cleanup at 0d06d1824 has only step findings (line 80)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude"
+      },
+      "ticket": "17b087f2483f"
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the red-first proof",
+          "kind": "compose",
+          "why": "binds the five outcomes to teeth before the build",
+          "uses": [
+            "cairn/tools/validation_store/validation_store.py",
+            "cairn/devices/trouble/proofs/test_an_ssh_hand_does_not_operator_close.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+          ]
+        },
+        {
+          "what": "the tester's recheck of its seal troubles",
+          "kind": "build",
+          "fills": "a recheck that clears the tester's seal-red and held-red troubles whose proof is proven or gone",
+          "why": "the tester rechecks its own troubles and emits the clears",
+          "uses": [
+            "cairn/tools/validation_store/validation_store.py",
+            "cairn/devices/tester/red_tickets.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/recheck.py"
+          ]
+        },
+        {
+          "what": "the cleanup step that hands the live seal troubles to the tester's CLI",
+          "kind": "build",
+          "fills": "a cleanup step and CLI flag that reach the tester's recheck",
+          "why": "cleanup is where a voyage ends, so the recheck runs there",
+          "uses": [
+            "bin/cmd/cleanup",
+            "cairn/devices/tester/cli.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/cli.py",
+            "bin/cmd/cleanup"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "survey_ref": "floor",
+        "sub_problems": "claude"
+      },
+      "ticket": "17b087f2483f"
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the red-first proof",
+          "why_now": "red first: the teeth bind before the build"
+        },
+        {
+          "what": "the tester's recheck of its seal troubles",
+          "why_now": "the five teeth turn green on the module alone"
+        },
+        {
+          "what": "the cleanup step that hands the live seal troubles to the tester's CLI",
+          "why_now": "wires the proven module into cleanup through the CLI"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "decompose_ref": "floor",
+        "order": "claude"
+      },
+      "ticket": "17b087f2483f"
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the red-first proof",
+          "expect": "all five teeth red at HEAD on the ImportError",
+          "falsifier": "any tooth green at HEAD",
+          "instrument": "bin/cairn test --seal cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+        },
+        {
+          "piece": "the tester's recheck of its seal troubles",
+          "expect": "all five teeth green",
+          "falsifier": "a never-sealed proof's trouble clears, or a proven one's stands",
+          "instrument": "bin/cairn test --seal cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+        },
+        {
+          "piece": "the cleanup step that hands the live seal troubles to the tester's CLI",
+          "expect": "cairn test --recheck-troubles prints the recheck's json and cleanup's seals step runs before troubles",
+          "falsifier": "encapsulation_holds reds bin at PROVEME",
+          "instrument": "bin/cairn test --seal cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "triage_ref": "floor",
+        "hypotheses": "claude"
+      },
+      "ticket": "17b087f2483f"
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "a seal-red or held-red trouble whose proof reads proven, or whose proof file is gone, is cleared by the recheck and the drain, and one whose proof was never sealed stays open and is reported standing",
+          "instrument": "bin/cairn test --seal cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py",
+          "covers": [
+            "the red-first proof",
+            "the tester's recheck of its seal troubles",
+            "the cleanup step that hands the live seal troubles to the tester's CLI"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "hypothesize_ref": "floor",
+        "criteria": "claude"
+      },
+      "ticket": "17b087f2483f"
+    }
+  }
 }
