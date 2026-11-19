@@ -5,15 +5,18 @@
   "intention": "A process that CC started over ssh classes as cc at the artifact door, so the journal, the question door and approve read an LLM's hand as an LLM's, never as Akien's.",
   "why": "Measured 2026-11-16 on akiendelllinux: caller() classes every logind session-*.scope as akien, and akienasus's CC works here over ssh in such scopes. So 1002 commons journal entries and 669 cairn journal entries whose ancestry runs through ssh.service are classed akien, cairn question answer recorded open-623b3822d036 and open-cddc9e378ee6 as 'recorded by caller class akien', and artifact.approve, which admits only the akien class, would admit CC. No physical signal separates CC-over-ssh from Akien-over-ssh today.",
   "traces_to": "Law 7: the journal is a record of truth and records CC's writes as Akien's. Outline 17.2.1: the one writer question is LLM or code. Law 6: approve is Akien's gate.",
-  "how": "caller() in cairn/tools/artifact/artifact.py reads the signal Akien chooses in Q#115 and classes an sshd session carrying it as cc. Its consumers (the journal entry, question.py's raised_by and answered_by, artifact.approve, trouble.py's operator close) read its answer unchanged. A red-first proof pins caller() over a scratch ancestry and environment, as test_the_caller_reads_whose_terminal_it_is.py does.",
+  "how": "caller() in cairn/tools/artifact/artifact.py walks the ancestry for an sshd-session process; for one, it reads that pid's 'Accepted publickey ... SHA256:<fp>' line (journalctl -u ssh _PID=<pid>, readable by the adm group, measured 2026-11-18) and classes the caller cc when <fp> is listed in cairn/tools/artifact/cc_ssh_keys.json. A red-first proof pins it over a scratch ancestry and a stubbed journal read.",
   "bounds": {
     "in": [
       "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/cc_ssh_keys.json",
       "cairn/tools/artifact/proofs/test_an_ssh_session_cc_started_classes_as_cc.py"
     ],
     "out": [
       "every other component",
-      "the journal entries already written (hash-chained, append-only)"
+      "the journal entries already written (hash-chained, append-only)",
+      "sshd configuration on any box",
+      "cairn/devices/trouble/trouble.py (reads caller() unchanged)"
     ]
   },
   "measured": [
@@ -46,53 +49,64 @@
       "when": "2026-11-16",
       "saw": "consumers of caller(): the journal entry (artifact.py:602) and relanded_by, parked_by and refused.by; question.py raised_by (:171), answered_by (:240) and the migration (:291); artifact.approve (:1190, akien only); trouble.py:307 (an operator-class hand closes a trouble); diagnostic.py:443; bus server shutdown (server.py:695). No PROVED certificate carries a caller, and sail's asked_by is a stated 'CC'",
       "how": "git grep on origin/main for caller() and its class reads"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "each accepted login logs 'sshd-session[PID]: Accepted publickey for akien from <ip> ... ED25519 SHA256:<fp>', and akien is in adm, so the journal line is readable without a host change",
+      "how": "journalctl -u ssh --since -48h on akiendelllinux; id -nG"
     }
   ],
   "outcomes": [
     {
       "n": 1,
-      "claim": "a caller whose ancestry is an sshd session carrying the CC signal Q#115 chooses classes cc, and artifact.approve refuses it",
-      "writes_to": [],
-      "reads": [],
+      "claim": "a caller whose ancestry holds an sshd-session process whose accepted key fingerprint (its 'Accepted publickey' journal line, matched by that pid) is listed in cairn/tools/artifact/cc_ssh_keys.json classes cc, and artifact.approve refuses it",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/cc_ssh_keys.json",
+        "cairn/tools/artifact/proofs/test_an_ssh_session_cc_started_classes_as_cc.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py"
+      ],
       "after": []
     },
     {
       "n": 2,
-      "claim": "an sshd session without that signal classes as Q#115's answer says, and a local app-*.scope or sddm session-*.scope still classes akien",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 3,
-      "claim": "a journal entry and a question answer written by that caller both name class cc",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 4,
-      "text": "caller() reads the Q#115 signal for an sshd session.",
+      "claim": "the same ancestry whose accepted key is not listed classes akien, and a local app-*.scope or sddm session-*.scope with no sshd-session ancestor still classes akien",
       "writes_to": [
-        "cairn/tools/artifact/artifact.py"
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/cc_ssh_keys.json",
+        "cairn/tools/artifact/proofs/test_an_ssh_session_cc_started_classes_as_cc.py"
       ],
       "reads": [
         "cairn/tools/artifact/artifact.py",
-        "cairn/tools/question/question.py",
-        "cairn/devices/trouble/trouble.py"
+        "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py"
       ],
-      "after": []
+      "after": [
+        1
+      ]
     },
     {
-      "n": 5,
-      "text": "a red-first proof over scratch ancestry and environment, one tooth per clause.",
+      "n": 3,
+      "claim": "a journal entry and a question answer written by the caller of outcome 1 both name class cc",
       "writes_to": [
         "cairn/tools/artifact/proofs/test_an_ssh_session_cc_started_classes_as_cc.py"
       ],
       "reads": [
-        "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py"
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/question/question.py"
       ],
-      "after": []
+      "after": [
+        1
+      ]
     }
+  ],
+  "constraints": [
+    "caller() decides from the kernel's record and sshd's journal, never from an environment variable: the key is the signal (outline 17.2.2).",
+    "cairn/tools/artifact/cc_ssh_keys.json lists public key fingerprints only, one {box, fingerprint} per CC key; its consumers (the journal entry, question.py, artifact.approve, the trouble operator close) read caller() unchanged.",
+    "a journal that cannot be read leaves the class as the cgroup says and records why on the caller record (Law 7); it never guesses cc or akien.",
+    "the proof pins caller() over a scratch ancestry and a scratch journal reader, as cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py does; no live sshd is touched.",
+    "out of this ticket: making CC's key on each box and pointing CC's ssh at it (a host-seam of its own), the interim refusal of every sshd-session caller at approve and the operator close (its own ticket, sailing first), and the claude_code user per box (outline 17.2.2.1, a later intention)."
   ]
 }
