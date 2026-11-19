@@ -77,5 +77,188 @@
       ],
       "after": []
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "the after-run pass in bin/cmd/artifactgate names only a record still unjournaled after a short settle",
+      "intent": "bin/cmd/artifactgate's after_run() re-checks each candidate path against a fresh journal after SETTLE_S = 0.5 s, up to REREADS = 2 times, and names only what is still unjournaled, so a door write whose journal append lands mid-pass is not named and a hand write still is.",
+      "scope": "IN: bin/cmd/artifactgate, the proof bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py. OUT: the door cairn/tools/artifact/artifact.py, .claude/settings.json, bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py (regression), every other component.",
+      "confidence": 0.95,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "ticket": "5cef97f01c79"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/5cef97f01c79-a-door-write-that-journals-mid-pass-is-not-named-after-the-run.json",
+          "text": "the settle runs only when the first pass names a path"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/5cef97f01c79-a-door-write-that-journals-mid-pass-is-not-named-after-the-run.json",
+          "text": "each re-read calls door.read_journal afresh"
+        },
+        {
+          "kind": "ticket",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/5cef97f01c79-a-door-write-that-journals-mid-pass-is-not-named-after-the-run.json",
+          "text": "7989bb520e14's proof stays green"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/cmd/artifactgate",
+          "bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+        ],
+        "out": [
+          "cairn/tools/artifact/artifact.py",
+          ".claude/settings.json",
+          "bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py",
+          "every other component"
+        ]
+      },
+      "confidence": 0.95,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      },
+      "ticket": "5cef97f01c79",
+      "unknowns": []
+    },
+    "survey": {
+      "sought": [
+        "the after-run pass",
+        "a settle before naming"
+      ],
+      "holdings": [
+        {
+          "what": "artifactgate's unjournaled() and after_run(), one pass with no re-read",
+          "address": "bin/cmd/artifactgate"
+        },
+        {
+          "what": "7989's proof, the regression and the scratch-root harness",
+          "address": "bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "an after-run re-read that settles before naming a path",
+          "measure": "grep -n 'sleep\\|SETTLE' bin/cmd/artifactgate at cairn 5edc6ed2d: no match; the red-first proof's teeth 1 and 3 red at HEAD"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude"
+      },
+      "ticket": "5cef97f01c79"
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "the red-first proof",
+          "kind": "compose",
+          "why": "binds the three outcomes to teeth before the build",
+          "uses": [
+            "bin/cmd/artifactgate",
+            "bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py"
+          ],
+          "writes_to": [
+            "bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+          ]
+        },
+        {
+          "what": "the settle re-read in after_run",
+          "kind": "build",
+          "fills": "an after-run re-read that settles before naming a path",
+          "why": "removes the measured race false flag",
+          "uses": [
+            "bin/cmd/artifactgate"
+          ],
+          "writes_to": [
+            "bin/cmd/artifactgate"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "survey_ref": "floor",
+        "sub_problems": "claude"
+      },
+      "ticket": "5cef97f01c79"
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "the red-first proof",
+          "why_now": "red first: the teeth bind before the build"
+        },
+        {
+          "what": "the settle re-read in after_run",
+          "why_now": "turns teeth 1 and 3 green"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "decompose_ref": "floor",
+        "order": "claude"
+      },
+      "ticket": "5cef97f01c79"
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "the red-first proof",
+          "expect": "teeth 1 and 3 red at HEAD, tooth 2 green",
+          "falsifier": "tooth 1 or 3 green at HEAD",
+          "instrument": "bin/cairn test --seal bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+        },
+        {
+          "piece": "the settle re-read in after_run",
+          "expect": "all three teeth green: the mid-pass door write quiet, the hand write named, constants 0.5 and 2",
+          "falsifier": "the mid-pass door write still named",
+          "instrument": "bin/cairn test --seal bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "triage_ref": "floor",
+        "hypotheses": "claude"
+      },
+      "ticket": "5cef97f01c79"
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "a door write journaled mid-pass is not named, a hand write never journaled is, and the gate declares SETTLE_S 0.5 and REREADS 2",
+          "instrument": "bin/cairn test --seal bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py",
+          "covers": [
+            "the red-first proof",
+            "the settle re-read in after_run"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.95,
+      "provenance": {
+        "unknowns": "claude",
+        "hypothesize_ref": "floor",
+        "criteria": "claude"
+      },
+      "ticket": "5cef97f01c79"
+    }
+  }
 }
