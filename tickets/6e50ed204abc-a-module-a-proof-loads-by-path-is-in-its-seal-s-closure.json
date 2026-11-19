@@ -1,0 +1,58 @@
+{
+  "id": "6e50ed204abc",
+  "title": "a module a proof loads by path is in its seal's closure",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A seal's closure names every repo file the proof's run loaded, including a module loaded by path and never registered in sys.modules, so a change to that file moves the seal.",
+  "why": "Measured 2026-11-19 in wt-1e99 on akiendelllinux. test_sail_queues_the_ticket_at_codemothers_gates.py loads cairn/devices/cc/scripts/sail.py by importlib.util.spec_from_file_location + exec_module (_sail()). sail.py is therefore outside the closure read from sys.modules, and the commit-time reseal after fix f09284b4f reported the stale red seal settled without re-running it.",
+  "traces_to": "Law 8 and Law 1: a seal is trusted because it moves when its subject moves; a settled answer is re-derived only when its inputs change, so the inputs must all be counted.",
+  "how": "In the closure runner in cairn/devices/tester/device.py (the atexit dump of sys.modules that _read_closure reads), also record repo .py files loaded outside sys.modules, for example through an audit hook on 'open'/'compile' scoped to the repo. Proof: cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py, keyed PROVES '6e50ed204abc' clauses 1-2, with a fixture proof that loads a scratch-repo module by path.",
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "a proof that loads a repo .py by spec_from_file_location + exec_module, without a sys.modules insert, seals a closure naming that file",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "after that file's bytes change, the reseal re-runs the proof instead of reporting it settled",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ],
+      "after": [
+        1
+      ]
+    }
+  ],
+  "constraints": [
+    "The closure still names the proof itself, and _read_closure's guard against a closure that does not name its proof is unchanged.",
+    "734b22d09f2e's reach log (subprocess loads) is still unioned into the closure."
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py"
+    ],
+    "out": [
+      "cairn/devices/tester/reseal.py (it compares fingerprints unchanged)",
+      "cairn/tools/validation_store",
+      "cairn/devices/cc/proofs/test_sail_queues_the_ticket_at_codemothers_gates.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "the commit-time reseal after f09284b4f reported the sail proof settled-red ('the closure has not moved'); an explicit bin/cairn test --seal ran it green",
+      "how": "build1e99.sh in wt-1e99 on akiendelllinux, then bin/cairn test --seal on the proof"
+    }
+  ]
+}
