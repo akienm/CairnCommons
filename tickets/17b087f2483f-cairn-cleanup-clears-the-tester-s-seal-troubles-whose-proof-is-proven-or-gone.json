@@ -1,0 +1,117 @@
+{
+  "id": "17b087f2483f",
+  "title": "cairn cleanup clears the tester's seal troubles whose proof is proven or gone",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "cairn cleanup clears the tester's seal-red-* and red-tickets-held-red-* troubles whose proof is sealed green with its fingerprint matching, or no longer exists; the tester rechecks and emits the clear, the trouble device's drain folds it.",
+  "why": "Measured 2026-11-18 at the akiendelllinux house: bin/cmd/cleanup rechecks only inspector-new-finding-* (its recheck_findings step), and of 24 live troubles 9 of the tester's had a gone cause: 7 of 7 red-tickets-held-red-* name a proof validation_store.standing() reads proven, and 2 of 4 seal-red-* name a proof file that no longer exists (bin/proofs/test_retired_components_are_gone.py, cairn/devices/codemother/proofs/test_an_outside_proof_asks_the_inspector_through_inspect_wire.py). akienasus_cc_0's cleanup the same night cleared 1 of 16 measured-stale.",
+  "traces_to": "Law 9 and Law 7: a standing trouble whose cause is gone no longer says what is. Law 6: the raiser emits, the trouble device folds (precedent 95557c2ed44f).",
+  "how": "New cairn/devices/tester/recheck.py: recheck(identities, *, proof_roots=None, raiser=None) indexes proof files under proof_roots (default the repo) by cairn/tools/validation_store/validation_store.py seal_trouble_identity and by the trouble slug of 'red_tickets:held:red:<rel>' (cairn/devices/tester/red_tickets.py red_keys, _hold), longest prefix wins; for each identity it emits raiser.clear_trouble(identity, by='cc', what_changed=<which predicate held>) when no proof matches or standing(proof)['proven'] is True, else reports it standing; an identity of neither kind is reported unknown. raiser defaults to ModuleRaiser('tester'). cairn/devices/tester/cli.py gains --recheck-troubles IDS... printing the result as json; bin/cmd/cleanup gains step 'seals' before 'troubles', handing it the live seal-red-*/red-tickets-held-red-* ids as recheck_findings does, and its --summarize reads the counts.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a seal-red trouble for a proof that standing() reads proven is cleared by recheck and the drain"
+      },
+      {
+        "n": 2,
+        "claim": "a seal-red trouble naming no proof file is cleared by recheck and the drain"
+      },
+      {
+        "n": 3,
+        "claim": "a seal-red trouble for an existing proof never sealed stays OPEN and is reported standing"
+      },
+      {
+        "n": 4,
+        "claim": "a red-tickets-held-red trouble for a proven proof is cleared by recheck and the drain"
+      },
+      {
+        "n": 5,
+        "claim": "a red-tickets-held-red trouble for an existing proof never sealed stays OPEN"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the recheck lives at cairn/devices/tester/recheck.py with the raiser; the tester never writes the trouble store, it emits clear_trouble.",
+      "writes_to": [
+        "cairn/devices/tester/recheck.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof is recovered from the identity alone (live records carry no detail); the proven predicate is validation_store.standing, never a re-read of the seal.",
+      "writes_to": [
+        "cairn/devices/tester/recheck.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: cairn/devices/tester/cli.py --recheck-troubles; bin/cmd/cleanup step 'seals' runs before 'troubles'.",
+      "writes_to": [
+        "cairn/devices/tester/cli.py",
+        "bin/cmd/cleanup"
+      ],
+      "reads": [
+        "bin/cmd/cleanup"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: bin/cmd/cleanup reaches the tester only through its CLI, \"$CAIRN\" test --recheck-troubles <ids> as a subprocess, never by importing cairn.devices.tester.recheck: bin is inspected by the build gate (since c1c3), and an import of another device's code reds encapsulation_holds (RULE 1).",
+      "writes_to": [
+        "bin/cmd/cleanup"
+      ],
+      "reads": [
+        "bin/cmd/cleanup",
+        "cairn/devices/tester/cli.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the proof raises the five troubles in a scratch world, drains a scratch store through TroubleShim, and passes proof_roots=[repo, scratch] so a never-sealed proof lives in scratch.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+      ],
+      "reads": [
+        "cairn/devices/trouble/proofs/test_an_ssh_hand_does_not_operator_close.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/recheck.py",
+      "cairn/devices/tester/cli.py",
+      "bin/cmd/cleanup",
+      "cairn/devices/tester/proofs/test_cleanup_rechecks_the_testers_seal_troubles.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store/validation_store.py (read, unchanged)",
+      "cairn/devices/tester/red_tickets.py (read, unchanged)",
+      "cairn/devices/trouble (folds, unchanged)",
+      "ticket-unqueued-*/ticket-refused-* (sibling ticket at cairn/machines/ticket)",
+      "red-tickets-outline-check-*",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "bin/cmd/cleanup's only recheck hands inspector --recheck the inspector-new-finding-* ids",
+      "how": "read bin/cmd/cleanup at cairn 0d06d1824"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "24 live; red-tickets-held-red 7/7 proven; seal-red 2/4 proof gone, 2/4 red; ticket-unqueued/refused 1/9 terminal",
+      "how": "bin/cairn trouble live --json, then per trouble validation_store.standing() / proof index by seal_trouble_identity / ticket workflow_and_state (scratch measure.py)"
+    }
+  ]
+}
