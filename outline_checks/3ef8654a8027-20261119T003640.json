@@ -1,0 +1,70 @@
+{
+  "ticket": "3ef8654a8027",
+  "at": "2026-11-19T00:36:40+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1698361,
+      "duration_ms": 77204,
+      "is_error": false,
+      "session_id": "e95f0d7b-c482-43b3-94b2-a6b80ed5f525"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "6a9c0322b5f0b262d827e9eef627753ec2d9e0160e469abfd08fdd4bab013a9f",
+  "ticket_sha256": "793260137570cbe3a6b7a1442d9b7bfacf5eb968e8224cd7d512f1ae3527ba22",
+  "touches": [
+    {
+      "number": "4.3.1.5",
+      "text": "The memory model. Everything Cairn keeps as LEARNING in database memory is these five things, and only these. Logs, troubles, git records and a device's own state keep their own homes (4.3.2-4.3.4). WHY: one kind of access everywhere."
+    },
+    {
+      "number": "4.3.1.5.1",
+      "text": "Nodes: one long list, id = row. Every tree indexes it; no tree owns a node, so several trees can index the same node in different ways."
+    },
+    {
+      "number": "4.3.1.5.1.1",
+      "text": "A row number is the same on every box. Storing a memory first reserves its slot from the librarian on the home box (CAIRN_HOME_HOST, 6.3.7.4), so two boxes are never handed the same slot, and the slot stays reserved until the write is complete. If a box's list is shorter than the slot (eg it holds rows up to 100 and is handed 123 while a sync is bringing the rest), it adds the open slots in between as blanks, and the sync fills them in as it proceeds. WHY: node ids are in every link and blob pointer, so a row has to mean the same node everywhere."
+    },
+    {
+      "number": "11.3",
+      "text": "DATABASE PROXY DEVICE (cairn/devices/dbproxy/)"
+    },
+    {
+      "number": "11.3.5.1",
+      "text": "A remote box keeps its own database and syncs it with the home box's (6.3.7.4). Node rows are the same on every box; the sync fills the blanks a box holds open (4.3.1.5.1.1). WHY: the local copy is fast, and the sync is the backup."
+    },
+    {
+      "number": "11.3.5.1.1",
+      "text": "Direction: home to remote. Every write goes to the home, so no node is held only by a remote; a box fills from the home, or from another host's proxy, but every row was written at the home (4.3.1.5.1.4.1.2). - akienasus_cc_0"
+    },
+    {
+      "number": "11.3.5.1.2",
+      "text": "The sync is owned by the database proxy, not by the devices whose tables it fills. WHY: its operations are then transparent to every other device, and the proxies are cooperatively the database's admins (Q#106). -amm"
+    },
+    {
+      "number": "11.3.5.1.3",
+      "text": "A write is a handshake: the box asked to store hands the write to the home box's proxy, the home stores it and hands back the row id, and the asking box stores it locally and returns it to the caller. A change is echoed the same way, so no id is ever held with two contents (Q#107). WHY: the proxies together hide the mechanism from the caller (encapsulation). -amm"
+    },
+    {
+      "number": "11.3.5.1.4",
+      "text": "Freshness is kept per tree or list, never per leaf: each carries when it was last updated, and a box refetches one whose stamp moved. WHY: every box asking the home when each leaf changed would bog it down. -amm"
+    },
+    {
+      "number": "11.3.5.1.5",
+      "text": "Every box is also a backup, and that whole copy syncs during sleep. -amm"
+    },
+    {
+      "number": "11.3.6",
+      "text": "Who holds tables: every table of learning is a tree in the memory model (4.3.1.5), owned by the librarian and delegated to the devices that learn. A table that is not learning is an exception and names why; the bus's message table is the first (5.5.3.4.1)."
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [],
+  "questions_already_open": []
+}

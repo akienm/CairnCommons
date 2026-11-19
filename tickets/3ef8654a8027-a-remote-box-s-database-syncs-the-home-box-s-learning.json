@@ -5,7 +5,7 @@
   "intention": "A remote box keeps its own database and syncs it with the home box's (outline 11.3.5.1): every learning table the home box holds is on the remote box with the same owner and the same node rows, so live-tree reads and proofs mean the same on every box.",
   "why": "Measured 2026-11-12: akienasus's local db holds one *_nodes table and none of codemother's trees, while akiendelllinux's codemother_orient_nodes holds 688 rows. So 2b3d842bc118's clause_4_the_live_tables_are_hers reds on akienasus ('codemother_orient_nodes owner=None rows=0/531'), and outline 11.3.5.1 has no ticket.",
   "traces_to": "Outline 11.3.5.1 (a remote box syncs its db with the home box's; the local copy is fast and the sync is the backup) and 4.3.1.5.1.1 (a row number is the same on every box).",
-  "how": "HELD FOR A DESIGN PASS before BUILDME (orchestrator, 2026-11-12: cast, don't build). The sync's unit is the outline's one long node list (4.3.1.5.1; open-675330928c01), whose rows are the same on every box with slots reserved from the home box (4.3.1.5.1.1), plus the trees that index it, owned by the librarian and delegated (11.3.6), not the built per-nexus <owner>_<nexus>_nodes tables. Its direction is home to remote (outline 11.3.5.1.1) and its owner is the database proxy (11.3.5.1.2, Q#106). Open: its transport (postgres replication versus a row copy between the proxies). The proof measures the outcome, which is fixed: tables, owners and node rows match the home box after a sync.",
+  "how": "HELD FOR A DESIGN PASS before BUILDME (orchestrator, 2026-11-12: cast, don't build). The sync's unit is the outline's one long node list (4.3.1.5.1; open-675330928c01), whose rows are the same on every box with slots reserved from the home box (4.3.1.5.1.1), plus the trees that index it, owned by the librarian and delegated (11.3.6), not the built per-nexus <owner>_<nexus>_nodes tables. Its direction is home to remote (outline 11.3.5.1.1) and its owner is the database proxy (11.3.5.1.2, Q#106). A write is a handshake through the home's proxy, which hands back the row id; a change is echoed the same way (11.3.5.1.3, Q#107). Freshness is one last-updated stamp per tree or list, never per leaf (11.3.5.1.4); the whole-copy backup syncs during sleep (11.3.5.1.5). Settled by CC as the design pass's how, not his: the asking proxy attaches a request id so a retried write after a lost reply is not stored twice; a write that cannot reach the home fails loudly. The proof measures the outcome, which is fixed: tables, owners and node rows match the home box after a sync.",
   "bounds": {
     "in": [
       "cairn/devices/dbproxy/sync.py",
@@ -57,7 +57,7 @@
     },
     {
       "n": 4,
-      "text": "the sync lives in dbproxy, the database proxy device (outline 11.3), and is owned by it: the proxies are cooperatively the database's admins, so the sync's writes into tables other devices own are transparent to those owners (Q#106, Akien 2026-11-18); its mechanism is the design pass's to settle.",
+      "text": "the sync lives in dbproxy, the database proxy device (outline 11.3), and is owned by it: the proxies are cooperatively the database's admins, so the sync's writes into tables other devices own are transparent to those owners (Q#106, Akien 2026-11-18); its mechanism is the write handshake and per-tree stamps of outline 11.3.5.1.3-11.3.5.1.5.",
       "writes_to": [
         "cairn/devices/dbproxy/sync.py"
       ],
