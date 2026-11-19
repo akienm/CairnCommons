@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Scoping the pass to paths the command itself wrote was looked at: the hook sees only the command text, not the writes, so nothing names which process wrote a path short of a file-watch around the command; a settle re-read is the smallest change that removes the measured false flag. A lock between the door and the gate was rejected: the door writes bytes then appends, and making that atomic touches cairn/tools/artifact, outside this component.",
+      "hidden_assumption": "That the door's bytes-to-journal gap is well under 0.5 s. The measured case closed within seconds; a door write slower than 1.0 s end to end would still be named. Also that a real hand write stays unjournaled across 1.0 s, which holds since nothing journals it.",
+      "prior_art": "artifactgate's own commit check (cairn artifact check) reads the same journal at commit time, when every door write has long finished; this pass is the only reader that races the door.",
+      "real_collision": "none: 7989bb520e14's outcomes stand (a hand write is named, a door write and a non-record are not); this narrows a false flag 7989's proof never drove."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when a door write whose journal append lands 0.2 s into the pass reads quiet, a hand write that is never journaled is still named, and test_a_bash_write_around_the_door_is_named_after_it_runs.py stays green. Wrong intent if the measured false flag was not a race (the journal still disagrees with the disk after a settle).",
+    "from_idea": "none, because it was measured on ticket 7989bb520e14 in bin/cmd/artifactgate (cairn 94e7aca4d): its after-run pass named tickets/7373983f9418-a-fixme-decide-on-an-outcomes-plan-names-the-answer-door.state.json, a door write, on 2026-11-18 21:26:44",
+    "how": "unjournaled() keeps its first pass; when it names any path, after_run() sleeps SETTLE_S = 0.5 s and re-reads the journal for those paths, up to REREADS = 2 times (at most 1.0 s added, well inside the hook's 10 s timeout), and names only the paths still unjournaled. A new red-first proof drives a door write that journals mid-pass (quiet) and a hand write that never journals (named).",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (a hollow green is worse than a red, and a false red is the mirror: a gate that cries wolf on every Bash call gets ignored, which is how its true reds stop being read); Law 7: a diagnostic surface is loud only about real errors.",
+    "what": "bin/cmd/artifactgate's after-run pass names only a record the journal still has not seen after a short settle, so a door write whose journal append lands while the pass is reading is never named."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-18 21:26:44: the after-run pass named 7373's state.json during a read-only command; the write was the door's (caller cairn-bus.service, verb phase) and journal sha == disk sha 82f0385d6942 seconds later."
+    },
+    {
+      "stratum": "code",
+      "text": "The after-run pass reads every changed record in every root, not only the command's: any concurrent peer door write lands inside some Bash call's window, so the race fires fleet-wide."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3fe8ccc0641b",
+  "skill": "intent",
+  "title": "bin/cmd/artifactgate's after-run pass names only a record the journal still has not seen after a short settle, so a door",
+  "trace_id": "9de0da3c74f9",
+  "when": "2026-11-18T21:32:10.164311"
+}

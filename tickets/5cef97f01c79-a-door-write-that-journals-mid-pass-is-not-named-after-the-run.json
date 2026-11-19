@@ -1,0 +1,81 @@
+{
+  "id": "5cef97f01c79",
+  "title": "a door write that journals mid-pass is not named after the run",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "bin/cmd/artifactgate's after-run pass names only a record the journal still has not seen after a short settle, so a door write whose journal append lands while the pass reads is never named, and a hand write still is.",
+  "why": "Measured 2026-11-18 21:26:44: during a read-only command the after-run pass (ticket 7989bb520e14) named tickets/7373983f9418-a-fixme-decide-on-an-outcomes-plan-names-the-answer-door.state.json. The write was the door's (caller cairn-bus.service, verb phase), and the journal's sha matched the disk (82f0385d6942) seconds later: the pass read between the door's bytes and its journal append. The pass reads every changed record in every root, so any concurrent door write by any peer can trip it on any Bash call.",
+  "traces_to": "Law 7: a diagnostic surface is loud about real errors; a false flag on every Bash call teaches the reader to ignore the true ones. Law 8: the proof drives both the race and the real write.",
+  "how": "HYPOTHESIS, named so a miss reads as its falsifier: SETTLE_S = 0.5 and REREADS = 2, module constants in bin/cmd/artifactgate. after_run() takes unjournaled()'s first pass; while it names any path and fewer than REREADS re-reads have run, it sleeps SETTLE_S and re-checks only those paths against a fresh door.read_journal(root); it names what is still unjournaled (at most 1.0 s added, only when a candidate exists; the hook's timeout is 10 s). A new red-first proof drives the gate in-process over a scratch root set by door.set_diagnostic_roots.",
+  "bounds": {
+    "in": [
+      "bin/cmd/artifactgate",
+      "bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+    ],
+    "out": [
+      "cairn/tools/artifact/artifact.py (the door's write order is unchanged)",
+      ".claude/settings.json (the registration and its 10 s timeout stand)",
+      "bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py (run as a regression, unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "the after-run pass named 7373983f9418's state.json during a read-only command (git status, stat, pgrep)",
+      "how": "the PostToolUse hook's blocking text in session_01Uny5cRoV5SFT1MywwwKPfx at 21:26:44"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "the journal's last entry for that path: verb phase, caller cairn-bus.service, sha_after 82f0385d6942 == the disk sha; CairnCommons clean, committed fde17087 at 21:26:45",
+      "how": "door.locate, door.read_journal, door.last_sha and sha256 of the bytes; git log -1"
+    }
+  ],
+  "constraints": [
+    "the settle runs only when the first pass names a path; a clean first pass returns at once",
+    "each re-read calls door.read_journal afresh; nothing caches the journal across the settle",
+    "7989bb520e14's outcomes stand; bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py stays green",
+    "the proof drives the gate in-process over a scratch root (door.set_diagnostic_roots), one tooth per outcome; no live root is written"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "a record unjournaled when the pass starts, which the door writes and journals 0.2 s into the pass, is not named: after_run('Bash') returns None",
+      "writes_to": [
+        "bin/cmd/artifactgate",
+        "bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+      ],
+      "reads": [
+        "bin/cmd/artifactgate",
+        "bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "a record written by hand and never journaled is still named by after_run('Bash') after the settle",
+      "writes_to": [
+        "bin/cmd/artifactgate",
+        "bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+      ],
+      "reads": [
+        "bin/cmd/artifactgate",
+        "bin/proofs/test_a_bash_write_around_the_door_is_named_after_it_runs.py"
+      ],
+      "after": [
+        1
+      ]
+    },
+    {
+      "n": 3,
+      "claim": "bin/cmd/artifactgate declares SETTLE_S == 0.5 and REREADS == 2, the hypothesis this ticket names",
+      "writes_to": [
+        "bin/cmd/artifactgate",
+        "bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py"
+      ],
+      "reads": [
+        "bin/cmd/artifactgate"
+      ],
+      "after": []
+    }
+  ]
+}
