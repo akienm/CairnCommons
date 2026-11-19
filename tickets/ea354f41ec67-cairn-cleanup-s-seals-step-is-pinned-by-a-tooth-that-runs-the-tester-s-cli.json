@@ -1,0 +1,84 @@
+{
+  "id": "ea354f41ec67",
+  "title": "cairn cleanup's seals step is pinned by a tooth that runs the tester's CLI",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A behaviour tooth runs bin/cairn cleanup in a scratch HOME over a seal-red trouble whose proof is gone, and asserts the seals line reports it cleared and trouble live no longer lists it, so removing either cairn test --recheck-troubles (cairn/devices/tester/cli.py) or cleanup's seals step (bin/cmd/cleanup) reds it.",
+  "why": "Measured 2026-11-19: ticket 17b087f2483f's hollow --seal read cairn/devices/tester/cli.py and bin/cmd/cleanup HOLLOW (no declared tooth redded on revert) and posted operator notices n-def5539f538c and n-9be844494f16. Its five teeth call recheck() in-process, so nothing measures the CLI flag or the cleanup step that a hand actually runs.",
+  "traces_to": "Law 8: nothing enters proven-space without a proof a hollow build couldn't pass; the wiring of 17b087f2483f passed one that could.",
+  "how": "New proof cairn/devices/tester/proofs/test_cleanup_reaches_the_recheck_through_the_cli.py, one tooth: under scratch_dir('cleanupwire') as HOME (short /tmp path, so the bus socket fits AF_UNIX), with CAIRN_BUS_UNIT=cairn-proof-cleanupwire-<pid>, raise seal_trouble_identity(<a proof path that does not exist>) through ModuleRaiser('tester'), run bin/cairn trouble drain, confirm it is live, run bin/cairn cleanup, and assert the seals line reads ok and names the identity and trouble live no longer lists it. Stop and reset-failed the unit in finally. No code changes: proofs-only, so the ticket carries a top-level writes_to naming the proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch HOME, a seal-red trouble for a gone proof stands OPEN, and bin/cairn cleanup reports it cleared on its seals line and trouble live no longer lists it"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the tooth runs the wiring as a hand does, bin/cairn cleanup as a subprocess, never recheck() in-process; that is what makes cli.py and bin/cmd/cleanup load-bearing for it.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_cleanup_reaches_the_recheck_through_the_cli.py"
+      ],
+      "reads": [
+        "bin/cmd/cleanup",
+        "cairn/devices/tester/cli.py",
+        "cairn/devices/tester/recheck.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the world is a scratch HOME from cairn.tools.scratch.scratch_dir, which reaps what ran under it; the bus the drain starts runs under the proof's own CAIRN_BUS_UNIT and is stopped and reset-failed in finally, so no live store and no live unit is touched.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_cleanup_reaches_the_recheck_through_the_cli.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the gone-proof case is the one tooth: it needs no sealed proof and no live validation, so the reading cannot drift with the repo's seal state.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_cleanup_reaches_the_recheck_through_the_cli.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/tester/proofs/test_cleanup_reaches_the_recheck_through_the_cli.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/proofs/test_cleanup_reaches_the_recheck_through_the_cli.py"
+    ],
+    "out": [
+      "cairn/devices/tester/cli.py (read, unchanged)",
+      "bin/cmd/cleanup (read, unchanged)",
+      "cairn/devices/tester/recheck.py (read, unchanged)",
+      "the 17b087f2483f proof (unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "hollow --seal of 17b087f2483f: cli.py and bin/cmd/cleanup HOLLOW, notices n-def5539f538c and n-9be844494f16",
+      "how": "bin/cairn test --hollow 17b087f2483f --seal at cairn 5a5ce169d"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "the drafted tooth: green as built; red with `step seals recheck_seals` commented out (seals line absent, trouble still live); red with cli.py's --recheck-troubles branch deleted (seals RED: unrecognized arguments); no cleanupwire unit left loaded",
+      "how": "bin/cairn test <proof> in worktree cleanup-wire-tooth at 8ca10e92f, each revert restored by git checkout"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "a scratch HOME under the session scratchpad fails the drain: bus socket path too long for AF_UNIX",
+      "how": "bin/cairn cleanup with HOME=<scratchpad>/hw/home"
+    }
+  ]
+}
