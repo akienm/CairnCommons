@@ -1,0 +1,112 @@
+{
+  "id": "a9cf64d1f92e",
+  "title": "approve refuses a caller over ssh",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "The artifact door's approve refuses any caller that descends from an ssh login, Akien's included, until CC has its own ssh key (outline 17.2.2).",
+  "why": "Measured 2026-11-18 on akiendelllinux: an ssh login's shell sits in session-4397.scope, which classify() reads as akien, under sshd-session (OpenSSH 10.2p1). CC on akienasus logs in with akien@akienasus, the key Akien's own ssh would use, and its environment does not cross ssh, so CC over ssh is classed akien and can approve a hand edit as him (Q#115, CairnCommons/questions/open-0bfaf0f5aa8b.json). Akien answered 2026-11-18: until CC's key lands, approve and the operator close refuse any sshd-session caller, Akien's included.",
+  "traces_to": "Law 6: approve is the owner's gate, and a CC classed akien over ssh passes it ambiently. Outline 17.2.2 (-amm).",
+  "how": "ancestry() records each pid's comm from /proc/<pid>/comm (None when unreadable). caller() sets me['ssh'] = the pid of the first ancestor whose comm is sshd-session or sshd (the older OpenSSH child), only when one is found, so a local caller's journal entry keeps its shape. approve() refuses a caller carrying ssh before its class check, naming the ssh login and Q#115. A red-first proof injects the ancestry with mock.patch.object, as cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py does. The trouble device's operator close is a sibling ticket (Q#103).",
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/proofs/test_approve_refuses_a_caller_over_ssh.py"
+    ],
+    "out": [
+      "cairn/devices/trouble (the operator close, a sibling ticket)",
+      "classify() and every class decision (unchanged)",
+      "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py (run as a regression, unchanged)",
+      "ticket 62e7bff757c0 (CC's own key) and every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "ps -eo pid,ppid,comm: 1729 sshd (parent 1), 1520885 sshd-session (parent 1729), 1520928 sshd-session (parent 1520885); /proc/1520928/cgroup is session-4397.scope",
+      "how": "ps and /proc on akiendelllinux; sshd -V reads OpenSSH_10.2p1"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "Q#115 answered: 'i agree on all counts' to (a) a dedicated ssh key for CC; until it lands, approve and the operator close refuse any sshd-session caller",
+      "how": "CairnCommons/questions/open-0bfaf0f5aa8b.json, answered_at 2026-11-18T17:46:25-07:00"
+    }
+  ],
+  "constraints": [
+    "the class decision is unchanged: ssh is a field beside the class, never a new class",
+    "ssh is set only when an sshd ancestor is found",
+    "approve's refusal names the ssh login and outline 17.2.2 / Q#115",
+    "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py stays green",
+    "the proof binds the door at call time and injects the ancestry; no live approve runs"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "ancestry() records each pid's /proc comm: this process's entry reads its own comm",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_approve_refuses_a_caller_over_ssh.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "caller() over an akien-scope leaf under an sshd-session ancestor carries ssh = that ancestor's pid",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_approve_refuses_a_caller_over_ssh.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py"
+      ],
+      "after": [
+        1
+      ]
+    },
+    {
+      "n": 3,
+      "claim": "caller() over an akien-scope leaf with no sshd ancestor carries no ssh",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_approve_refuses_a_caller_over_ssh.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_the_caller_reads_whose_terminal_it_is.py"
+      ],
+      "after": [
+        1
+      ]
+    },
+    {
+      "n": 4,
+      "claim": "approve() refuses an akien caller carrying ssh, naming the ssh login",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_approve_refuses_a_caller_over_ssh.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "after": [
+        2
+      ]
+    },
+    {
+      "n": 5,
+      "claim": "approve() from an akien caller without ssh is not refused for ssh: it reaches its words check",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py",
+        "cairn/tools/artifact/proofs/test_approve_refuses_a_caller_over_ssh.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "after": [
+        4
+      ]
+    }
+  ]
+}
