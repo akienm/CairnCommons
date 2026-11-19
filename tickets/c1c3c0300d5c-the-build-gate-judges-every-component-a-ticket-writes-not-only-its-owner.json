@@ -1,0 +1,66 @@
+{
+  "id": "c1c3c0300d5c",
+  "title": "the build gate judges every component a ticket writes, not only its owner",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A ticket's PROVEME crossing runs the build_inspector over every census component holding a path in its bounds.in, not only the component its owning_intention names, so a red its build writes into another component reds its own crossing.",
+  "why": "Measured 2026-11-18: dda0e72b9c67's build (cairn c9d4e79f6) added `from cairn.devices.tester.isolation import ...` at bin/proofs/test_a_proof_run_by_any_spelling_is_sealed.py:81, a path in its bounds.in. Its owning_intention is cairn/tools/scratch, so transitions._build_gate inspected only that directory; encapsulation_holds on the scratch row reds 0 of the breach (source 'bin', target 'cairn/devices/tester'), and dda0 crossed PROVEME and PROVED green. The red surfaced at the next bin-owned ticket, 78a600419a21, whose PROVED was refused and needed bug ticket 973ead3631e1.",
+  "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build couldn't pass): a gate that inspects one of the components a build wrote passes the rest unexamined. RULE 1: the breach is a reach into a device.",
+  "how": "In cairn/tools/base/transitions.py _build_gate (inspect_build beneath it, transitions.py:1264), when the crossing carries a ticket, read its bounds.in (ticket_file.plans_of + read_ticket, as cross.py does), map each path to its innermost component with the same resolver encapsulation_breaches uses for a breach's source (so bin/ resolves to 'bin', which the cairn/ census does not list), run inspect_build over the owning component plus those, refuse on any red with each finding naming its component, and name every inspected component in the note and record. Red-first proof: a scratch repo with two components; a ticket owned by A whose bounds.in writes a cross-device import into B reds naming B.",
+  "constraints": [
+    "a ticket whose bounds.in all sit in its owning component inspects exactly as today (one component, same record shape)",
+    "no sieve's own logic changes; only which census rows the gate runs them over",
+    "this does not answer Q#103 (open-212b2de5c6b8: one ticket per component, or one spanning ticket); it measures every component a ticket writes under either answer"
+  ],
+  "outcomes": [
+    {
+      "n": 1,
+      "claim": "a PROVEME crossing for a ticket owned by component A whose bounds.in holds a file in component B carrying a cross-device import is refused, the finding naming B's encapsulation_holds, nothing journaled",
+      "writes_to": [
+        "cairn/tools/base/transitions.py",
+        "cairn/tools/base/proofs/test_the_build_gate_judges_every_written_component.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py",
+        "cairn/machines/build_inspector/inspector.py",
+        "cairn/tools/base/address.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 2,
+      "claim": "the same ticket with the import removed crosses, and the crossing's record names both A and B as inspected",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_the_build_gate_judges_every_written_component.py"
+      ],
+      "reads": [
+        "cairn/tools/base/transitions.py"
+      ],
+      "after": [
+        1
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/transitions.py",
+      "cairn/tools/base/proofs/test_the_build_gate_judges_every_written_component.py"
+    ],
+    "out": [
+      "cairn/machines/build_inspector/",
+      "cairn/devices/codemother/",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-18",
+      "saw": "at dda0's PROVED commit 8c3380c06, encapsulation_breaches lists {source: bin, target: cairn/devices/tester, file: bin/proofs/test_a_proof_run_by_any_spelling_is_sealed.py, line 81}; the encapsulation_holds predicate reds it on the bin and cairn/devices/tester rows and on 0 rows for cairn/tools/scratch",
+      "how": "encap_probe.sh on akiendelllinux: git archive 8c3380c06 into scratch, inspector.encapsulation_breaches + the sieve's row predicate"
+    },
+    {
+      "when": "2026-11-18",
+      "saw": "the import was added by dda0's own build c9d4e79f6 (git log -S), and transitions._build_gate takes comp_dir = Path(history_path).parent, the one component cross.py derives from owning_intention",
+      "how": "git log -S on the proof; read transitions.py:1348-1366 and cross.py:79"
+    }
+  ]
+}
