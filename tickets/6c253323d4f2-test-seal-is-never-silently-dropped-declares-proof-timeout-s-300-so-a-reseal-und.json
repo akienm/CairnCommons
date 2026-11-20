@@ -1,0 +1,64 @@
+{
+  "id": "6c253323d4f2",
+  "title": "test_seal_is_never_silently_dropped declares PROOF_TIMEOUT_S = 300, so a reseal under sweep load is not read as a timeout red",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "test_seal_is_never_silently_dropped.py declares a top-level PROOF_TIMEOUT_S = 300, and the tester's run_proof runs it at that budget.",
+  "why": "Measured 2026-11-19: 2026-11-19, the proof is slow only under load: Windows idle 53 s wall (12 of 12 green, bin/cairn test); Linux idle 23.4 s and 24.2 s (akienasus_cc_0, origin/main 3c6c6c3a1, unsealed, 12 of 12 PASS, no hang); under cc_0's 39-validation reseal sweep on the Dell (22:44-23:05) it exceeded the default 120 s and went red (seal-red-...-test-seal-is-never-silently-dropped). Its own waits are bounded (subprocess timeout=240, bus ask timeout=180), no sleep loop. Law 7: a timeout under load is a measurement of load, not a red of the proof.",
+  "traces_to": "Law 3 (nothing is known until measured: the budget is measured wall plus margin); Law 4 (the budget is the proof's own byte, physics not a caller's flag).",
+  "how": "A hypothesis, measured by the proof: add `PROOF_TIMEOUT_S = 300` at the top level of cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py. Budget = measured wall plus margin: the slowest idle wall is 53 s (Windows), so 300 s is 5.7x it and 12.5x the Linux idle; it is 2.5x the 120 s that sweep load already exceeded, so it covers the sweep at up to ~2.5x slowdown beyond the point it timed out. It stays under the proof's own bounded waits summed (240 s + 180 s), so a real hang still reds inside the proof rather than at the budget. If the sweep measures above 300 s the number is re-measured, not guessed up.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the proof source declares PROOF_TIMEOUT_S as a top-level positive integer, 300, read through the tester's declared_timeout"
+      },
+      {
+        "n": 2,
+        "claim": "run_proof on that proof with the reseal door's caller budget of 120 runs at 300: the budget the run records is 300, not 120"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: test_seal_is_never_silently_dropped.py declares a top-level PROOF_TIMEOUT_S = 300, and the tester's run_proof runs it at that budget.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof reads declared_timeout and runs run_proof at a 120 s caller budget, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_seal_proof_declares_a_budget_above_sweep_load.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_proof_declares_its_own_time_limit.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py",
+    "cairn/devices/tester/proofs/test_the_seal_proof_declares_a_budget_above_sweep_load.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/proofs/test_seal_is_never_silently_dropped.py",
+      "cairn/devices/tester/proofs/test_the_seal_proof_declares_a_budget_above_sweep_load.py"
+    ],
+    "out": [
+      "cairn/devices/tester/device.py (the mechanism is 8383a32d20c5's)",
+      "every other proof"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "2026-11-19, the proof is slow only under load: Windows idle 53 s wall (12 of 12 green, bin/cairn test); Linux idle 23.4 s and 24.2 s (akienasus_cc_0, origin/main 3c6c6c3a1, unsealed, 12 of 12 PASS, no hang); under cc_0's 39-validation reseal sweep on the Dell (22:44-23:05) it exceeded the default 120 s and went red (seal-red-...-test-seal-is-never-silently-dropped). Its own waits are bounded (subprocess timeout=240, bus ask timeout=180), no sleep loop.",
+      "how": "bin/cairn test of the proof on Windows (53 s); akienasus_cc_0's two unsealed Linux runs (23.4 s, 24.2 s); the live trouble's 120 s timeout during the 22:44-23:05 sweep; read of the proof's subprocess and ask timeouts"
+    }
+  ]
+}
