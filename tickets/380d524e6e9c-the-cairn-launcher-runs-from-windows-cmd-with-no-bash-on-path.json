@@ -77,5 +77,178 @@
       "saw": "2026-11-19/20 on akiendell (Windows): outline 5.4.3.8 reads 'The launcher is Python (bin/cairn), run by Cairn's own interpreter, so Windows needs no bash'; bin/cairn line 1 is '#!/usr/bin/env bash' (479 lines of bash); bin/cairn.cmd runs '\"C:\\Program Files\\Git\\bin\\bash.exe\" bin\\cairn' by a hardcoded path; a bare subprocess of bin/cairn from Python raises FileNotFoundError [WinError 2] (and WinError 193 for a bare bash script by full path, seen tonight in the tester's proofs); cmd /c 'where bash' finds three bash.exe here, so the shim works only because bash exists. cc_0 answered open-198248431b60 by measurement: 5.4.3.8 is unbuilt and no ticket names it.",
       "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "380d524e6e9c: the cairn launcher runs from Windows cmd with no bash on PATH (home: bin)",
+      "intent": "bin/cairn.py is the Python launcher and bin/cairn.cmd runs it with Cairn's own interpreter, naming no bash, so typing cairn in cmd works with no bash.exe on PATH.",
+      "scope": "in: bin/cairn.py, bin/cairn.cmd, bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py; out: bin/cairn (the bash launcher, unchanged), the Rescue fallover (ddc9957704d2), the Linux front (8b94ca4536c9)",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "domain": "bin"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Outline 5.4.3.8: the launcher is Python, run by Cairn's own interpreter, so Windows needs no bash.",
+          "source": "cairn/devices/cairn/requirements",
+          "kind": "outline"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/cairn.py",
+          "bin/cairn.cmd",
+          "bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py"
+        ],
+        "out": [
+          "bin/cairn (the bash launcher, unchanged)",
+          "the Rescue fallover (ddc9957704d2)",
+          "the Linux front (8b94ca4536c9)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "what bin/cairn.cmd runs today and what bin/cairn dispatches, so the Python launcher resolves the same targets and exits with the same codes"
+      ],
+      "holdings": [
+        {
+          "what": "the component the build writes",
+          "address": "bin/cairn.cmd"
+        },
+        {
+          "what": "the dispatch the Python launcher ports",
+          "address": "bin/cairn"
+        },
+        {
+          "what": "the verb table and bin reader the launcher composes",
+          "address": "cairn/tools/base/shim.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "bin/cairn.py runs the dispatch and bin/cairn.cmd runs it with the venv python, naming no bash",
+          "measure": "bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py: teeth 1 and 2 red (bin/cairn.py absent; cairn.cmd names bash), tooth 3 green as a guard (bin/cairn test, 2026-11-20, akiendell Windows)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "bin/cairn.py runs the dispatch and bin/cairn.cmd runs it with the venv python, naming no bash",
+          "why": "Measured 2026-11-20 on akiendell: bin/cairn.cmd runs Git's bash.exe by an absolute path, so cairn works on Windows only where Git Bash is installed; outline 5.4.3.8 says the launcher is Python and Windows needs no bash.",
+          "kind": "build",
+          "fills": "bin/cairn.py runs the dispatch and bin/cairn.cmd runs it with the venv python, naming no bash",
+          "uses": [
+            "bin/cairn",
+            "cairn/tools/base/shim.py"
+          ],
+          "writes_to": [
+            "bin/cairn.py",
+            "bin/cairn.cmd"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "bin/cairn.py runs the dispatch and bin/cairn.cmd runs it with the venv python, naming no bash",
+          "why_now": "the red-first proof is on main; Windows is the only box that can measure cairn.cmd"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "bin/cairn.py runs the dispatch and bin/cairn.cmd runs it with the venv python, naming no bash",
+          "expect": "the three teeth of test_cairn_runs_from_cmd_with_no_bash.py pass",
+          "falsifier": "a tooth stays red: cairn help from cmd with bash off PATH fails or differs from the bash launcher, cairn.cmd names bash, or a verb exiting 1 does not exit 1",
+          "instrument": "bin/cairn test bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_cairn_runs_from_cmd_with_no_bash.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py",
+          "timeout_s": 600,
+          "covers": [
+            "bin/cairn.py runs the dispatch and bin/cairn.cmd runs it with the venv python, naming no bash"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "verdict": {
+      "verdicts": [
+        {
+          "claim": "every tooth of test_cairn_runs_from_cmd_with_no_bash.py passes, one per falsifier clause",
+          "instrument": "bin/cairn test bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py",
+          "outcome": "pass",
+          "evidence": "claimed pass by CC; the verdict door's own re-run of this instrument is the reading, recorded beside it as observed_runs",
+          "discriminating_observation": "Measured 2026-11-20 on akiendell (Windows): bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py sealed green (3 of 3 teeth) at main d4b139be4; hollow measured 2 files, 0 hollow (bin/cairn.py absent reds teeth 1 and 3; bin/cairn.cmd reverted reds teeth 1 and 2). Linux reads teeth 1 and 3 UNRAN by design; the Windows seal is the one that counts.",
+          "timeout_s": 600
+        }
+      ]
+    }
+  }
 }
