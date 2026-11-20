@@ -68,5 +68,167 @@
       "how": "reading cairn/tools/tester/../devices/tester/cli.py (--reseal --stage), reseal.py run_or_record / reseal_all / stage_clean_seals, the installed pre-commit hook, and artifact.py check_staged on cairn origin/main 2026-11-20"
     }
   ],
-  "id": "380b2d99901d"
+  "id": "380b2d99901d",
+  "chart": {
+    "orient": {
+      "request": "380b2d99901d: a commit's journal names only the records the commit carries \u2014 check_staged composes the index blob of .artifact-journal.jsonl per path (working entry where the commit carries that path, HEAD's otherwise) and never stages the whole working journal",
+      "intent": "A commit's .artifact-journal.jsonl names only the records that commit carries: for a path the commit does not carry, the committed journal keeps HEAD's entry, and the working-tree journal keeps the newer one for the commit that will.",
+      "scope": "in: cairn/tools/artifact/artifact.py, cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py, cairn/tools/artifact/validations/test_a_commits_journal_names_only_the_records_it_carries.json; out: cairn/devices/tester/reseal.py (the reseal is unchanged), cairn/devices/tester/hooks/pre-commit, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Every component talks to every other component only through that component's public interface.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Errors are loud at diagnostic surfaces and permanent in records of truth.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/artifact/artifact.py",
+          "cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py",
+          "cairn/tools/artifact/validations/test_a_commits_journal_names_only_the_records_it_carries.json"
+        ],
+        "out": [
+          "cairn/devices/tester/reseal.py (the reseal is unchanged)",
+          "cairn/devices/tester/hooks/pre-commit",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "whether cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py reads green on every clause"
+      ],
+      "holdings": [
+        {
+          "what": "under change",
+          "address": "cairn/tools/artifact/artifact.py"
+        },
+        {
+          "what": "the red-first proof",
+          "address": "cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py"
+        },
+        {
+          "what": "the harness the proof copies",
+          "address": "cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "check_staged composes the committed journal per path, so a commit carries only its own records' journal lines",
+          "measure": "commit 53c5fbc1c (a `git commit -- server.py` whose reseal hit ENOSPC and staged no seal) carries .artifact-journal.jsonl with 5 rewritten seal lines naming validation bytes the commit does not hold; check_staged ends with an unconditional `git add -- .artifact-journal.jsonl`; the red-first proof reds at 47b572a5e"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "check_staged composes the committed journal per path, so a commit carries only its own records' journal lines",
+          "why": "Law 7: a record of truth that names a seal the commit does not hold says what is not so; Law 8: that seal line is a false green",
+          "kind": "build",
+          "fills": "check_staged composes the committed journal per path, so a commit carries only its own records' journal lines",
+          "uses": [
+            "cairn/tools/artifact/artifact.py",
+            "cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py",
+            "cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/artifact.py",
+            "cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py",
+            "cairn/tools/artifact/validations/test_a_commits_journal_names_only_the_records_it_carries.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "check_staged composes the committed journal per path, so a commit carries only its own records' journal lines",
+          "why_now": "53c5fbc1c landed 5 journal lines without their seals on 2026-11-20, and every commit under a failed reseal can do it again"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "check_staged composes the committed journal per path, so a commit carries only its own records' journal lines",
+          "expect": "every proof named reads green",
+          "falsifier": "(1) a path commit carries only its own journal lines: record A unstaged, `git commit -- B`, the committed entry for A is HEAD's and for B the working one; (2) a reseal forced to ENOSPC after one seal, under `git commit -- <source>`, lands the commit, prints COULD NOT RUN, and every committed journal entry's sha_after matches its committed blob; (3) the working-tree journal is byte-identical before and after the check",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the red-first proof reads green on every clause and the others stay green",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py",
+          "timeout_s": 1800,
+          "covers": [
+            "check_staged composes the committed journal per path, so a commit carries only its own records' journal lines"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
