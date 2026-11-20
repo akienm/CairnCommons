@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing assumption: the interpreter on akiendell has no socket.AF_UNIX. Measured: the traceback reaches remote.py:250 with rec unbound, reachable only when hasattr(socket,'AF_UNIX') is false, so it stands. A second: bus.port is written by the bus on Windows in the {port,key} shape the dead block already reads; that block is unchanged by the fix.",
+    "builder_check": "A Haiku builder needs: the exact edit (dedent lines 245-250 of remote.py out of the if hasattr(socket,'AF_UNIX') block, so they run after 'return conn, None'), the proof path, and the instrument command. The ticket's decisions name both files and the proof; no other file changes.",
+    "children": "none, because it is one dedent in cairn/tools/bus_client/remote.py with one proof",
+    "collision_check": "No collision with f62f6b50b047 (held_connection): its why is a held connection for the sole-path rule, its teeth run on Linux sockets; this restores the Windows branch it moved. A distinction to record, not exclusive-and-terminal. Outline 5.4.3 (the bus is the only device-to-device path) is what a broken dial violates.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Falsifier: with AF_UNIX deleted, _dial returns a connection to the listener named in bus.port and the record's key; an absent or port-less record raises FileNotFoundError naming bus.port. Red today (UnboundLocalError, 3 of 3 teeth), green after the dedent. Horizon: until _dial is restructured again.",
+    "gates_bound": "proof gate: cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py, one tooth per falsifier clause, red-first; feeds back to origin (FIXME) on failure; Laws 3 and 8.",
+    "missing_check": "The AF_UNIX branch is untouched, so Linux behaviour is unchanged; the proof deletes AF_UNIX in-process so the Windows branch reads on every host. Not covered: a live Windows bus end to end; the proof stubs the listener, which is exactly what _dial owns.",
+    "node_class": "code-seam",
+    "questions": "none, because the fix is the dedent of cairn/tools/bus_client/remote.py lines 245-250, confirmed by the orchestrator against origin/main, and nothing in it is a spec choice for Akien",
+    "task_or_ticket": "ticket",
+    "title": "bus_client dials the loopback port where Python has no AF_UNIX",
+    "watchme": "none, because the proof it adds (red-first, landing on main before the chart) is the whole of its correctness, the fix is one dedent in cairn/tools/bus_client/remote.py, and f62f6b50b047's proof cairn/tools/bus_client/proofs/test_a_held_connection_holds_the_bus_open.py still guards the AF_UNIX path",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A Windows-only branch moved under an AF_UNIX guard went unseen because every Linux proof reads the AF_UNIX path; the proof deletes AF_UNIX in-process so it reads everywhere."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "7409d59e0e1b",
+  "skill": "sorted",
+  "title": "bus_client dials the loopback port where Python has no AF_UNIX",
+  "trace_id": "28c5e7008d68",
+  "when": "2026-11-20T02:48:45.191983"
+}

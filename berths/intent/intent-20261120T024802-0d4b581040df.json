@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "Proceed.",
+      "better_approach": "The dedent is the smallest change; a try/except around the AF_UNIX branch would hide the bug, not fix it.",
+      "hidden_assumption": "That Windows has no AF_UNIX on the interpreter in use: measured, the traceback reaches line 250 with rec unbound, which only happens when hasattr(socket,'AF_UNIX') is false.",
+      "prior_art": "Grepped CairnCommons tickets and questions for _dial / UnboundLocalError / bus.port: no ticket owns this path; 3dc005de27cf (db reaches postgres over tcp) is a different component. Checked congruency-lab for bus_client: its charter owns remote.py.",
+      "real_collision": "None: f62f6b50b047's proof measures held_connection on Linux sockets; this restores the Windows path it moved. Not exclusive-and-terminal with it."
+    },
+    "exit": "routed_forward",
+    "falsifier": "With socket.AF_UNIX deleted, _dial returns a connection to the loopback listener named in bus.port and the record's key; a missing or port-less record raises FileNotFoundError; the proof is red today and green after the dedent.",
+    "from_idea": "none, because this is a bug measured 2026-11-20 on akiendell: cairn/tools/bus_client/remote.py:245-250 (grep of tickets and questions found no ticket for _dial's Windows path; f62f6b50b047 is the commit that introduced it)",
+    "how": "Dedent the no-AF_UNIX block in remote.py _dial so it runs after the AF_UNIX branch returns; red-first proof deletes socket.AF_UNIX in-process so Linux measures the Windows branch.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 9 (red is the default; a green earned) and Law 3 (measured 2026-11-20: every bus call on akiendell raises UnboundLocalError); outline 5.4.3 bus is the only device-to-device path.",
+    "what": "bus_client's _dial dials the loopback port recorded in bus.port where Python has no AF_UNIX, instead of dying with UnboundLocalError on rec."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "f62f6b50b047 broke every bus call on Windows; Linux proofs could not see it. The fix proof deletes AF_UNIX in-process so it reads on every host."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "f658e6a2b0ca",
+  "skill": "intent",
+  "title": "bus_client's _dial dials the loopback port recorded in bus.port where Python has no AF_UNIX, instead of dying with Unbou",
+  "trace_id": "5e69c462e93c",
+  "when": "2026-11-20T02:48:02.110949"
+}
