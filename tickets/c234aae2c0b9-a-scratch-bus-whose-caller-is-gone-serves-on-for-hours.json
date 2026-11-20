@@ -1,0 +1,92 @@
+{
+  "title": "a scratch bus whose caller is gone serves on for hours",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "A --scratch bus that no caller has reached for N seconds, holding no open connection, no ask in flight and no undelivered mail, ends itself with its cause recorded; the live house bus never does.",
+  "why": "Measured 2026-11-19 on akiendelllinux: 31 scratch bus units served on after their callers were gone, one for 2h 7min on 1.3 s of CPU, until a hand stopped 29 of them. Their homes were never removed, so the existing home-gone exit could not fire. A process that outlives every caller is a leak the next mind has to find by hand.",
+  "traces_to": "CP4 through the bus charter's lazy-init why (the next ask respawns a bus, so an idle one costs only its memory and its unit) and Law 7 (the exit records its cause in stops.jsonl).",
+  "how": "Owner: the bus machine (cairn/devices/cairn/machines/bus). The starter remote._spawn (bus_client, remote.py:233) is unchanged. The bound sits in the bus because the bus alone knows whether anything is open or standing; the starter only knows it launched. _HomeWatch.service_actions already runs every poll and already ends a bus whose home is gone; the idle check sits beside it and leaves by the same door (stop.set, then shutdown on a thread), so a scratch home's spill and asks file are written exactly as at any other exit. N = CAIRN_BUS_IDLE_S, default 1800 s. N IS A HYPOTHESIS: bus.log records no ask or connection timing (measured), so the longest gap between asks a real long proof makes on its scratch bus could not be read. 1800 s is 3x the longest single held request measured (581.7 s, b0e65cf8a77e's queueme, 2026-11-12); that is a held connection, which keeps the bus busy anyway, not a gap. D2 writes idle_s_max into every stop record so the next reading of stops.jsonl sets N by measurement. THE TESTER-ID CASE KEEPS ITS COLLECTMODE STOP: CollectMode=inactive-or-failed only reaps the unit record once the process has exited, by any cause, and the tester's end-of-run stop is a SIGTERM that serve records as cause 'signal'. A proof's bus is reached continuously, so the tester's stop normally comes first. If the idle exit comes first, the tester's stop finds an inactive unit and is a no-op. Both go through the one stop path, so the two exits never fight.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "only a --scratch bus idles out: a serve(scratch=True) at a scratch home with CAIRN_BUS_IDLE_S short and nothing open exits after it with a stops.jsonl record of cause 'idle'; a serve(scratch=False) under the same short N is still serving well after it"
+      },
+      {
+        "n": 2,
+        "claim": "nothing is lost across an idle exit: no idle exit while a connection is open, an ask is in flight or a row is undelivered, even past N; and after an idle exit, a post to a recipient that subscribed before the exit is delivered by the bus respawned at the same home"
+      },
+      {
+        "n": 3,
+        "claim": "N is read, not guessed: with CAIRN_BUS_IDLE_S unset N is 1800 s, and every stop record (idle, signal, verb) carries idle_s_max, the longest gap in seconds between one connection closing and the next opening over that bus's life"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: serve sets server.scratch = scratch beside server.home (server.py:1159). _Handler counts open connections on the server and stamps server.last_idle_at = time.monotonic() when the count falls to 0. _HomeWatch.service_actions, after the home-gone check: if getattr(self,'scratch',False) and open == 0 and nothing is in flight or undelivered (the same accessors take_over_asks/return_the_backlog read) and monotonic() - last_idle_at >= N, print 'bus: idle <s>s with nothing open or standing — exiting', stop.set('idle', {'idle_s': s, 'n_s': N}), and start the shutdown thread exactly as the home-gone branch does. N = float(os.environ.get('CAIRN_BUS_IDLE_S', '1800')).",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: idle_s_max is kept on the server (the max of each gap closed, plus the open gap at stop) and _record_stop adds it to every stop record's detail-level fields as 'idle_s_max'.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: a red-first proof, one tooth per clause, PROVES {1,2,3}, harness copied from test_every_stop_records_its_cause.py: serve in a child process at a scratch HOME with CAIRN_BUS_IDLE_S=2, read <home>/stops.jsonl. Tooth 2 holds a connection open past N, then posts mail to a subscribed recipient across a respawn. Tooth 3 imports the default from server inside the tooth.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py",
+        "cairn/devices/cairn/machines/bus/server.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py"
+    ],
+    "out": [
+      "cairn/tools/bus_client (the starter is unchanged)",
+      "the live cairn-bus.service unit",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "31 cairn-bus-<hash> units ran `serve --home <h> --scratch` since 15:00 with no tester id; cc_0 found 29 standing and stopped them at 23:09:37 (bus.log: 'bus: stop ... cause signal sender_pid 1798'). Unit ffd7fdacc1: started 21:02:20, stopped 23:09:37, 1.269 s CPU over 2h 7min.",
+      "how": "journalctl --user over Started cairn-bus-*.service lines; systemctl --user show; bus.log stop lines"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "CORRECTION to the first reading ('every home missing'): all 31 homes are PRESENT (ls -ld; mtimes 23:09, the stop, not a removal). bus.log carries 0 'is gone — exiting' lines ever, though _HomeWatch.service_actions (server.py:822) ends a bus whose home is gone and server.home is set on every serve (1159). The units outlived their CALLERS, not their homes: a shell exported CAIRN_BUS_HOME=$(mktemp -d /tmp/xx.XXXX), ran cairn verbs (a cairn pre-commit's tester --reseal --stage reaches the bus via _announce_seals; any verb asking the bus does too), and never removed the dir.",
+      "how": "ls -ld per unit home from the journal's --home argument; grep -c over ~/.cairn/logs/bus.log; reading server.py"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "CORRECTION on whose: units c44a3a41b2 (/tmp/bsp.ALKX) and ffd7fdacc1 (/tmp/bsp.6gNj) were spawned at 21:02 from ~/dev/src/wt-splice/cairn by akienasus_cc_0's castsplice script, which exported a scratch CAIRN_BUS_HOME around cairn cast, outlinecheck and the commons commit. An earlier report that none were mine was wrong.",
+      "how": "bus.log 'client: bus spawn attempted as cairn-bus-<hash>' and 'bus: serving <home>/bus.sock ... root <cwd>' lines matched to the script's echoed BUS line"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "bus.log records no per-ask or per-connection time (its line kinds: backlog, spawn attempted, serving, stop, took over, tracebacks), so the longest gap between asks a real long proof makes on its scratch bus cannot be read from it.",
+      "how": "line-kind census of ~/.cairn/logs/bus.log (15602 lines) with digits and paths masked"
+    }
+  ],
+  "id": "c234aae2c0b9"
+}

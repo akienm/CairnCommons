@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Assumes a --scratch bus's transit table is a throwaway (BusDevice.scratch via __main__.py:60) and dropped at its exit, so what survives an exit is only what serve already writes to the home (final_flush's spill, hand_over_asks' asks file). Idle exit is therefore allowed only when neither has anything to write: no connection open, no ask in flight, no undelivered row. Assumes N=1800 s, which is a HYPOTHESIS because bus.log carries no ask timing (measured); D2 makes it measurable.",
+    "builder_check": "A Haiku builder needs: where the poll runs (_HomeWatch.service_actions, server.py:822, called by serve_forever each poll); where connections are seen (_Handler, server.py:669: count open, stamp last close); how in-flight state is read (the BusProcess/BusDevice asks and undelivered accessors behind take_over_asks and return_the_backlog); the scratch flag (serve(..., scratch=) at 1117, which needs setting on server); the stop shape (stop.set(cause, detail), _record_stop into <home>/stops.jsonl; copy the harness from test_every_stop_records_its_cause.py); and the env name (CAIRN_BUS_IDLE_S). All are carried in decisions.",
+    "children": "none, because the change is one poll condition and one stop-record field in cairn/devices/cairn/machines/bus/server.py",
+    "collision_check": "b69e5c658b1c (serve returns after backlog) and 1029d5146152 (shutdown waits for held requests) shape the exit path this reuses; the idle exit goes through the same stop.set + shutdown as _HomeWatch. 5a91bdac03b7 and ea6e465680a3 are the starter's and the shim proof's leaks, not this one (distinctions). The live bus is untouched (clause 1). No exclusive-and-terminal collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Three clauses, one tooth each, horizon the red-first proof. (1) Only a --scratch bus idles out: a scratch serve with nothing open past N exits with stop cause 'idle', and a serve with scratch=False under the same N is still serving after it. (2) Nothing is lost: idle never fires while a connection is open, an ask is in flight or a row is undelivered, and after an idle exit a post to a recipient subscribed before the exit is delivered by the respawned bus at the same home. (3) N is read: unset CAIRN_BUS_IDLE_S gives N=1800, and every stop record carries idle_s_max.",
+    "gates_bound": "code-seam: proof gate = bin/cairn test over the red-first proof, sealed by the tester; hollow gate = cairn test --hollow; verdict gate at PROVED; feeds back to origin (this ticket's measured) on failure.",
+    "missing_check": "It does not remove the leaked homes (a caller's mktemp is the caller's to clean). It does not change the starter (remote._spawn), so a scratch spawn outside a test run still gets no CollectMode; that is fine because the unit ends by itself now. It does not decide which verb spawned each of the 31 (bus.log gives time and cwd only).",
+    "node_class": "code-seam",
+    "questions": "none, because the shape (idle-exit on the bus machine, starter unchanged) is read from the bus charter cairn/devices/cairn/machines/bus/intention+why.json, and N is carried as a labeled hypothesis that D2's idle_s_max in cairn/devices/cairn/machines/bus/server.py measures",
+    "task_or_ticket": "ticket",
+    "title": "a scratch bus whose caller is gone serves on for hours",
+    "watchme": "none, because its red-first proof (to berth beside cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py) is the whole of its correctness, and D2's idle_s_max in each stop record written by cairn/devices/cairn/machines/bus/server.py is the reading that resets N",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The home-gone guard was already built and never fired: no leaked home was ever removed. The leak is a caller that never ends, so the bound belongs to the bus's own idleness."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "e888730ed58e",
+  "skill": "sorted",
+  "title": "a scratch bus whose caller is gone serves on for hours",
+  "trace_id": "8cbafaaca98a",
+  "when": "2026-11-19T23:21:21.565377"
+}
