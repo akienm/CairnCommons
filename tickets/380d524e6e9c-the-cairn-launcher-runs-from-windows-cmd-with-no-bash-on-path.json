@@ -1,0 +1,81 @@
+{
+  "id": "380d524e6e9c",
+  "title": "the cairn launcher runs from Windows cmd with no bash on PATH",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "A Python launcher (bin/cairn.py) is the dispatcher on Windows and cairn.cmd runs it with Cairn's own interpreter, naming no bash, so typing cairn in cmd works with no bash anywhere on PATH.",
+  "why": "Measured: 2026-11-19/20 on akiendell (Windows): outline 5.4.3.8 reads 'The launcher is Python (bin/cairn), run by Cairn's own interpreter, so Windows needs no bash'; bin/cairn line 1 is '#!/usr/bin/env bash' (479 lines of bash); bin/cairn.cmd runs '\"C:\\Program Files\\Git\\bin\\bash.exe\" bin\\cairn' by a hardcoded path; a bare subprocess of bin/cairn from Python raises FileNotFoundError [WinError 2] (and WinError 193 for a bare bash script by full path, seen tonight in the tester's proofs); cmd /c 'where bash' finds three bash.exe here, so the shim works only because bash exists. cc_0 answered open-198248431b60 by measurement: 5.4.3.8 is unbuilt and no ticket names it.",
+  "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
+  "how": "A hypothesis, not a settled shape: build in slices. Slice 1 (this ticket): bin/cairn.py ports the dispatch the shim needs on Windows (resolve the device address, find Cairn's venv python, exec the device verb or bus verb), and cairn.cmd runs the venv python on it, with no bash.exe named anywhere in the shim. The bash launcher stays for Linux until a later slice replaces it (outline 5.4.3.8.1: a thin platform shell in front). Falling over to Rescue and the shell-written trouble file (5.4.3.8.1-2) are later slices, each its own ticket, not cast here.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn help run from cmd.exe with PATH holding no directory that contains bash.exe exits 0 and prints the verb list the bash launcher prints"
+      },
+      {
+        "n": 2,
+        "claim": "bin/cairn.cmd names no bash.exe and no Git path in its source"
+      },
+      {
+        "n": 3,
+        "claim": "a verb that exits 1 through the Windows launcher exits 1 (5.4.3.8.3: a command's own failure is that command's error)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: A Python launcher (bin/cairn.py) is the dispatcher on Windows and cairn.cmd runs it with Cairn's own interpreter, naming no bash, so typing cairn in cmd works with no bash anywhere on PATH.",
+      "writes_to": [
+        "bin/cairn.py"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D1: A Python launcher (bin/cairn.py) is the dispatcher on Windows and cairn.cmd runs it with Cairn's own interpreter, naming no bash, so typing cairn in cmd works with no bash anywhere on PATH.",
+      "writes_to": [
+        "bin/cairn.cmd"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
+    }
+  ],
+  "writes_to": [
+    "bin/cairn.py",
+    "bin/cairn.cmd",
+    "bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py"
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn.py",
+      "bin/cairn.cmd",
+      "bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py"
+    ],
+    "out": [
+      "bin/cairn (the bash launcher, unchanged)",
+      "the floor checks and the Rescue fallover (later slices)",
+      "Linux behaviour"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "2026-11-19/20 on akiendell (Windows): outline 5.4.3.8 reads 'The launcher is Python (bin/cairn), run by Cairn's own interpreter, so Windows needs no bash'; bin/cairn line 1 is '#!/usr/bin/env bash' (479 lines of bash); bin/cairn.cmd runs '\"C:\\Program Files\\Git\\bin\\bash.exe\" bin\\cairn' by a hardcoded path; a bare subprocess of bin/cairn from Python raises FileNotFoundError [WinError 2] (and WinError 193 for a bare bash script by full path, seen tonight in the tester's proofs); cmd /c 'where bash' finds three bash.exe here, so the shim works only because bash exists. cc_0 answered open-198248431b60 by measurement: 5.4.3.8 is unbuilt and no ticket names it.",
+      "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    }
+  ]
+}
