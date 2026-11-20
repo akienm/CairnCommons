@@ -19,6 +19,10 @@
       {
         "n": 3,
         "claim": "the narrowing stays code-only: a file the fixture only READS as data (a .json, a .md, opened with open()) is not in its closure, and cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py stays green"
+      },
+      {
+        "n": 4,
+        "claim": "a fixture proof that only RUNS an extensionless repo file as a subprocess (sys.executable <file>, never loading it in-process) names that file in its fingerprint_closure — the reach log already records it as the child's __main__ __file__, and repo_relative_closure must keep it"
       }
     ]
   },
@@ -35,7 +39,7 @@
     },
     {
       "n": 2,
-      "text": "D2: repo_relative_closure keeps executed no-suffix repo files as well as .py.",
+      "text": "D2: repo_relative_closure keeps executed no-suffix repo files as well as .py; this alone also closes the subprocess-run case via the reach log (clause 4).",
       "writes_to": [
         "cairn/tools/validation_store/validation_store.py"
       ],
@@ -45,7 +49,7 @@
     },
     {
       "n": 3,
-      "text": "D3: the proof plus validation, one tooth per clause, modelled on the prior art.",
+      "text": "D3: the proof plus validation, one tooth per clause (1-4), modelled on the prior art.",
       "writes_to": [
         "cairn/devices/tester/proofs/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.py",
         "cairn/devices/tester/validations/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.json"
@@ -77,6 +81,11 @@
       "when": "2026-11-20",
       "saw": "A seal over a proof that loads an extensionless repo file by path never names that file, so editing the file cannot stale the seal. 2026-11-20, eb2f8f9b0b8c: after bin/cmd/deletegate changed (82ab0b80a), the reseal-at-commit read test_delete_gate as 'settled red, closure unmoved' and did not rerun it; its fingerprint_closure was ['bin/proofs/test_delete_gate.py'] alone. Two filters each drop the file: the exec audit hook ticket 6e50ed204abc added keeps only co_filename ending '.py' (cairn/devices/tester/device.py:112), and repo_relative_closure keeps only rel paths ending '.py' (cairn/tools/validation_store/validation_store.py:457). Scope, by a scan of every **/proofs/*.py: 56 proofs load by path (spec_from_file_location 45, SourceFileLoader 9, spec_from_loader 9, run_path 1, exec(compile 1); the 9 that load an extensionless file all use spec_from_loader(name, SourceFileLoader(name, path)) + exec_module, and are blind: bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py (artifactgate); bin/proofs/test_a_record_path_refusal_names_every_way_out.py (artifactgate); bin/proofs/test_a_var_script_slot_runs_a_proof_only_through_its_loop.py (proofgate); bin/proofs/test_artifact_gate.py (artifactgate); bin/proofs/test_askscan.py (askscan); bin/proofs/test_delete_gate.py (deletegate, trash); bin/proofs/test_probescan.py (probescan); bin/proofs/test_proof_gate.py (proofgate); cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py (artifactgate). Read: the validations of test_delete_gate, test_artifact_gate, test_askscan, test_probescan, test_proof_gate each carry a one-entry closure (the proof).",
       "how": "eb2f8f9b0b8c's reseal output (settled-red over a moved gate); a regex scan of every **/proofs/*.py for by-path load forms; the fingerprint_closure of 5 bin validations read; cairn/devices/tester/device.py:112 and cairn/tools/validation_store/validation_store.py:457 read"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "the missing_check measured: subprocess-run is blind by the SAME second filter, not a different mechanism. A scratch fixture proof in bin/proofs that only ran bin/cmd/deletegate as a subprocess, sealed through TesterDevice().run_proof: closure ['<the proof>'] alone. Re-sealed with only repo_relative_closure patched to also keep executed no-suffix repo files: closure ['bin/cmd/deletegate', '<the proof>'] — reach/sitecustomize.py logs every module __file__ unfiltered, so the reach log already carried it, and nothing else entered",
+      "how": "worktree /var/tmp/wt-b7d5 at 069a9e356, probe bin/proofs/_probe_subprocess_only_gate.py (never committed) driven by two run_proof seals, unpatched then with filter #2 monkeypatched"
     }
   ]
 }
