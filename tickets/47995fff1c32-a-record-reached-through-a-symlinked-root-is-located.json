@@ -1,0 +1,67 @@
+{
+  "id": "47995fff1c32",
+  "title": "a record reached through a symlinked root is located",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "The artifact door's locate() finds a record reached through a symlinked default root, so the gate guards the commons that hollow links beside its worktree.",
+  "why": "Measured 2026-11-20: 6cd13a3a5f42's hollow refused at HEAD because bin/proofs/test_artifact_gate.py read 12 FAILs in the hollow worktree. hollow links the standing commons beside the worktree as a symlink (19193ff1e41e); locate() resolves the asked path through the link but compares it against the unresolved default root _REPO.parent/CairnCommons, so relative_to fails and every commons record locates as None.",
+  "traces_to": "Law 4 — a rule that matters is enforced by physics; the gate is physics only where locate() sees the record.",
+  "how": "locate() compares the resolved path against Path(root).resolve(). A red-first proof points _REPO at a scratch wt whose sibling CairnCommons is a symlink and asks locate() through the link, at its target, and outside.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a ticket path spelled through a symlinked default CairnCommons root locates as a CairnCommons record at tickets/<name>"
+      },
+      {
+        "n": 2,
+        "claim": "the same ticket spelled at the link's target locates as the same root name and relative path"
+      },
+      {
+        "n": 3,
+        "claim": "a path under neither root, and a non-record path (notes/) under the linked root, still locate as None"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: locate() compares p against Path(root).resolve(), so every branch of roots() is judged in one spelling.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof drives roots()'s default branch over a scratch symlink layout, one tooth per clause.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_record_reached_through_a_symlinked_root_is_located.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/proofs/test_remove_clears_the_read_only_bit.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/proofs/test_a_record_reached_through_a_symlinked_root_is_located.py"
+    ],
+    "out": [
+      "cairn/tools/artifact/jurisdiction.json",
+      "cairn/tools/artifact/__main__.py",
+      "bin/cmd/artifactgate",
+      "cairn/devices/tester/hollow.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "in a bare worktree with CairnCommons symlinked beside it, bin/proofs/test_artifact_gate.py read 12 FAILs and artifact.locate('<wt>/../CairnCommons/tickets/x.json') returned None; without the link it read GREEN",
+      "how": "git worktree add --detach + ln -s ~/dev/src/CairnCommons beside it, then bin/cairn test --exec over the proof and a python call to locate()"
+    }
+  ]
+}
