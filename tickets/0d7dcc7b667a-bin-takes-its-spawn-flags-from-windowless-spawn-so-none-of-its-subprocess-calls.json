@@ -10,11 +10,15 @@
     "clauses": [
       {
         "n": 1,
-        "claim": "unhelped_sites over bin names no file"
+        "claim": "unhelped_sites over bin names no file, and every subprocess spawn in bin/cairn.py passes **windowless_kwargs(given=...) (given required: a bare **windowless_kwargs() loses inherited stdio on Windows) or **detached_kwargs(), or carries a '# visible-console:' marker"
       },
       {
         "n": 2,
         "claim": "the component's behaviour is unchanged: its existing proofs read as they did before the edit"
+      },
+      {
+        "n": 3,
+        "claim": "a real child's output reaches the caller: a parent with an inherited stdout pipe and no console runs a printing child through bin/cairn.py's _run, and the print arrives in the parent's captured stdout"
       }
     ]
   },
@@ -56,6 +60,11 @@
       "when": "2026-11-20",
       "saw": "1 non-proof file(s) in bin call subprocess without helper keywords: cairn.py",
       "how": "grep -rlE subprocess.(run|Popen|call|check_output|check_call) over cairn, bin and skills, minus proofs, then a check for detached_kwargs or windowless_kwargs in each, grouped by nearest intention+why.json"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "akiendell_cc_0: the first build (**windowless_kwargs() at the three sites) made `python bin/cairn.py test --list` print nothing on Windows — CREATE_NO_WINDOW without std handles hands the child a new hidden console; the proof's clause 2 recorder read green on that broken build. Fixed in the helper by ticket aab7f9ca2068 (given=, and this ticket waits on its PROVED): the call sites spell **windowless_kwargs(given=()). The proof was withdrawn from main (0d82308ac) and re-lands amended with clause 3",
+      "how": "akiendell_cc_0's measurement on akiendell, relayed 2026-11-20; amended proof run on akiendelllinux: 2/3 green, tooth 1 red on the unbuilt cairn.py"
     }
   ],
   "chart": {
