@@ -1,0 +1,73 @@
+{
+  "id": "6437cfd935bb",
+  "title": "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300, so its 137 s wall is not read as a 120 s timeout",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "The outside-readers census proof declares its own time limit above its measured wall, so a reseal that touches artifact.py runs it to a verdict instead of timing it out and staling the artifact component.",
+  "why": "Measured 2026-11-20: cc_0 on akiendelllinux timed the census proof at 137 s wall; commit a71b39b54 records 133 s, 'past the reseal's default budget'. It declares no PROOF_TIMEOUT_S (cairn.devices.tester.device.declared_timeout returns None for it), so the reseal door's 120 s default budget applies, and every reseal touching cairn/tools/artifact/artifact.py times it out.",
+  "traces_to": "Law 9 (green is earned) and Law 3 (the budget follows the measured wall)",
+  "how": "Add a top-level `PROOF_TIMEOUT_S = 300` to cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py. Budget = measured wall plus margin: 300 s is 2.2x the 137 s Linux wall and 2.5x the 120 s default that times it out. No Windows wall is read; if one measures above 300 s the number is re-measured, not guessed up. The mechanism is 8383a32d20c5's; the proof copies cf32e6f141e0's test_the_scratch_proof_declares_a_budget_above_its_wall, whose first tooth reds an undeclared proof because declared_timeout returns None.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the census proof source declares PROOF_TIMEOUT_S as a top-level positive integer, 300, read through the tester's declared_timeout (None today, so this tooth is red before the build)"
+      },
+      {
+        "n": 2,
+        "claim": "run_proof on a fixture carrying the census proof's declared value, at the reseal door's 120 s caller budget, records a run budget of 300, not 120"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py declares a top-level PROOF_TIMEOUT_S = 300; its teeth are unchanged.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py",
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof copies cf32e6f141e0's, retargeted at the census proof: tooth 1 reads declared_timeout == 300, tooth 2 runs run_proof on a scratch fixture carrying that value at a 120 s caller budget.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/proofs/test_the_scratch_proof_declares_a_budget_above_its_wall.py",
+        "cairn/devices/tester/proofs/test_a_proof_declares_its_own_time_limit.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py",
+      "cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py"
+    ],
+    "out": [
+      "cairn/devices/tester/device.py (the mechanism is 8383a32d20c5's)",
+      "cairn/tools/artifact/artifact.py",
+      "every other proof"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "the census proof ran 137 s wall on Linux",
+      "how": "cc_0's timed run on akiendelllinux, relayed by the orchestrator"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "a71b39b54 records the census reseal at 133 s, past the reseal's default budget",
+      "how": "git log -1 a71b39b54"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "declared_timeout returns None for the census proof",
+      "how": "cairn.devices.tester.device.declared_timeout on akiendelllinux"
+    }
+  ]
+}
