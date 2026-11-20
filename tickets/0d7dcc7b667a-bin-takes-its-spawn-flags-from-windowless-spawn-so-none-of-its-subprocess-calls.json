@@ -57,5 +57,159 @@
       "saw": "1 non-proof file(s) in bin call subprocess without helper keywords: cairn.py",
       "how": "grep -rlE subprocess.(run|Popen|call|check_output|check_call) over cairn, bin and skills, minus proofs, then a check for detached_kwargs or windowless_kwargs in each, grouped by nearest intention+why.json"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "0d7dcc7b667a: bin takes its spawn flags from windowless_spawn, so none of bin/cairn.py's subprocess calls opens a console window (home: bin)",
+      "intent": "Every subprocess call in bin/cairn.py (the three subprocess.call sites in _run and _bus) takes windowless_kwargs() from cairn.tools.windowless_spawn, so none opens a visible console window on Windows; behaviour and exit codes are unchanged.",
+      "scope": "in: bin/cairn.py and the 0d7d proof; out: every other component, cairn/tools/windowless_spawn",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "domain": "bin"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Errors are loud at diagnostic surfaces and permanent in records of truth: a red from either host refuses, and a reading that cannot rule a red out does not stand.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "bin/cairn.py",
+          "bin/proofs/test_bin_takes_its_spawn_flags_from_the_helper.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/windowless_spawn"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where bin/cairn.py calls subprocess"
+      ],
+      "holdings": [
+        {
+          "what": "the dispatcher the build edits; the subprocess.call sites are in it",
+          "address": "bin/cairn.py"
+        },
+        {
+          "what": "the helper whose kwargs the calls take",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "windowless keywords on bin/cairn.py's subprocess.call sites",
+          "measure": "unhelped_sites over bin, once the widened scan of 364704f371dd lands: names bin/cairn.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "in bin/cairn.py import windowless_kwargs and pass **windowless_kwargs() to each subprocess.call (lines 144, 155, 160); a call that must show a terminal keeps none and carries a marker comment",
+          "why": "Akien 2026-11-20: popups while he works on the same box are annoying; CP4. Law 4: the widened scan enforces it.",
+          "kind": "build",
+          "fills": "windowless keywords on bin/cairn.py's subprocess.call sites",
+          "uses": [
+            "bin/cairn.py",
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "bin/cairn.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "in bin/cairn.py import windowless_kwargs and pass **windowless_kwargs() to each subprocess.call (lines 144, 155, 160); a call that must show a terminal keeps none and carries a marker comment",
+          "why_now": "bin is open after 5b0a PROVED; eb2f lands first, then this lands over the new bin/cairn.py; the proof reads red only once 364704f371dd widens the scan"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "in bin/cairn.py import windowless_kwargs and pass **windowless_kwargs() to each subprocess.call (lines 144, 155, 160); a call that must show a terminal keeps none and carries a marker comment",
+          "expect": "unhelped_sites over bin names nothing and bin's existing proofs read as before",
+          "falsifier": "a subprocess.call in bin/cairn.py still lacks windowless_kwargs, or an exit code changes",
+          "instrument": "bin/cairn test bin/proofs/test_bin_takes_its_spawn_flags_from_the_helper.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "unhelped_sites over bin names no file, and bin's existing proofs read as before",
+          "instrument": "bin/cairn test bin/proofs/test_bin_takes_its_spawn_flags_from_the_helper.py",
+          "timeout_s": 900,
+          "covers": [
+            "in bin/cairn.py import windowless_kwargs and pass **windowless_kwargs() to each subprocess.call (lines 144, 155, 160); a call that must show a terminal keeps none and carries a marker comment"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
