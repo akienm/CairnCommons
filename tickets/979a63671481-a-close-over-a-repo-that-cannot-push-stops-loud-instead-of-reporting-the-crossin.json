@@ -1,0 +1,83 @@
+{
+  "id": "979a63671481",
+  "title": "a close over a repo that cannot push stops loud instead of reporting the crossing",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "close.sh and prove.sh read the status of every commit, pull and push they run, and a repo left behind or diverged from origin stops the script loud, naming the repo, before it reports any crossing.",
+  "why": "Law 7: errors are loud at diagnostic surfaces. 2026-11-20 on akiendelllinux, closing 380d524e6e9c: close.sh's commit_all (close.sh:23) ran `(cd $CC && cairn artifact quiet -- git pull -q --rebase --autostash && git push -q 2>&1 | tail -1)`; the pull printed 'fatal: Cannot rebase onto multiple branches.' and the push its non-fast-forward hint (/var/tmp/close380d.1.txt lines 1-2), and close.sh went on to print '--- CROSSED TO BUILDME, NOT YET PROVED' (line 5) and exit 4 with the commons 5 commits ahead of origin. Nothing reads the subshell's status. The unpushed state surfaced only at a later PROVED crossing (the_stones_are_pushed lane); it was rebased and pushed by hand. prove.sh's commit_all (prove.sh:13) carries no pull/push but its commits and status are likewise unread. Cause of 'multiple branches' unmeasured (commons branch.main.merge is single; hypothesis: a concurrent fetch rewrote FETCH_HEAD)..",
+  "traces_to": "Law 7; Law 4; CP4",
+  "how": "In close.sh, factor the pull/push into one function sync_repo <dir> that runs `cairn artifact quiet -- git pull --rebase --autostash` then `git push`, captures both statuses (no pipe that swallows them), and on any failure, or when `git rev-list @{u}..HEAD` is non-empty afterwards, prints 'NOT PUSHED: <dir>: <git's own last error line>' and returns non-zero. commit_all returns that status, and every call site of commit_all exits non-zero (a new exit code 5 = 'repo not pushed', documented in the header) before any CROSSED/PROVED line. prove.sh's commit_all gets the same status check on its commits. The proof drives the extracted commit/sync step (as test_a_close_commits_only_its_own_tickets_records does) over scratch bare-origin git repos under a scratch HOME, never the live trees, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "close.sh's commit step over a scratch repo whose origin is ahead with a non-conflicting commit and whose local branch has its own commit either ends with local == origin (rebased and pushed), or exits non-zero with a line naming the repo and the divergence"
+      },
+      {
+        "n": 2,
+        "claim": "over a scratch repo whose pull fails (a conflicting origin commit, or a pull that errors), close.sh exits non-zero naming the repo, never prints CROSSED/PROVED, and never exits 0 or 4 while local holds commits origin lacks"
+      },
+      {
+        "n": 3,
+        "claim": "over a scratch repo already in sync, close.sh's commit step still succeeds (exit status unchanged from today)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: close.sh's pull/push becomes sync_repo, whose failure or leftover unpushed commits stops the close with exit 5 before any crossing line.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: prove.sh's commit_all reads its commits' status the same way.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/prove.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/prove.sh"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over scratch bare-origin repos.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py",
+        "cairn/devices/cc/validations/test_a_close_over_a_diverged_repo_rebases_or_stops.json"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh",
+        "cairn/devices/cc/scripts/prove.sh"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/close.sh",
+      "cairn/devices/cc/scripts/prove.sh",
+      "cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py",
+      "cairn/devices/cc/validations/test_a_close_over_a_diverged_repo_rebases_or_stops.json"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py",
+    "cairn/devices/cc/scripts/close.sh",
+    "cairn/devices/cc/scripts/prove.sh",
+    "cairn/devices/cc/validations/test_a_close_over_a_diverged_repo_rebases_or_stops.json"
+  ],
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "2026-11-20 on akiendelllinux, closing 380d524e6e9c: close.sh's commit_all (close.sh:23) ran `(cd $CC && cairn artifact quiet -- git pull -q --rebase --autostash && git push -q 2>&1 | tail -1)`; the pull printed 'fatal: Cannot rebase onto multiple branches.' and the push its non-fast-forward hint (/var/tmp/close380d.1.txt lines 1-2), and close.sh went on to print '--- CROSSED TO BUILDME, NOT YET PROVED' (line 5) and exit 4 with the commons 5 commits ahead of origin. Nothing reads the subshell's status. The unpushed state surfaced only at a later PROVED crossing (the_stones_are_pushed lane); it was rebased and pushed by hand. prove.sh's commit_all (prove.sh:13) carries no pull/push but its commits and status are likewise unread. Cause of 'multiple branches' unmeasured (commons branch.main.merge is single; hypothesis: a concurrent fetch rewrote FETCH_HEAD).",
+      "how": "/var/tmp/close380d.1.txt read; close.sh:23 and prove.sh:13 read; git -C CairnCommons status -sb showed ahead 5"
+    }
+  ]
+}

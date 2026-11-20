@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "assumption_check": "Measured: 2026-11-20 on akiendelllinux, closing 380d524e6e9c: close.sh's commit_all (close.sh:23) ran `(cd $CC && cairn artifact quiet -- git pull -q --rebase --autostash && git push -q 2>&1 | tail -1)`; the pull printed 'fatal: Cannot rebase onto multiple branches.' and the push its non-fast-forward hint (/var/tmp/close380d.1.txt lines 1-2), and close.sh went on to print '--- CROSSED TO BUILDME, NOT YET PROVED' (line 5) and exit 4 with the commons 5 commits ahead of origin. Nothing reads the subshell's status. The unpushed state surfaced only at a later PROVED crossing (the_stones_are_pushed lane); it was rebased and pushed by hand. prove.sh's commit_all (prove.sh:13) carries no pull/push but its commits and status are likewise unread. Cause of 'multiple branches' unmeasured (commons branch.main.merge is single; hypothesis: a concurrent fetch rewrote FETCH_HEAD).. Assumed: an autostash rebase that succeeds needs no human; one that fails does, so stopping is right rather than retrying. The proof cannot reproduce 'multiple branches' itself; it uses a conflicting origin commit as the failing pull, which exercises the same unread status.",
+    "builder_check": "In close.sh, factor the pull/push into one function sync_repo <dir> that runs `cairn artifact quiet -- git pull --rebase --autostash` then `git push`, captures both statuses (no pipe that swallows them), and on any failure, or when `git rev-list @{u}..HEAD` is non-empty afterwards, prints 'NOT PUSHED: <dir>: <git's own last error line>' and returns non-zero. commit_all returns that status, and every call site of commit_all exits non-zero (a new exit code 5 = 'repo not pushed', documented in the header) before any CROSSED/PROVED line. prove.sh's commit_all gets the same status check on its commits. The proof drives the extracted commit/sync step (as test_a_close_commits_only_its_own_tickets_records does) over scratch bare-origin git repos under a scratch HOME, never the live trees, one tooth per clause. Keep house_paths.py/commons_paths.py scoping (91908f3b3bb3, d3b8cdf81a41) and the artifact quiet lock (0f8aefbba1d0) exactly.",
+    "children": "none, because one status-reading function in two scripts closes the measured silent failure",
+    "collision_check": "91908f3b3bb3 and d3b8cdf81a41 scope what commit_all stages; 0f8aefbba1d0 puts the pull under the door lock; c2460ae6c3d1 (the_stones_are_pushed lane) catches unpushed stones at PROVED. None reads the pull/push status; this ticket moves the catch to the act that failed. A distinction, not a collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "3 clauses: (1) close.sh's commit step over a scratch repo whose origin is ahead with a non-conflicting commit and whose local branch has its own commit either ends with local == origin (rebased and pushed), or exits non-zero with a line naming the repo and the divergence; (2) over a scratch repo whose pull fails (a conflicting origin commit, or a pull that errors), close.sh exits non-zero naming the repo, never prints CROSSED/PROVED, and never exits 0 or 4 while local holds commits origin lacks; (3) over a scratch repo already in sync, close.sh's commit step still succeeds (exit status unchanged from today)",
+    "gates_bound": "code-seam: BUILDME entry gate, PROVEME build gate, PROVED exit gate",
+    "missing_check": "the root cause of 'Cannot rebase onto multiple branches' is left unmeasured; this ticket makes any pull failure loud, so the next occurrence is caught with its text at the act",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator stated the falsifier (akiendelllinux_cc_orchestrator, 2026-11-20) and cairn/devices/cc/scripts/close.sh is CC's own script",
+    "skill": "sorted",
+    "task_or_ticket": "ticket",
+    "title": "a close over a repo that cannot push stops loud instead of reporting the crossing",
+    "watchme": "none, because its proof cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py is the whole of its correctness, modelled on cairn/devices/cc/proofs/test_a_close_commits_only_its_own_tickets_records.py",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A door that fails quietly breaks Law 7: close.sh reported a crossing while its push was rejected. 2026-11-20 on akiendelllinux, closing 380d524e6e9c: close.sh's commit_all (close.sh:23) ran `(cd $CC && cairn artifact quiet -- git pull -q --rebase --autostash && git push -q 2>&1 | tail -1)`; the pull printed 'fatal: Cannot rebase onto multiple branches.' and the push its non-fast-forward hint (/var/tmp/close380d.1.txt lines 1-2), and close.sh went on to print '--- CROSSED TO BUILDME, NOT YET PROVED' (line 5) and exit 4 with the commons 5 commits ahead of origin. Nothing reads the subshell's status. The unpushed state surfaced only at a later PROVED crossing (the_stones_are_pushed lane); it was rebased and pushed by hand. prove.sh's commit_all (prove.sh:13) carries no pull/push but its commits and status are likewise unread. Cause of 'multiple branches' unmeasured (commons branch.main.merge is single; hypothesis: a concurrent fetch rewrote FETCH_HEAD)."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "4eec799853a9",
+  "skill": "sorted",
+  "title": "a close over a repo that cannot push stops loud instead of reporting the crossing",
+  "trace_id": "02c0489e3b0d",
+  "when": "2026-11-20T11:52:54.676256"
+}
