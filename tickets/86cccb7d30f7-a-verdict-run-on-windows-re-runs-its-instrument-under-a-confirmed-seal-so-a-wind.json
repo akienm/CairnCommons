@@ -2,58 +2,64 @@
   "id": "86cccb7d30f7",
   "title": "a verdict run on Windows re-runs its instrument under a confirmed seal, so a Windows clause is judged by the gate and not only by the builder",
   "owning_intention": "cairn/devices/codemother/machines/verdict/intention+why.json",
-  "intention": "The verdict gate's re-run of a ticket's instrument works on Windows, so a clause that only Windows can show is judged by the gate's own run and not only by the builder's validate run.",
-  "why": "Measured 2026-11-19 on akiendell: `sail.py verdict 35bb99574043` and `sail.py verdict 1eeeab70c59e` were each refused by the gate because its re-run of `bin/cairn test <proof>` exited 2 with: cairn test --exec: refused — the instance seal is not confirmed (indeterminate: cannot build the instance seal: bubblewrap (bwrap) is not installed); the command was not run. Windows has no seal, so the gate can never confirm a green-on-Windows clause itself; it is measured only by the builder's own validate run (Law 3). The earlier instance 3a38e2e1cfe0 got around it by verdicting its Windows clause on Linux (berth verdict-20261113T024209, PROVED 11-13). Related: 56b61c10bdbe builds the Windows instance seal and is at TICKETME.",
+  "intention": "On a box without bubblewrap, the verdict gate asks the sealer for its instrument run and reads the sealer's outcome, instead of refusing with exit 2, so a clause is judged by the sealer and the builder's own validate run is never the only measurement.",
+  "why": "Measured 2026-11-19 on akiendell: `sail.py verdict 35bb99574043` and `sail.py verdict 1eeeab70c59e` were each refused by the gate because its re-run of `bin/cairn test <proof>` exited 2 with: cairn test --exec: refused — the instance seal is not confirmed (indeterminate: cannot build the instance seal: bubblewrap (bwrap) is not installed); the command was not run. Windows has no seal, so the gate can never confirm a green-on-Windows clause itself; it is measured only by the builder's own validate run (Law 3). The earlier instance 3a38e2e1cfe0 got around it by verdicting its Windows clause on Linux (berth verdict-20261113T024209, PROVED 11-13). Outline 9.4.8.1 already settles the design (open-c5b4c7304e85, answered from the outline): the verdict's instrument run is seal-grade and runs where the sealer runs; a box without bubblewrap asks for it and does not run it itself; a bwrap-only tooth reads not-run there, never red. Measured 2026-11-19 on main c18939ee6: verdict.py runs the instrument as a fork through `bin/cairn test --exec` and records a refused seal as seal_refused (verdict.py lines 236-268, header line 147 'A run is a fork. It is never an ask'); no hand-off to the sealer exists in verdict.py or sail.verdict, so the Windows verdict can only refuse. Related: 56b61c10bdbe builds the Windows seal, which is a different route and is not what 9.4.8.1 asks.",
   "traces_to": "Law 3 (nothing is known until measured: a Windows green measured by the builder alone is a claim); Law 8 (prove, then trust: the verdict is the peer's check that the hand did not write); Law 7 (the refusal is loud and stays a refusal).",
-  "how": "A hypothesis, measured by clause 1: the gate's re-run of a ticket's instrument is accepted on Windows once the tester can confirm a seal there (the build reads 56b61c10bdbe before choosing between waiting on that seal and a gate-side change). Red-first proof under cairn/devices/codemother/machines/verdict/proofs/, one tooth per clause, PROVES declared. No exemption: a refused re-run stays a refusal and a builder's validate run does not stand in for it.",
+  "how": "A hypothesis, measured by clauses 1 and 2: when the instrument's sealed exec comes back seal_refused (no bubblewrap), the gate sends the run to the sealer through its public interface (the bus; the build names the verb or queued request) and reads the sealer's outcome as the verdict's outcome; the box's own run is never recorded as a pass or a red. Red-first proof under cairn/devices/codemother/machines/verdict/proofs/, one tooth per clause, PROVES declared. No exemption: with no sealer reachable the gate refuses, loud and recorded.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "on Windows the verdict gate's re-run of a green proof returns exit 0 and the verdict artifact lands, where today the same call exits 2 with the instance-seal refusal"
+        "claim": "on a box without bubblewrap, a verdict whose instrument run is seal_refused sends the run to the sealer and replies naming the ask, where today it is refused with exit 2 and the instance-seal line"
       },
       {
         "n": 2,
-        "claim": "on Windows the gate's re-run of a red proof verdicts fail with the proof's own output as evidence, not the seal refusal"
+        "claim": "the sealer's outcome (pass or fail, with its evidence) becomes the verdict's outcome for that instrument"
       },
       {
         "n": 3,
-        "claim": "when no seal can be confirmed the gate still refuses, loud and recorded, naming the seal line, and writes no pass"
+        "claim": "a bwrap-only tooth reads not-run on such a box and never red, and the box's own run is never recorded as a pass"
+      },
+      {
+        "n": 4,
+        "claim": "with no sealer reachable the gate still refuses, loud and recorded, naming the seal line, and writes no pass"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: the verdict gate's instrument re-run is accepted on Windows under a confirmed seal; the build decides whether that is the 56b61c10bdbe seal or a gate-side change, and records it.",
+      "text": "D1: when the sealed exec returns seal_refused, the verdict gate asks the sealer through the sealer's public interface and reads its outcome; the build records which verb carries the ask.",
       "writes_to": [
         "cairn/devices/codemother/machines/verdict/verdict.py"
       ],
       "reads": [
         "cairn/devices/codemother/machines/verdict/verdict.py",
-        "cairn/devices/tester/isolation.py"
+        "cairn/devices/cc/scripts/sail.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: the red-first proof drives the gate's re-run against a scratch proof and a fake seal state, one tooth per clause, PROVES declared.",
+      "text": "D2: the red-first proof drives the gate with a fake seal_refused run and a fake sealer reply, one tooth per clause, PROVES declared.",
       "writes_to": [
-        "cairn/devices/codemother/machines/verdict/proofs/test_a_windows_verdict_reruns_its_instrument_under_a_confirmed_seal.py"
+        "cairn/devices/codemother/machines/verdict/proofs/test_a_verdict_on_a_box_without_bubblewrap_asks_the_sealer.py"
       ],
-      "reads": []
+      "reads": [
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ]
     }
   ],
   "writes_to": [
     "cairn/devices/codemother/machines/verdict/verdict.py",
-    "cairn/devices/codemother/machines/verdict/proofs/test_a_windows_verdict_reruns_its_instrument_under_a_confirmed_seal.py"
+    "cairn/devices/codemother/machines/verdict/proofs/test_a_verdict_on_a_box_without_bubblewrap_asks_the_sealer.py"
   ],
   "bounds": {
     "in": [
       "cairn/devices/codemother/machines/verdict/verdict.py",
-      "cairn/devices/codemother/machines/verdict/proofs/test_a_windows_verdict_reruns_its_instrument_under_a_confirmed_seal.py"
+      "cairn/devices/codemother/machines/verdict/proofs/test_a_verdict_on_a_box_without_bubblewrap_asks_the_sealer.py"
     ],
     "out": [
-      "cairn/devices/tester (the seal itself is 56b61c10bdbe)",
+      "cairn/devices/tester (the sealer's side and the Windows seal 56b61c10bdbe)",
       "every other component"
     ]
   },
