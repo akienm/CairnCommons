@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "assumption_check": "Measured: on akiendelllinux /tmp is a 7.7G tmpfs; isolation.py:459 and :498 make the pristine snapshot and the seal swap with tempfile.mkdtemp, which honours TMPDIR and otherwise lands on /tmp; each seal copies ~1.4G (cairn-instance-pristine-* 685M + cairn-instance-seal-* 685M). At 08:2x a seal from akienasus's 0da9 prove (pid 2071739, swap under /tmp) and a sealed --exec of mine with no TMPDIR ran together and the second died 'No space left on device' in snapshot_instance_space. The processes that start seals without a caller's export carry no TMPDIR: the live bus (pid 2083024, cairn.devices.cairn.machines.bus serve), the ground loop (pid 9567) and every superclaude session (/proc/<pid>/environ), because remote.py:323 and shim.py:191 launch units through systemd-run carrying only CAIRN_*, HOME and PATH. With TMPDIR=/var/tmp (ext4, 765G free) a 21-proof reseal plus a 2-proof seal left /tmp flat at 2.1G free over 13 samples 30 s apart (/home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/tmpwatch/samples.txt). Assumed: /var/tmp is disk-backed on every Linux box we run; the chooser checks it rather than trusting it. Windows: tempfile already lands on %TEMP% (disk); the chooser leaves Windows as it is.",
+    "builder_check": "isolation.py chooses its swap root once: the caller's TMPDIR when set, else a disk-backed dir it owns (e.g. /var/tmp, checked not tmpfs, else ~/.cairn/devices/tester/0/temp/), and passes dir= to both mkdtemp calls and to line 374's root. The proof drives the chooser over a scratch mountinfo/temp layout for clauses 1 and 3, and runs two seals at once under a scratch small tmpfs default for clause 2 (or a sized fake that refuses a write past its cap, if a tmpfs mount is not available unprivileged). Swap dirs keep their prefixes (_PRISTINE_PREFIX, _SEAL_PREFIX) so the sweeps that find them still do.",
+    "children": "none, because the systemd-run env (remote.py, shim.py) is not changed here: the seal chooses its own disk, so no launcher has to remember TMPDIR",
+    "collision_check": "no open ticket names isolation.py's mkdtemp (grep CairnCommons/tickets for isolation.py + mkdtemp, 2026-11-20); the scratch-sweep sieves read the prefixes, which stay",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "3 clauses: (1) with TMPDIR unset, an instance seal's pristine snapshot and swap are made on a directory that is not a tmpfs (read from /proc/self/mountinfo for the swap's path); (2) with TMPDIR unset and a tmpfs mounted at the default temp dir with less free space than one snapshot, two concurrent instance seals both complete; (3) with TMPDIR set by the caller, the swap is made under it, as today",
+    "gates_bound": "code-seam: BUILDME entry gate, PROVEME build gate, PROVED exit gate",
+    "missing_check": "whether other tester temp dirs (scratch homes, bsk bus homes) also need moving is not asked here; they are ~30M each, not the 1.4G that fills the tmpfs",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator ruled the scope (akiendelllinux_cc_orchestrator, 2026-11-20) and cairn/devices/tester/isolation.py is the subject",
+    "skill": "sorted",
+    "task_or_ticket": "ticket",
+    "title": "an instance seal swaps on a disk, not on a tmpfs, unless its caller names a temp dir",
+    "watchme": "none, because the new proof cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py over cairn/devices/tester/isolation.py is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "An env var every launcher has to remember is policy (Law 4): the bus and ground loop never carry TMPDIR. on akiendelllinux /tmp is a 7.7G tmpfs; isolation.py:459 and :498 make the pristine snapshot and the seal swap with tempfile.mkdtemp, which honours TMPDIR and otherwise lands on /tmp; each seal copies ~1.4G (cairn-instance-pristine-* 685M + cairn-instance-seal-* 685M). At 08:2x a seal from akienasus's 0da9 prove (pid 2071739, swap under /tmp) and a sealed --exec of mine with no TMPDIR ran together and the second died 'No space left on device' in snapshot_instance_space. The processes that start seals without a caller's export carry no TMPDIR: the live bus (pid 2083024, cairn.devices.cairn.machines.bus serve), the ground loop (pid 9567) and every superclaude session (/proc/<pid>/environ), because remote.py:323 and shim.py:191 launch units through systemd-run carrying only CAIRN_*, HOME and PATH. With TMPDIR=/var/tmp (ext4, 765G free) a 21-proof reseal plus a 2-proof seal left /tmp flat at 2.1G free over 13 samples 30 s apart (/home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/tmpwatch/samples.txt)"
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "364d6e914029",
+  "skill": "sorted",
+  "title": "an instance seal swaps on a disk, not on a tmpfs, unless its caller names a temp dir",
+  "trace_id": "201b470f0d68",
+  "when": "2026-11-20T09:00:08.913483"
+}
