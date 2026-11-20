@@ -68,5 +68,157 @@
       "saw": "on akiendelllinux /tmp is a 7.7G tmpfs; isolation.py:459 and :498 make the pristine snapshot and the seal swap with tempfile.mkdtemp, which honours TMPDIR and otherwise lands on /tmp; each seal copies ~1.4G (cairn-instance-pristine-* 685M + cairn-instance-seal-* 685M). At 08:2x a seal from akienasus's 0da9 prove (pid 2071739, swap under /tmp) and a sealed --exec of mine with no TMPDIR ran together and the second died 'No space left on device' in snapshot_instance_space. The processes that start seals without a caller's export carry no TMPDIR: the live bus (pid 2083024, cairn.devices.cairn.machines.bus serve), the ground loop (pid 9567) and every superclaude session (/proc/<pid>/environ), because remote.py:323 and shim.py:191 launch units through systemd-run carrying only CAIRN_*, HOME and PATH. With TMPDIR=/var/tmp (ext4, 765G free) a 21-proof reseal plus a 2-proof seal left /tmp flat at 2.1G free over 13 samples 30 s apart (/home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/tmpwatch/samples.txt)",
       "how": "df/du of /tmp sampled every 30 s into /home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/tmpwatch/samples.txt; /proc/<pid>/environ of the bus, ground loop and superclaude; the cp error text from snapshot_instance_space"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "83eaa778101e: an instance seal swaps on a disk, not on a tmpfs, unless its caller names a temp dir \u2014 isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap",
+      "intent": "An instance seal makes its pristine snapshot and swap on a disk-backed directory unless its caller names one, so two seals at once never fill a RAM-backed /tmp.",
+      "scope": "in: cairn/devices/tester/isolation.py, cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py, cairn/devices/tester/validations/test_an_instance_seal_swaps_on_a_disk.json; out: cairn/tools/bus_client/remote.py, cairn/tools/base/shim.py, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Every component talks to every other component only through that component's public interface.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/isolation.py",
+          "cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py",
+          "cairn/devices/tester/validations/test_an_instance_seal_swaps_on_a_disk.json"
+        ],
+        "out": [
+          "cairn/tools/bus_client/remote.py",
+          "cairn/tools/base/shim.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "whether cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py reads green on every clause"
+      ],
+      "holdings": [
+        {
+          "what": "under change",
+          "address": "cairn/devices/tester/isolation.py"
+        },
+        {
+          "what": "the red-first proof",
+          "address": "cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap",
+          "measure": "on akiendelllinux /tmp is a 7.7G tmpfs; isolation.py:459 and :498 make the pristine snapshot and the seal swap with tempfile.mkdtemp, which honours TMPDIR and otherwise lands on /tmp; each seal copies ~1.4G (cairn-instance-pristine-* 685M + cairn-instance-seal-* 685M). At 08:2x a seal from akienasus; the red-first proof reds at 9ab773145"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap",
+          "why": "Law 7 / CP6 \u2014 a seal that fills RAM takes the box's other work down with it",
+          "kind": "build",
+          "fills": "isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap",
+          "uses": [
+            "cairn/devices/tester/isolation.py",
+            "cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py"
+          ],
+          "writes_to": [
+            "cairn/devices/tester/isolation.py",
+            "cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py",
+            "cairn/devices/tester/validations/test_an_instance_seal_swaps_on_a_disk.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap",
+          "why_now": "two concurrent seals filled the 7.7G /tmp tmpfs on akiendelllinux 2026-11-20"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap",
+          "expect": "every proof named reads green",
+          "falsifier": "(1) with TMPDIR unset, an instance seal's pristine snapshot and swap are made on a directory that is not a tmpfs (read from /proc/self/mountinfo for the swap's path; (2) with TMPDIR unset and a tmpfs mounted at the default temp dir with less free space than one snapshot, two concurrent instance seals both complete; (3) with TMPDIR set by the caller, the swap is made under it, as today",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the red-first proof reads green on every clause and the others stay green",
+          "instrument": "bin/cairn test cairn/devices/tester/proofs/test_an_instance_seal_swaps_on_a_disk.py",
+          "timeout_s": 1800,
+          "covers": [
+            "isolation.py chooses one swap root (the caller's TMPDIR, else a temp dir that is not a tmpfs) for the sweep, the pristine snapshot and the swap"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
