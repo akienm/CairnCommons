@@ -65,5 +65,158 @@
       "saw": "2026-11-19 on akiendell (Windows): alone, 10 of 10 runs green (76-102 s); inside aa750de17382's moved-proofs tooth 1 red of 4 (the first; teeth e_blocks_unearned_consolidated_sources and the consolidation-links tooth) then 3 green; Linux (akienasus_cc_0) 40 of 40 green. Two copies at once, 3 rounds: RED 6 of 6 copies (1-2 teeth each): e_blocks_unearned_consolidated_sources x3, test_source_nodes_in_provenance x3, UniqueViolation cairn_nodes_pkey, UniqueViolation cairn_embeddings_pkey. The proof writes dbname cairn at 127.0.0.1:5432 (store.DB_NAME), this box's own live PostgreSQL 17.9 (x86_64-windows), through trees.NODES_TABLE, EMBEDDINGS_TABLE and LINKS_TABLE; node ids are sha256(content)[:16], so identical fixture content from two runs is the same row. _cleanup (line 329) deletes this run's links only. Observed after the runs, not attributed and not to be deleted here: cairn_nodes 521, cairn_embeddings 476, cairn_links 9, oldest node 2026-10-28. Other proofs whose source holds the 'alpha'/'phantom' strings seen in those rows (unmarked as far as this grep shows; each gets its own ticket): cairn/devices/codemother/machines/{constrain,decompose,hypothesize,survey,triage,validate}/proofs/test_chart_*.py and cairn/devices/codemother/proofs/test_deposit.py.",
       "how": "test_librarian_trees.py run alone 10x and as two simultaneous copies x3 rounds on akiendell; a direct psycopg2 query of current_database/inet_server_addr and table counts; grep of proofs for the alpha/phantom strings"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "784eb1e92866: cairn/devices/librarian/proofs/test_librarian_trees.py marks every row it writes with its own run id and removes them, so two copies run side by side and leave the tables as they found them",
+      "intent": "cairn/devices/librarian/proofs/test_librarian_trees.py runs alongside itself: each run's nodes, embeddings and links carry its run id, none collide with another run's, and every one is removed when it ends.",
+      "scope": "in: cairn/devices/librarian/proofs/test_librarian_trees.py, cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py, cairn/devices/librarian/validations/test_librarian_trees.json, cairn/devices/librarian/validations/test_librarian_trees_runs_alongside_itself.json; out: cairn/devices/librarian/tools/trees/trees.py, the rows already in the tables, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Every component talks to every other component only through that component's public interface.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/librarian/proofs/test_librarian_trees.py",
+          "cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py",
+          "cairn/devices/librarian/validations/test_librarian_trees.json",
+          "cairn/devices/librarian/validations/test_librarian_trees_runs_alongside_itself.json"
+        ],
+        "out": [
+          "cairn/devices/librarian/tools/trees/trees.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "whether two concurrent copies both stay green and a run leaves no row of its id behind"
+      ],
+      "holdings": [
+        {
+          "what": "the proof under change",
+          "address": "cairn/devices/librarian/proofs/test_librarian_trees.py"
+        },
+        {
+          "what": "the red-first proof",
+          "address": "cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "per-run row ids and cleanup in the proof",
+          "measure": "the red-first proof reds at bcf1b1d2a: two concurrent copies exit [1, 1] on UniqueViolation cairn_nodes_pkey"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "cairn/devices/librarian/proofs/test_librarian_trees.py derives its node ids from a run id and deletes its rows in all three tables at the end",
+          "why": "Law 3: a proof that reds when a sibling runs measures the schedule, not the code",
+          "kind": "build",
+          "fills": "per-run row ids and cleanup in the proof",
+          "uses": [
+            "cairn/devices/librarian/proofs/test_librarian_trees.py",
+            "cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py"
+          ],
+          "writes_to": [
+            "cairn/devices/librarian/proofs/test_librarian_trees.py",
+            "cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py",
+            "cairn/devices/librarian/validations/test_librarian_trees.json",
+            "cairn/devices/librarian/validations/test_librarian_trees_runs_alongside_itself.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "cairn/devices/librarian/proofs/test_librarian_trees.py derives its node ids from a run id and deletes its rows in all three tables at the end",
+          "why_now": "reseals run proofs concurrently; this one collides with itself on a fixed primary key"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "cairn/devices/librarian/proofs/test_librarian_trees.py derives its node ids from a run id and deletes its rows in all three tables at the end",
+          "expect": "the red-first proof reads 3 of 3 green and the proof stays green",
+          "falsifier": "the red-first proof's clauses: two copies concurrently both green; no row of the run's id remains and counts are unchanged; a lone copy green",
+          "instrument": "bin/cairn test cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py cairn/devices/librarian/proofs/test_librarian_trees.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the red-first proof reads green on all three clauses and the proof stays green",
+          "instrument": "bin/cairn test cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py cairn/devices/librarian/proofs/test_librarian_trees.py",
+          "timeout_s": 1500,
+          "covers": [
+            "cairn/devices/librarian/proofs/test_librarian_trees.py derives its node ids from a run id and deletes its rows in all three tables at the end"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
