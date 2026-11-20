@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Assumes handing sys.stdin/stdout/stderr to the child's std handles is enough to reach the caller's output from a no-console parent with an inherited pipe: measured 2026-11-20, 'hi-explicit' printed. Assumes a true console parent also works; unmeasured (needs a visible window), a hypothesis the proof covers where it can. Assumes the tester's OR-merge is the only caller that iterates the returned dict; grep over cairn, bin and skills found it alone.",
+    "builder_check": "A Haiku builder would ask: the exact signature (windowless_kwargs(os_name=None, *, given=None)); what given holds (the std keys the caller passes: 'stdin','stdout','stderr'); when to add a stream (not in given and it has a usable fileno, else skip); what to add (sys.stdin/stdout/stderr themselves); how the proof reads a window and output (a no-console parent child via pythonw with a log, nt only, recorded not-run elsewhere). The ticket's decisions carry all of it, and the existing proofs in cairn/tools/windowless_spawn/proofs are the model.",
+    "children": "none, because the sweep sites are separate cast tickets under 364704f371dd and this one changes only cairn/tools/windowless_spawn/windowless_spawn.py",
+    "collision_check": "No collision: an opt-in parameter on windowless_kwargs (Law 1: one helper). The tester's runs.py:73 OR-merge is protected by clause 5. 364704f371dd edits the same file in unhelped_sites; no overlap.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Falsifier: clause 1, from a no-console pipe parent a bare subprocess.call with **windowless_kwargs(given=()) prints the child's output to the caller; clause 2, from a pythonw parent the same call opens no window and exits 0; clause 3, a caller's own stdout=PIPE still captures and stdout is not duplicated; clause 4, a caller's own stdin is not overwritten; clause 5, windowless_kwargs('nt') with given omitted still returns creationflags only. Horizon: until Windows changes how a CREATE_NO_WINDOW child gets its std handles.",
+    "gates_bound": "proved: red-first proof cairn/tools/windowless_spawn/proofs/test_windowless_kwargs_hands_inherited_stdio_through.py, one tooth per falsifier clause; on failure it feeds back to the origin, windowless_kwargs losing the caller's output (Laws 3, 4 and 8).",
+    "missing_check": "Not wrapped: the sweep tickets under 364704f371dd and 0d7dcc7b667a then call windowless_kwargs(given=()) at each site; that is theirs. cairn/tools/windowless_spawn/windowless_spawn.py is also edited by 364704f371dd; different functions.",
+    "node_class": "code-seam",
+    "questions": "none, because nothing here is a spec choice: the aim is measured and stated at cairn/tools/windowless_spawn/intention+why.json",
+    "task_or_ticket": "ticket",
+    "title": "windowless_kwargs hands the caller's inherited stdin, stdout and stderr to an attached child, so a windowless child's output still reaches its caller",
+    "watchme": "none, because its proof cairn/tools/windowless_spawn/proofs/test_windowless_kwargs_hands_inherited_stdio_through.py is the standing check and the existing proof cairn/tools/windowless_spawn/proofs/test_every_detached_spawn_takes_its_flags_from_the_helper.py still guards the helper",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "tree",
+      "text": "Replaces the GetConsoleWindow hypothesis from cc_0, falsified by measurement 2026-11-20."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3dc291c510d7",
+  "skill": "sorted",
+  "title": "windowless_kwargs hands the caller's inherited stdin, stdout and stderr to an attached child, so a windowless child's output still reaches its caller",
+  "trace_id": "b14b06701402",
+  "when": "2026-11-20T12:14:04.249881"
+}

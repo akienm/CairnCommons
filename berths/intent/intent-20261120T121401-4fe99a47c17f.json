@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Set CREATE_NO_WINDOW only when GetConsoleWindow() == 0 (akiendelllinux_cc_0's hypothesis). Measured 2026-11-20 on akiendell: the failing case IS a no-console parent with an inherited stdout pipe (GetConsoleWindow 0), where the windowless child printed nothing, so the gate does not fix it. Handing the std handles through does.",
+      "hidden_assumption": "That sys.stdout.fileno() names a handle the child may inherit; under pythonw sys.stdout is None and the helper adds nothing. Also untested: a true console parent (needs a visible window); the proof covers it where it can.",
+      "prior_art": "cairn/tools/windowless_spawn/windowless_spawn.py windowless_kwargs (bce45318b2e0) and its one caller cairn/devices/tester/runs.py:73, which reads the child's output through its own PIPE and OR-merges every returned value into its keywords. Measured 2026-11-20: that is why the default return must not gain non-integer values.",
+      "real_collision": "None found: it adds an opt-in parameter to one function. 364704f371dd also edits windowless_spawn.py (a different function, unhelped_sites), so the two merge by hunk; neither depends on the other."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when, from a parent with no console and an inherited stdout pipe, a bare subprocess.call with **windowless_kwargs(given=()) delivers the child's print to the caller, and a caller passing its own stdout=PIPE still captures. Wrong if GetConsoleWindow-style gating is needed instead; measured 2026-11-20 that it is not.",
+    "from_idea": "none, because it is cast from a measurement taken 2026-11-20 on akiendell while building ticket 0d7dcc7b667a, recorded in cairn/tools/windowless_spawn/windowless_spawn.py's caller bin/cairn.py and in the ticket's measured field",
+    "how": "In cairn/tools/windowless_spawn/windowless_spawn.py, give windowless_kwargs a keyword-only given parameter (default None). None keeps today's return, creationflags only, so the tester's OR-merge at cairn/devices/tester/runs.py:73 is untouched. Any other value (a set or tuple of std keys the caller passes itself) adds stdin/stdout/stderr = sys.std* for each key not in given whose stream has a usable fileno. Red-first proof cairn/tools/windowless_spawn/proofs/test_windowless_kwargs_hands_inherited_stdio_through.py, one tooth per falsifier clause.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "CP4 (the system serves the person at the box: no popups, and no output swallowed to get there); Law 3 (measured, not assumed: the child printed nothing); Law 1 (one helper, fixed once, not worked around at 30 sweep sites).",
+    "what": "windowless_kwargs(os_name=None, *, given=None), when given is passed, adds stdin, stdout and stderr taken from sys.stdin, sys.stdout and sys.stderr for each std stream the caller did not name in given and that has a usable fileno, beside CREATE_NO_WINDOW, so a child started with the helper's keywords writes to the caller's stdout instead of a new hidden console; with given left out it returns exactly what it returns today."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-20: a child started with **windowless_kwargs() prints nothing when its parent has no console and an inherited stdout pipe; a bare child prints; explicit stdout=sys.stdout fixes it."
+    },
+    {
+      "stratum": "tree",
+      "text": "No sweep child has landed, so none is losing output now; the only existing caller (tester runs.py:73) reads through PIPE and is unaffected."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "5b9ffd0ca5c0",
+  "skill": "intent",
+  "title": "windowless_kwargs(os_name=None, *, given=None), when given is passed, adds stdin, stdout and stderr taken from sys.stdin",
+  "trace_id": "9b6ed947003a",
+  "when": "2026-11-20T12:14:01.936131"
+}

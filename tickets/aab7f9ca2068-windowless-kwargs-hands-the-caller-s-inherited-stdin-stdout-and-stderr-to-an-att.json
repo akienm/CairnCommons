@@ -1,0 +1,79 @@
+{
+  "id": "aab7f9ca2068",
+  "title": "windowless_kwargs hands the caller's inherited stdin, stdout and stderr to an attached child, so a windowless child's output still reaches its caller",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "windowless_kwargs(os_name=None, *, given=None), when given is passed, adds stdin, stdout and stderr taken from sys.stdin, sys.stdout and sys.stderr for each std stream the caller did not name in given and that has a usable fileno, beside CREATE_NO_WINDOW, so a child started with the helper's keywords writes to the caller's stdout instead of a new hidden console; with given left out it returns exactly what it returns today.",
+  "why": "Measured 2026-11-20 on akiendell while building 0d7dcc7b667a: with an inherited stdout pipe and no console, a child started with **windowless_kwargs() prints nothing (CREATE_NO_WINDOW without STARTF_USESTDHANDLES gives it a new hidden console); a bare child prints; explicit stdin/stdout/stderr = sys.std* fixes it. The helper's contract breaks inherited stdio for every caller that spreads it, so the fix is once, here. cc_0's hypothesis (set CREATE_NO_WINDOW only when GetConsoleWindow() == 0) is FALSIFIED by the same measurement: the failing parent has GetConsoleWindow 0. A true console parent was not measured (needs a visible window). Akien 2026-11-20: popups while he works are annoying.",
+  "traces_to": "CP4; Law 3 (measured); Law 1 (one helper, fixed once).",
+  "how": "In cairn/tools/windowless_spawn/windowless_spawn.py, add keyword-only given=None to windowless_kwargs. None: return as today (creationflags only on nt, {} elsewhere), so cairn/devices/tester/runs.py:73's OR-merge is unchanged. Otherwise, for each of stdin, stdout, stderr not in given whose sys stream has a usable fileno (not None, fileno() works), add key = that stream. Proof cairn/tools/windowless_spawn/proofs/test_windowless_kwargs_hands_inherited_stdio_through.py, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "from a parent with no console and an inherited stdout pipe, a bare subprocess.call of a child that prints, with **windowless_kwargs(given=()), delivers the print to the caller"
+      },
+      {
+        "n": 2,
+        "claim": "from a pythonw parent the same call opens no console window and exits 0, and adds no stream keyword for a stream that is None"
+      },
+      {
+        "n": 3,
+        "claim": "a caller that passes stdout=PIPE through windowless_kwargs(given=('stdout',)) still captures, with no duplicate keyword"
+      },
+      {
+        "n": 4,
+        "claim": "a caller's own stdin named in given is not overwritten by sys.stdin"
+      },
+      {
+        "n": 5,
+        "claim": "windowless_kwargs('nt') with given omitted returns creationflags only, so the tester's OR-merge still reads integers"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: windowless_kwargs takes keyword-only given and hands through the std streams not named in it (clauses 1-5).",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/devices/tester/runs.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause; the pythonw tooth runs only on nt and records not-run elsewhere.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_windowless_kwargs_hands_inherited_stdio_through.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/windowless_spawn.py",
+      "cairn/tools/windowless_spawn/proofs/test_windowless_kwargs_hands_inherited_stdio_through.py"
+    ],
+    "out": [
+      "cairn/devices/tester/runs.py (unchanged: clause 5 protects it)",
+      "the sweep tickets under 364704f371dd",
+      "bin/cairn.py (0d7dcc7b667a)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "tool-shell parent (inherited pipe, GetConsoleWindow 0): bare child prints; **windowless_kwargs() child prints nothing; capture_output with it captures; explicit stdout=sys.stdout prints. pythonw and powershell -Command parents: GetConsoleWindow 0 as well",
+      "how": "a scratch script in the session scratchpad running the same print child three ways under python, pythonw and powershell; bin/cairn.py test --list printed nothing with the three subprocess.call sites edited and printed usage unedited"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "no sweep child has landed: the 30 children read TICKETME and 0d7dcc7b667a reads BUILDME with its build reverted; the one existing caller of windowless_kwargs, cairn/devices/tester/runs.py:73, reads through its own PIPE and OR-merges the returned values",
+      "how": "grep -rn windowless_kwargs over cairn, bin and skills minus proofs; the state files of the 31 tickets"
+    }
+  ]
+}
