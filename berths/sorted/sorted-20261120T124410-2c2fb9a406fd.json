@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "assumption_check": "Measured: A python script a proof runs as a SUBPROCESS is missing from the reach log when it runs to its last line, .py and extensionless alike, so editing it cannot stale the seal. CPython 3.14.4 pops __main__.__file__ once the script completes, and cairn/devices/tester/reach/sitecustomize.py reads every module __file__ at atexit, after the pop. A script that raises SystemExit keeps __file__ and IS logged. Repro, 2026-11-20 on akiendelllinux: /var/tmp/noext_probe = 'import sys,atexit; atexit.register(lambda: print(\"atexit\", getattr(sys.modules[\"__main__\"],\"__file__\",None)))' then a plain last line prints 'atexit None' (also as noext_probe.py); /var/tmp/noext_probe2 ending 'raise SystemExit(0)' prints 'atexit /var/tmp/noext_probe2'. Live: CAIRN_TESTER_REACH_LOG=<f> PYTHONPATH=cairn/devices/tester/reach python3 cairn/devices/tester/proofs/fixtures/extensionless_leaf (then ending normally) logged only the editable finder and sitecustomize.py. Found building b7d5df9919fe's clause 4; all 28 bin/cmd scripts exit via SystemExit, so the gates are covered and the blind set is any other subprocess-run script that ends normally. Assumed: sys.argv[0] is the script path the interpreter ran for a `python <script>` child (it is, per the interpreter docs, and the repro will confirm in the proof).",
+    "builder_check": "In cairn/devices/tester/reach/sitecustomize.py, the atexit logger also records the main script when __main__ no longer carries __file__: sys.argv[0] when it names an existing file (a -c child's argv[0] is '-c' and a -m child's __main__ keeps __file__, so neither invents a path). Capturing at import is not available \u2014 sitecustomize runs before __main__ is set. Proof cairn/devices/tester/proofs/test_a_subprocess_script_that_ends_normally_is_in_the_seals_closure.py under PROVES this ticket's id, clauses 1-3: a CAIRN_*_FIXTURE env re-run of itself that subprocess-runs a committed normally-ending fixture, sealed through run_proof, closure read. Note the extensionless half also needs b7d5df9919fe's repo_relative_closure edit; build after it lands. Do not import cairn in sitecustomize (its docstring says why). The fixture must end WITHOUT raise SystemExit, or the tooth is hollow.",
+    "children": "none, because it is one predicate in one file and one proof covers it",
+    "collision_check": "b7d5df9919fe covers the .py filter on extensionless names and its clause 4 (subprocess) uses a SystemExit fixture; this is the different mechanism it measured and split out per the orchestrator. 734b22d09f2e (PROVED) introduced the reach log; this closes a gap it left. A distinction, not a collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "3 clauses: (1) a fixture proof that runs a repo .py script as a subprocess (sys.executable <script>), the script ending by falling off its last line, sealed through TesterDevice().run_proof, names that script in its fingerprint_closure, and the script's bytes move sealed_fingerprint_now; (2) the same holds for an EXTENSIONLESS script ending normally (cairn/devices/tester/proofs/fixtures/extensionless_leaf's shape, without its SystemExit); (3) no invented path: a `python -c` child and a `python -m <module>` child add nothing to the closure that the run did not execute, and cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py stays green",
+    "gates_bound": "code-seam: BUILDME entry gate, PROVEME build gate, PROVED exit gate",
+    "missing_check": "a script that ends in os._exit still logs nothing (sitecustomize's docstring names it; unchanged and out of scope); a non-python child is out of scope",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator ruled the cast (akiendelllinux_cc_orchestrator, 2026-11-20) and the mechanism is the reach log's own, cairn/devices/tester/reach/sitecustomize.py",
+    "skill": "sorted",
+    "task_or_ticket": "ticket",
+    "title": "a subprocess script that ends normally is in its seal's closure",
+    "watchme": "none, because its proof cairn/devices/tester/proofs/test_a_subprocess_script_that_ends_normally_is_in_the_seals_closure.py is the whole of its correctness, as for its prior art cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A subprocess script that ends normally is a quiet green in its proof's seal. A python script a proof runs as a SUBPROCESS is missing from the reach log when it runs to its last line, .py and extensionless alike, so editing it cannot stale the seal. CPython 3.14.4 pops __main__.__file__ once the script completes, and cairn/devices/tester/reach/sitecustomize.py reads every module __file__ at atexit, after the pop. A script that raises SystemExit keeps __file__ and IS logged. Repro, 2026-11-20 on akiendelllinux: /var/tmp/noext_probe = 'import sys,atexit; atexit.register(lambda: print(\"atexit\", getattr(sys.modules[\"__main__\"],\"__file__\",None)))' then a plain last line prints 'atexit None' (also as noext_probe.py); /var/tmp/noext_probe2 ending 'raise SystemExit(0)' prints 'atexit /var/tmp/noext_probe2'. Live: CAIRN_TESTER_REACH_LOG=<f> PYTHONPATH=cairn/devices/tester/reach python3 cairn/devices/tester/proofs/fixtures/extensionless_leaf (then ending normally) logged only the editable finder and sitecustomize.py. Found building b7d5df9919fe's clause 4; all 28 bin/cmd scripts exit via SystemExit, so the gates are covered and the blind set is any other subprocess-run script that ends normally."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "f2e9b88da434",
+  "skill": "sorted",
+  "title": "a subprocess script that ends normally is in its seal's closure",
+  "trace_id": "e2e561018391",
+  "when": "2026-11-20T12:44:10.567475"
+}
