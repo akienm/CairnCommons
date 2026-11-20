@@ -2,53 +2,54 @@
   "id": "1578bbb1839f",
   "title": "cairn cleanup reaches the inspector's recheck through a codemother verb",
   "owning_intention": "cairn/devices/codemother/intention+why.json",
-  "intention": "cairn cleanup reaches the build inspector's recheck through codemother's public verb, never her module path.",
+  "intention": "cairn cleanup reaches the build inspector's recheck over the bus, through codemother's inspect verb and the published inspect_wire tool, never through her module path.",
   "why": "RULE 1 (encapsulation): bin/cmd/cleanup:80 runs `python3 -m cairn.devices.codemother.machines.build_inspector.inspector --recheck $ids`, reaching into device codemother's code from outside it. RULE 1 says a device's public interface is the bus plus the client tools it publishes. encapsulation_holds reads only .py imports, so it cannot see a shell `-m`. bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py:56 finds its stub by regex over that same `python3 -m` line. Recorded as residue at 93fa3e3a6199's move, which left it out of scope.",
   "traces_to": "RULE 1; Law 4 (a rule that matters is enforced by physics)",
-  "how": "Add cairn/devices/codemother/0/bin/recheck, a bash verb like its sibling show: cd REPO_ROOT, set PYTHONPATH, then exec `python3 -m cairn.devices.codemother.machines.build_inspector.inspector --recheck \"$@\"`. Change bin/cmd/cleanup:80 to `\"$CAIRN\" codemother recheck $ids`. Repoint bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py's stub: it now stubs the verb, not a module path. cairn/devices/codemother/proofs/test_cleanup_reaches_the_recheck_through_codemother.py holds one tooth per clause.",
+  "how": "D1: add \"recheck\" to INSPECT_JUDGES in cairn/devices/codemother/shim.py (module build_inspector.inspector), the allow-list codemother's inspect verb answers. D2: the findings step in bin/cmd/cleanup runs `python3 -c 'import json,sys; from cairn.tools.inspect_wire.inspect_wire import ask; print(json.dumps(ask(\"recheck\", sys.argv[1:]), indent=2))' $ids` in place of `python3 -m ...inspector --recheck $ids`. Its stdout keeps the same JSON, and an InspectRefused exits non-zero. bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py stops locating a stub module by regex over cleanup's text, and stubs what cleanup now reaches. D3: red-first proof cairn/devices/codemother/proofs/test_cleanup_asks_the_recheck_over_the_bus.py, one tooth per clause, asking over a scratch codemother (inspect_wire.launch).",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "`cairn codemother recheck <id>...` runs inspector.recheck over exactly those trouble ids, and returns the same exit code and output as the module CLI"
+        "claim": "over a scratch codemother bus, inspect_wire.ask('recheck', ids) returns what inspector.recheck(ids) returns for the same ids; with 'recheck' off INSPECT_JUDGES the same ask raises InspectRefused naming it"
       },
       {
         "n": 2,
-        "claim": "bin/cmd/cleanup names no `cairn.devices.` module; its findings step reaches the recheck through `cairn codemother recheck`, and the standing finding ids still arrive there, and only those"
+        "claim": "bin/cmd/cleanup names no `cairn.devices.` module; its findings step asks the recheck through inspect_wire, and the standing inspector-new-finding-* ids arrive there, and only those"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: codemother publishes `recheck` as a bin verb at cairn/devices/codemother/0/bin/recheck.",
+      "text": "D1: \"recheck\" joins codemother's inspect allow-list in cairn/devices/codemother/shim.py.",
       "writes_to": [
-        "cairn/devices/codemother/0/bin/recheck"
+        "cairn/devices/codemother/shim.py"
       ],
       "reads": [
-        "cairn/devices/codemother/0/bin/show",
+        "cairn/devices/codemother/shim.py",
         "cairn/devices/codemother/machines/build_inspector/inspector.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: bin/cmd/cleanup's findings step calls the verb, and bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py stubs the verb.",
+      "text": "D2: bin/cmd/cleanup's findings step asks over the bus through inspect_wire; bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py follows it.",
       "writes_to": [
         "bin/cmd/cleanup",
         "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py"
       ],
       "reads": [
         "bin/cmd/cleanup",
-        "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py"
+        "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py",
+        "cairn/tools/inspect_wire/inspect_wire.py"
       ]
     },
     {
       "n": 3,
-      "text": "D3: red-first proof cairn/devices/codemother/proofs/test_cleanup_reaches_the_recheck_through_codemother.py, one tooth per clause.",
+      "text": "D3: red-first proof cairn/devices/codemother/proofs/test_cleanup_asks_the_recheck_over_the_bus.py, one tooth per clause.",
       "writes_to": [
-        "cairn/devices/codemother/proofs/test_cleanup_reaches_the_recheck_through_codemother.py",
+        "cairn/devices/codemother/proofs/test_cleanup_asks_the_recheck_over_the_bus.py",
         "bin/validations/test_cleanup_rechecks_the_standing_findings_first.json",
-        "cairn/devices/codemother/validations/test_cleanup_reaches_the_recheck_through_codemother.json"
+        "cairn/devices/codemother/validations/test_cleanup_asks_the_recheck_over_the_bus.json"
       ],
       "reads": []
     }
@@ -58,12 +59,13 @@
       "bin/cmd/cleanup",
       "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py",
       "bin/validations/test_cleanup_rechecks_the_standing_findings_first.json",
-      "cairn/devices/codemother/0/bin/recheck",
-      "cairn/devices/codemother/proofs/test_cleanup_reaches_the_recheck_through_codemother.py",
-      "cairn/devices/codemother/validations/test_cleanup_reaches_the_recheck_through_codemother.json"
+      "cairn/devices/codemother/proofs/test_cleanup_asks_the_recheck_over_the_bus.py",
+      "cairn/devices/codemother/shim.py",
+      "cairn/devices/codemother/validations/test_cleanup_asks_the_recheck_over_the_bus.json"
     ],
     "out": [
       "build_inspector's code",
+      "inspect_wire's code",
       "every other cleanup step"
     ]
   },
@@ -71,15 +73,20 @@
     "bin/cmd/cleanup",
     "bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py",
     "bin/validations/test_cleanup_rechecks_the_standing_findings_first.json",
-    "cairn/devices/codemother/0/bin/recheck",
-    "cairn/devices/codemother/proofs/test_cleanup_reaches_the_recheck_through_codemother.py",
-    "cairn/devices/codemother/validations/test_cleanup_reaches_the_recheck_through_codemother.json"
+    "cairn/devices/codemother/proofs/test_cleanup_asks_the_recheck_over_the_bus.py",
+    "cairn/devices/codemother/shim.py",
+    "cairn/devices/codemother/validations/test_cleanup_asks_the_recheck_over_the_bus.json"
   ],
   "measured": [
     {
       "when": "2026-11-19",
       "saw": "bin/cmd/cleanup:80 runs `python3 -m cairn.devices.codemother.machines.build_inspector.inspector --recheck $ids`, reaching into device codemother's code from outside it. RULE 1 says a device's public interface is the bus plus the client tools it publishes. encapsulation_holds reads only .py imports, so it cannot see a shell `-m`. bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py:56 finds its stub by regex over that same `python3 -m` line. Recorded as residue at 93fa3e3a6199's move, which left it out of scope",
       "how": "grep -n inspector bin/cmd/cleanup; sed -n 56p bin/proofs/test_cleanup_rechecks_the_standing_findings_first.py"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "outline 9.4.3.3.4: code outside codemother reaches build_inspector over the bus, no published client tool, no fifth exception; the first plan (a bin verb) contradicted it and opened open-2c8a63c25d71. INSPECT_JUDGES in shim.py lacks 'recheck'",
+      "how": "bin/cairn outlinecheck 1578bbb1839f (CairnCommons/outline_checks/1578bbb1839f-20261120T040728.json); grep -n recheck cairn/devices/codemother/shim.py"
     }
   ]
 }
