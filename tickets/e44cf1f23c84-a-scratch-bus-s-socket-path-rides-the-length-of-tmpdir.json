@@ -1,0 +1,107 @@
+{
+  "title": "a scratch bus's socket path rides the length of TMPDIR",
+  "owning_intention": "cairn/devices/cairn/machines/bus/intention+why.json",
+  "intention": "A scratch bus's socket path is a short fixed-length path under $XDG_RUNTIME_DIR named by the unit's hash, whatever TMPDIR or HOME say; the live bus keeps <home>/bus.sock.",
+  "why": "Measured 2026-11-19 on akiendelllinux: bus.sock under TMPDIR=/var/tmp is 110 chars against a limit of ~107, so every proof that binds a scratch bus reds 'AF_UNIX path too long' (2955a4a316d3's fix reseal: test_clearance and two approval proofs). /tmp fits the socket but not the tester's 858M instance snapshots, which the same TMPDIR places, so c234aae2c0b9's fix commit's reseal failed 'No space left on device'. No TMPDIR satisfies both.",
+  "traces_to": "CP4 (a proof must not fail on where its scratch lives) and Law 7 (an over-long path is refused naming its length); RULE 1 (one published address function).",
+  "how": "Owner: the bus machine. One address function, in the published client (cairn/tools/bus_client/remote.py), that the server, the bus CLI and every client call, so the bind and the dial cannot spell the path two ways. For any home other than the live one, the socket is $XDG_RUNTIME_DIR/cairn-bus-<hash>.sock, where <hash> is the same sha1(str(home))[:10] that _unit (remote.py:94) already names the unit with. That makes the unit and the socket one name, and the length fixed at len(XDG_RUNTIME_DIR)+26 whatever TMPDIR or HOME are. WEIGHED BY THE CHARTER: a Linux abstract socket was the other shape, and it is refused because server.py:9 makes the file mode the gate ('mode 0600 — one box, one user, the file mode is the gate'). An abstract socket has no file mode, so any user in the network namespace could dial it. $XDG_RUNTIME_DIR is a 0700 directory the user owns, and the socket keeps its 0600 umask. The live home keeps <home>/bus.sock byte for byte, so cairn-bus.service is untouched and needs no restart. <home>/bus.sock stays as a symlink to the runtime socket, so every reader that asks (home/'bus.sock').exists() (proofs in the bus, bus_client, tester, inferenceproxy and cairn devices) reads the same answer without an edit; only the dial must use the address function. With XDG_RUNTIME_DIR unset or not a 0700 dir of this uid, the address falls back to <home>/bus.sock when that is under 108 bytes, and otherwise serve and the dial refuse loudly, naming the path, its byte count and XDG_RUNTIME_DIR (Law 7). There is no silent truncation and no guessed directory. This frees the tester's snapshots to live wherever TMPDIR says (/var/tmp on the Dell) while the sockets stay short: the two halves of the bind separate. Lands BEHIND c234aae2c0b9 (CairnCommons/tickets/c234aae2c0b9-a-scratch-bus-whose-caller-is-gone-serves-on-for-hours.json), which edits the same server.py; built off main after c234 lands.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a scratch bus whose home sits so deep that <home>/bus.sock would be over 150 bytes, with TMPDIR set to that depth too, serves, and a RemoteBus at that home is answered (stats ok)"
+      },
+      {
+        "n": 2,
+        "claim": "the socket it bound is $XDG_RUNTIME_DIR/cairn-bus-<the same hash _unit names the unit with>.sock: under 108 bytes, not under TMPDIR, mode 0600, and <home>/bus.sock is a symlink to it; and the address function gives the live home <live home>/bus.sock unchanged"
+      },
+      {
+        "n": 3,
+        "claim": "nothing stale and no sharing: after the bus exits (shutdown verb) the runtime socket and the <home>/bus.sock link are both gone, and two distinct homes get two distinct sockets"
+      },
+      {
+        "n": 4,
+        "claim": "the fallback is loud: with XDG_RUNTIME_DIR unset and a home whose bus.sock is over 107 bytes, serve exits non-zero with a message naming AF_UNIX, the path and its byte count, and no socket is bound"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remote.py gains socket_path(home) -> Path. For the live home: home/'bus.sock'. Otherwise, when XDG_RUNTIME_DIR names a directory owned by this uid with mode 0700: Path(XDG_RUNTIME_DIR)/f'{_unit(home)}.sock' (the unit name is cairn-bus-<sha1(str(home))[:10]>, remote.py:94; CAIRN_BUS_UNIT if set wins there too). Otherwise home/'bus.sock' when len(os.fsencode(str(...))) <= 107. Otherwise it raises OSError(f'AF_UNIX path too long: {p} is {n} bytes (limit 107) and XDG_RUNTIME_DIR is not usable'). remote.py:146 dials str(socket_path(home)); remote.py:370's message names it.",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: serve (server.py:1143) binds at remote.socket_path(home) (server.py already imports bus_client.remote at 1175; it still never imports socket). It unlinks any stale file there first, keeps the 0o177 umask, and, when that path is not home/'bus.sock', makes home/'bus.sock' a symlink to it after the bind. serve's finally unlinks both. An OSError from socket_path is printed and serve returns non-zero before binding. __main__.py:27's pulse message names socket_path(home).",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/__main__.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/devices/cairn/machines/bus/__main__.py",
+        "cairn/devices/tester/isolation.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: a red-first proof, one tooth per clause, PROVES {1,2,3,4}. It serves in a child process (`python -m cairn.devices.cairn.machines.bus serve --home H --scratch --lan 0`) with H = scratch_dir(...) plus nested subdirectories to reach over 150 bytes for <H>/bus.sock, and TMPDIR set to the parent of that depth. Tooth 2 imports socket_path and _unit inside the tooth and compares against os.environ['XDG_RUNTIME_DIR']; the live-home check calls socket_path(_live_home()) only, never dialling the live bus. Tooth 4 pops XDG_RUNTIME_DIR from the child's env. Every child is reaped in a finally and every unit is stopped by name.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_socket_does_not_ride_tmpdir.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py",
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/devices/cairn/machines/bus/server.py",
+      "cairn/devices/cairn/machines/bus/__main__.py",
+      "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_socket_does_not_ride_tmpdir.py"
+    ],
+    "out": [
+      "the live cairn-bus.service unit and its address",
+      "the tester's snapshot location (cairn/devices/tester/isolation.py)",
+      "cairn/devices/cairn/tools/scratch_bus/scratch_bus.py (its workaround stays)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "cc_0 on akiendelllinux: with TMPDIR=/var/tmp every proof that binds a scratch bus reds 'OSError: AF_UNIX path too long'. The bus.sock path comes to 110 chars under /var/tmp and 105 under /tmp, against a limit of ~107; /dev/shm is also too long.",
+      "how": "cc_0's measurement, relayed verbatim in substance by akiendelllinux_cc_orchestrator's peer message to akienasus_cc_0, 2026-11-19"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "2955a4a316d3's fix reseal red on akiendelllinux: test_clearance and two approval proofs, the same AF_UNIX-length red.",
+      "how": "the same relayed message from akiendelllinux_cc_orchestrator"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "THE BIND: one knob, TMPDIR, places both the tester's instance snapshots and every scratch bus home. tester/isolation.py makes cairn-instance-pristine-* and cairn-instance-seal-* with tempfile.mkdtemp (isolation.py:422, 460: copytree of ~/.cairn, devices alone 858M), and scratch_dir (cairn/tools/scratch/scratch.py:146) makes the bus homes with tempfile.mkdtemp too. On the Dell /tmp is a 7.7G tmpfs: c234aae2c0b9's fix commit's pre-commit reseal of the bus proofs failed 'cp: No space left on device' copying the snapshot (5.6G used, 5.3G of it a leaked /tmp/stones.13XiDl). So /tmp is too small for the snapshots and /var/tmp too long for the sockets; no TMPDIR satisfies both.",
+      "how": "c234 build.out on akiendelllinux; df -h /tmp /var/tmp; du -sh ~/.cairn/devices; reading isolation.py and scratch.py"
+    },
+    {
+      "when": "2026-11-14",
+      "saw": "scratch_bus.py already works around the limit for one caller: its bus address is a separate short scratch_dir('bus-'), because <HOME>/.cairn/devices/cairn/machines/bus/0/bus.sock under a scratch HOME ran past 108 bytes (7 of 8 teeth red in inspect_wire's Linux seal). That workaround still rides TMPDIR's length.",
+      "how": "the comment at cairn/devices/cairn/tools/scratch_bus/scratch_bus.py:49-53"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "XDG_RUNTIME_DIR=/run/user/1000 on akiendelllinux, mode 0700 owned by akien; /run/user/1000/cairn-bus-<10 hex>.sock is 39 chars.",
+      "how": "ssh akiendelllinux: echo $XDG_RUNTIME_DIR; ls -ld /run/user/$(id -u)"
+    }
+  ],
+  "id": "e44cf1f23c84"
+}

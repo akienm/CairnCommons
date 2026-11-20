@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Assumes XDG_RUNTIME_DIR is set where Cairn runs scratch buses on Linux: login sessions, ssh sessions under systemd-logind and systemd --user units all carry it (measured on akiendelllinux). Where it is not, clause 4 makes the fallback loud rather than silent. Assumes every dial goes through remote.exchange/RemoteBus. The sole-path sieve already reds a second dialer (socket import outside inferenceproxy), so a stray dialer of <home>/bus.sock cannot hide. Assumes /run/user is not swept while a bus runs; logind removes it only at the user's last logout, and a respawn re-binds it.",
+    "builder_check": "A Haiku builder needs: (a) where the path is spelled today: server.py:1143 (bind), __main__.py:27 (pulse message), remote.py:146 (dial), remote.py:370 (error text); (b) _unit's hash at remote.py:94-104, to reuse; (c) _live_home() in remote.py, for the live exception; (d) the umask 0o177 at server.py:1147, kept for the runtime socket; (e) serve's finally that unlinks the socket, which now unlinks both the socket and the link; (f) the sole-path rule: server.py never imports socket, it binds through socketserver with a str path; (g) the proof harness: copy the child-process serve and stops.jsonl reading from test_a_scratch_bus_with_no_caller_ends_itself.py (c234), with homes made by scratch_dir under a deep subdirectory to force the length. All of these are carried in decisions.",
+    "children": "none, because the change is one address function in cairn/tools/bus_client/remote.py and its three callers",
+    "collision_check": "c234aae2c0b9 edits the same server.py (idle exit), so this lands behind it. That is an ordering, not a conflict. 48519f4789b1 (one bus per instance, bus.sock in the instance folder) is kept for the live home; only scratch homes move. scratch_bus.py's short-address workaround (2026-11-14) is the same aim reached per caller; this does it once at the address, a distinction. No exclusive-and-terminal collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Four clauses, one tooth each, horizon the red-first proof. (1) With TMPDIR and the bus home under a directory deep enough that <home>/bus.sock is over 150 bytes, a scratch bus serves and a RemoteBus at that home is answered. (2) The bound socket is $XDG_RUNTIME_DIR/cairn-bus-<the unit's hash>.sock, under 108 bytes and not under TMPDIR, <home>/bus.sock is a link to it, and the live home's address is still <live home>/bus.sock. (3) At the bus's exit both the runtime socket and the link are gone, and two homes get two distinct sockets. (4) With XDG_RUNTIME_DIR unset and a long home, serve exits non-zero naming AF_UNIX, the path and its byte count, and binds nothing.",
+    "gates_bound": "code-seam: proof gate = bin/cairn test over the red-first proof, sealed by the tester; hollow gate = cairn test --hollow; verdict gate at PROVED; feeds back to origin (this ticket's measured) on failure.",
+    "missing_check": "It does not move the tester's snapshots to /var/tmp. After this, TMPDIR can be set to /var/tmp for the snapshots, but which TMPDIR the Dell's hands use is the hands' call, not this machine's. It does not remove scratch_bus.py's separate short address, which becomes redundant but harmless; deleting it is a later edit to that tool. Windows is untouched: no AF_UNIX there, so the loopback port path does not change.",
+    "node_class": "code-seam",
+    "questions": "none, because the shape is settled by server.py:9 ('the file mode is the gate'), which refuses an abstract socket and leaves $XDG_RUNTIME_DIR; the path is cairn/devices/cairn/machines/bus/server.py",
+    "task_or_ticket": "ticket",
+    "title": "a scratch bus's socket path rides the length of TMPDIR",
+    "watchme": "none, because its correctness is a string length its own red-first proof reads (berthing beside cairn/devices/cairn/machines/bus/server.py in cairn/devices/cairn/machines/bus/proofs/); the address is computed in cairn/tools/bus_client/remote.py, so there is nothing that runs later for a probe to watch",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The AF_UNIX red and the full /tmp are one defect: TMPDIR places both the 858M snapshots and the socket homes, so no single TMPDIR satisfies both. Moving the socket to $XDG_RUNTIME_DIR separates them."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "984b43717a4a",
+  "skill": "sorted",
+  "title": "a scratch bus's socket path rides the length of TMPDIR",
+  "trace_id": "6dc77ca031fc",
+  "when": "2026-11-19T23:42:24.531329"
+}
