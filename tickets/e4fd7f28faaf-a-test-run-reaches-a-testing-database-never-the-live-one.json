@@ -2,10 +2,10 @@
   "id": "e4fd7f28faaf",
   "title": "a test run reaches a TESTING database, never the live one",
   "owning_intention": "cairn/devices/db_domain/tools/client/intention+why.json",
-  "intention": "store.connect() dials the database named by database_name(): `cairn_testing` when the process carries CAIRN_TESTER_TEST_ID (the tester's run marker, already carried to every bus a test spawns) and `cairn` otherwise; ensure_database() creates whichever is asked for. Every table a test run makes, scratch tables and the owner and scratch registries beside them, lives in the testing database, so a test cannot touch a live table and a sweep run by a test cannot reach live tables, because they are in another database.",
+  "intention": "Under a test run (the process carries CAIRN_TESTER_TEST_ID) every write the store door makes lands in `cairn_testing`, never in `cairn`: store.write, a scratch table minted, the owner and scratch registries, ensure_database. Reads are not redirected: under a test run store.query reads live, except a table the run itself created in cairn_testing, which it reads there (outline 4.3.1.5.1.5.2 clause 4: testing first, live underneath). Live is read under a test run only through a read-only connection, so a proof can read live and cannot write it. Without a test id nothing changes: `cairn`.",
   "why": "Akien 2026-11-14 (relayed by the orchestrator, answering Q#104): \"we need a TESTING database.\" The lived symptoms are all from proofs and scratch tables sharing the live `cairn` database: (1) 2026-09-06, 9,087 tables, 12 live (201a37bf1613); (2) 2026-11-14 on akiendell, a sweep that read live processes as dead dropped the caller's own scratch tables, and 36 orphan seal_ann_*_delivery tables stood in the live database (5b940b1c4fbe, 9484180b4ff4); (3) the sweep is a DELETE FROM over a registry in the live database, run by a test, so a bug in a test-run's sweep is a bug against live tables. Separation by database is physics (Postgres cannot read across databases on one connection), not a naming convention that a pattern sweep must respect.",
   "traces_to": "Law 4 (a rule that matters is enforced by physics), Law 6 (a test run owns nothing live), the standing rule that a test against live data is marked as testing.",
-  "how": "D1: store.database_name() reads CAIRN_TESTER_TEST_ID: set -> `cairn_testing`, unset -> DB_NAME (`cairn`); connect() and ensure_database() use it; the owner registry and the scratch registry are created per database as they already are. D2: a proof, three teeth. D3 (decision for Akien, opened as a question): a proof that must read LIVE learning tables (2b3d842bc118's clause_4_the_live_tables_are_hers reads the live codemother tables) gets NO door in this ticket: under a test run it reads the testing database, where those tables are absent, and is re-pointed by its own ticket to the sync's cache (3ef8654a8027 v2).",
+  "how": "D1: store.database_name() reads CAIRN_TESTER_TEST_ID (set -> `cairn_testing`, unset -> DB_NAME); every connection that can write (connect() as used by write, the scratch mint and sweep, the registries, ensure_database) dials it. D2: under a test id, store.query routes per table: a table present in cairn_testing (one the run created) is read there; any other is read through a live connection opened with default_transaction_read_only=on, so an INSERT/UPDATE/DELETE/DDL through it raises. Without a test id store.query is unchanged. D3 of the cast (a live-reading proof gets no door) is dropped: Akien's Q112 answer says a proof may read live. The row-grain overlay pinned at the run's start seq (clause 4's full form) is measured in the build's census, not built here: the overlay here is at table grain. D4: the proof, one tooth per outcome.",
   "bounds": {
     "in": [
       "cairn/devices/db_domain/tools/client/store.py",
@@ -53,12 +53,17 @@
       "when": "2026-11-14",
       "saw": "Akien stamped the rework shape at outline 4.3.1.5.1.5.2 -amm (\"4.3.1.5.1.5.2 -amm\"); it is his call now. The rework stays parked under the usage pace only",
       "how": "his words, relayed verbatim by orchestrator 2026-11-14"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "as cast, D1 redirected every connection under a test run, reads included, and D3 gave a live-reading proof no door: that contradicts Akien's Q112 answer (open-087b17d58fb9: \"i see no reason why a proof can't read a live db\") and outline 4.3.1.5.1.5.2 clause (4). Amended: writes to cairn_testing, reads live (read-only) except tables the run created; D3 dropped. Raised as open-206d5828ede5; the shape ruled CC's call by akiendelllinux_cc_orchestrator 2026-11-20.",
+      "how": "the ticket as cast at commons main; questions/open-087b17d58fb9.json; cairn/devices/cairn/requirements/04-graph-trees-memory-service.md 4.3.1.5.1.5.2"
     }
   ],
   "outcomes": [
     {
       "n": 1,
-      "claim": "with CAIRN_TESTER_TEST_ID set, store.connect() answers current_database() = cairn_testing (created on demand), and with it unset, `cairn`",
+      "claim": "with CAIRN_TESTER_TEST_ID set, every connection the store door writes through answers current_database() = cairn_testing (created on demand), and with it unset, `cairn`",
       "writes_to": [],
       "reads": [],
       "after": []
@@ -79,7 +84,21 @@
     },
     {
       "n": 4,
-      "text": "database_name() and its two uses in store.py.",
+      "claim": "under a test id, store.query of a live table the run has not created returns the live rows (a count equals the count read without a test id), and an INSERT sent through that read path raises a read-only error; the live row count is unchanged across the tooth",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 5,
+      "claim": "under a test id, a table the run created through store.write is read by store.query from cairn_testing (its rows, not live's), and the live database holds no table of that name",
+      "writes_to": [],
+      "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "text": "database_name(), the write-side uses, and store.query's per-table read routing with the read-only live connection, in store.py.",
       "writes_to": [
         "cairn/devices/db_domain/tools/client/store.py"
       ],
@@ -90,8 +109,8 @@
       "after": []
     },
     {
-      "n": 5,
-      "text": "the proof, one tooth per clause, over the two real databases of the local Postgres, both asked by name.",
+      "n": 7,
+      "text": "the proof, one tooth per outcome 1-5, over the two real databases of the local Postgres, both asked by name.",
       "writes_to": [
         "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
       ],
@@ -101,7 +120,7 @@
       "after": []
     },
     {
-      "n": 6,
+      "n": 8,
       "text": "test_db_domain.py's current_database() assertion reads store.database_name(), not store.DB_NAME, so it stays green under a marked run (bounds gap the build measured).",
       "writes_to": [
         "cairn/devices/db_domain/proofs/test_db_domain.py"
