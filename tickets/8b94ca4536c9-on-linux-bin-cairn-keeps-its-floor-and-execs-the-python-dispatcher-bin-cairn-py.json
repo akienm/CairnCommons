@@ -5,7 +5,7 @@
   "intention": "After its floor checks, bin/cairn on Linux execs the venv python on bin/cairn.py (outline 5.4.3.8), so one dispatcher serves both platforms.",
   "why": "Measured: 2026-11-20 read of bin/cairn on akiendell: 479 lines, 295 of code; lines 94-217 are the bash floor (venv, db, wiring, instance), lines 218-313 the help, lines 314-479 the dispatch (token fold, instance split, device and bus resolution, exec). bin/proofs holds 34 proofs, 21 of which drive the launcher. This box cannot run a Linux read of them, so riding Linux on slice 1 (ticket 380d524e6e9c) is not cheap from here: it re-reads 21 proofs on a platform I do not hold. Owed by outline 5.4.3.8; the floor stays bash (5.4.3.8.1).",
   "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
-  "how": "A hypothesis, not a settled shape: after 380d524e6e9c lands bin/cairn.py, bin/cairn keeps _floor and _help and replaces the dispatch block (line 314 on) with an exec of the venv python on bin/cairn.py with the same arguments. A parity proof resolves a fixed list of addresses (cc, cc.1, a bus verb, an unknown word, a case-folded token) through both and compares target and exit code. Depends on 380d524e6e9c.",
+  "how": "A hypothesis, not a settled shape: after 380d524e6e9c lands bin/cairn.py, bin/cairn keeps _floor and _help and replaces the dispatch block (line 314 on) with an exec of the venv python on bin/cairn.py with the same arguments. A parity proof resolves a fixed list of addresses (cc, cc.1, a bus verb, an unknown word, a case-folded token) through both and compares target and exit code. Depends on 380d524e6e9c. Depends on 80a220a86873: bin/cairn.py carries bootstrap.sh's instance wiring, so the exec drops none of it (measured 2026-11-20 on Windows: bash bin/cairn probescan wires 58 entries into an empty instance root, cairn.cmd 0).",
   "falsifier": {
     "clauses": [
       {
@@ -19,6 +19,10 @@
       {
         "n": 3,
         "claim": "bin/cairn holds no device or bus resolution of its own: its only exec after the floor is the Python dispatcher"
+      },
+      {
+        "n": 4,
+        "claim": "on a fresh instance root, bin/cairn on Linux exec'ing bin/cairn.py leaves the same instance wiring bootstrap.sh's cairn_wire_instances laid before the exec (bin/cairn.py carries that wiring, ticket 80a220a86873)"
       }
     ]
   },
