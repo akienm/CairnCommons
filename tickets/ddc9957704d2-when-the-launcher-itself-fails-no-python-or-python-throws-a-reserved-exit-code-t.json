@@ -5,27 +5,39 @@
   "intention": "The platform shell in front of the launcher falls over to Rescue on a launcher failure, writing the trouble file itself when Python cannot run (outline 5.4.3.8.1-3).",
   "why": "Measured: 2026-11-20 read of bin/cairn.cmd on akiendell: five lines, it runs bash by a hardcoded path and returns its exit code; it has no fallover, no trouble file and no reserved exit code. bin/cairn on Linux has _floor_refuse (a refusal with one remedy) but files no trouble ticket and does not call Rescue. Outline 5.4.3.8.1-3 says it must. No ticket builds it (open-198248431b60 answered by measurement, 2026-11-19).",
   "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
-  "how": "A hypothesis, not a settled shape: the Python launcher exits with one reserved code (outline 5.4.3.8.3) only for its own failure; the shell shim (cairn.cmd first, then bin/cairn's floor on Linux) maps that code, and any failure to start Python, to a trouble file in the trouble format (finding a matching open one and incrementing it) and then to Rescue's entry. Depends on 380d524e6e9c.",
+  "how": "A hypothesis, not a settled shape (outline 5.4.3.8.1-4, 6.5.3.4-6): bin/cairn.py wraps its own start in a guard that exits LAUNCHER_FAILURE_EXIT (a reserved code, 70) and nothing else uses it. cairn.cmd maps that code, and the absent-venv case it already detects, to a trouble file it writes itself in the trouble store (troubletickets/0, one <slug>.json per defect; a live file at the top is open, so a repeat finds it and increments its counter), then, only at a terminal, execs `claude --dangerously-skip-permissions \"read this: <trouble path> <what failed>\"` found on PATH. Rescue is Claude Code outside Cairn (6.5.3.4), and `cairn rescueclaude` cannot be the target because the launcher is what failed. Test seams, named: CAIRN_TROUBLE_STORE (store dir) and CAIRN_LAUNCHER_TTY (1/0 overrides the terminal probe, for proofs). Windows only: the Linux floor is the other ticket.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "with no Python reachable, cairn.cmd writes a trouble file in the trouble format and a repeat increments the matching open one"
+        "claim": "with no Python reachable (the venv absent), cairn.cmd writes a trouble file in the trouble format into the trouble store and a repeat increments the matching open one rather than writing a second"
       },
       {
         "n": 2,
-        "claim": "a launcher failure (the reserved exit code) falls over to Rescue's entry"
+        "claim": "a launcher failure (the reserved exit code) at a terminal files the trouble and execs the claude found on PATH with --dangerously-skip-permissions and a prompt carrying the trouble file's path (a stub claude on a scratch PATH records its argv)"
       },
       {
         "n": 3,
-        "claim": "a verb that exits 1 does not file a trouble and does not fall over"
+        "claim": "a verb that exits 1 files no trouble and does not exec claude, and cairn.cmd exits 1"
+      },
+      {
+        "n": 4,
+        "claim": "a launcher failure with no terminal (a script, hook or schedule) files or increments the trouble, does not exec claude, and exits loudly non-zero naming the trouble path"
+      },
+      {
+        "n": 5,
+        "claim": "a launcher failure at a terminal with claude absent from PATH still files the trouble and exits loudly non-zero naming the trouble path and that claude was not found"
+      },
+      {
+        "n": 6,
+        "claim": "bin/cairn.py exits the reserved code when the launcher itself fails before it dispatches, and still exits a verb's own 1 as 1"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: The platform shell in front of the launcher falls over to Rescue on a launcher failure, writing the trouble file itself when Python cannot run (outline 5.4.3.8.1-3).",
+      "text": "D1: cairn.cmd files or increments the trouble itself and, at a terminal, execs claude on a launcher failure (clauses 1-5).",
       "writes_to": [
         "bin/cairn.cmd"
       ],
@@ -35,22 +47,35 @@
     },
     {
       "n": 2,
-      "text": "D2: the red-first proof, one tooth per clause.",
+      "text": "D2: bin/cairn.py exits the reserved code only for its own failure (clause 6).",
+      "writes_to": [
+        "bin/cairn.py"
+      ],
+      "reads": [
+        "bin/cairn.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof, one tooth per clause.",
       "writes_to": [
         "cairn/devices/recovery/proofs/test_a_launcher_failure_falls_over_to_rescue.py"
       ],
       "reads": [
-        "bin/cairn.cmd"
+        "bin/cairn.cmd",
+        "bin/cairn.py"
       ]
     }
   ],
   "writes_to": [
     "bin/cairn.cmd",
+    "bin/cairn.py",
     "cairn/devices/recovery/proofs/test_a_launcher_failure_falls_over_to_rescue.py"
   ],
   "bounds": {
     "in": [
       "bin/cairn.cmd",
+      "bin/cairn.py",
       "cairn/devices/recovery/proofs/test_a_launcher_failure_falls_over_to_rescue.py"
     ],
     "out": [
@@ -64,6 +89,11 @@
       "when": "2026-11-20",
       "saw": "2026-11-20 read of bin/cairn.cmd on akiendell: five lines, it runs bash by a hardcoded path and returns its exit code; it has no fallover, no trouble file and no reserved exit code. bin/cairn on Linux has _floor_refuse (a refusal with one remedy) but files no trouble ticket and does not call Rescue. Outline 5.4.3.8.1-3 says it must. No ticket builds it (open-198248431b60 answered by measurement, 2026-11-19).",
       "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "the orchestrator's reading of the outline: Rescue is Claude Code outside Cairn (6.5), launched with 'read this' and the trouble ticket (6.5.3.5), always with dangerous permissions (6.5.3.6), at a terminal only (5.4.3.8.4). git ls-files names no rescue file, so the entry is the claude binary called directly; cairn rescueclaude (6.5.4) cannot be the target because the launcher is what failed.",
+      "how": "git ls-files | grep -i rescue (empty); outline 05-cairn-device.md:148-171 and 06-recovery-device.md:86-100"
     }
   ]
 }
