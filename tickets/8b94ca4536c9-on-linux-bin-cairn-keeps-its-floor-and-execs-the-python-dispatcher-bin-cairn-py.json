@@ -1,0 +1,69 @@
+{
+  "id": "8b94ca4536c9",
+  "title": "on Linux, bin/cairn keeps its floor and execs the Python dispatcher bin/cairn.py in place of its own 165 lines of dispatch",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "After its floor checks, bin/cairn on Linux execs the venv python on bin/cairn.py (outline 5.4.3.8), so one dispatcher serves both platforms.",
+  "why": "Measured: 2026-11-20 read of bin/cairn on akiendell: 479 lines, 295 of code; lines 94-217 are the bash floor (venv, db, wiring, instance), lines 218-313 the help, lines 314-479 the dispatch (token fold, instance split, device and bus resolution, exec). bin/proofs holds 34 proofs, 21 of which drive the launcher. This box cannot run a Linux read of them, so riding Linux on slice 1 (ticket 380d524e6e9c) is not cheap from here: it re-reads 21 proofs on a platform I do not hold. Owed by outline 5.4.3.8; the floor stays bash (5.4.3.8.1).",
+  "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
+  "how": "A hypothesis, not a settled shape: after 380d524e6e9c lands bin/cairn.py, bin/cairn keeps _floor and _help and replaces the dispatch block (line 314 on) with an exec of the venv python on bin/cairn.py with the same arguments. A parity proof resolves a fixed list of addresses (cc, cc.1, a bus verb, an unknown word, a case-folded token) through both and compares target and exit code. Depends on 380d524e6e9c.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the 21 launcher-driving proofs in bin/proofs read green on Linux unchanged after bin/cairn execs bin/cairn.py"
+      },
+      {
+        "n": 2,
+        "claim": "a fixed list of typed addresses resolves to the same target and exit code through the Python dispatcher as through the bash dispatch it replaced"
+      },
+      {
+        "n": 3,
+        "claim": "bin/cairn holds no device or bus resolution of its own: its only exec after the floor is the Python dispatcher"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: After its floor checks, bin/cairn on Linux execs the venv python on bin/cairn.py (outline 5.4.3.8), so one dispatcher serves both platforms.",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
+    }
+  ],
+  "writes_to": [
+    "bin/cairn",
+    "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn",
+      "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
+    ],
+    "out": [
+      "bin/cairn.py itself (380d524e6e9c)",
+      "the floor checks",
+      "Windows"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "2026-11-20 read of bin/cairn on akiendell: 479 lines, 295 of code; lines 94-217 are the bash floor (venv, db, wiring, instance), lines 218-313 the help, lines 314-479 the dispatch (token fold, instance split, device and bus resolution, exec). bin/proofs holds 34 proofs, 21 of which drive the launcher. This box cannot run a Linux read of them, so riding Linux on slice 1 (ticket 380d524e6e9c) is not cheap from here: it re-reads 21 proofs on a platform I do not hold. Owed by outline 5.4.3.8; the floor stays bash (5.4.3.8.1).",
+      "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    }
+  ]
+}

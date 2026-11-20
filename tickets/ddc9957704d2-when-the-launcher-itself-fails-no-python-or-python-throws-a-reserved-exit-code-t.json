@@ -1,0 +1,69 @@
+{
+  "id": "ddc9957704d2",
+  "title": "when the launcher itself fails (no Python, or Python throws a reserved exit code), the platform shell files a trouble ticket and falls over to Rescue; a command's own failure does not",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "The platform shell in front of the launcher falls over to Rescue on a launcher failure, writing the trouble file itself when Python cannot run (outline 5.4.3.8.1-3).",
+  "why": "Measured: 2026-11-20 read of bin/cairn.cmd on akiendell: five lines, it runs bash by a hardcoded path and returns its exit code; it has no fallover, no trouble file and no reserved exit code. bin/cairn on Linux has _floor_refuse (a refusal with one remedy) but files no trouble ticket and does not call Rescue. Outline 5.4.3.8.1-3 says it must. No ticket builds it (open-198248431b60 answered by measurement, 2026-11-19).",
+  "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
+  "how": "A hypothesis, not a settled shape: the Python launcher exits with one reserved code (outline 5.4.3.8.3) only for its own failure; the shell shim (cairn.cmd first, then bin/cairn's floor on Linux) maps that code, and any failure to start Python, to a trouble file in the trouble format (finding a matching open one and incrementing it) and then to Rescue's entry. Depends on 380d524e6e9c.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with no Python reachable, cairn.cmd writes a trouble file in the trouble format and a repeat increments the matching open one"
+      },
+      {
+        "n": 2,
+        "claim": "a launcher failure (the reserved exit code) falls over to Rescue's entry"
+      },
+      {
+        "n": 3,
+        "claim": "a verb that exits 1 does not file a trouble and does not fall over"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: The platform shell in front of the launcher falls over to Rescue on a launcher failure, writing the trouble file itself when Python cannot run (outline 5.4.3.8.1-3).",
+      "writes_to": [
+        "bin/cairn.cmd"
+      ],
+      "reads": [
+        "bin/cairn.cmd"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/recovery/proofs/test_a_launcher_failure_falls_over_to_rescue.py"
+      ],
+      "reads": [
+        "bin/cairn.cmd"
+      ]
+    }
+  ],
+  "writes_to": [
+    "bin/cairn.cmd",
+    "cairn/devices/recovery/proofs/test_a_launcher_failure_falls_over_to_rescue.py"
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn.cmd",
+      "cairn/devices/recovery/proofs/test_a_launcher_failure_falls_over_to_rescue.py"
+    ],
+    "out": [
+      "the Python dispatcher (380d524e6e9c)",
+      "Rescue's own behaviour",
+      "the Linux floor wiring (cast with the Linux ticket's builder, not promised here)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "2026-11-20 read of bin/cairn.cmd on akiendell: five lines, it runs bash by a hardcoded path and returns its exit code; it has no fallover, no trouble file and no reserved exit code. bin/cairn on Linux has _floor_refuse (a refusal with one remedy) but files no trouble ticket and does not call Rescue. Outline 5.4.3.8.1-3 says it must. No ticket builds it (open-198248431b60 answered by measurement, 2026-11-19).",
+      "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    }
+  ]
+}

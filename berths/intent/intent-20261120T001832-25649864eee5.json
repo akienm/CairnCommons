@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Make the reseal roll back its journal lines on a crash: that writes the door's own record from outside the door and only fixes the crash case. Block the commit when the journal names unstaged records: every shared-tree commit would block on another session's work. Composing the staged journal per path fixes every case at the one place that stages it.",
+      "hidden_assumption": "That nothing reads the committed journal expecting lines for uncommitted records (a later commit carries them). Unmeasured; the proof's clause 2 checks the committed journal against the committed tree, and the artifact proofs that run over commits re-green or red.",
+      "prior_art": "23c822fe8095 (path commits; same harness), 30531f6e1c5d (the journal goes with the records), b0e65cf8a77e (reseal crash lands the commit). Grepped tickets, questions and ideas for a journal staged without its records: none.",
+      "real_collision": "None. The 2026-09-30 ruling (a reseal crash does not block the commit) still stands."
+    },
+    "exit": "routed_forward",
+    "falsifier": "A path commit with another record journaled and unstaged carries HEAD's entry for it; a reseal crashed on ENOSPC leaves a commit whose every journal entry matches its committed blob; the working journal is unchanged by the check.",
+    "from_idea": "none, because it was measured at a build, not imagined: commit 53c5fbc1c on branch akienasus/c234-fix-forked-journal, ticket c234aae2c0b9",
+    "how": "check_staged stops staging the whole working journal. It composes the index blob per path: the working entry where the commit's index carries that path's bytes, HEAD's entry otherwise. It writes that blob with hash-object and update-index and leaves the file alone.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 7: a record of truth (the journal) never says a thing that is not so, and the committed journal said five validations had bytes the commit does not hold. Law 8: a seal line with no seal is a false green a peer leans on.",
+    "what": "A commit's .artifact-journal.jsonl names only the records that commit carries; a journaled record left unstaged keeps its line in the working tree, not in the commit."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "53c5fbc1c's journal claimed 5 seals the commit did not hold, after the reseal itself said no seal was staged."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "64d8dd51a862",
+  "skill": "intent",
+  "title": "A commit's .artifact-journal.jsonl names only the records that commit carries; a journaled record left unstaged keeps it",
+  "trace_id": "9272f1f0a823",
+  "when": "2026-11-20T00:18:32.687608"
+}
