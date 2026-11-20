@@ -1,0 +1,71 @@
+{
+  "id": "eb2f8f9b0b8c",
+  "title": "the delete gate reads .cairn as the guarded root only where it is a path segment",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "The delete gate refuses every delete under ~/.cairn and stops refusing text that only contains '.cairn' inside another word or a regex, so the guard is never routed around for harmless work.",
+  "why": "Law 4 and Law 7: a physics gate that misfires teaches the reflex of scripting around it. bin/cmd/deletegate refused 4 commands that delete nothing under ~/.cairn, each worked around by moving the text into a scratch file (n=2 on 2026-11-05, recorded in /home/akien/dev/src/CairnCommons/ideas/2026-11-05-bin-cmd-deletegate-refused-two-commands-on.json; n=2 on 2026-11-20 by akiendelllinux_cc_0). 2026-11-20 #1: a python heredoc patching isolation.py whose new code made a probe dir with prefix \".cairn-swap-probe-\" under /var/tmp and removed it with os.rmdir. 2026-11-20 #2: a read-only grep of bin/cmd/deletegate for the pattern \"rmdir\\|rmtree\\|unlink\\|...\\|\\.cairn\". 2026-11-05: a heredoc patching server.py (sock.unlink) and a grep for \"unlink|.cairn\". In every case the guarded form that matched is GUARDED_FORMS' bare \".cairn\" (deletegate:84), read as a substring: inside a longer word (.cairn-swap-probe-) or inside a regex (\\.cairn\\|). None of the four names a path at or under ~/.cairn..",
+  "traces_to": "Law 4; Law 7; CP4",
+  "how": "In bin/cmd/deletegate, replace the substring test `any(form in command for form in GUARDED_FORMS)` with one regex: `.cairn` counts as the guarded root only where it is a whole path segment, preceded by start, whitespace, '/', '~', a quote, '=', '(' or a backtick and followed by end, '/', whitespace, a quote, ';', '&', '|', ')' or a backtick. Every GUARDED_FORMS spelling (~/.cairn, $HOME/.cairn, <home>/.cairn) ends in '/.cairn' so it is covered by the same regex. Co-occurrence is kept exactly: the verb and the root are still asked of the whole text independently. Proof: add teeth to bin/proofs/test_delete_gate.py under a PROVES key for this ticket, one per clause; clause 3 names the existing co-occurrence tooth.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "each of the four measured commands, reduced to its matching text (a heredoc whose code calls os.rmdir on a /var/tmp dir with prefix '.cairn-swap-probe-'; grep -n \"rmdir\\|\\.cairn\" bin/cmd/deletegate; a heredoc calling sock.unlink(); grep \"unlink|.cairn\" bin/cmd/deletegate), passes the gate"
+      },
+      {
+        "n": 2,
+        "claim": "every guarded delete still refuses: each spelling in test_every_spelling_of_the_same_delete_is_caught, the quoted and python-call teeth, and the bare relative root (cd ~ && rm -rf .cairn/logs; rm -rf .cairn; rmdir \".cairn/x\"; shutil.rmtree('.cairn'))"
+      },
+      {
+        "n": 3,
+        "claim": "the co-occurrence over-refusals stay refused (test_the_match_is_by_CO_OCCURRENCE_..., unchanged): the narrowing reads the root's spelling as a path, it does not parse clauses"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: GUARDED_FORMS' substring test becomes one path-segment regex for .cairn; co-occurrence unchanged.",
+      "writes_to": [
+        "bin/cmd/deletegate"
+      ],
+      "reads": [
+        "bin/cmd/deletegate"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: teeth in the existing proof, one per clause, under this ticket's PROVES key.",
+      "writes_to": [
+        "bin/proofs/test_delete_gate.py",
+        "bin/validations/test_delete_gate.json"
+      ],
+      "reads": [
+        "bin/cmd/deletegate",
+        "bin/proofs/test_delete_gate.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cmd/deletegate",
+      "bin/proofs/test_delete_gate.py",
+      "bin/validations/test_delete_gate.json"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "bin/cmd/deletegate",
+    "bin/proofs/test_delete_gate.py",
+    "bin/validations/test_delete_gate.json"
+  ],
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "bin/cmd/deletegate refused 4 commands that delete nothing under ~/.cairn, each worked around by moving the text into a scratch file (n=2 on 2026-11-05, recorded in /home/akien/dev/src/CairnCommons/ideas/2026-11-05-bin-cmd-deletegate-refused-two-commands-on.json; n=2 on 2026-11-20 by akiendelllinux_cc_0). 2026-11-20 #1: a python heredoc patching isolation.py whose new code made a probe dir with prefix \".cairn-swap-probe-\" under /var/tmp and removed it with os.rmdir. 2026-11-20 #2: a read-only grep of bin/cmd/deletegate for the pattern \"rmdir\\|rmtree\\|unlink\\|...\\|\\.cairn\". 2026-11-05: a heredoc patching server.py (sock.unlink) and a grep for \"unlink|.cairn\". In every case the guarded form that matched is GUARDED_FORMS' bare \".cairn\" (deletegate:84), read as a substring: inside a longer word (.cairn-swap-probe-) or inside a regex (\\.cairn\\|). None of the four names a path at or under ~/.cairn.",
+      "how": "the hook's refusal text in this session's transcript (2 refusals); /home/akien/dev/src/CairnCommons/ideas/2026-11-05-bin-cmd-deletegate-refused-two-commands-on.json (2 more); deletegate:84 and :164 read"
+    }
+  ]
+}

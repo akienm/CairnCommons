@@ -1,0 +1,33 @@
+{
+  "answers": {
+    "assumption_check": "Measured: bin/cmd/deletegate refused 4 commands that delete nothing under ~/.cairn, each worked around by moving the text into a scratch file (n=2 on 2026-11-05, recorded in /home/akien/dev/src/CairnCommons/ideas/2026-11-05-bin-cmd-deletegate-refused-two-commands-on.json; n=2 on 2026-11-20 by akiendelllinux_cc_0). 2026-11-20 #1: a python heredoc patching isolation.py whose new code made a probe dir with prefix \".cairn-swap-probe-\" under /var/tmp and removed it with os.rmdir. 2026-11-20 #2: a read-only grep of bin/cmd/deletegate for the pattern \"rmdir\\|rmtree\\|unlink\\|...\\|\\.cairn\". 2026-11-05: a heredoc patching server.py (sock.unlink) and a grep for \"unlink|.cairn\". In every case the guarded form that matched is GUARDED_FORMS' bare \".cairn\" (deletegate:84), read as a substring: inside a longer word (.cairn-swap-probe-) or inside a regex (\\.cairn\\|). None of the four names a path at or under ~/.cairn.. Assumed: no real delete under the root spells it only as '.cairn' glued to another word; '~/.cairn-old' is a sibling directory, not inside the root, so leaving it unguarded is outside the gate's bound (the docstring guards ~/.cairn only).",
+    "builder_check": "In bin/cmd/deletegate, replace the substring test `any(form in command for form in GUARDED_FORMS)` with one regex: `.cairn` counts as the guarded root only where it is a whole path segment, preceded by start, whitespace, '/', '~', a quote, '=', '(' or a backtick and followed by end, '/', whitespace, a quote, ';', '&', '|', ')' or a backtick. Every GUARDED_FORMS spelling (~/.cairn, $HOME/.cairn, <home>/.cairn) ends in '/.cairn' so it is covered by the same regex. Co-occurrence is kept exactly: the verb and the root are still asked of the whole text independently. Proof: add teeth to bin/proofs/test_delete_gate.py under a PROVES key for this ticket, one per clause; clause 3 names the existing co-occurrence tooth. Do not touch DESTRUCTIVE, _strip_data_heredocs or the trash exemption.",
+    "children": "none, because one regex in one file closes all four measured refusals",
+    "collision_check": "The deletegate docstring (lines 39-54) records co-occurrence as a chosen trade, with the remedy 'split the command'; the CO_OCCURRENCE tooth pins it. This ticket does not loosen co-occurrence (clause 3 keeps that tooth green); it fixes the root's spelling, a distinction to record and not a collision. Prior narrowings 76d35575aead (data heredocs) and d6f0732afe8a (quoted deletes) are kept by clause 2.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "3 clauses: (1) each of the four measured commands, reduced to its matching text (a heredoc whose code calls os.rmdir on a /var/tmp dir with prefix '.cairn-swap-probe-'; grep -n \"rmdir\\|\\.cairn\" bin/cmd/deletegate; a heredoc calling sock.unlink(); grep \"unlink|.cairn\" bin/cmd/deletegate), passes the gate; (2) every guarded delete still refuses: each spelling in test_every_spelling_of_the_same_delete_is_caught, the quoted and python-call teeth, and the bare relative root (cd ~ && rm -rf .cairn/logs; rm -rf .cairn; rmdir \".cairn/x\"; shutil.rmtree('.cairn')); (3) the co-occurrence over-refusals stay refused (test_the_match_is_by_CO_OCCURRENCE_..., unchanged): the narrowing reads the root's spelling as a path, it does not parse clauses",
+    "gates_bound": "code-seam: BUILDME entry gate, PROVEME build gate, PROVED exit gate",
+    "missing_check": "a command that mentions os.rmdir on /var/tmp AND names ~/.cairn as a path elsewhere still refuses, by the recorded co-occurrence trade; that is clause 3, not a miss",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator ruled the cast (akiendelllinux_cc_orchestrator, 2026-11-20) and the co-occurrence trade stays as bin/cmd/deletegate records it",
+    "skill": "sorted",
+    "task_or_ticket": "ticket",
+    "title": "the delete gate reads .cairn as the guarded root only where it is a path segment",
+    "watchme": "none, because its proof bin/proofs/test_delete_gate.py is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A guard that fires on harmless text teaches routing around it with a script file, which is the move a real delete would make too. bin/cmd/deletegate refused 4 commands that delete nothing under ~/.cairn, each worked around by moving the text into a scratch file (n=2 on 2026-11-05, recorded in /home/akien/dev/src/CairnCommons/ideas/2026-11-05-bin-cmd-deletegate-refused-two-commands-on.json; n=2 on 2026-11-20 by akiendelllinux_cc_0). 2026-11-20 #1: a python heredoc patching isolation.py whose new code made a probe dir with prefix \".cairn-swap-probe-\" under /var/tmp and removed it with os.rmdir. 2026-11-20 #2: a read-only grep of bin/cmd/deletegate for the pattern \"rmdir\\|rmtree\\|unlink\\|...\\|\\.cairn\". 2026-11-05: a heredoc patching server.py (sock.unlink) and a grep for \"unlink|.cairn\". In every case the guarded form that matched is GUARDED_FORMS' bare \".cairn\" (deletegate:84), read as a substring: inside a longer word (.cairn-swap-probe-) or inside a regex (\\.cairn\\|). None of the four names a path at or under ~/.cairn."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "b980a3cad6f3",
+  "skill": "sorted",
+  "title": "the delete gate reads .cairn as the guarded root only where it is a path segment",
+  "trace_id": "aa113ca315da",
+  "when": "2026-11-20T09:27:44.322713"
+}
