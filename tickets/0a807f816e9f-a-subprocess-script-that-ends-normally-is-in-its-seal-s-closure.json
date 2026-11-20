@@ -35,11 +35,12 @@
     },
     {
       "n": 2,
-      "text": "D2: the proof plus validation and a committed normally-ending fixture, one tooth per clause.",
+      "text": "D2: the proof plus validation and two committed normally-ending fixtures (a .py and an extensionless one, clause 2's), one tooth per clause.",
       "writes_to": [
         "cairn/devices/tester/proofs/test_a_subprocess_script_that_ends_normally_is_in_the_seals_closure.py",
         "cairn/devices/tester/validations/test_a_subprocess_script_that_ends_normally_is_in_the_seals_closure.json",
-        "cairn/devices/tester/proofs/fixtures/a_script_that_ends_normally.py"
+        "cairn/devices/tester/proofs/fixtures/a_script_that_ends_normally.py",
+        "cairn/devices/tester/proofs/fixtures/an_extensionless_script_that_ends_normally"
       ],
       "reads": [
         "cairn/devices/tester/proofs/test_a_seal_records_what_it_reached.py"
@@ -51,7 +52,8 @@
       "cairn/devices/tester/reach/sitecustomize.py",
       "cairn/devices/tester/proofs/test_a_subprocess_script_that_ends_normally_is_in_the_seals_closure.py",
       "cairn/devices/tester/validations/test_a_subprocess_script_that_ends_normally_is_in_the_seals_closure.json",
-      "cairn/devices/tester/proofs/fixtures/a_script_that_ends_normally.py"
+      "cairn/devices/tester/proofs/fixtures/a_script_that_ends_normally.py",
+      "cairn/devices/tester/proofs/fixtures/an_extensionless_script_that_ends_normally"
     ],
     "out": [
       "every other component"
@@ -68,6 +70,16 @@
       "when": "2026-11-20",
       "saw": "A python script a proof runs as a SUBPROCESS is missing from the reach log when it runs to its last line, .py and extensionless alike, so editing it cannot stale the seal. CPython 3.14.4 pops __main__.__file__ once the script completes, and cairn/devices/tester/reach/sitecustomize.py reads every module __file__ at atexit, after the pop. A script that raises SystemExit keeps __file__ and IS logged. Repro, 2026-11-20 on akiendelllinux: /var/tmp/noext_probe = 'import sys,atexit; atexit.register(lambda: print(\"atexit\", getattr(sys.modules[\"__main__\"],\"__file__\",None)))' then a plain last line prints 'atexit None' (also as noext_probe.py); /var/tmp/noext_probe2 ending 'raise SystemExit(0)' prints 'atexit /var/tmp/noext_probe2'. Live: CAIRN_TESTER_REACH_LOG=<f> PYTHONPATH=cairn/devices/tester/reach python3 cairn/devices/tester/proofs/fixtures/extensionless_leaf (then ending normally) logged only the editable finder and sitecustomize.py. Found building b7d5df9919fe's clause 4; all 28 bin/cmd scripts exit via SystemExit, so the gates are covered and the blind set is any other subprocess-run script that ends normally.",
       "how": "the two /var/tmp/noext_probe* repros under python3 3.14.4; the leaf run with a scratch reach log; git grep of bin/cmd for SystemExit/sys.exit"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "under the reach sitecustomize at origin/main 887096c2b, CPython 3.14.4: a script of print(1) alone logged no script path; with raise SystemExit(0) or sys.exit(0) it logged its own path; a -c child's argv[0] is '-c' and __main__ has no __file__; a -m child (python -m mm) logged mm.py. sys.argv is already set when sitecustomize loads (argv[0] the script as typed, cwd unchanged), so D1 resolves argv[0] at load and adds it at exit only when __main__ lost __file__",
+      "how": "akienasus_cc_0 /var/tmp/0a80m.* scripts on akiendelllinux, PYTHONPATH=cairn/devices/tester/reach"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "with D1, the print(1) script logs its own absolute path once and a -c child logs no script; clause 2 needs an extensionless fixture that ends normally, and extensionless_leaf exits through SystemExit (b7d5df9919fe's, and must keep that), so a second fixture joins bounds.in",
+      "how": "akienasus_cc_0 same scripts after the patch, in /home/akien/dev/src/wt-0a80/cairn"
     }
   ]
 }
