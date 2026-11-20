@@ -1,0 +1,74 @@
+{
+  "ticket": "a2eaa93fa078",
+  "at": "2026-11-20T07:48:39+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1797591,
+      "duration_ms": 104157,
+      "is_error": false,
+      "session_id": "63bc497e-036d-4b15-88e6-5f99fc37a435"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/wt-castpair/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "2b9ac293f42c3fb086de16ea395a87585cb4d4bdb93654fc327216e6e3eba15a",
+  "ticket_sha256": "a140d6f8ebd6e942d676f6328076625a91ca5c98ae65af8af59281180ed2a1c3",
+  "touches": [
+    {
+      "number": "4.3.1",
+      "text": "Knowledge: one list of nodes, owned by the librarian."
+    },
+    {
+      "number": "4.3.1.5",
+      "text": "The memory model. Everything Cairn keeps as LEARNING in database memory is these five things, and only these. Logs, troubles, git records and a device's own state keep their own homes (4.3.2-4.3.4). WHY: one kind of access everywhere."
+    },
+    {
+      "number": "4.3.1.5.1",
+      "text": "Nodes: one long list, id = row. Every tree indexes it; no tree owns a node, so several trees can index the same node in different ways."
+    },
+    {
+      "number": "4.3.1.5.1.5",
+      "text": "Proofs run against a TESTING database, separate from live."
+    },
+    {
+      "number": "4.3.1.5.1.5.1",
+      "text": "A proof MAY read the live database; what a test writes stays out of live, either in the TESTING database or marked as a testing artifact that the rest of the system ignores. WHY: reading live saves populating test data; ignoring testing artifacts keeps them from leaking into what the system believes. Test against live, marked as testing. -amm"
+    },
+    {
+      "number": "4.3.1.5.1.5.2",
+      "text": "How the TESTING database works. (1) The db proxy is the seam (4.3.1.5.1.4.1.1, 11.3.7): proofs, devices and tools never choose a database; the proxy chooses by session context. (2) The test runner sets the context, never the proof: bin/cairn test and the hollow run open every db session with context=testing, so a proof can neither forget it nor pick live (Law 4). (3) In testing context, writes go only to the TESTING database: same schema, rows from a reserved address range, so a testing address never collides with a live one. (4) In testing context, reads are an overlay: testing rows first, live underneath, live pinned at the seq the run started at. A proof reads live with no fixtures, what it wrote shadows live for that run only, and the run repeats within itself. (5) In live context the proxy never consults the TESTING database, so testing artifacts are invisible to all but the run that made them, by construction rather than by filtering. (6) Each run's testing rows carry its run id and are dropped at run end; the sleep cycle sweeps orphans. (7) A proof over live data asserts invariants, never snapshots; a tooth that needs an exact value writes its fixture into the overlay first. Until the per-box proxy exists, the same routing sits in the store door (db_domain) and moves into the proxy when it is built. WHY: a context the proof sets is a context a proof can forget; the runner is the one place every proof passes through. - akiendelllinux_orchestrator -amm"
+    },
+    {
+      "number": "4.3.1.7",
+      "text": "Lifetimes. Each tree declares its lifetime when it is made: kept, one activity (eg one sleep run), or until its source file changes. Dropping a tree drops its leaves and its own links. A node goes only when no tree indexes it, so whatever a temporary tree's activity promoted into a permanent tree outlives it. The drop is enforced, not a habit. WHY: a run that ends without dropping its tables leaves them behind forever."
+    },
+    {
+      "number": "4.5",
+      "text": "COMMANDS:"
+    },
+    {
+      "number": "9.4.2",
+      "text": "tester"
+    },
+    {
+      "number": "9.4.2.3.6",
+      "text": "Test runs are transient (30 days, 4.3.2); seals are records of truth (git)."
+    },
+    {
+      "number": "9.4.8",
+      "text": "The chart chain machines (9.3.2): orient, constrain, survey, decompose, triage, hypothesize, validate, verdict."
+    },
+    {
+      "number": "17.21",
+      "text": "scratch: a proof's throwaway temp dirs and worktrees, cleaned up by the door. WHY: a run must leave nothing behind (4.3.1.7). USERS: the tester."
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [],
+  "questions_already_open": []
+}

@@ -1,0 +1,54 @@
+{
+  "ticket": "eb36a5ff6fe8",
+  "at": "2026-11-20T07:45:40+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.13628110000000002,
+      "duration_ms": 28609,
+      "is_error": false,
+      "session_id": "6eb780b3-d961-43a1-973d-07bbc278755d"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/wt-castpair/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "2b9ac293f42c3fb086de16ea395a87585cb4d4bdb93654fc327216e6e3eba15a",
+  "ticket_sha256": "da3d3d2390b3b09020dc677829d9b4c87fc37a47342f09eb5a2b0936d48a4a1a",
+  "touches": [
+    {
+      "number": "4.3.1.5.1.5.2",
+      "text": "How the TESTING database works. (1) The db proxy is the seam (4.3.1.5.1.4.1.1, 11.3.7): proofs, devices and tools never choose a database; the proxy chooses by session context. (2) The test runner sets the context, never the proof: bin/cairn test and the hollow run open every db session with context=testing, so a proof can neither forget it nor pick live (Law 4). (3) In testing context, writes go only to the TESTING database: same schema, rows from a reserved address range, so a testing address never collides with a live one. (4) In testing context, reads are an overlay: testing rows first, live underneath, live pinned at the seq the run started at. A proof reads live with no fixtures, what it wrote shadows live for that run only, and the run repeats within itself. (5) In live context the proxy never consults the TESTING database, so testing artifacts are invisible to all but the run that made them, by construction rather than by filtering. (6) Each run's testing rows carry its run id and are dropped at run end; the sleep cycle sweeps orphans. (7) A proof over live data asserts invariants, never snapshots; a tooth that needs an exact value writes its fixture into the overlay first. Until the per-box proxy exists, the same routing sits in the store door (db_domain) and moves into the proxy when it is built. WHY: a context the proof sets is a context a proof can forget; the runner is the one place every proof passes through. - akiendelllinux_orchestrator -amm"
+    },
+    {
+      "number": "4.3.1.5.1.5",
+      "text": "Proofs run against a TESTING database, separate from live."
+    },
+    {
+      "number": "4.3.1.5.1",
+      "text": "Nodes: one long list, id = row. Every tree indexes it; no tree owns a node, so several trees can index the same node in different ways."
+    },
+    {
+      "number": "4.3.1",
+      "text": "Knowledge: one list of nodes, owned by the librarian."
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "4.3.1.5.1.5.2",
+      "text": "How the TESTING database works. (1) The db proxy is the seam (4.3.1.5.1.4.1.1, 11.3.7): proofs, devices and tools never choose a database; the proxy chooses by session context. (2) The test runner sets the context, never the proof: bin/cairn test and the hollow run open every db session with context=testing, so a proof can neither forget it nor pick live (Law 4). (3) In testing context, writes go only to the TESTING database: same schema, rows from a reserved address range, so a testing address never collides with a live one. (4) In testing context, reads are an overlay: testing rows first, live underneath, live pinned at the seq the run started at. A proof reads live with no fixtures, what it wrote shadows live for that run only, and the run repeats within itself. (5) In live context the proxy never consults the TESTING database, so testing artifacts are invisible to all but the run that made them, by construction rather than by filtering. (6) Each run's testing rows carry its run id and are dropped at run end; the sleep cycle sweeps orphans. (7) A proof over live data asserts invariants, never snapshots; a tooth that needs an exact value writes its fixture into the overlay first. Until the per-box proxy exists, the same routing sits in the store door (db_domain) and moves into the proxy when it is built. WHY: a context the proof sets is a context a proof can forget; the runner is the one place every proof passes through. - akiendelllinux_orchestrator -amm",
+      "ticket_says": "test_chart_decompose.py writes to the live cairn tables with a testing marker and removes rows via finally block (filtering/marking approach)",
+      "why": "Outline clause 3 states writes in testing context go only to TESTING database; clause 5 explicitly states invisibility achieved 'by construction rather than by filtering'. Outline's design routes writes to separate database via context set by test runner (clause 2), invisible by architecture. Ticket achieves invisibility by explicit marking/cleanup in proof code, contradicting the construction-based design."
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [
+    "Law 3",
+    "Law 9"
+  ],
+  "questions_opened": [
+    "open-64270b081286"
+  ],
+  "questions_already_open": []
+}
