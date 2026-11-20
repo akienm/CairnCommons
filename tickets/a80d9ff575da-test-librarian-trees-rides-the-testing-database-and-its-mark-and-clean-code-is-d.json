@@ -90,6 +90,21 @@
       "when": "2026-11-20",
       "saw": "with ONE token forced on two concurrent copies under a tester test id, copy 1 bit 6 teeth and copy 2 bit 8 (UniqueViolation cairn_embeddings_pkey; already-refuted retirements)",
       "how": "akienasus_cc_0 a80dprobe.sh on akiendelllinux, CAIRN_LIBRARIAN_TRIALS_RUN_ID=same0001 CAIRN_TESTER_TEST_ID=testing-a80d-probe, two copies of cairn/devices/librarian/proofs/test_librarian_trees.py at origin/main b0f0501b2"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "a known cross-copy threat, read in the mechanism: trees._retire_lowest (trees.py:854) evicts the lowest-importance SLEEPING thread in the whole cairn_threads table once detect_threads sees MAX_THREADS=7 (trees.py:896), so in the one shared cairn_testing a copy can retire another copy's thread. One copy holds at most 1 thread at a time (each warm tooth deletes its own in finally) and cairn_testing held 0 threads, so a plain pair never reaches 7; sleep_check acts only on the caller's own counter (trees.py:990-1001) and is not a threat",
+      "how": "akienasus_cc_0 read test_librarian_trees.py:780-910 and trees.py:825-1001 at akienasus/codemother-rides-prefix-linked, and counted cairn_threads under CAIRN_TESTER_TEST_ID"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "_retire_lowest across copies NOT EXERCISED (not green): 6 seeded pairs (6 foreign sleeping threads at importance 2.0, second copy offset 0.085-0.199 s around the lone copy's co-occurrence->sleeping gap of 0.142 s) and 8 more after the duplicate-tooth fix (14 pairs) gave 1 coincidence (a seed retired while the other copy held an AWAKE thread) and 0 sleeping overlaps. A copy's thread sleeps only between store.write and wake_threads inside test_sleeping_thread_wakes_on_deposit, about 1 ms, so a pair cannot target it. RE-MEASURE TRIGGER: any change that lengthens that window (a tooth that holds a thread sleeping longer, or more threads per copy) re-opens this measurement",
+      "how": "akienasus_cc_0 retire_exercise.py on akiendelllinux under CAIRN_TESTER_TEST_ID=testing-a80d-retire (-retire2 for the 8 post-fix pairs) at akienasus/codemother-rides-prefix-linked 8afc0063b; seeds removed by thread_id after (6 minted, 5 deleted, 1 retired by the product, 0 threads left); accepted as not-exercised by akiendelllinux_cc_orchestrator 2026-11-20"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "in the same 6 pairs, 2 had one copy red on test_a_duplicate_grows_nothing_but_its_provenance_lands ('a duplicate must grow cairn_nodes by NOTHING'): the tooth counted the WHOLE cairn_nodes table, which the other copy's deposits move inside the shared cairn_testing. Fixed in the build: the count is scoped to content carrying the run's token. A grep of the six rides proofs and both a80d proofs then found no other asserted whole-table count (the rest are reported totals, or this process's own scratch leaf). After the fix, 8 more seeded pairs: 0 red pairs",
+      "how": "akienasus_cc_0 retire_exercise.py pairs 3 and 4 (as M3), then grep for count(*) at the fix commit"
     }
   ],
   "id": "a80d9ff575da"
