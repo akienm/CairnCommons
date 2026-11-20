@@ -22,6 +22,10 @@
       {
         "n": 4,
         "claim": "the fallback is loud: with XDG_RUNTIME_DIR unset and a home whose bus.sock is over 107 bytes, serve exits non-zero with a message naming AF_UNIX, the path and its byte count, and no socket is bound"
+      },
+      {
+        "n": 5,
+        "claim": "a fixture that stands in for the bus binds where the client dials and leaves nothing: bus_client's draining proof, run as a child with XDG_RUNTIME_DIR a fresh private (0700) directory and CAIRN_BUS_UNIT unset, exits 0 with its three teeth PASS, and afterwards that directory holds no file"
       }
     ]
   },
@@ -60,6 +64,27 @@
         "cairn/devices/cairn/machines/bus/server.py",
         "cairn/tools/bus_client/remote.py"
       ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the draining fixture (cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py:62) binds at remote.socket_path(home), imported inside _FakeBus, not home/'bus.sock', so it sits where ensure_bus dials. _FakeBus.close is idempotent (a lock and a closed flag), and _run closes every fake it made, the old one and each 'fresh' one its _spawn stand-in binds, in its finally, so no socket outlives the run: socketserver's server_close never removes the file, and with a hashed unit name each home's socket is a distinct file in the runtime dir. Its PROVES (99258e9bbdb1, teeth 1-3) and assertions are unchanged.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py",
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: e44c's proof gains tooth 5, PROVES 5 = test_a_fixture_bus_is_dialled_where_it_binds_and_leaves_nothing. It runs `python3 cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py` (its print_teeth_main) in a child with XDG_RUNTIME_DIR = a fresh scratch_dir chmod 0700 and CAIRN_BUS_UNIT popped, asserts exit 0 and exactly three PASS lines, then asserts the directory is empty. It imports nothing of bus_client's proofs: it runs a file. The server's own unlink at exit is D2's finally, proved by tooth 3.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_socket_does_not_ride_tmpdir.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
+      ]
     }
   ],
   "bounds": {
@@ -67,7 +92,8 @@
       "cairn/tools/bus_client/remote.py",
       "cairn/devices/cairn/machines/bus/server.py",
       "cairn/devices/cairn/machines/bus/__main__.py",
-      "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_socket_does_not_ride_tmpdir.py"
+      "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_socket_does_not_ride_tmpdir.py",
+      "cairn/tools/bus_client/proofs/test_a_draining_bus_is_used_not_raced.py"
     ],
     "out": [
       "the live cairn-bus.service unit and its address",
