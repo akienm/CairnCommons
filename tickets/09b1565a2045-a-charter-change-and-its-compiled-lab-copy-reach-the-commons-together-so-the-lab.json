@@ -1,0 +1,73 @@
+{
+  "id": "09b1565a2045",
+  "title": "a charter change and its compiled lab copy reach the commons together, so the lab never sits as uncommitted dirt that aborts a pull",
+  "owning_intention": "cairn/tools/intentions_model_compiler/intention+why.json",
+  "intention": "When a charter changes, the recompile gate leaves the regenerated intentions-congruency-lab copy committed in the commons in the same act, so the derived lab never stands as uncommitted tracked dirt that aborts a commons pull on any box.",
+  "why": "Measured 2026-11-19 on akiendell: charters skills/note, skills/commit and skills/challenge gained runtime_role and gated_by (a8d9ded2f, a61009024); the post-merge recompile regenerated their lab copies in the commons working tree and nothing committed them, so intentions-congruency-lab/skills-{challenge,commit,note}--intention+why.json stood modified and `git pull --ff-only` in CairnCommons aborted on local changes. It recurred after a `pull --rebase --autostash` re-applied the same dirt. It bites every box that merges a charter change.",
+  "traces_to": "Law 5 (the thing and the story of the thing may live in two roots but may never contradict each other: a stale committed lab contradicts its charters); the CLAUDE.md bug 'everything in intentions-congruency-lab/ is derived, never authored' (ticket the-lab-is-derived-never-authored); Law 4 (a rule that matters is enforced by physics, not by a box stashing before it pulls).",
+  "how": "recompile_gate.sh (the lab's write gate in cairn/tools/intentions_model_compiler) commits the lab files it regenerated in the commons through the commit door (`commit -- <paths>`) in the same act, and records a failed commit to its instance log (Law 7) without blocking its caller; red-first proof over a scratch commons and code root, one tooth per clause. The mechanism (gate commits its own output) is a hypothesis; clause 3 measures it.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "after a charter changes and recompile_gate.sh runs over a scratch commons and code root, the commons working tree has no modified or untracked lab file (git status clean over intentions-congruency-lab)"
+      },
+      {
+        "n": 2,
+        "claim": "a clone of the scratch commons taken before the charter change can then `git pull --ff-only` without aborting on local lab changes"
+      },
+      {
+        "n": 3,
+        "claim": "two scratch boxes compiling the same charters write byte-identical lab files, so a lab commit from either merges without conflict"
+      },
+      {
+        "n": 4,
+        "claim": "when the commit step fails, the gate still exits 0 and records the failure to its log, naming the lab files left uncommitted"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: recompile_gate.sh commits the lab files it regenerated in the commons through the commit door, and logs a failed commit without blocking its caller.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+        "cairn/tools/intentions_model_compiler/compiler.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof builds a scratch commons (a git repo plus a clone) and code root, changes a charter, runs the gate, one tooth per clause, PROVES declared.",
+      "writes_to": [
+        "cairn/tools/intentions_model_compiler/proofs/test_a_charter_change_leaves_no_uncommitted_lab.py"
+      ],
+      "reads": [
+        "cairn/tools/intentions_model_compiler/proofs/test_recompile_gate.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+    "cairn/tools/intentions_model_compiler/proofs/test_a_charter_change_leaves_no_uncommitted_lab.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/intentions_model_compiler/recompile_gate.sh",
+      "cairn/tools/intentions_model_compiler/proofs/test_a_charter_change_leaves_no_uncommitted_lab.py"
+    ],
+    "out": [
+      "cairn/tools/intentions_model_compiler/compiler.py (the compile itself is unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "three lab files modified in CairnCommons after charters gained runtime_role and gated_by; git pull --ff-only aborted on local changes; the diff holds only those added charter fields",
+      "how": "git -C CairnCommons status --short and git diff intentions-congruency-lab/skills-note--intention+why.json on akiendell at e154377ea"
+    }
+  ]
+}
