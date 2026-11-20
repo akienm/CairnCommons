@@ -13,7 +13,7 @@
       },
       {
         "n": 2,
-        "claim": "nothing is lost across an idle exit: no idle exit while a connection is open, an ask is in flight or a row is undelivered, even past N; and after an idle exit, a post to a recipient that subscribed before the exit is delivered by the bus respawned at the same home"
+        "claim": "nothing is lost across an idle exit: no idle exit while a connection is open, an ask is in flight, a row is undelivered, or a shim held by spec is wired, even past N. 'Subscribed' covers both kinds: a spec-held subscription lives only in the bus process's roster, so it is guarded (the bus does not exit while one is wired); a subscription on disk (cairn/devices/**/shim.py) is rebuilt by the respawned bus's roster. After an idle exit, a call through a RemoteBus handle opened before it respawns a bus at the same home, and a re-held fixture echo (never a real device's shim) is answered by the new pid"
       },
       {
         "n": 3,
@@ -24,7 +24,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: serve sets server.scratch = scratch beside server.home (server.py:1159). _Handler counts open connections on the server and stamps server.last_idle_at = time.monotonic() when the count falls to 0. _HomeWatch.service_actions, after the home-gone check: if getattr(self,'scratch',False) and open == 0 and nothing is in flight or undelivered (the same accessors take_over_asks/return_the_backlog read) and monotonic() - last_idle_at >= N, print 'bus: idle <s>s with nothing open or standing — exiting', stop.set('idle', {'idle_s': s, 'n_s': N}), and start the shutdown thread exactly as the home-gone branch does. N = float(os.environ.get('CAIRN_BUS_IDLE_S', '1800')).",
+      "text": "D1: serve sets server.scratch = scratch beside server.home (server.py:1159). _Handler counts open connections on the server and stamps server.last_idle_at = time.monotonic() when the count falls to 0. _HomeWatch.service_actions, after the home-gone check: if getattr(self,'scratch',False) and open == 0 and nothing is in flight or undelivered (the same accessors take_over_asks/return_the_backlog read) and no shim held by spec is wired (process._by_spec whose device_id process._is_wired) and monotonic() - last_idle_at >= N, print 'bus: idle <s>s with nothing open or standing — exiting', stop.set('idle', {'idle_s': s, 'n_s': N}), and start the shutdown thread exactly as the home-gone branch does. N = float(os.environ.get('CAIRN_BUS_IDLE_S', '1800')).",
       "writes_to": [
         "cairn/devices/cairn/machines/bus/server.py"
       ],
@@ -45,13 +45,15 @@
     },
     {
       "n": 3,
-      "text": "D3: a red-first proof, one tooth per clause, PROVES {1,2,3}, harness copied from test_every_stop_records_its_cause.py: serve in a child process at a scratch HOME with CAIRN_BUS_IDLE_S=2, read <home>/stops.jsonl. Tooth 2 holds a connection open past N, then posts mail to a subscribed recipient across a respawn. Tooth 3 imports the default from server inside the tooth.",
+      "text": "D3: a red-first proof, one tooth per clause, PROVES {1,2,3}, harness copied from test_every_stop_records_its_cause.py: serve in a child process at a scratch HOME with CAIRN_BUS_IDLE_S=2, read <home>/stops.jsonl. Tooth 2 holds a connection open past N, then posts mail to a subscribed recipient across a respawn. Tooth 3 imports the default from server inside the tooth. Tooth 2 also holds the fixture echo (bus_proof_echo, by spec) and shows the bus stays up past N while it is wired; the respawn half re-holds the echo on the respawned bus and reads the new pid from its reply. Every unit the proof starts is stopped by name in its finally.",
       "writes_to": [
         "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py"
       ],
       "reads": [
+        "cairn/devices/cairn/machines/bus/proofs/bus_proof_echo.py",
         "cairn/devices/cairn/machines/bus/proofs/test_every_stop_records_its_cause.py",
-        "cairn/devices/cairn/machines/bus/server.py"
+        "cairn/devices/cairn/machines/bus/server.py",
+        "cairn/tools/bus_client/remote.py"
       ]
     }
   ],
@@ -86,6 +88,11 @@
       "when": "2026-11-19",
       "saw": "bus.log records no per-ask or per-connection time (its line kinds: backlog, spawn attempted, serving, stop, took over, tracebacks), so the longest gap between asks a real long proof makes on its scratch bus cannot be read from it.",
       "how": "line-kind census of ~/.cairn/logs/bus.log (15602 lines) with digits and paths masked"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "a shim held by spec lives only in the bus process's roster; a respawned bus rebuilds its roster from shim.py on disk alone (roster.shim_for -> bus_client._device_shim_module -> rack.shim_of over _CLASS_ROOT; DeviceRoster takes no root override), so an idle exit would lose a spec-held wire",
+      "how": "read cairn/tools/bus_client/roster.py:45, cairn/tools/bus_client/bus_client.py:167, cairn/devices/cairn/machines/bus/server.py:237,376 at a97408d27"
     }
   ],
   "id": "c234aae2c0b9"
