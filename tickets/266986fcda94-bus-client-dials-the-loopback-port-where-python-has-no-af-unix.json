@@ -1,0 +1,63 @@
+{
+  "id": "266986fcda94",
+  "title": "bus_client dials the loopback port where Python has no AF_UNIX",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "remote._dial reads bus.port and dials the loopback listener it names where the interpreter has no socket.AF_UNIX, instead of raising UnboundLocalError on rec.",
+  "why": "Measured 2026-11-20 on akiendell (Windows): every bus call died with 'UnboundLocalError: cannot access local variable 'rec' where it is not associated with a value' at remote.py line 250. Commit f36fa3fae (ticket f62f6b50b047) indented the no-AF_UNIX block under 'if hasattr(socket, \"AF_UNIX\"):' after that branch's 'return conn, None', so it is dead and rec is never bound. sail chart/cross, outlinecheck and hollow stop on that host.",
+  "traces_to": "Law 9 (red is the default) and Law 3 (measured); outline 5.4.3: the bus is the only device-to-device path.",
+  "how": "Dedent lines 245-250 of remote.py out of the AF_UNIX if so they run after 'return conn, None'. Red-first proof deletes socket.AF_UNIX in-process, writes a scratch bus.port naming a stub 127.0.0.1 listener, and asserts _dial returns that connection and the record's key.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with socket.AF_UNIX deleted and a bus.port record naming a live loopback listener, _dial returns a connection to that listener and the record's key"
+      },
+      {
+        "n": 2,
+        "claim": "with socket.AF_UNIX deleted and no bus.port record, _dial raises FileNotFoundError naming bus.port, never UnboundLocalError"
+      },
+      {
+        "n": 3,
+        "claim": "with socket.AF_UNIX deleted and a bus.port record naming no port, _dial raises FileNotFoundError saying it names no loopback port"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the no-AF_UNIX block in _dial runs after the AF_UNIX branch returns (a dedent).",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause, runnable on any host.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py"
+    ],
+    "out": [
+      "the AF_UNIX branch of _dial",
+      "held_connection",
+      "the bus server"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "sail.py chart 64ae0df3f1f3 raised UnboundLocalError at remote.py:250; the AF_UNIX-less path is dead code after 'return conn, None' (remote.py:245-249); the orchestrator confirmed the same on origin/main",
+      "how": "traceback of sail chart on akiendell; sed -n 225,250p cairn/tools/bus_client/remote.py; git diff 1e958634f HEAD -- remote.py"
+    }
+  ]
+}
