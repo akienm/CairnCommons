@@ -1,0 +1,72 @@
+{
+  "title": "a commit's journal names only the records the commit carries",
+  "owning_intention": "cairn/tools/artifact/intention+why.json",
+  "intention": "A commit's .artifact-journal.jsonl names only the records that commit carries: for a path the commit does not carry, the committed journal keeps HEAD's entry, and the working-tree journal keeps the newer one for the commit that will.",
+  "why": "Measured 2026-11-20 on akiendelllinux: commit 53c5fbc1c's pre-commit reseal crashed on ENOSPC and printed 'No seal was staged', and the commit still carried 5 rewritten seal lines naming validation bytes it does not hold. A record of truth that says what is not so is the Law 7 failure, and a seal line without its seal is a false green (Law 8).",
+  "traces_to": "Law 7 (a record of truth is never wrong in silence) and Law 8 (a false green is worse than a red, because a peer leans on it).",
+  "how": "Owner: the artifact door (cairn/tools/artifact). check_staged's last step, `git add .artifact-journal.jsonl`, becomes a composed stage: read the working journal and HEAD's; for each path take the working entry when the commit's index (GIT_INDEX_FILE) holds a blob hashing to that entry's sha_after, or the path is staged for deletion and the entry says absent; otherwise take HEAD's entry, or none. The day trail for a withheld path follows its entry. Write the blob with `git hash-object -w --stdin` and `git update-index --cacheinfo` under the same index; the file on disk is untouched. Order and line bytes are kept, so verify_journal still reads every line self-hashing. The reseal (tester) is unchanged: its crash path still lands the commit (ruling 2026-09-30) and still says COULD NOT RUN; its unstaged seals and their lines wait in the working tree for the commit that carries their code.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a path commit carries only its own journal lines: in a scratch repo with the real hook, record A written through the door and left unstaged, then `git commit -- B` of record B written through the door: the committed journal's entry for A is HEAD's (or absent when HEAD had none) and its entry for B is the working one"
+      },
+      {
+        "n": 2,
+        "claim": "the measured row: a pre-commit reseal forced to raise OSError(ENOSPC) after it has sealed one proof, under `git commit -- <source>`, lands the commit and prints COULD NOT RUN, and every entry in the committed journal names a sha_after that the committed blob at its path hashes to"
+      },
+      {
+        "n": 3,
+        "claim": "the working-tree .artifact-journal.jsonl is byte-identical before and after the check: only the index blob is composed"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: check_staged's journal stage composes the index blob per path, working entry where the commit's index carries that path's sha_after (or its deletion), HEAD's otherwise, day trail following its entry; written with hash-object + update-index --cacheinfo under GIT_INDEX_FILE; the working file is not written.",
+      "writes_to": [
+        "cairn/tools/artifact/artifact.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/artifact.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, PROVES {1,2,3}, hermetic, harness copied from cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py (scratch repo, real hook via install-hook, CAIRN_ARTIFACT_ROOTS). Tooth 2 injects the crash without editing cairn/devices/tester/reseal.py: a fake tester on PYTHONPATH or an env-named fault, the builder's choice, recorded in the proof's docstring.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py"
+      ],
+      "reads": [
+        "cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py",
+        "cairn/devices/tester/reseal.py",
+        "cairn/tools/artifact/artifact.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/artifact/artifact.py",
+      "cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py"
+    ],
+    "out": [
+      "cairn/devices/tester/reseal.py (the reseal is unchanged)",
+      "cairn/devices/tester/hooks/pre-commit",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "Commit 53c5fbc1c (akiendelllinux, branch akienasus/c234-fix-forked-journal, ticket c234aae2c0b9's fix) was a `git commit -- server.py`. Its pre-commit reseal printed 'reseal: COULD NOT RUN ... No space left on device. No seal was staged; trouble tester-reseal-could-not-run raised. The commit is not blocked'. The commit still carries .artifact-journal.jsonl with 5 seal lines rewritten (bus validations test_a_bounce_leaves_a_line_..., test_a_child_of_the_bus_..., test_a_gone_clients_request_is_not_run, test_a_reply_across_a_bus_stop_is_receipted, test_a_second_bus_exits_quietly_..., new sha_after each). `git show --stat` lists only the journal and server.py: none of the 5 validation files whose new bytes those lines name.",
+      "how": "the build script's captured commit output; git show --stat 53c5fbc1c; git show 53c5fbc1c -- .artifact-journal.jsonl, parsed per line for path, verb and sha_after"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "How it lands: reseal_all writes each seal through persist_validation, which journals it in the working tree, before the run that hits ENOSPC. run_or_record catches the crash, so stage_clean_seals never runs and no validation is staged. The hook then runs `cairn.tools.artifact check` a second time, and check_staged ends with an unconditional `_git(root, 'add', '--', jp.name)` (artifact.py, the last lines of check_staged). That stages the WHOLE working journal into the commit's temp index, lines for unstaged records included. Nothing in that path is specific to a crash: any journaled record left unstaged has its line carried by the next path commit of anything else (READ from source; the proof measures it).",
+      "how": "reading cairn/tools/tester/../devices/tester/cli.py (--reseal --stage), reseal.py run_or_record / reseal_all / stage_clean_seals, the installed pre-commit hook, and artifact.py check_staged on cairn origin/main 2026-11-20"
+    }
+  ],
+  "id": "380b2d99901d"
+}

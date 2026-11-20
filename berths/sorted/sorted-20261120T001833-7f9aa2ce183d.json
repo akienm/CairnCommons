@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Assumes the journal holds one newest entry per path (plus a day trail, test_the_journal_keeps_the_newest_entry_per_path_and_a_day_trail.py), so a staged journal can be composed per path: HEAD's entry for a path the commit does not carry, the working entry for one it does. Assumes a commit's journal only has to explain the commit's own records; the working-tree journal keeps every line, so the commit that later carries the record carries its line. Assumes check_staged sees the commit's index through GIT_INDEX_FILE, as check_shared_index already reads it.",
+    "builder_check": "A Haiku builder needs: where the journal is staged (check_staged's last lines in cairn/tools/artifact/artifact.py); how to read the commit's index (GIT_INDEX_FILE, as check_shared_index and _staged do); how to write an index blob without touching the file (git hash-object -w --stdin, then git update-index --cacheinfo 100644,<sha>,.artifact-journal.jsonl under the same GIT_INDEX_FILE); what HEAD's journal is (git show HEAD:.artifact-journal.jsonl, empty when absent); how the day trail ties to a path (read the journal-format proof named in assumption_check); and the harness (cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py: a scratch CairnCommons repo, the real hook via install-hook, CAIRN_ARTIFACT_ROOTS). Tooth 2's crash is injected by an env-named fault in the tester run, or by a fake tester module on PYTHONPATH; the builder picks the one that keeps cairn/devices/tester/reseal.py unchanged. All carried in decisions.",
+    "children": "none, because the change is the journal-staging step of check_staged in cairn/tools/artifact/artifact.py",
+    "collision_check": "23c822fe8095 (a commit takes only the paths its author names) is the same principle one level down: it keeps another session's staged paths out of a path commit, this keeps their journal lines out too. 30531f6e1c5d (the artifact door) put the 'journal goes with the records' line in; this keeps that and narrows it to the records actually carried. b0e65cf8a77e (a reseal that cannot run raises a trouble and the commit still lands) is untouched: the commit still lands. No exclusive-and-terminal collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Three clauses, one tooth each, horizon the red-first proof in a hermetic scratch repo (copy of the harness in cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py). (1) A journaled record A left unstaged and a `git commit -- B`: the committed journal's entry for A is HEAD's (or absent if HEAD had none), B's is the working one. (2) The measured row: a pre-commit reseal forced to raise OSError(ENOSPC) after it has sealed one proof, under `git commit -- <source>`: the commit lands, the run says COULD NOT RUN, and for every path in the committed journal the committed blob hashes to that entry's sha_after. (3) The working-tree journal is byte-identical before and after the check: only the index blob is composed.",
+    "gates_bound": "code-seam: proof gate = bin/cairn test over the red-first proof, sealed by the tester; hollow gate = cairn test --hollow; verdict gate at PROVED; feeds back to origin (this ticket's measured) on failure.",
+    "missing_check": "It does not make the reseal stage the seals it wrote before a crash (Akien 2026-09-30: the commit is not blocked; the seals seal again on the next commit). It does not change the reseal's message, which stays loud. It does not repair 53c5fbc1c; that commit is parked as a branch and c234's fix is recommitted from its red.",
+    "node_class": "code-seam",
+    "questions": "none, because the owner and the shape are read from the artifact door's charter cairn/tools/artifact/intention+why.json (the journal explains the records it is committed with) and the 2026-09-30 ruling recorded on ticket b0e65cf8a77e (the commit is not blocked)",
+    "task_or_ticket": "ticket",
+    "title": "a commit's journal names only the records the commit carries",
+    "watchme": "none, because its red-first proof (to berth at cairn/tools/artifact/proofs/test_a_commits_journal_names_only_the_records_it_carries.py, copying the harness of cairn/tools/artifact/proofs/test_a_commit_takes_only_the_paths_its_author_names.py) is the whole of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The orchestrator framed it as the reseal's defect; the reading puts it in the artifact door's journal staging, which carries an unstaged record's line on ANY path commit. The crash is only the measured instance."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "72f62fbcca11",
+  "skill": "sorted",
+  "title": "a commit's journal names only the records the commit carries",
+  "trace_id": "501ed4f931c3",
+  "when": "2026-11-20T00:18:33.260459"
+}
