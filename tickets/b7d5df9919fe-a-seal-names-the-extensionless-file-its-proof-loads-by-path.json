@@ -14,7 +14,7 @@
       },
       {
         "n": 2,
-        "claim": "live: bin/proofs/test_delete_gate.py sealed by the built tester names bin/cmd/deletegate in its fingerprint_closure, and a one-byte edit to bin/cmd/deletegate makes that seal stale (sealed_fingerprint_now differs) with no explicit --seal; the same holds for each of the 9 proofs in the measured blind set, each naming the extensionless file(s) it loads"
+        "claim": "live: bin/proofs/test_delete_gate.py sealed by the built tester names bin/cmd/deletegate in its fingerprint_closure, and a one-byte edit to bin/cmd/deletegate makes that seal stale (sealed_fingerprint_now differs) with no explicit --seal; the same holds for each of the 8 proofs in the measured blind set (the 9th counted at cast is not blind: see measured 2026-11-20, the correction), each naming the extensionless file(s) it loads"
       },
       {
         "n": 3,
@@ -93,6 +93,11 @@
       "when": "2026-11-20",
       "saw": "building clause 4: a subprocess-run script that falls off its last line is NOT in the reach log, extensionless or .py alike — CPython 3.14 pops __main__.__file__ after the script completes, so reach/sitecustomize.py's atexit reads None; a script ending in raise SystemExit keeps __file__ and is logged. Every python bin/cmd script (28 git files) exits through SystemExit/sys.exit, so clause 4 holds for the gates; the normal-end case is a separate mechanism, ticketed apart, not a clause here. Built worktree: clauses 1, 3, 4 green, clause 2 red until the 9 reseal; build reverted: 1, 2, 4 red, 3 green",
       "how": "python3 /var/tmp/noext_probe (atexit prints __main__.__file__ -> None) vs /var/tmp/noext_probe2 (raise SystemExit(0) -> the path); the proof run in /var/tmp/wt-b7d5 with and without the two filter edits"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "Correction to the blind set: 8 of the 9, not 9. cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py loads bin/cmd/artifactgate by path, but bin owns that file and the seal's closure stops at the proof's own component (_owned_by_the_proofs_component, validation_store.py; Akien 2026-10-05, ticket 184d211153ff), so its omission is by design and the build does not change it. The other 8 bin/proofs seals, resealed under build 1be0e7429, each name their gate(s).",
+      "how": "bin/cairn test <proof> --seal for all 9 on akiendelllinux after 1be0e7429; the red-first proof's clause 2 red named only that proof, closure [cairn/tools/base/...]; read the owner filter"
     }
   ],
   "chart": {
