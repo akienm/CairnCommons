@@ -1,0 +1,111 @@
+{
+  "id": "c3d48108f9f4",
+  "title": "a shim's last_known berths under its rack folder, and the alias-named strays migrate home",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "A shim keeps its last_known under the rack folder that declares it, so a device whose shim answers to a declared name (dbproxy as database, inferenceproxy as inference) writes no alias-named directory in instance-space, and the strays already standing migrate home once and are gone.",
+  "why": "Measured 2026-11-20 on akiendelllinux: ~/.cairn/devices/database/0/ and ~/.cairn/devices/inference/0/ each hold only last_known.json, beside the real dbproxy/ and inferenceproxy/ dirs. BaseShim._last_known_path (cairn/tools/base/shim.py:1173) keys the file by device_id, and of the 11 rack shims exactly the two proxies have a device_id that differs from their folder (database vs dbproxy, inference vs inferenceproxy; measured by importing each shim class). The stray dir is what reddened bin/proofs/test_cairn_instance_address.py clause (b) (ticket 07d73ffa129c) and, before 8c5fdb750b75, broke `cairn inference`. 8c5fdb750b75's bounds.out names this verbatim: 'cairn/tools/base/shim.py (where a shim keeps last_known is its own ticket)'.",
+  "traces_to": "Law 5 (the address carries what a mind needs now) and Law 6 (one owner, one address)",
+  "how": "BaseShim._last_known_path keys by the folder rack.folder_of(device_id) names when device_id is a charter's answers_as, else by device_id unchanged (the launcher's own rule, bin/cairn answers_as block). _read_last_known migrates: when the folder record is absent and the alias record stands, it reads the alias record, writes it under the folder atomically, removes the alias file and then the alias <n>/ and <alias>/ dirs if left empty; when both stand, it reads the folder record and removes the alias one. The red-first proof runs over a scratch instance root (address.ROOTS) with a throwaway shim whose device_id is a real charter's answers_as.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a shim whose device_id is a charter's answers_as persists last_known at instance_path(<declaring folder>, n)/last_known.json, and nothing is created at instance_path(device_id, n)"
+      },
+      {
+        "n": 2,
+        "claim": "a shim whose device_id is no charter's answers_as persists last_known at instance_path(device_id, n)/last_known.json, byte-path unchanged"
+      },
+      {
+        "n": 3,
+        "claim": "migration: with last_known only at the old alias address, a fresh shim's cold read returns that record, the record then stands under the folder, and the alias file, its <n>/ dir and the alias dir are gone"
+      },
+      {
+        "n": 4,
+        "claim": "with a record at both addresses, the cold read returns the folder's and the alias file is gone"
+      },
+      {
+        "n": 5,
+        "claim": "no other caller of the last_known path breaks: cairn/tools/base/proofs/test_shim.py, test_root_verbs.py, test_root_verb_vocabulary.py and bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py pass unchanged"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: BaseShim._last_known_path keys by rack.folder_of(device_id, repo root).name when device_id is a charter's answers_as, else device_id; the folder is resolved once per shim and cached.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/rack/rack.py",
+        "cairn/tools/base/address.py",
+        "cairn/devices/dbproxy/intention+why.json",
+        "cairn/devices/inferenceproxy/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: _read_last_known migrates: folder absent and alias present -> read alias, write folder atomically through _persist_last_known, unlink the alias file, rmdir the alias <n>/ and <alias>/ only if empty; both present -> read folder, unlink alias. Never rmtree.",
+      "writes_to": [
+        "cairn/tools/base/shim.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof, one tooth per clause, over a scratch instance root (monkeypatch address.ROOTS as test_shim.py does) with a throwaway shim whose device_id is dbproxy's answers_as 'database'; tooth 5 runs the standing callers of the last_known path as subprocesses.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_a_shims_last_known_berths_under_its_folder.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_shim.py",
+        "cairn/tools/base/proofs/test_root_verbs.py",
+        "cairn/tools/base/proofs/test_root_verb_vocabulary.py",
+        "bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: bin/cairn's comment at the answers_as block stops saying the shim keeps last_known under its device_id; comment only, no code line changes.",
+      "writes_to": [
+        "bin/cairn"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/shim.py",
+      "cairn/tools/base/proofs/test_a_shims_last_known_berths_under_its_folder.py",
+      "bin/cairn"
+    ],
+    "out": [
+      "the proxies' code and charters (device_id stays the bus name)",
+      "cairn/tools/rack/rack.py (used, not changed)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "~/.cairn/devices/database/0/ and ~/.cairn/devices/inference/0/ each hold only last_known.json",
+      "how": "ls on akiendelllinux"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "of 11 rack shims, only dbproxy (database) and inferenceproxy (inference) have device_id != component_of_module",
+      "how": "import every cairn/devices/**/shim.py and compare device_id with cairn.tools.base.address.component_of_module"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "grep of tickets/ and questions/ for _last_known_path / last_known keyed by device_id found only 8c5fdb750b75 (bounds.out names it) and 15d6a0ef9c11 (unrelated)",
+      "how": "grep -lE over CairnCommons tickets/*.json questions/*.json"
+    }
+  ]
+}
