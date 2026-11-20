@@ -2,15 +2,15 @@
   "id": "bdd02e0ad010",
   "title": "a ticket's BUILDME crossing is held until every ticket it declares a dependency on is PROVED and every measured BUILDME need carries a DONE mark",
   "owning_intention": "cairn/tools/base/intention+why.json",
-  "intention": "inspect_entry gains a lane that reads a ticket's declared dependencies (outcome `after` ticket ids and BUILDME stage_needs) and holds the BUILDME crossing, naming every unmet one, until each ticket is PROVED and each need carries a DONE mark.",
+  "intention": "inspect_entry gains a lane that reads a ticket's BUILDME `stage_needs` (a need may name a ticket id it waits on, or carry a measured mark) and, for a plan that has outcomes, its outcome `after` ticket ids, and holds the BUILDME crossing, naming every unmet one, until each named ticket is PROVED and each need carries a DONE mark.",
   "why": "Measured 2026-11-19: inspect_entry (cairn/tools/base/transitions.py:1045-1093) has six lanes (chart, intent, sorted, open questions, outcome claims, outline check) and none reads a dependency on another ticket. Outcome `after` accepts 12-hex ticket ids and is shape-checked at cast (plan_shape.py) but read by no gate; needs.py (ticket 43905593680a) keeps a per-stage need ledger with measured marks and no entry lane reads it. So 'BUILDME waits on X PROVED' written in a ticket's how text, as for 86cccb7d30f7 (waits on tester exec 21f9628872da and on akiendell pinned), holds nothing: a rule in prose (Law 4).",
   "traces_to": "Law 4 (a rule that matters is enforced by physics, not policy); Law 3 (a need's DONE is an observation with when and how_measured, needs.py); Law 8 (peers lean on a proved ticket, so a build waits for it).",
-  "how": "A hypothesis, measured by the proof: a seventh lane the_ticket_waits_on_nothing_unproved in inspect_entry reads (a) every ticket-id in the plan's outcome `after`, held unless that ticket's state reads PROVED (an id that resolves to no ticket is held and named), and (b) each need under stage_needs BUILDME, held unless its latest mark (needs.project_needs) is DONE; one finding names every unmet dependency with, for a mark, its age. The build records how a ticket's PROVED is read. Red-first proof under cairn/tools/base/proofs/ over scratch tickets, one tooth per clause, PROVES declared.",
+  "how": "A hypothesis, measured by the proof: a seventh lane the_ticket_waits_on_nothing_unproved in inspect_entry reads the ticket's state `stage_needs` BUILDME ledger, which both plan shapes can carry (decisions plans have no `after`): a need entry may carry an optional `ticket` (12-hex id) and is then met when that ticket's state reads PROVED; a need without `ticket` is met when its latest mark (needs.project_needs) is DONE. It also reads outcome `after` ticket ids where the plan has outcomes. An id that resolves to no ticket is held and named. One finding names every unmet dependency, with a mark's age. needs.py's door already accepts the extra `ticket` key (it validates `need` and `marks` only); the build records how a ticket's PROVED is read. Red-first proof under cairn/tools/base/proofs/ over scratch tickets of both plan shapes, one tooth per clause, PROVES declared.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "a ticket whose outcome `after` names a ticket that is not PROVED is refused at the BUILDME entry, the finding naming that id"
+        "claim": "a DECISIONS-plan ticket whose BUILDME stage_needs names a ticket that is not PROVED is refused at the BUILDME entry, the finding naming that id"
       },
       {
         "n": 2,
@@ -18,14 +18,18 @@
       },
       {
         "n": 3,
-        "claim": "a ticket with a stage_needs BUILDME need whose latest mark is not DONE, or that has no mark, is refused naming the need; a DONE mark with when and how_measured lets it cross"
+        "claim": "a ticket with a BUILDME need carrying no `ticket` whose latest mark is not DONE, or that has no mark, is refused naming the need; a DONE mark with when and how_measured lets it cross"
       },
       {
         "n": 4,
-        "claim": "an `after` id that resolves to no ticket is refused by name, not passed"
+        "claim": "a named ticket id that resolves to no ticket, in a need or in an outcome `after`, is refused by name, not passed"
       },
       {
         "n": 5,
+        "claim": "an OUTCOMES-plan ticket whose outcome `after` names an unproved ticket is refused naming it, and crosses once it is PROVED"
+      },
+      {
+        "n": 6,
         "claim": "a ticket that declares no dependency crosses as before, and one refusal names every unmet dependency at once"
       }
     ]
@@ -33,7 +37,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: inspect_entry gains the lane the_ticket_waits_on_nothing_unproved beside its six, reading outcome `after` ticket ids and the BUILDME stage_needs ledger through needs.project_needs; the build records how a ticket's PROVED is read.",
+      "text": "D1: inspect_entry gains the lane the_ticket_waits_on_nothing_unproved beside its six, reading the state's BUILDME stage_needs (optional `ticket` key per need, else the latest mark) and outcome `after` ticket ids through needs.project_needs and plan.steps; the build records how a ticket's PROVED is read.",
       "writes_to": [
         "cairn/tools/base/transitions.py"
       ],
@@ -66,12 +70,17 @@
     "out": [
       "cairn/tools/base/needs.py (the ledger and its mark door are unchanged)",
       "cairn/tools/base/plan_shape.py (the cast-time shape is unchanged)",
-      "recasting 86cccb7d30f7 so it declares its waits (its own re-plan, after this is proved)",
       "whether a mark ever expires (an open edge of 43905593680a)",
-      "every other component"
+      "every other component",
+      "declaring 86cccb7d30f7's waits as BUILDME stage_needs (its own re-plan once this is proved; its plan stays a decisions plan)"
     ]
   },
   "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "of 484 tickets in the commons, the 260 not at PROVED carry: 173 outcomes plans, 46 decisions plans, 41 neither; the 46 are 18% of open plans with a shape, so a lane reading only outcome `after` cannot hold them. `dependencies` is a declared state field but is prose in 148 tickets, not ids, so it is not reused; `stage_needs` is a declared state field both shapes can carry (20 tickets use it) and needs.py's door accepts an extra key per need",
+      "how": "python over CairnCommons/tickets/*.json and *.state.json (workflow_and_state without a [PROVED cursor = open; outcomes vs decisions key), grep of cairn/ for readers of `dependencies`, read of cairn/tools/base/needs.py:144-165"
+    },
     {
       "when": "2026-11-19",
       "saw": "inspect_entry composes six lanes, none reading a dependency on another ticket; plan_shape accepts `after` ticket ids and plan.steps returns them, read by no gate",
