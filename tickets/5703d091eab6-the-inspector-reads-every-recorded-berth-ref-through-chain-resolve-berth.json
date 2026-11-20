@@ -1,0 +1,73 @@
+{
+  "id": "5703d091eab6",
+  "title": "the inspector reads every recorded berth ref through chain.resolve_berth",
+  "owning_intention": "cairn/devices/codemother/machines/build_inspector/intention+why.json",
+  "intention": "Every place build_inspector reads or compares a chart berth recorded by path reads it through chain.resolve_berth, so a ticket charted on one box is judged the same on another.",
+  "why": "Law 7 (a refusal that is the reader's spelling, not the world, is a false red at a diagnostic surface): 2026-11-19 on akiendelllinux: (a) 7cae18f7f9c2's PROVED crossing refused [proved_answers_the_chart] 'verdict answers claiming chart' (actual False): its verdict's validate_ref is C:\\Users\\akien\\.cairn\\devices\\chart\\0\\packets\\validate-20261119T210906-1a8aa472e30e.json, recorded on akiendell, and claiming_packets returns the same berth's commons copy CairnCommons/berths/chart/validate-20261119T210906-1a8aa472e30e.json; cairn/devices/codemother/machines/build_inspector/inspector.py:2537 compares the two as literal strings. (b) by /home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/skillseals/measure_stagejudges.py: the four stage judges open the upstream berth with open(os.path.expanduser(ref)) (cairn/devices/codemother/machines/build_inspector/inspector.py:1381 judge_decompose survey_ref, :1607 judge_triage decompose_ref, :1764 judge_hypothesize triage_ref, :1911 judge_validate hypothesize_ref); over the commons mirror, every berth whose ref names another box reds '<x>_ref does not read as a <x> berth' — 44 decompose, 44 triage, 44 hypothesize, 36 validate, 168 in all — and chain.resolve_berth finds the copy for all 168. A sweep of build_inspector and clearance for *_ref, chart_claim and claiming-path comparisons found no other site (clearance reads no berth path). Grep of tickets and questions for proved_answers_the_chart: no ticket or question names this defect. Prior sites of the shape, each fixed at its reader: 1e99a571dd6d (sail.verdict), 7cae18f7f9c2 (the verdict gate), 072a482e6dd7 (the BUILDME chart lane).",
+  "traces_to": "Law 7; RULE 1 (chain's one resolver)",
+  "how": "In cairn/devices/codemother/machines/build_inspector/inspector.py: one private helper _open_berth(ref) = chain.resolve_berth(ref) or os.path.expanduser(ref) (the 7cae shape: an unresolvable ref keeps its own OSError and finding), used by the four judges in place of open(os.path.expanduser(ref)). In proved_answers_the_chart compare resolved paths: the verdict's validate_ref through resolve_berth with the mirror chain._mirror_for(str(root)) gives (no mirror for a passed root: compare the expanded ref only), against the claiming paths, both normalised by os.path.realpath; never by bare file name. Proof in the 072a shape: a scratch local store and a scratch commons mirror swapped in (chain.BERTHS_ROOT, chain._commons_mirror, inspector._CHART_BERTHS), the house runner (print_teeth_main) from the start. Measurement script: /home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/skillseals/measure_stagejudges.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "proved_answers_the_chart reads a verdict whose validate_ref is spelled on another box (a Windows C:\\ path, and a foreign /home path) as answering the claiming chart held only in the commons mirror, and still reds 'verdict answers claiming chart' for a verdict naming a different berth"
+      },
+      {
+        "n": 2,
+        "claim": "each of judge_decompose, judge_triage, judge_hypothesize and judge_validate reads an upstream ref spelled on another box by its commons copy, raising no 'does not read as' finding, and still reds that finding when no copy exists anywhere"
+      },
+      {
+        "n": 3,
+        "claim": "a ref that resolves as written on this box, and an explicit berths_root, read exactly as before: a passed root never reads the live commons mirror"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _open_berth joins inspector.py and the four judges open through it; proved_answers_the_chart compares resolved paths.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py",
+        "cairn/tools/chain/chain.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: red-first proof cairn/devices/codemother/machines/build_inspector/proofs/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.py, one tooth per clause, house runner.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/build_inspector/proofs/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.py",
+        "cairn/devices/codemother/machines/build_inspector/validations/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.json"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/build_inspector/inspector.py",
+      "cairn/devices/codemother/machines/build_inspector/proofs/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.py",
+      "cairn/devices/codemother/machines/build_inspector/validations/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.json"
+    ],
+    "out": [
+      "cairn/tools/chain/chain.py",
+      "cairn/devices/codemother/machines/clearance",
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "cairn/devices/codemother/machines/build_inspector/inspector.py",
+    "cairn/devices/codemother/machines/build_inspector/proofs/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.py",
+    "cairn/devices/codemother/machines/build_inspector/validations/test_the_inspector_reads_a_far_box_berth_ref_by_its_commons_copy.json"
+  ],
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "2026-11-19 on akiendelllinux: (a) 7cae18f7f9c2's PROVED crossing refused [proved_answers_the_chart] 'verdict answers claiming chart' (actual False): its verdict's validate_ref is C:\\Users\\akien\\.cairn\\devices\\chart\\0\\packets\\validate-20261119T210906-1a8aa472e30e.json, recorded on akiendell, and claiming_packets returns the same berth's commons copy CairnCommons/berths/chart/validate-20261119T210906-1a8aa472e30e.json; cairn/devices/codemother/machines/build_inspector/inspector.py:2537 compares the two as literal strings. (b) by /home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/skillseals/measure_stagejudges.py: the four stage judges open the upstream berth with open(os.path.expanduser(ref)) (cairn/devices/codemother/machines/build_inspector/inspector.py:1381 judge_decompose survey_ref, :1607 judge_triage decompose_ref, :1764 judge_hypothesize triage_ref, :1911 judge_validate hypothesize_ref); over the commons mirror, every berth whose ref names another box reds '<x>_ref does not read as a <x> berth' — 44 decompose, 44 triage, 44 hypothesize, 36 validate, 168 in all — and chain.resolve_berth finds the copy for all 168. A sweep of build_inspector and clearance for *_ref, chart_claim and claiming-path comparisons found no other site (clearance reads no berth path). Grep of tickets and questions for proved_answers_the_chart: no ticket or question names this defect. Prior sites of the shape, each fixed at its reader: 1e99a571dd6d (sail.verdict), 7cae18f7f9c2 (the verdict gate), 072a482e6dd7 (the BUILDME chart lane)",
+      "how": "python3 /home/akien/.cairn/devices/cc/0/scratch/akiendelllinux_cc_0/skillseals/measure_stagejudges.py from the cairn root; close.sh 7cae18f7f9c2 PROVED output; grep of cairn/devices/codemother/machines/build_inspector/inspector.py and clearance/*.py for *_ref and claiming comparisons"
+    }
+  ]
+}
