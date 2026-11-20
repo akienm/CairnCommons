@@ -69,5 +69,159 @@
       "saw": "declared_timeout returns None for the census proof",
       "how": "cairn.devices.tester.device.declared_timeout on akiendelllinux"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "6437cfd935bb: test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300, so its 137 s wall is not read as a 120 s timeout — test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)",
+      "intent": "The outside-readers census proof declares its own time limit above its measured wall, so a reseal that touches artifact.py runs it to a verdict instead of timing it out and staling the artifact component.",
+      "scope": "in: cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py, cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py, cairn/tools/artifact/validations/test_a_census_names_every_outside_reader.json, cairn/tools/artifact/validations/test_the_census_proof_declares_a_budget_above_its_wall.json; out: cairn/devices/tester/device.py (the mechanism is 8383a32d20c5's), cairn/tools/artifact/artifact.py, every other proof",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Every component talks to every other component only through that component's public interface.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py",
+          "cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py",
+          "cairn/tools/artifact/validations/test_a_census_names_every_outside_reader.json",
+          "cairn/tools/artifact/validations/test_the_census_proof_declares_a_budget_above_its_wall.json"
+        ],
+        "out": [
+          "cairn/devices/tester/device.py (the mechanism is 8383a32d20c5's)",
+          "cairn/tools/artifact/artifact.py",
+          "every other proof"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "whether cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py reads green on every clause"
+      ],
+      "holdings": [
+        {
+          "what": "a proof under change",
+          "address": "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py"
+        },
+        {
+          "what": "the red-first proof",
+          "address": "cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)",
+          "measure": "the census proof ran 137 s wall on Linux; the red-first proof reds at 3841dd364"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)",
+          "why": "Law 7 — a timeout the budget manufactured is not a measurement of the proof",
+          "kind": "build",
+          "fills": "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)",
+          "uses": [
+            "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py",
+            "cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py"
+          ],
+          "writes_to": [
+            "cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py",
+            "cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py",
+            "cairn/tools/artifact/validations/test_a_census_names_every_outside_reader.json",
+            "cairn/tools/artifact/validations/test_the_census_proof_declares_a_budget_above_its_wall.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)",
+          "why_now": "the census reseal ran 133-137 s against the reseal's 120 s default and stales the artifact component on every reseal touching artifact.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)",
+          "expect": "every proof named reads green",
+          "falsifier": "(1) the census proof source declares a top-level PROOF_TIMEOUT_S = 300, read by AST the way the tester reads it (None today, so this tooth is red before the build); (2) under `cairn test` with a caller budget below a scratch fixture's run, the fixture carrying the census proof's declared value finishes green; the same fixture u",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the red-first proof reads green on every clause and the others stay green",
+          "instrument": "bin/cairn test cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py cairn/tools/artifact/proofs/test_the_census_proof_declares_a_budget_above_its_wall.py",
+          "timeout_s": 1800,
+          "covers": [
+            "test_a_census_names_every_outside_reader declares PROOF_TIMEOUT_S = 300 (cairn/tools/artifact/proofs/test_a_census_names_every_outside_reader.py)"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
