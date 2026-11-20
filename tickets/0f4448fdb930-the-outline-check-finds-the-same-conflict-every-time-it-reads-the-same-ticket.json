@@ -1,0 +1,82 @@
+{
+  "title": "the outline check finds the same conflict every time it reads the same ticket",
+  "owning_intention": "cairn/devices/codemother/machines/outline_check/intention+why.json",
+  "intention": "The outline check returns the conflicts a ticket really has on every read, on every host: a ticket that contradicts an outline line is never cleared by one unlucky read.",
+  "why": "Measured 2026-11-20: 784eb1e92866 (mark-and-clean, which contradicts outline 4.3.1.5.1.5.2) was checked on Windows with conflicts [] (outline_checks/784eb1e92866-20261120T065349.json, Haiku) and went on to PROVED. Over the same outline on Linux, five of seven same-shape codemother tickets opened the 4.3.1.5.1.5.2 conflict and two (a2eaa93fa078, 0a1e6f1efe49) returned none. A check that clears a contradiction by chance is a hollow green, and the BUILDME lane leans on it.",
+  "traces_to": "Law 8 (a hollow green is worse than a red: it gets leaned on); Law 3 (one read is n=1).",
+  "how": "The check's reader is one Haiku call (MODEL, from rehearsal). The red-first proof cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_finds_the_same_conflict_every_read.py runs check() N=3 times on Linux over a frozen copy of 784eb's ticket (cairn/devices/codemother/machines/outline_check/proofs/fixtures/784eb1e92866.ticket.json) and today's outline, expecting the 4.3.1.5.1.5.2 conflict on every read, plus a control ticket with no conflict. D1 finds the cheapest reader that passes, measured in this order: (a) the prompt names the clause-level contradiction test (by construction against filtering is a contradiction, not a distinction); (b) k reads with the union of conflicts; (c) a stronger model for the outline check alone. The first that holds at N=3 on both hosts is kept.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Linux, check() over cairn/devices/codemother/machines/outline_check/proofs/fixtures/784eb1e92866.ticket.json and today's outline returns a conflict on 4.3.1.5.1.5.2 on each of N=3 reads"
+      },
+      {
+        "n": 2,
+        "claim": "the same proof run on Windows (akiendell) returns the conflict on each of N=3 reads"
+      },
+      {
+        "n": 3,
+        "claim": "a control ticket with no outline contradiction (6cd13a3a5f42 frozen beside it) returns no conflict on each of N=3 reads"
+      },
+      {
+        "n": 4,
+        "claim": "the outline_check proofs already in cairn/devices/codemother/machines/outline_check/proofs stay green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the reader change, the first of (a) prompt, (b) k-read union, (c) stronger model that passes clauses 1-3. The build records which was kept and the reads it cost.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py",
+        "cairn/devices/codemother/machines/outline_check/prompt.md"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py",
+        "cairn/devices/codemother/machines/outline_check/prompt.md"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, PROVES {1,3} on Linux and {2} on Windows, live reads (cost is about $0.17 a read, measured); fixtures frozen beside it.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_finds_the_same_conflict_every_read.py",
+        "cairn/devices/codemother/machines/outline_check/proofs/fixtures/784eb1e92866.ticket.json",
+        "cairn/devices/codemother/machines/outline_check/proofs/fixtures/6cd13a3a5f42.ticket.json"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/outline_check/outline_check.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/outline_check/outline_check.py",
+      "cairn/devices/codemother/machines/outline_check/prompt.md",
+      "cairn/devices/codemother/machines/outline_check/proofs/test_the_outline_check_finds_the_same_conflict_every_read.py",
+      "cairn/devices/codemother/machines/outline_check/proofs/fixtures/784eb1e92866.ticket.json",
+      "cairn/devices/codemother/machines/outline_check/proofs/fixtures/6cd13a3a5f42.ticket.json"
+    ],
+    "out": [
+      "cairn/machines/rehearsal (its MODEL is the rehearsal's; a change for the check is made in the check)",
+      "the questions the check opens and the BUILDME lane that reads them",
+      "784eb1e92866 and its follow-up (their own)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "784eb1e92866's check on Windows returned conflicts [] over outline sha 2b9ac293f42c...; it then went to PROVED",
+      "how": "CairnCommons/outline_checks/784eb1e92866-20261120T065349.json"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "five same-shape tickets opened a 4.3.1.5.1.5.2 conflict on Linux; a2eaa93fa078 and 0a1e6f1efe49 opened none",
+      "how": "CairnCommons/outline_checks/a2eaa93fa078-20261120T074839.json and 0a1e6f1efe49-20261120T075040.json beside open-61db48662b37 et al."
+    }
+  ],
+  "id": "0f4448fdb930"
+}
