@@ -131,5 +131,166 @@
       ],
       "after": []
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "e4fd7f28faaf: a test run reaches a TESTING database, never the live one \u2014 store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+      "intent": "Under a test run (the process carries CAIRN_TESTER_TEST_ID) every write the store door makes lands in `cairn_testing`, never in `cairn`: store.write, a scratch table minted, the owner and scratch registries, ensure_database. Reads are not redirected: under a test run store.query reads live, except a table the run itself created in cairn_testing, which it reads there (outline 4.3.1.5.1.5.2 clause 4: testing first, live underneath). Live is read under a test run only through a read-only connection, so a proof can read live and cannot write it. Without a test id nothing changes: `cairn`.",
+      "scope": "in: cairn/devices/db_domain/tools/client/store.py, cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py, cairn/devices/db_domain/proofs/test_db_domain.py, cairn/devices/db_domain/tools/client/validations/test_a_test_run_reaches_a_testing_database_never_the_live_one.json, cairn/devices/db_domain/validations/test_db_domain.json; out: the bus and every other component (they reach the database through the store door, and the environment variable they already carry picks the database), 2b3d842bc118's proof (re-pointed by its own ticket), the sync (3ef8654a8027 v2)",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Every component talks to every other component only through that component's public interface.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/db_domain/tools/client/store.py",
+          "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py",
+          "cairn/devices/db_domain/proofs/test_db_domain.py",
+          "cairn/devices/db_domain/tools/client/validations/test_a_test_run_reaches_a_testing_database_never_the_live_one.json",
+          "cairn/devices/db_domain/validations/test_db_domain.json"
+        ],
+        "out": [
+          "the bus and every other component (they reach the database through the store door, and the environment variable they already carry picks the database)",
+          "2b3d842bc118's proof (re-pointed by its own ticket)",
+          "the sync (3ef8654a8027 v2)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "whether cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py reads green on every clause"
+      ],
+      "holdings": [
+        {
+          "what": "under change",
+          "address": "cairn/devices/db_domain/tools/client/store.py"
+        },
+        {
+          "what": "the red-first proof",
+          "address": "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
+        },
+        {
+          "what": "a proof under change",
+          "address": "cairn/devices/db_domain/proofs/test_db_domain.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+          "measure": "store.DB_NAME = 'cairn' is the one database every connect() dials; scratch tables, the owner registry cairn_owned and the scratch registry cairn_scratch all live in it; the tester marks a run with CAIRN_TESTER_TEST_ID (runs.py:37) and the bus launch already carries it to the bus process (remote.py:2; the red-first proof reds at dd4429360"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+          "why": "Law 8 \u2014 a proof's writes never touch the live record it is measuring",
+          "kind": "build",
+          "fills": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+          "uses": [
+            "cairn/devices/db_domain/tools/client/store.py",
+            "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py",
+            "cairn/devices/db_domain/proofs/test_db_domain.py"
+          ],
+          "writes_to": [
+            "cairn/devices/db_domain/tools/client/store.py",
+            "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py",
+            "cairn/devices/db_domain/proofs/test_db_domain.py",
+            "cairn/devices/db_domain/tools/client/validations/test_a_test_run_reaches_a_testing_database_never_the_live_one.json",
+            "cairn/devices/db_domain/validations/test_db_domain.json"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+          "why_now": "every proof run writes the live database today, so a test run's scratch and rows land in cairn; akienasus's seven rides-testing-db reds wait on it"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+          "expect": "every proof named reads green",
+          "falsifier": "(1) with CAIRN_TESTER_TEST_ID set, every connection the store door writes through answers current_database() = cairn_testing (created on demand), and with it unset,; (2) a scratch table minted under a test id exists in cairn_testing and NOT in the live database; and sweep_scratch() under a test id leaves a scratch table and regi; (3) a table written through store.write by a process under a test id lands in cairn_testing, owner registry included, and the live database's owner registry is unch; (4) under a test id, store.query of a live table the run has not created returns the live rows (a count equals the count read without a test id), and an INSERT sent; (5) under a test id, a table the run created through store.write is read by store.query from cairn_testing (its rows, not live's), and the live database holds no ta",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py cairn/devices/db_domain/proofs/test_db_domain.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "the red-first proof reads green on every clause and the others stay green",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py cairn/devices/db_domain/proofs/test_db_domain.py",
+          "timeout_s": 1800,
+          "covers": [
+            "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
