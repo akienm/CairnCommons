@@ -1,0 +1,73 @@
+{
+  "title": "bus_client publishes a held connection to a home's bus",
+  "owning_intention": "cairn/tools/bus_client/intention+why.json",
+  "intention": "bus_client's remote.held_connection(home) opens one connection to the bus at home, dialled at socket_path(home), and holds it until the with block ends: while held the bus counts it open, and on exit, error or not, it is released.",
+  "why": "Measured 2026-11-20 on akiendelllinux: c234aae2c0b9's PROVED was refused at clearance, deterministic red [sole_path_holds] bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py imports ['socket']: its _open_connection_guard (line 256 at ff0c46fe2) dials a raw AF_UNIX socket to <home>/bus.sock to hold a connection open. A proof that needs a connection held has no door to hold one through, so it reaches past the sole path; and the raw dial spells the address by hand where e44cf1f23c84 makes socket_path(home) its one spelling.",
+  "traces_to": "RULE 1 (a proof reaches the bus only through bus_client, the sole path); Law 4 (sole_path_holds is the physics, and it reds a raw dial).",
+  "how": "Add held_connection to remote.py beside exchange; a red-first proof in bus_client's proofs holds a scratch bus open past a short CAIRN_BUS_IDLE_S and watches it idle out after release. Rides e44cf1f23c84 for socket_path. c234aae2c0b9's proof edit then uses it.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "while held, the bus counts the connection open: a scratch bus started by ensure_bus(home, scratch=True) with CAIRN_BUS_IDLE_S=3 and held_connection(home) entered stays up past 3 s + slack, with no record in <home>/stops.jsonl"
+      },
+      {
+        "n": 2,
+        "claim": "on exit the connection is released: after the with block ends, the same bus exits by idle within 3 s + slack and its stop record's cause is 'idle'"
+      },
+      {
+        "n": 3,
+        "claim": "an exception raised inside the with block still releases it: the bus idles out after, as in clause 2, and the exception reaches the caller unchanged"
+      },
+      {
+        "n": 4,
+        "claim": "the holder dials socket_path(home): with no bus at home, entering held_connection(home) raises an error whose text names str(socket_path(home)), and nothing is created at that path"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: remote.py publishes held_connection(home=None, *, timeout=_TIMEOUT_S), a contextlib.contextmanager that connects one AF_UNIX stream socket to socket_path(home) (the e44cf1f23c84 spelling, never <home>/bus.sock by hand), yields it unread and unwritten, and closes it in a finally. A failed connect raises (Law 7) naming the path; it never spawns a bus (ensure_bus is the starter). The name joins remote's public surface (its module docstring's list).",
+      "writes_to": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, PROVES {1,2,3,4}, one tooth per clause, imports held_connection inside each tooth (it is what the build adds). Each tooth starts its own bus with ensure_bus(home, scratch=True, env={'CAIRN_BUS_IDLE_S': '3'}) at its own scratch home, reads <home>/stops.jsonl (the home is the proof's own), and stops every unit it started by name (remote._unit) in a finally. It imports no socket.",
+      "writes_to": [
+        "cairn/tools/bus_client/proofs/test_a_held_connection_holds_the_bus_open.py"
+      ],
+      "reads": [
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/bus_client/proofs/test_a_bus_spawn_carries_its_launch_env.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/bus_client/remote.py",
+      "cairn/tools/bus_client/proofs/test_a_held_connection_holds_the_bus_open.py",
+      "cairn/tools/bus_client/validations/test_a_held_connection_holds_the_bus_open.json"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/bus/server.py (c234aae2c0b9's)",
+      "cairn/devices/cairn/machines/bus/proofs (c234aae2c0b9's proof edit is its own)",
+      "socket_path itself (e44cf1f23c84's)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "c234aae2c0b9 PROVED refused at clearance: [sole_path_holds] bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py imports ['socket'], from _open_connection_guard's raw AF_UNIX dial to <home>/bus.sock",
+      "how": "the clearance reply relayed by akiendelllinux_cc_orchestrator; commons commit fd1c7fcce; git show ff0c46fe2:cairn/devices/cairn/machines/bus/proofs/test_a_scratch_bus_with_no_caller_ends_itself.py lines 251-270"
+    }
+  ],
+  "id": "f62f6b50b047"
+}
