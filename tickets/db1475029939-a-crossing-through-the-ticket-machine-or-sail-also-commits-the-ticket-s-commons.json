@@ -1,0 +1,69 @@
+{
+  "id": "db1475029939",
+  "title": "a crossing through the ticket machine or sail also commits the ticket's commons state file, path-limited, so it is not left dirty",
+  "owning_intention": "cairn/machines/ticket/intention+why.json",
+  "intention": "Ticket.passed, Ticket.failed and the sail crossing commit the ticket's commons state.json, path-limited, in the same act as the component's history.json and state.json.",
+  "why": "Measured: 2026-11-19, read by cc_0 and confirmed by git show on origin: crossings 1648858dd (633a76c125d2) and 89447c4a6 (c408f2c1e66d), both DROPPED, committed only .artifact-journal.jsonl and cairn/devices/codemother/machines/clearance/{history,state}.json; the two tickets' commons state files stayed dirty until a hand commit, commons 0595ae5b3 ('633a76c125d2, c408f2c1e66d: DROPPED'). The ticket machine's published helper commit_crossing_records (ticket 79875eb17ac2, on its stacked branch, not yet landed) path-limits to the component's two files in the class-space repo only; the ticket's charter public_interface lists only Ticket and GATE_HOLDER.",
+  "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
+  "how": "A hypothesis, not a settled shape: the public_interface is the class Ticket, so the commons commit belongs inside Ticket.passed and Ticket.failed beside the existing commit_crossing_records call, not a new public function. Either commit_crossing_records takes an optional commons_state path and commits it in the commons repo (a second path-limited git -C of the commons work tree), or a private sibling _commit_commons_state does and both run from the same call sites. Choose by the charter: a sibling stays private and needs no public_interface change. The commons commit stays path-limited (the ticket's state file and the artifact journal line it moved) and never stages another ticket's dirt. Depends on 79875eb17ac2, 2955a4a316d3 and ee9637b02525 landing first.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "after Ticket.passed or Ticket.failed on a ticket whose commons state file is tracked, git status --porcelain in the commons shows that state file clean, and a commit in the commons names it"
+      },
+      {
+        "n": 2,
+        "claim": "another ticket's dirty file in the same commons work tree is not staged or committed by the crossing"
+      },
+      {
+        "n": 3,
+        "claim": "a crossing whose ticket sits in no git work tree (a scratch commons) returns without raising"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: Ticket.passed, Ticket.failed and the sail crossing commit the ticket's commons state.json, path-limited, in the same act as the component's history.json and state.json.",
+      "writes_to": [
+        "cairn/machines/ticket/ticket.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/machines/ticket/proofs/test_a_crossing_commits_its_commons_ticket_state.py"
+      ],
+      "reads": [
+        "cairn/machines/ticket/ticket.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/machines/ticket/ticket.py",
+    "cairn/machines/ticket/proofs/test_a_crossing_commits_its_commons_ticket_state.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/machines/ticket/ticket.py",
+      "cairn/machines/ticket/proofs/test_a_crossing_commits_its_commons_ticket_state.py"
+    ],
+    "out": [
+      "the commons push (the actor pushes)",
+      "cairn/machines/ticket/ticket.py's other behaviour",
+      "commitcommons itself"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "2026-11-19, read by cc_0 and confirmed by git show on origin: crossings 1648858dd (633a76c125d2) and 89447c4a6 (c408f2c1e66d), both DROPPED, committed only .artifact-journal.jsonl and cairn/devices/codemother/machines/clearance/{history,state}.json; the two tickets' commons state files stayed dirty until a hand commit, commons 0595ae5b3 ('633a76c125d2, c408f2c1e66d: DROPPED'). The ticket machine's published helper commit_crossing_records (ticket 79875eb17ac2, on its stacked branch, not yet landed) path-limits to the component's two files in the class-space repo only; the ticket's charter public_interface lists only Ticket and GATE_HOLDER.",
+      "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    }
+  ]
+}
