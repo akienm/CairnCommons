@@ -1,0 +1,76 @@
+{
+  "id": "364704f371dd",
+  "title": "windowless_spawn names every subprocess spawn that opens a console window and ships a hidden launcher, so no Cairn spawn pops up on a box someone is working at",
+  "owning_intention": "cairn/tools/windowless_spawn/intention+why.json",
+  "intention": "unhelped_sites names every spawn site (Popen, subprocess.run, call, check_call, check_output) that does not take its flags from the helper, and windowless_spawn ships a pythonw launcher that runs a command line with no console window, its output in a log and its exit code returned, so no Cairn spawn opens a visible window on Windows.",
+  "why": "Akien 2026-11-20: popups while he works on the same box are annoying and sometimes interrupt what he is typing. With them gone the only cost left is CPU, answered by pausing the box's work while he is at it. Measured 2026-11-20 on akiendell: unhelped_sites('.') returns 0 because it looks only for Popen(, while 46 of 57 non-proof files that call subprocess.run/call/check_output carry neither detached_kwargs nor windowless_kwargs. A bare subprocess.run from a windowless parent can open a console, and the existing proof cannot see it.",
+  "traces_to": "CP4 (the system serves the person using the box); Law 4 (a rule that matters is enforced by physics: the proof greps only Popen); Law 1 (one helper replaces hand-built flag sets).",
+  "how": "Add subprocess.run/call/check_call/check_output to the spawn needles in unhelped_sites beside Popen; add cairn/tools/windowless_spawn/hidden.py, run as pythonw -m cairn.tools.windowless_spawn.hidden <log> <command...>, which runs the argv list (never a shell) with windowless_kwargs, stdout to the log and stderr into stdout, and exits with the child's code. Red-first proof, one tooth per clause. The sweep of the owning components rides child tickets cast from the widened scan's red.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "unhelped_sites names a scratch file that calls subprocess.run, call, check_call or check_output without helper keywords, and does not name one that takes detached_kwargs or windowless_kwargs"
+      },
+      {
+        "n": 2,
+        "claim": "the hidden launcher runs a command line given as an argv list and exits with the child's exit code, with the child's stdout and stderr in the named log"
+      },
+      {
+        "n": 3,
+        "claim": "on Windows, a console child started through the launcher and a grandchild it starts both report no console window (GetConsoleWindow() == 0)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: unhelped_sites takes the subprocess.run/call/check_call/check_output call forms as spawn sites beside Popen (clause 1).",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: hidden.py is the launcher: argv list, windowless_kwargs, log, exit code (clauses 2-3).",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/hidden.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause; the window tooth runs only on nt and records not-run elsewhere.",
+      "writes_to": [
+        "cairn/tools/windowless_spawn/proofs/test_every_subprocess_site_and_a_hidden_launcher_open_no_window.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/windowless_spawn/windowless_spawn.py",
+      "cairn/tools/windowless_spawn/hidden.py",
+      "cairn/tools/windowless_spawn/proofs/test_every_subprocess_site_and_a_hidden_launcher_open_no_window.py"
+    ],
+    "out": [
+      "every component that owns an unhelped spawn site (each swept by its own child ticket)",
+      "scheduled tasks and startup entries (a host-seam)",
+      "pausing the box's work while Akien is at it"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "unhelped_sites('.') returned 0; 46 of 57 non-proof files calling subprocess.run/call/check_output mention neither detached_kwargs nor windowless_kwargs",
+      "how": "PYTHONPATH=. python -c over cairn.tools.windowless_spawn.windowless_spawn.unhelped_sites, and grep -rL for the two helper names across the files grep -rl found calling subprocess"
+    }
+  ]
+}
