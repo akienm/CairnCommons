@@ -59,5 +59,155 @@
       "saw": "sail.py chart 64ae0df3f1f3 raised UnboundLocalError at remote.py:250; the AF_UNIX-less path is dead code after 'return conn, None' (remote.py:245-249); the orchestrator confirmed the same on origin/main",
       "how": "traceback of sail chart on akiendell; sed -n 225,250p cairn/tools/bus_client/remote.py; git diff 1e958634f HEAD -- remote.py"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "266986fcda94: bus_client dials the loopback port where Python has no AF_UNIX (home: cairn/tools/bus_client)",
+      "intent": "remote._dial reads bus.port and dials the loopback listener it names where the interpreter has no socket.AF_UNIX, instead of raising UnboundLocalError on rec; an absent or port-less record raises FileNotFoundError naming it.",
+      "scope": "in: cairn/tools/bus_client/remote.py and the proof cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py; out: the AF_UNIX branch of _dial, held_connection, the bus server",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      },
+      "domain": "bus_client"
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Errors are loud at diagnostic surfaces and permanent in records of truth: a red from either host refuses, and a reading that cannot rule a red out does not stand.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/bus_client/remote.py",
+          "cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py"
+        ],
+        "out": [
+          "the AF_UNIX branch of _dial",
+          "held_connection",
+          "the bus server"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "where _dial reads bus.port and returns the loopback connection and key"
+      ],
+      "holdings": [
+        {
+          "what": "the dial the build edits",
+          "address": "cairn/tools/bus_client/remote.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a dial with no AF_UNIX that reaches the loopback listener named in bus.port",
+          "measure": "cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py: 3 of 3 teeth red, UnboundLocalError at remote.py:250 (bin/cairn test, 2026-11-20, akiendell Windows and akiendelllinux; dial-red on main 57c06c77e)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "dedent the no-AF_UNIX block in _dial so it runs after the AF_UNIX branch returns",
+          "why": "Measured 2026-11-20: every Windows bus call raised UnboundLocalError on rec; f36fa3fae indented the loopback block under the AF_UNIX if, dead after 'return conn, None'.",
+          "kind": "build",
+          "fills": "a dial with no AF_UNIX that reaches the loopback listener named in bus.port",
+          "uses": [
+            "cairn/tools/bus_client/remote.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/remote.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "dedent the no-AF_UNIX block in _dial so it runs after the AF_UNIX branch returns",
+          "why_now": "it blocks every Windows crossing (sail chart, cross, outlinecheck, hollow)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "dedent the no-AF_UNIX block in _dial so it runs after the AF_UNIX branch returns",
+          "expect": "the three teeth pass and the held-connection proof stays green",
+          "falsifier": "_dial still raises UnboundLocalError with AF_UNIX deleted, or the AF_UNIX path stops returning (conn, None)",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of the dial proof passes, one per falsifier clause",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_a_dial_without_af_unix_reaches_the_loopback_port.py",
+          "timeout_s": 300,
+          "covers": [
+            "dedent the no-AF_UNIX block in _dial so it runs after the AF_UNIX branch returns"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
