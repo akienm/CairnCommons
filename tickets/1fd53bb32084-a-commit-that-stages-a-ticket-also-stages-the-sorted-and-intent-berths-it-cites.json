@@ -1,15 +1,16 @@
 {
-  "title": "a commit that stages a ticket also stages the sorted and intent berths it cites, or the commit is refused",
+  "title": "a commit that stages a ticket also stages the sorted, intent and chart berths it cites, or the commit is refused",
   "owning_intention": "cairn/tools/artifact/intention+why.json",
-  "intention": "The artifact door's jurisdiction declares the commons' berths (berths/sorted and berths/intent) as records, so _carry_berths' copy is journaled, and the pre-commit check refuses a commit that stages a ticket's state file while the sorted or intent berth it cites is not tracked or staged under commons berths/, so a ticket never reaches the other box without the berth its gates must read.",
+  "intention": "The artifact door's jurisdiction declares the commons' berths (berths/sorted, berths/intent and berths/chart) as records, so _carry_berths' and chain.carry_berth's copies are journaled, and the pre-commit check refuses a commit that stages a ticket's state file while a sorted, intent or chart berth it cites (sorted_berth, intent_berth, every *_berth in chart_claim) is not tracked or staged under commons berths/<kind>/, so a ticket cast or charted on one box walks its gates on another with no hand copy.",
   "why": "Measured 2026-11-13 on akiendell: the cast door's _carry_berths (transitions.py:2161, ticket d692ef650534, landed 2026-11-12 16:07) copies each cited berth into <commons>/berths/<kind>/<name>, but nothing stages it. After a cast, git status in the commons shows the ticket files AND the new berth as untracked ('??'), and a commit that adds only tickets/ leaves the berth behind, so the Dell's gate reads 'sorted berth readable (expected: True, actual: False)' and refuses BUILDME. Two tickets cast before the carry code (c7dc2ccdd9ad, b38af5fd1852) were refused for want of the file; every later cast of mine was safe only because I added berths/ by hand. _carry_berths' own docstring says the copy 'journals it only if the jurisdiction ever declares berths/'; cairn/tools/artifact/jurisdiction.json lists no berths/ record set.",
   "traces_to": "Law 4 (a rule that matters is enforced by physics, not policy: 'remember to add berths' is policy) and Law 7 (a refusal must name what is missing).",
-  "how": "DESIGN IN THE BUILD (cast at TICKETME). D1 declare berths/sorted/*.json and berths/intent/*.json as CairnCommons records in jurisdiction.json (through the door), so the carry is journaled and the existing pre-commit 'bytes the journal never saw' rule covers it. D2 extend the pre-commit check: for every staged tickets/<id>-*.state.json whose sorted_berth or intent_berth names a file, the file's basename must be tracked or staged under berths/<kind>/ in the commons; otherwise the commit is refused naming the missing berth and the `git add berths/<kind>/<name>` that fixes it. A 'none, because' entry is exempt.",
+  "how": "DESIGN IN THE BUILD (cast at TICKETME). D1 declare berths/sorted/*.json, berths/intent/*.json and berths/chart/*.json as CairnCommons records in jurisdiction.json (through the door), so the carry is journaled and the existing pre-commit 'bytes the journal never saw' rule covers it. D2 extend the pre-commit check: for every staged tickets/<id>-*.state.json whose sorted_berth, intent_berth or any chart_claim *_berth names a file, the file's basename must be tracked or staged under berths/<kind>/ in the commons; otherwise the commit is refused naming the missing berth and the `git add berths/<kind>/<name>` that fixes it. A 'none, because' entry is exempt. Widened 2026-11-20 (akiendelllinux_cc_orchestrator) to chart berths: chain.carry_berth (cairn/tools/chain/chain.py:152, e8fb6bcd23c5) copies them to berths/chart/ and, like _carry_berths, commits nothing.",
   "bounds": {
     "in": [
       "cairn/tools/artifact/jurisdiction.json",
       "cairn/tools/artifact/hooks/pre-commit",
-      "cairn/tools/artifact/proofs/test_a_ticket_commit_without_its_berths_is_refused.py"
+      "cairn/tools/artifact/proofs/test_a_ticket_commit_without_its_berths_is_refused.py",
+      "cairn/tools/artifact/validations/test_a_ticket_commit_without_its_berths_is_refused.json"
     ],
     "out": [
       "every other component",
@@ -22,6 +23,11 @@
       "when": "2026-11-13",
       "saw": "145 of 147 Windows-path berth fields in the commons' ticket state files resolve through the commons fallback; the two missing pairs (c7dc2ccdd9ad, b38af5fd1852) were cast at 16:09 and 16:13 on 2026-11-12, after the carry code landed at 16:07 but before the running process had it. After each cast tonight `git status` in the commons shows `?? berths/sorted/sorted-...json` beside the untracked ticket files. cairn/tools/artifact/jurisdiction.json declares tickets, troubles, decisions, slates, ideas, questions, adjudications, rehearsals, outline_checks and others, and no berths.",
       "how": "python walk of every tickets/*.state.json against commons/berths; read transitions._carry_berths; git status after a cast; read jurisdiction.json"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "5b0a7c2e91d4, cast and charted on akiendell, was refused its PROVEME crossing on akiendelllinux by buildme_rides_the_chart and buildme_rides_the_sorted: its sorted berth and chart chain had been carried into akiendell's commons berths/ but never committed. akiendell committed them by hand (commons e00bef5d5 at 11:07, 106 files, berths/sorted for 32 Windows-cast tickets; then the chart berths and BUILDME certificate), after which the crossing cleared and 5b0a went PROVED on the Dell.",
+      "how": "close.sh output on the Dell; git show --stat e00bef5d5 in CairnCommons; akiendell_cc_0's message (2026-11-20)"
     }
   ],
   "id": "1fd53bb32084",
@@ -71,5 +77,63 @@
       "reads": [],
       "after": []
     }
+  ],
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch commons, a commit staging a ticket state file whose sorted, intent or chart_claim berth is carried under berths/<kind>/ but untracked and unstaged is refused, the refusal naming each missing berth and the git add that fixes it"
+      },
+      {
+        "n": 2,
+        "claim": "the same commit with those berths staged passes, and a 'none, because' berth field is exempt"
+      },
+      {
+        "n": 3,
+        "claim": "a ticket cast and charted in one scratch clone, committed and pushed through the hook, then pulled into a second scratch clone, resolves every berth its BUILDME lanes read (buildme_rides_the_sorted, buildme_rides_the_chart) from that clone's commons with no hand copy"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: jurisdiction declares berths/sorted, berths/intent and berths/chart as CairnCommons records.",
+      "writes_to": [
+        "cairn/tools/artifact/jurisdiction.json"
+      ],
+      "reads": [
+        "cairn/tools/artifact/jurisdiction.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the pre-commit hook refuses a staged ticket state whose cited berths are not tracked or staged under berths/<kind>/.",
+      "writes_to": [
+        "cairn/tools/artifact/hooks/pre-commit"
+      ],
+      "reads": [
+        "cairn/tools/artifact/hooks/pre-commit",
+        "cairn/tools/chain/chain.py",
+        "cairn/tools/base/transitions.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof, one tooth per clause, over scratch commons clones.",
+      "writes_to": [
+        "cairn/tools/artifact/proofs/test_a_ticket_commit_without_its_berths_is_refused.py",
+        "cairn/tools/artifact/validations/test_a_ticket_commit_without_its_berths_is_refused.json"
+      ],
+      "reads": [
+        "cairn/tools/artifact/hooks/pre-commit",
+        "cairn/tools/artifact/jurisdiction.json"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/tools/artifact/hooks/pre-commit",
+    "cairn/tools/artifact/jurisdiction.json",
+    "cairn/tools/artifact/proofs/test_a_ticket_commit_without_its_berths_is_refused.py",
+    "cairn/tools/artifact/validations/test_a_ticket_commit_without_its_berths_is_refused.json"
   ]
 }
