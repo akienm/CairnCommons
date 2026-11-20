@@ -1,67 +1,39 @@
 {
   "id": "ee9637b02525",
-  "title": "a crossing leaves its component's history and state committed, whichever door wrote it, so no record of truth lives on one disk",
+  "title": "a crossing made by sail.py's own cross leaves its component's history and state committed, through the ticket machine's published helper",
   "owning_intention": "cairn/devices/cc/intention+why.json",
-  "intention": "After a crossing returns, from the gates' Ticket.passed or Ticket.failed or from sail.py's own cross, the crossed component's history.json and state.json are committed, path-limited to that crossing's own records, so a crossing never exists only as uncommitted dirt on one disk.",
-  "why": "Measured 2026-11-19 on akiendell: five crossings stood only as uncommitted dirt in the house tree until landed by hand on akiendell-1eee-fixme-record (0065e73b6): tester seq 408 (1eeeab70c59e PROVEME->FIXME), codemother seq 172 (35bb99574043 PROVEME->FIXME), verdict seq 32 (8e0cfb77827c PROVEME->FIXME), chart_gate seq 9 (7cae18f7f9c2 TICKETME->BUILDME) and seq 10 (c1a7130fba84 TICKETME->SUPERSEDED). Read: projector.append_entry writes history and state and runs no git; the Stop and PostToolUse hooks in .claude/settings.json commit nothing; the only committer of a crossing's records is close.sh's commit_all, which runs at close or prove, and a verdict refusal or a supersede never reaches it. Law 7: a crossing on one disk is not permanent. RE-PLANNED 2026-11-19 on the orchestrator's point that three of the five (1eee, 35bb, 8e0c, actor codemother) did not come from sail.py: read chart_gate/gate.py _fail (line 253) calls Ticket.failed (cairn/machines/ticket/ticket.py:337), which calls transitions.emit to FIXME and writes the cursor; Ticket.passed (line 311) is the matching door for a forward pass; clearance.py _send_to_fixme (line 1192) is a third emit; sail.py cross (line 218) calls transitions.emit directly for FIXME and dispositions. So Ticket.passed and Ticket.failed carry the gate-written majority, and sail.cross carries the hand-written rest.",
+  "intention": "After sail.py's cross lands its own emit (a disposition such as SUPERSEDED, or a FIXME), the crossed component's history.json and state.json are committed, path-limited, by calling the ticket machine's published commit helper.",
+  "why": "Measured 2026-11-19 on akiendell: five crossings stood only as uncommitted dirt in the house tree until landed by hand on akiendell-1eee-fixme-record (0065e73b6): tester seq 408 (1eeeab70c59e PROVEME->FIXME), codemother seq 172 (35bb99574043 PROVEME->FIXME), verdict seq 32 (8e0cfb77827c PROVEME->FIXME), chart_gate seq 9 (7cae18f7f9c2 TICKETME->BUILDME) and seq 10 (c1a7130fba84 TICKETME->SUPERSEDED). Read: projector.append_entry writes history and state and runs no git; the Stop and PostToolUse hooks in .claude/settings.json commit nothing; the only committer of a crossing's records is close.sh's commit_all, which runs at close or prove, and a verdict refusal or a supersede never reaches it. Law 7: a crossing on one disk is not permanent. RE-PLANNED 2026-11-19 twice: first on the orchestrator's measurement that three of the five crossings came from the gates, then on its RULE 1 ruling that the ticket machine's build is its own ticket (79875eb17ac2) and the clearance gate's is 2955a4a316d3. This ticket keeps the sail.py cross half and calls the machine's published helper.",
   "traces_to": "Law 7 (permanent in records of truth); Law 4 (physics, not a hand remembering sail step 10); Law 5 (the repo is itself the state of the machine).",
-  "how": "A hypothesis, measured by the proof: one helper in cairn/machines/ticket/ticket.py commits the crossed component's history.json and state.json path-limited, called at the end of Ticket.passed and Ticket.failed (so the chart gates, the verdict gate and the clearance gate that cross through them are covered) and by sail.cross after its own emit; it stays out of projector.append_entry, which scratch proofs call. The build decides whether clearance.py's own emit also needs the call.",
+  "how": "A hypothesis, measured by the proof: sail.cross calls cairn.machines.ticket.ticket.commit_crossing_records after its transitions.emit. It depends on ticket 79875eb17ac2 (the helper); until bdd02e0ad010 lets a BUILDME need name a ticket, the dependency is carried here and moves into a stage_needs entry (ticket = 79875eb17ac2) through the door once that gate lands.",
   "falsifier": {
     "clauses": [
       {
         "n": 1,
-        "claim": "after sail.py cross lands a crossing in a scratch repo, the component's history.json and state.json are committed and git status of those paths is clean"
+        "claim": "after sail.py cross lands a disposition (SUPERSEDED) or a FIXME in a scratch repo, the component's history.json and state.json are committed and git status of those two paths is clean"
       },
       {
         "n": 2,
-        "claim": "after sail.py verdict refuses a ticket to FIXME, the same two files are committed, not left dirty"
-      },
-      {
-        "n": 3,
-        "claim": "another ticket's dirty records in the same tree are not staged or committed by the crossing"
-      },
-      {
-        "n": 4,
-        "claim": "after a gate's Ticket.failed sends a ticket to FIXME (the chart gate's _fail path, actor codemother), the component's history.json and state.json are committed and clean"
-      },
-      {
-        "n": 5,
-        "claim": "after a gate's Ticket.passed crosses a ticket forward, the same two files are committed and clean"
-      },
-      {
-        "n": 6,
-        "claim": "projector.append_entry still makes no git call: a scratch proof that appends an entry leaves the tree with only its own writes"
+        "claim": "another ticket's dirty records in the same tree are not staged or committed by cross"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: one commit helper in the ticket machine, called at the end of Ticket.passed and Ticket.failed, commits only the crossed component's history.json and state.json; it is not in projector.append_entry.",
-      "writes_to": [
-        "cairn/machines/ticket/ticket.py"
-      ],
-      "reads": [
-        "cairn/machines/ticket/ticket.py",
-        "cairn/devices/cc/scripts/close.sh",
-        "cairn/tools/charter/projector.py",
-        "cairn/devices/codemother/machines/chart_gate/gate.py"
-      ]
-    },
-    {
-      "n": 2,
-      "text": "D2: sail.py's cross calls the same helper after its own emit; the codemother gate code is unchanged, since it crosses through Ticket.failed.",
+      "text": "D1: After sail.py's cross lands its own emit (a disposition such as SUPERSEDED, or a FIXME), the crossed component's history.json and state.json are committed, path-limited, by calling the ticket machine's published commit helper.",
       "writes_to": [
         "cairn/devices/cc/scripts/sail.py"
       ],
       "reads": [
         "cairn/devices/cc/scripts/sail.py",
+        "cairn/devices/cc/scripts/close.sh",
         "cairn/machines/ticket/ticket.py"
       ]
     },
     {
-      "n": 3,
-      "text": "D3: the red-first proof drives a scratch crossing through sail cross, sail verdict, Ticket.failed and Ticket.passed, one tooth per clause, PROVES declared.",
+      "n": 2,
+      "text": "D2: the red-first proof drives a scratch cross and verdict-to-FIXME, one tooth per clause, PROVES declared.",
       "writes_to": [
         "cairn/devices/cc/proofs/test_a_crossing_made_by_a_sail_verb_leaves_its_records_committed.py"
       ],
@@ -71,20 +43,18 @@
     }
   ],
   "writes_to": [
-    "cairn/machines/ticket/ticket.py",
     "cairn/devices/cc/scripts/sail.py",
     "cairn/devices/cc/proofs/test_a_crossing_made_by_a_sail_verb_leaves_its_records_committed.py"
   ],
   "bounds": {
     "in": [
-      "cairn/machines/ticket/ticket.py",
       "cairn/devices/cc/scripts/sail.py",
       "cairn/devices/cc/proofs/test_a_crossing_made_by_a_sail_verb_leaves_its_records_committed.py"
     ],
     "out": [
-      "cairn/tools/charter/projector.py (the append door stays git-free)",
-      "cairn/devices/cc/scripts/close.sh (d3b8cdf81a41 owns its staging)",
-      "cairn/devices/codemother/machines/chart_gate/gate.py and clearance.py (they cross through the ticket machine; the build adds a call to clearance.py only if the proof shows its own emit leaves dirt)",
+      "cairn/machines/ticket/ticket.py (the helper is 79875eb17ac2's)",
+      "cairn/tools/charter/projector.py",
+      "cairn/devices/cc/scripts/close.sh (d3b8cdf81a41)",
       "every other component"
     ]
   },
@@ -98,6 +68,11 @@
       "when": "2026-11-19",
       "saw": "the three codemother-actor crossings (1eee, 35bb, 8e0c) were written by chart_gate/gate.py _fail via Ticket.failed (ticket.py:337 emit to FIXME), not by sail.py; sail.py cross (line 218) calls transitions.emit directly; clearance.py:1192 _send_to_fixme is a third emit",
       "how": "grep of 'failed at the' (gate.py:257), read of ticket.py passed/failed and sail.py cross, grep of emit callers in clearance.py"
+    },
+    {
+      "when": "2026-11-19",
+      "saw": "the gates' crossings (tester seq 408, codemother seq 172, verdict seq 32, actor codemother) are written by Ticket.failed (ticket.py:337), not sail.py; clearance.py:1164 _send_to_fixme emits directly. Those halves are tickets 79875eb17ac2 and 2955a4a316d3.",
+      "how": "read of gate.py:253, ticket.py:311/337, clearance.py:1164"
     }
   ]
 }
