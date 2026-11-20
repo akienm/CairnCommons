@@ -46,21 +46,32 @@
       "reads": [
         "bin/cairn"
       ]
+    },
+    {
+      "n": 3,
+      "text": "D3: bin/cairn.py carries the wiring the bash dispatch carried so exec'ing it drops none: the per-addressed-instance wire (ticket f0ffa0db0952) and the floor's wiring-gap gate on the every-call wire (clause 4).",
+      "writes_to": [
+        "bin/cairn.py"
+      ],
+      "reads": [
+        "bin/cairn"
+      ]
     }
   ],
   "writes_to": [
     "bin/cairn",
-    "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
+    "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py",
+    "bin/cairn.py"
   ],
   "bounds": {
     "in": [
       "bin/cairn",
-      "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
+      "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py",
+      "bin/cairn.py"
     ],
     "out": [
-      "bin/cairn.py itself (380d524e6e9c)",
       "the floor checks",
-      "Windows"
+      "the floor checks, Windows launch (cairn.cmd)"
     ]
   },
   "measured": [
@@ -68,13 +79,18 @@
       "when": "2026-11-20",
       "saw": "2026-11-20 read of bin/cairn on akiendell: 479 lines, 295 of code; lines 94-217 are the bash floor (venv, db, wiring, instance), lines 218-313 the help, lines 314-479 the dispatch (token fold, instance split, device and bus resolution, exec). bin/proofs holds 34 proofs, 21 of which drive the launcher. This box cannot run a Linux read of them, so riding Linux on slice 1 (ticket 380d524e6e9c) is not cheap from here: it re-reads 21 proofs on a platform I do not hold. Owed by outline 5.4.3.8; the floor stays bash (5.4.3.8.1).",
       "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "Linux measurement of 8b94-fix and 8b94-wire: the exec worked but clause 4 needs the per-instance wire in bin/cairn.py, and the every-call wire spoke on stderr without the floor's gap gate; the old bin/cairn held both",
+      "how": "akiendelllinux_cc_0's run of the proof on 8b94-fix 89a9cd380 and 8b94-wire ac7189b74"
     }
   ],
   "chart": {
     "orient": {
       "request": "8b94ca4536c9: on Linux bin/cairn keeps its floor and execs the Python dispatcher bin/cairn.py (home: bin)",
       "intent": "After its floor and help, bin/cairn replaces its bash dispatch (instance split, device and bus resolution, exec) with one exec of the venv python on bin/cairn.py carrying the typed argv, so one dispatcher serves both platforms (outline 5.4.3.8, 5.4.3.8.1).",
-      "scope": "in: bin/cairn and the proof bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py; out: bin/cairn.py itself (380d524e6e9c, on main), the floor checks, Windows",
+      "scope": "in: bin/cairn, bin/cairn.py (the ported instance wiring and its gap gate) and the 8b94 proof; out: the floor checks, cairn.cmd",
       "unknowns": [],
       "confidence": 0.85,
       "provenance": {
@@ -104,12 +120,12 @@
       "bounds": {
         "in": [
           "bin/cairn",
+          "bin/cairn.py",
           "bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
         ],
         "out": [
-          "bin/cairn.py itself (380d524e6e9c)",
           "the floor checks",
-          "Windows"
+          "Windows launch (cairn.cmd)"
         ]
       },
       "unknowns": [],
@@ -163,6 +179,19 @@
           "writes_to": [
             "bin/cairn"
           ]
+        },
+        {
+          "what": "bin/cairn.py wires the declared instance it addresses (f0ffa0db0952) and gates its every-call wire on the floor's wiring gap, so the exec drops none of the wiring the bash dispatch carried",
+          "why": "Clause 4: bin/cairn.py carries the wiring, so the Linux exec drops none; the old bin/cairn held both the per-instance wire and the gap gate.",
+          "kind": "build",
+          "fills": "a Linux launcher that holds no dispatch of its own and execs bin/cairn.py once",
+          "uses": [
+            "bin/cairn.py",
+            "bin/cairn"
+          ],
+          "writes_to": [
+            "bin/cairn.py"
+          ]
         }
       ],
       "unknowns": [],
@@ -178,6 +207,10 @@
         {
           "what": "replace bin/cairn's bash dispatch block with a single exec of the venv python on bin/cairn.py \"$@\"",
           "why_now": "bin/cairn.py (380d524e6e9c) and its wiring (80a220a86873) are on main; the red-first proof holds bin component_color red for ddc9 and 380d until this lands"
+        },
+        {
+          "what": "bin/cairn.py wires the declared instance it addresses (f0ffa0db0952) and gates its every-call wire on the floor's wiring gap, so the exec drops none of the wiring the bash dispatch carried",
+          "why_now": "measured red on Linux by cc_0: wiring tooth and standing proofs"
         }
       ],
       "unknowns": [],
@@ -194,6 +227,12 @@
           "piece": "replace bin/cairn's bash dispatch block with a single exec of the venv python on bin/cairn.py \"$@\"",
           "expect": "the four teeth pass and the standing launcher proofs stay green",
           "falsifier": "a typed address resolves differently, bin/cairn still holds a dispatch, or the exec is not of cairn.py once",
+          "instrument": "bin/cairn test bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
+        },
+        {
+          "piece": "bin/cairn.py wires the declared instance it addresses (f0ffa0db0952) and gates its every-call wire on the floor's wiring gap, so the exec drops none of the wiring the bash dispatch carried",
+          "expect": "tooth 4 and the standing launcher proofs pass",
+          "falsifier": "an addressed declared instance stays unwired, or bare cairn speaks about hand-placed files on stderr",
           "instrument": "bin/cairn test bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py"
         }
       ],
@@ -212,7 +251,8 @@
           "instrument": "bin/cairn test bin/proofs/test_the_linux_launcher_execs_the_python_dispatcher.py",
           "timeout_s": 900,
           "covers": [
-            "replace bin/cairn's bash dispatch block with a single exec of the venv python on bin/cairn.py \"$@\""
+            "replace bin/cairn's bash dispatch block with a single exec of the venv python on bin/cairn.py \"$@\"",
+            "bin/cairn.py wires the declared instance it addresses (f0ffa0db0952) and gates its every-call wire on the floor's wiring gap, so the exec drops none of the wiring the bash dispatch carried"
           ]
         }
       ],
