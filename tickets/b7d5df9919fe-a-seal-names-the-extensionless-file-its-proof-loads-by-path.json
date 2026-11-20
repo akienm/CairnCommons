@@ -1,0 +1,82 @@
+{
+  "id": "b7d5df9919fe",
+  "title": "a seal names the extensionless file its proof loads by path",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A proof's seal names every repo file the proof executes by path, extensionless ones included, so an edit to any of them stales the seal.",
+  "why": "Law 8: a seal an edit to its subject cannot expire is a quiet green that peers lean on. A seal over a proof that loads an extensionless repo file by path never names that file, so editing the file cannot stale the seal. 2026-11-20, eb2f8f9b0b8c: after bin/cmd/deletegate changed (82ab0b80a), the reseal-at-commit read test_delete_gate as 'settled red, closure unmoved' and did not rerun it; its fingerprint_closure was ['bin/proofs/test_delete_gate.py'] alone. Two filters each drop the file: the exec audit hook ticket 6e50ed204abc added keeps only co_filename ending '.py' (cairn/devices/tester/device.py:112), and repo_relative_closure keeps only rel paths ending '.py' (cairn/tools/validation_store/validation_store.py:457). Scope, by a scan of every **/proofs/*.py: 56 proofs load by path (spec_from_file_location 45, SourceFileLoader 9, spec_from_loader 9, run_path 1, exec(compile 1); the 9 that load an extensionless file all use spec_from_loader(name, SourceFileLoader(name, path)) + exec_module, and are blind: bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py (artifactgate); bin/proofs/test_a_record_path_refusal_names_every_way_out.py (artifactgate); bin/proofs/test_a_var_script_slot_runs_a_proof_only_through_its_loop.py (proofgate); bin/proofs/test_artifact_gate.py (artifactgate); bin/proofs/test_askscan.py (askscan); bin/proofs/test_delete_gate.py (deletegate, trash); bin/proofs/test_probescan.py (probescan); bin/proofs/test_proof_gate.py (proofgate); cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py (artifactgate). Read: the validations of test_delete_gate, test_artifact_gate, test_askscan, test_probescan, test_proof_gate each carry a one-entry closure (the proof).",
+  "traces_to": "Law 8; Law 3; ticket 6e50ed204abc",
+  "how": "In cairn/devices/tester/device.py, the exec audit hook keeps a code object's co_filename when it is a repo file, not only when it ends '.py' (an exec event is CODE being run, so a data read never enters). In cairn/tools/validation_store/validation_store.py, repo_relative_closure keeps an extensionless rel path that the run executed (e.g. bin/cmd/<name>), still dropping data files; the narrowest form keeps '.py' OR a file with no suffix. Proof cairn/devices/tester/proofs/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.py under PROVES this ticket's id, clauses 1-3, modelled on cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py (a CAIRN_*_FIXTURE env re-run of itself that loads an extensionless tester-owned leaf by path). After the build, reseal the 9 blind proofs' validations so their closures name what they load.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture proof that loads an extensionless repo file through spec_from_loader(name, SourceFileLoader(name, path)) + exec_module, sealed through TesterDevice().run_proof, names that file in its fingerprint_closure, and the file's bytes are in sealed_fingerprint_now (the recorded number matches; the closure without it hashes differently)"
+      },
+      {
+        "n": 2,
+        "claim": "live: bin/proofs/test_delete_gate.py sealed by the built tester names bin/cmd/deletegate in its fingerprint_closure, and a one-byte edit to bin/cmd/deletegate makes that seal stale (sealed_fingerprint_now differs) with no explicit --seal; the same holds for each of the 9 proofs in the measured blind set, each naming the extensionless file(s) it loads"
+      },
+      {
+        "n": 3,
+        "claim": "the narrowing stays code-only: a file the fixture only READS as data (a .json, a .md, opened with open()) is not in its closure, and cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py stays green"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the exec audit hook keeps executed repo files with no suffix as well as .py.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: repo_relative_closure keeps executed no-suffix repo files as well as .py.",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the proof plus validation, one tooth per clause, modelled on the prior art.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.py",
+        "cairn/devices/tester/validations/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.json"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/devices/tester/proofs/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.py",
+      "cairn/devices/tester/validations/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.json"
+    ],
+    "out": [
+      "every other component"
+    ]
+  },
+  "writes_to": [
+    "cairn/devices/tester/device.py",
+    "cairn/devices/tester/proofs/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.py",
+    "cairn/devices/tester/validations/test_an_extensionless_module_loaded_by_path_is_in_the_seals_closure.json",
+    "cairn/tools/validation_store/validation_store.py"
+  ],
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "A seal over a proof that loads an extensionless repo file by path never names that file, so editing the file cannot stale the seal. 2026-11-20, eb2f8f9b0b8c: after bin/cmd/deletegate changed (82ab0b80a), the reseal-at-commit read test_delete_gate as 'settled red, closure unmoved' and did not rerun it; its fingerprint_closure was ['bin/proofs/test_delete_gate.py'] alone. Two filters each drop the file: the exec audit hook ticket 6e50ed204abc added keeps only co_filename ending '.py' (cairn/devices/tester/device.py:112), and repo_relative_closure keeps only rel paths ending '.py' (cairn/tools/validation_store/validation_store.py:457). Scope, by a scan of every **/proofs/*.py: 56 proofs load by path (spec_from_file_location 45, SourceFileLoader 9, spec_from_loader 9, run_path 1, exec(compile 1); the 9 that load an extensionless file all use spec_from_loader(name, SourceFileLoader(name, path)) + exec_module, and are blind: bin/proofs/test_a_door_write_journaled_mid_pass_is_not_named.py (artifactgate); bin/proofs/test_a_record_path_refusal_names_every_way_out.py (artifactgate); bin/proofs/test_a_var_script_slot_runs_a_proof_only_through_its_loop.py (proofgate); bin/proofs/test_artifact_gate.py (artifactgate); bin/proofs/test_askscan.py (askscan); bin/proofs/test_delete_gate.py (deletegate, trash); bin/proofs/test_probescan.py (probescan); bin/proofs/test_proof_gate.py (proofgate); cairn/tools/base/proofs/test_only_the_gate_writes_a_certificate.py (artifactgate). Read: the validations of test_delete_gate, test_artifact_gate, test_askscan, test_probescan, test_proof_gate each carry a one-entry closure (the proof).",
+      "how": "eb2f8f9b0b8c's reseal output (settled-red over a moved gate); a regex scan of every **/proofs/*.py for by-path load forms; the fingerprint_closure of 5 bin validations read; cairn/devices/tester/device.py:112 and cairn/tools/validation_store/validation_store.py:457 read"
+    }
+  ]
+}
