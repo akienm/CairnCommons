@@ -5,7 +5,7 @@
   "intention": "On a box without bubblewrap, the verdict gate asks the sealer for its instrument run and reads the sealer's outcome, instead of refusing with exit 2, so a clause is judged by the sealer and the builder's own validate run is never the only measurement.",
   "why": "Measured 2026-11-19 on akiendell: `sail.py verdict 35bb99574043` and `sail.py verdict 1eeeab70c59e` were each refused by the gate because its re-run of `bin/cairn test <proof>` exited 2 with: cairn test --exec: refused — the instance seal is not confirmed (indeterminate: cannot build the instance seal: bubblewrap (bwrap) is not installed); the command was not run. Windows has no seal, so the gate can never confirm a green-on-Windows clause itself; it is measured only by the builder's own validate run (Law 3). The earlier instance 3a38e2e1cfe0 got around it by verdicting its Windows clause on Linux (berth verdict-20261113T024209, PROVED 11-13). Outline 9.4.8.1 already settles the design (open-c5b4c7304e85, answered from the outline): the verdict's instrument run is seal-grade and runs where the sealer runs; a box without bubblewrap asks for it and does not run it itself; a bwrap-only tooth reads not-run there, never red. Measured 2026-11-19 on main c18939ee6: verdict.py runs the instrument as a fork through `bin/cairn test --exec` and records a refused seal as seal_refused (verdict.py lines 236-268, header line 147 'A run is a fork. It is never an ask'); no hand-off to the sealer exists in verdict.py or sail.verdict, so the Windows verdict can only refuse. Related: 56b61c10bdbe builds the Windows seal, which is a different route and is not what 9.4.8.1 asks.",
   "traces_to": "Law 3 (nothing is known until measured: a Windows green measured by the builder alone is a claim); Law 8 (prove, then trust: the verdict is the peer's check that the hand did not write); Law 7 (the refusal is loud and stays a refusal).",
-  "how": "A hypothesis, measured by clauses 1 and 2: when the instrument's sealed exec comes back seal_refused (no bubblewrap), the gate sends the run to the sealer through its public interface (the bus; the build names the verb or queued request) and reads the sealer's outcome as the verdict's outcome; the box's own run is never recorded as a pass or a red. Red-first proof under cairn/devices/codemother/machines/verdict/proofs/, one tooth per clause, PROVES declared. No exemption: with no sealer reachable the gate refuses, loud and recorded.",
+  "how": "A hypothesis, measured by clauses 1 and 2: when the instrument's sealed exec comes back seal_refused (no bubblewrap), the gate sends the run to the sealer as a CLIENT DIAL to a configured sealer address: the bus as built (ticket 5183005fa134, cairn/tools/bus_client/remote.py, `host:port` over pinned mutual TLS, the way akienasus already reaches the Dell), asking the tester's `exec` verb (ticket 21f9628872da), and reads the sealer's outcome as the verdict's outcome; the box's own run is never recorded as a pass or a red. The gate takes the sealer through a `sealer` callable seam on observe_instruments so a proof drives it without a network. BUILDME waits on 21f9628872da PROVED (the tester answers an exec ask). BUILDME waits on akiendell pinned to the sealer's bus (the operator's fingerprint check at cairn install). Red-first proof under cairn/devices/codemother/machines/verdict/proofs/, one tooth per clause, PROVES declared. No exemption: with no sealer reachable the gate refuses, loud and recorded.",
   "falsifier": {
     "clauses": [
       {
@@ -29,13 +29,14 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: when the sealed exec returns seal_refused, the verdict gate asks the sealer through the sealer's public interface and reads its outcome; the build records which verb carries the ask.",
+      "text": "D1: when the sealed exec returns seal_refused, the verdict gate dials the configured sealer address and asks the tester's `exec` verb (ticket 21f9628872da), reading its record as the outcome; the verb is named here, not invented in the gate. BUILDME waits on 21f9628872da PROVED and on akiendell pinned to the Dell.",
       "writes_to": [
         "cairn/devices/codemother/machines/verdict/verdict.py"
       ],
       "reads": [
         "cairn/devices/codemother/machines/verdict/verdict.py",
-        "cairn/devices/cc/scripts/sail.py"
+        "cairn/devices/cc/scripts/sail.py",
+        "cairn/tools/bus_client/remote.py"
       ]
     },
     {
@@ -59,7 +60,9 @@
       "cairn/devices/codemother/machines/verdict/proofs/test_a_verdict_on_a_box_without_bubblewrap_asks_the_sealer.py"
     ],
     "out": [
-      "cairn/devices/tester (the sealer's side and the Windows seal 56b61c10bdbe)",
+      "cairn/devices/tester (the exec verb is 21f9628872da; the Windows seal is 56b61c10bdbe)",
+      "federated bus routing between boxes (outline 5.5.3.8): a separate, bigger intention, not cast here",
+      "pinning akiendell to the Dell (cairn install on both boxes, an operator step)",
       "every other component"
     ]
   },
