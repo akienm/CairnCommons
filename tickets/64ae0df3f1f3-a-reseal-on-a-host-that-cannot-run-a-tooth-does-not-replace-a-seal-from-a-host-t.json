@@ -1,0 +1,69 @@
+{
+  "id": "64ae0df3f1f3",
+  "title": "a reseal on a host that cannot run a tooth does not replace a seal from a host that can",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "reseal() does not persist a record over a standing green seal for the same source fingerprint when every tooth the new run failed reads UNRAN; it leaves that seal byte-identical and says so loudly, and a run where a tooth actually FAILs still writes red.",
+  "why": "Measured: 2026-11-20 on akiendell (Windows): cc_0's Linux landing of 80a2-fix (a2f477928) resealed bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py on Linux, where teeth 1 and 3 read UNRAN (cairn.cmd is Windows-only), and persist_validation REPLACED my green 3 of 3 Windows seal with that red. The replacement voided 380d524e6e9c's hollow evidence and left the proof red on main until I resealed on Windows (bdce17bf1) and re-ran the hollow (1e958634f). Outline 9.4.8.1 already reads a not-run tooth as not-run, never red; the seal write has no such reading.",
+  "traces_to": "Law 3 (nothing is known until measured); Law 5 (the repo is the state of the machine: a crossing's record is committed where it lands); Law 9 (green is earned).",
+  "how": "A hypothesis, not a settled shape: in reseal(), before the write, read the standing seal for the same source_fingerprint; when it is green and every failing tooth of the new run reads UNRAN, return an outcome that names the kept seal and writes nothing. A failure that is not UNRAN, a standing seal on other bytes, or no standing seal writes exactly as today. 50ac45cde4dd fixes the verdict's reading of such a seal; this fixes the write that destroys the evidence the verdict reads.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture proof with a green Windows seal, resealed on Linux with every failing tooth UNRAN, keeps the seal file byte-identical and the result says the seal was kept and why"
+      },
+      {
+        "n": 2,
+        "claim": "a reseal where a tooth actually FAILs still writes red over the green seal"
+      },
+      {
+        "n": 3,
+        "claim": "a reseal over a standing seal on other bytes (fingerprint differs) writes as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: reseal() does not persist a record over a standing green seal for the same source fingerprint when every tooth the new run failed reads UNRAN; it leaves that seal byte-identical and says so loudly, and a run where a tooth actually FAILs still writes red.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_a_tooth_keeps_the_seal_that_could.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/tester/reseal.py",
+    "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_a_tooth_keeps_the_seal_that_could.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_a_reseal_that_cannot_run_a_tooth_keeps_the_seal_that_could.py"
+    ],
+    "out": [
+      "cairn/tools/validation_store",
+      "the verdict machine (50ac45cde4dd)",
+      "far-box sealer path"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "2026-11-20 on akiendell (Windows): cc_0's Linux landing of 80a2-fix (a2f477928) resealed bin/proofs/test_cairn_runs_from_cmd_with_no_bash.py on Linux, where teeth 1 and 3 read UNRAN (cairn.cmd is Windows-only), and persist_validation REPLACED my green 3 of 3 Windows seal with that red. The replacement voided 380d524e6e9c's hollow evidence and left the proof red on main until I resealed on Windows (bdce17bf1) and re-ran the hollow (1e958634f). Outline 9.4.8.1 already reads a not-run tooth as not-run, never red; the seal write has no such reading.",
+      "how": "reads of the named commits, files and a run on akiendell (Windows), 2026-11-19/20"
+    }
+  ]
+}
