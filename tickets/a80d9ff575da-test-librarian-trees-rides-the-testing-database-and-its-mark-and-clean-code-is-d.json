@@ -4,7 +4,7 @@
   "intention": "Once e4fd7f28faaf lands, test_librarian_trees.py writes nothing to the live tables by construction, so 784eb1e92866's run id, testing marker and finally-block deletes come out of it, and every tooth it proves stays.",
   "why": "Measured 2026-11-20: 784eb1e92866 PROVED (cairn 7ade65adb) with mark-and-clean in cairn/devices/librarian/proofs/test_librarian_trees.py (9cf8b7901: _RUN, a provenance testing marker, store.delete of nodes and embeddings). Outline 4.3.1.5.1.5.2 puts isolation in the runner by construction, not filtering in the proof, and its outline check on Windows missed the conflict. Code that the construction makes unneeded is deleted.",
   "traces_to": "Law 1 (a settled answer, the outline line, is not re-derived in each proof); Law 4 (the rule is physics in the runner, not policy in a proof).",
-  "how": "Rides e4fd7f28faaf. In cairn/devices/librarian/proofs/test_librarian_trees.py: delete _RUN and CAIRN_LIBRARIAN_TRIALS_RUN_ID, the testing/run keys in _PROV, and the finally-block store.delete calls, keeping every tooth. cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py reads live cairn_nodes and cairn_embeddings counts before and after a run, not rows by run id. A red-first proof cairn/devices/librarian/proofs/test_librarian_trees_rides_the_testing_database.py reads cairn/devices/librarian/proofs/test_librarian_trees.py's source for the mark-and-clean forms and runs it once, counting live rows.",
+  "how": "Rides e4fd7f28faaf. In cairn/devices/librarian/proofs/test_librarian_trees.py: keep the per-run token _RUN in every node's content (cairn_testing is one shared schema and a node id is sha256(content), so the token is what keeps two concurrent copies' ids disjoint); delete the testing/run keys in _PROV, the _CREATED_NODES list and the store.delete calls in _cleanup, keeping every tooth and the cairn_threads reset the MAX_THREADS teeth need. cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py counts the live rows carrying each copy's token (nodes by content, embeddings and links joined by id); totals reported, never asserted (31ba1dd472d6's shape). A red-first proof cairn/devices/librarian/proofs/test_librarian_trees_rides_the_testing_database.py reads cairn/devices/librarian/proofs/test_librarian_trees.py's source for the mark-and-clean forms and runs it once, counting the live rows carrying its token.",
   "falsifier": {
     "clauses": [
       {
@@ -13,7 +13,7 @@
       },
       {
         "n": 2,
-        "claim": "across a run, the live cairn_nodes, cairn_embeddings and cairn_links counts, read from the live database, are unchanged"
+        "claim": "across a run, the live rows it could have written are unchanged: the cairn_nodes whose content carries the run's token, and the cairn_embeddings and cairn_links that join to those nodes by id. The live totals are reported and never asserted, because another live writer moves them"
       },
       {
         "n": 3,
@@ -21,14 +21,14 @@
       },
       {
         "n": 4,
-        "claim": "cairn/devices/librarian/proofs/test_librarian_trees.py carries no run id, no testing marker in its provenance, and no store.delete"
+        "claim": "cairn/devices/librarian/proofs/test_librarian_trees.py carries no testing/run provenance key and no hand cleanup (no store.delete, no raw SQL DELETE or TRUNCATE), except one: the cairn_threads rows this run minted, removed by thread_id; isolation comes from a per-run token in content"
       }
     ]
   },
   "decisions": [
     {
       "n": 1,
-      "text": "D1: delete the mark-and-clean code from cairn/devices/librarian/proofs/test_librarian_trees.py (_RUN, the env var, the testing and run provenance keys, the finally-block deletes); every tooth stays.",
+      "text": "D1: delete the mark-and-clean code from cairn/devices/librarian/proofs/test_librarian_trees.py (the testing and run provenance keys, _CREATED_NODES, the store.delete calls in _cleanup); the per-run token stays in content and every tooth stays.",
       "writes_to": [
         "cairn/devices/librarian/proofs/test_librarian_trees.py"
       ],
@@ -38,7 +38,7 @@
     },
     {
       "n": 2,
-      "text": "D2: cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py measures live row counts before and after, not rows by run id.",
+      "text": "D2: cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py counts the live rows carrying each copy's token, not totals; totals are reported and never asserted.",
       "writes_to": [
         "cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py"
       ],
@@ -54,6 +54,14 @@
       ],
       "reads": [
         "cairn/devices/librarian/proofs/test_librarian_trees_runs_alongside_itself.py",
+        "cairn/devices/librarian/proofs/test_librarian_trees.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4 (a hypothesis, akiendelllinux_cc_orchestrator 2026-11-20, option (a)): a per-run token in content is enough isolation inside the one shared cairn_testing schema, so per-test-id schemas (a change to e4fd7f28faaf's door) are not cast now. Falsifier: two concurrent copies with identical inputs, tokens in place, both read green (clause 1). A collision with tokens in place is the measurement that casts per-test-id schemas as its own ticket.",
+      "writes_to": [],
+      "reads": [
         "cairn/devices/librarian/proofs/test_librarian_trees.py"
       ]
     }
@@ -77,6 +85,26 @@
       "when": "2026-11-20",
       "saw": "784eb1e92866 PROVED with mark-and-clean code in test_librarian_trees.py; outline 4.3.1.5.1.5.2 rules filtering out; akiendelllinux_cc_orchestrator ruled the outline stands and named this follow-up",
       "how": "cairn git show 9cf8b7901 and 7ade65adb; outline 04-graph-trees-memory-service.md 4.3.1.5.1.5.2"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "with ONE token forced on two concurrent copies under a tester test id, copy 1 bit 6 teeth and copy 2 bit 8 (UniqueViolation cairn_embeddings_pkey; already-refuted retirements)",
+      "how": "akienasus_cc_0 a80dprobe.sh on akiendelllinux, CAIRN_LIBRARIAN_TRIALS_RUN_ID=same0001 CAIRN_TESTER_TEST_ID=testing-a80d-probe, two copies of cairn/devices/librarian/proofs/test_librarian_trees.py at origin/main b0f0501b2"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "a known cross-copy threat, read in the mechanism: trees._retire_lowest (trees.py:854) evicts the lowest-importance SLEEPING thread in the whole cairn_threads table once detect_threads sees MAX_THREADS=7 (trees.py:896), so in the one shared cairn_testing a copy can retire another copy's thread. One copy holds at most 1 thread at a time (each warm tooth deletes its own in finally) and cairn_testing held 0 threads, so a plain pair never reaches 7; sleep_check acts only on the caller's own counter (trees.py:990-1001) and is not a threat",
+      "how": "akienasus_cc_0 read test_librarian_trees.py:780-910 and trees.py:825-1001 at akienasus/codemother-rides-prefix-linked, and counted cairn_threads under CAIRN_TESTER_TEST_ID"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "_retire_lowest across copies NOT EXERCISED (not green): 6 seeded pairs (6 foreign sleeping threads at importance 2.0, second copy offset 0.085-0.199 s around the lone copy's co-occurrence->sleeping gap of 0.142 s) and 8 more after the duplicate-tooth fix (14 pairs) gave 1 coincidence (a seed retired while the other copy held an AWAKE thread) and 0 sleeping overlaps. A copy's thread sleeps only between store.write and wake_threads inside test_sleeping_thread_wakes_on_deposit, about 1 ms, so a pair cannot target it. RE-MEASURE TRIGGER: any change that lengthens that window (a tooth that holds a thread sleeping longer, or more threads per copy) re-opens this measurement",
+      "how": "akienasus_cc_0 retire_exercise.py on akiendelllinux under CAIRN_TESTER_TEST_ID=testing-a80d-retire (-retire2 for the 8 post-fix pairs) at akienasus/codemother-rides-prefix-linked 8afc0063b; seeds removed by thread_id after (6 minted, 5 deleted, 1 retired by the product, 0 threads left); accepted as not-exercised by akiendelllinux_cc_orchestrator 2026-11-20"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "in the same 6 pairs, 2 had one copy red on test_a_duplicate_grows_nothing_but_its_provenance_lands ('a duplicate must grow cairn_nodes by NOTHING'): the tooth counted the WHOLE cairn_nodes table, which the other copy's deposits move inside the shared cairn_testing. Fixed in the build: the count is scoped to content carrying the run's token. A grep of the six rides proofs and both a80d proofs then found no other asserted whole-table count (the rest are reported totals, or this process's own scratch leaf). After the fix, 8 more seeded pairs: 0 red pairs",
+      "how": "akienasus_cc_0 retire_exercise.py pairs 3 and 4 (as M3), then grep for count(*) at the fix commit"
     }
   ],
   "id": "a80d9ff575da"
