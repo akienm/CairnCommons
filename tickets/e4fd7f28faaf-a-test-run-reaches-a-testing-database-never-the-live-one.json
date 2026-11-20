@@ -64,43 +64,24 @@
     {
       "n": 1,
       "claim": "with CAIRN_TESTER_TEST_ID set, every connection the store door writes through answers current_database() = cairn_testing (created on demand), and with it unset, `cairn`",
-      "writes_to": [],
-      "reads": [],
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py",
+        "cairn/devices/db_domain/proofs/test_db_domain.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/tester/runs.py",
+        "cairn/devices/db_domain/proofs/test_db_domain.py"
+      ],
       "after": []
     },
     {
       "n": 2,
       "claim": "a scratch table minted under a test id exists in cairn_testing and NOT in the live database; and sweep_scratch() under a test id leaves a scratch table and registry row standing in the live database",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 3,
-      "claim": "a table written through store.write by a process under a test id lands in cairn_testing, owner registry included, and the live database's owner registry is unchanged",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 4,
-      "claim": "under a test id, store.query of a live table the run has not created returns the live rows (a count equals the count read without a test id), and an INSERT sent through that read path raises a read-only error; the live row count is unchanged across the tooth",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 5,
-      "claim": "under a test id, a table the run created through store.write is read by store.query from cairn_testing (its rows, not live's), and the live database holds no table of that name",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 6,
-      "text": "database_name(), the write-side uses, and store.query's per-table read routing with the read-only live connection, in store.py.",
       "writes_to": [
-        "cairn/devices/db_domain/tools/client/store.py"
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
       ],
       "reads": [
         "cairn/devices/db_domain/tools/client/store.py",
@@ -109,32 +90,48 @@
       "after": []
     },
     {
-      "n": 7,
-      "text": "the proof, one tooth per outcome 1-5, over the two real databases of the local Postgres, both asked by name.",
+      "n": 3,
+      "claim": "a table written through store.write by a process under a test id lands in cairn_testing, owner registry included, and the live database's owner registry is unchanged",
       "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py",
         "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
       ],
       "reads": [
-        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/tester/runs.py"
       ],
       "after": []
     },
     {
-      "n": 8,
-      "text": "test_db_domain.py's current_database() assertion reads store.database_name(), not store.DB_NAME, so it stays green under a marked run (bounds gap the build measured).",
+      "n": 4,
+      "claim": "under a test id, store.query of a live table the run has not created returns the live rows (a count equals the count read without a test id), and an INSERT sent through that read path raises a read-only error; the live row count is unchanged across the tooth",
       "writes_to": [
-        "cairn/devices/db_domain/proofs/test_db_domain.py"
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
       ],
       "reads": [
-        "cairn/devices/db_domain/proofs/test_db_domain.py",
-        "cairn/devices/db_domain/tools/client/store.py"
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/tester/runs.py"
+      ],
+      "after": []
+    },
+    {
+      "n": 5,
+      "claim": "under a test id, a table the run created through store.write is read by store.query from cairn_testing (its rows, not live's), and the live database holds no table of that name",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py",
+        "cairn/devices/tester/runs.py"
       ],
       "after": []
     }
   ],
   "chart": {
     "orient": {
-      "request": "e4fd7f28faaf: a test run reaches a TESTING database, never the live one \u2014 store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
+      "request": "e4fd7f28faaf: a test run reaches a TESTING database, never the live one — store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
       "intent": "Under a test run (the process carries CAIRN_TESTER_TEST_ID) every write the store door makes lands in `cairn_testing`, never in `cairn`: store.write, a scratch table minted, the owner and scratch registries, ensure_database. Reads are not redirected: under a test run store.query reads live, except a table the run itself created in cairn_testing, which it reads there (outline 4.3.1.5.1.5.2 clause 4: testing first, live underneath). Live is read under a test run only through a read-only connection, so a proof can read live and cannot write it. Without a test id nothing changes: `cairn`.",
       "scope": "in: cairn/devices/db_domain/tools/client/store.py, cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py, cairn/devices/db_domain/proofs/test_db_domain.py, cairn/devices/db_domain/tools/client/validations/test_a_test_run_reaches_a_testing_database_never_the_live_one.json, cairn/devices/db_domain/validations/test_db_domain.json; out: the bus and every other component (they reach the database through the store door, and the environment variable they already carry picks the database), 2b3d842bc118's proof (re-pointed by its own ticket), the sync (3ef8654a8027 v2)",
       "unknowns": [],
@@ -216,7 +213,7 @@
       "sub_problems": [
         {
           "what": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
-          "why": "Law 8 \u2014 a proof's writes never touch the live record it is measuring",
+          "why": "Law 8 — a proof's writes never touch the live record it is measuring",
           "kind": "build",
           "fills": "store.database_name() in cairn/devices/db_domain/tools/client/store.py picks cairn_testing under a test id for every write, and store.query routes reads per table with a read-only live connection",
           "uses": [
@@ -292,5 +289,10 @@
         "unknowns": "claude"
       }
     }
-  }
+  },
+  "constraints": [
+    "D1: database_name(), the write-side uses, and store.query's per-table read routing with the read-only live connection, in store.py.",
+    "D2: the proof, one tooth per outcome 1-5, over the two real databases of the local Postgres, both asked by name.",
+    "D3: test_db_domain.py's current_database() assertion reads store.database_name(), not store.DB_NAME, so it stays green under a marked run (bounds gap the build measured)."
+  ]
 }
