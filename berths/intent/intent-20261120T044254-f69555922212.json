@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Changing the proxies' device_id to their folder names would also do it, but it reds dbproxy's own falsifier ('when the shim's device_id or the charter's answers_as is not database') and the bus name; keying the file by folder in the base shim is the smaller change and matches bin/cairn's rule.",
+      "hidden_assumption": "That only last_known is written under the alias dir: measured, ~/.cairn/devices/database/0 and inference/0 hold only last_known.json. And that folder_of reading charters per persist is cheap: rack iterates ~20 folders, cached on the shim.",
+      "prior_art": "CairnCommons/tickets/8c5fdb750b75-a-charter-s-answers-as-outranks-a-stray-instance-space-dir-of-that-name.json fixed the launcher side and named this as its own ticket; bin/cairn's answers_as block and cairn/tools/rack/rack.py folder_of already resolve alias to folder; grep of tickets/ and questions/ for _last_known_path found no ticket for it.",
+      "real_collision": "None exclusive: 8c5fdb750b75 rules a declared name outranks a stray dir, which this removes rather than contradicts; device_id stays the bus name."
+    },
+    "exit": "routed_forward",
+    "falsifier": "a shim whose device_id is a charter's answers_as persists last_known at instance_path(<declaring folder>, n)/last_known.json, and nothing is created at instance_path(device_id, n); a shim whose device_id is no charter's answers_as persists last_known at instance_path(device_id, n)/last_known.json, byte-path unchanged; migration: with last_known only at the old alias address, a fresh shim's cold read returns that record, the record then stands under the folder, and the alias file, its <n>/ dir and the alias dir are gone; with a record at both addresses, the cold read returns the folder's and the alias file is gone; no other caller of the last_known path breaks: cairn/tools/base/proofs/test_shim.py, test_root_verbs.py, test_root_verb_vocabulary.py and bin/proofs/test_a_declared_name_outranks_a_stray_instance_dir.py pass unchanged",
+    "from_idea": "none, because the debt was named in CairnCommons/tickets/8c5fdb750b75-a-charter-s-answers-as-outranks-a-stray-instance-space-dir-of-that-name.json bounds.out, not captured as an idea",
+    "how": "BaseShim._last_known_path keys by the folder rack.folder_of(device_id) names when device_id is a charter's answers_as, else by device_id unchanged (the launcher's own rule, bin/cairn answers_as block). _read_last_known migrates: when the folder record is absent and the alias record stands, it reads the alias record, writes it under the folder atomically, removes the alias file and then the alias <n>/ and <alias>/ dirs if left empty; when both stand, it reads the folder record and removes the alias one. The red-first proof runs over a scratch instance root (address.ROOTS) with a throwaway shim whose device_id is a real charter's answers_as.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 5 (the address carries what a mind needs now: an alias dir holding a stray cache misstates what devices exist) and Law 6 (one owner: the dbproxy record berths under dbproxy's address, not a second one)",
+    "what": "A shim keeps its last_known under the rack folder that declares it, so a device whose shim answers to a declared name (dbproxy as database, inferenceproxy as inference) writes no alias-named directory in instance-space, and the strays already standing migrate home once and are gone."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Two live alias dirs (database/0, inference/0) exist only because BaseShim keys last_known by device_id; this ticket migrates them home."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3db1c3debd3a",
+  "skill": "intent",
+  "title": "A shim keeps its last_known under the rack folder that declares it, so a device whose shim answers to a declared name (d",
+  "trace_id": "61db01b4fbcb",
+  "when": "2026-11-20T04:42:54.548690"
+}
