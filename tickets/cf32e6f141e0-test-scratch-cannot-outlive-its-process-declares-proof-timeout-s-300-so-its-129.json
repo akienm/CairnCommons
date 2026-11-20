@@ -1,0 +1,64 @@
+{
+  "id": "cf32e6f141e0",
+  "title": "test_scratch_cannot_outlive_its_process declares PROOF_TIMEOUT_S = 300, so its 129 s wall is not read as a 120 s timeout",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "intention": "test_scratch_cannot_outlive_its_process.py declares a top-level PROOF_TIMEOUT_S = 300, and the tester's run_proof runs it at that budget.",
+  "why": "Measured 2026-11-19: 2026-11-19 on akiendell (Windows), origin/main f56f0f8fd: bin/cairn test at the default 120 s budget TIMED OUT (nothing written); at --timeout 540 it finished in 129 s wall (7 of 8 teeth pass; the one red, test_the_moved_proofs_stay_green, is the librarian's test_librarian_trees.py, queued for a Linux read, not a timeout). Its slow tooth runs the four _MOVED sibling proofs as subprocesses (timeout=300 each). aa750de17382 (PROVED) fixed the fork, not the budget. Law 7: a timeout is a measurement of the budget, not a red of the proof.",
+  "traces_to": "Law 3 (the budget is measured wall plus margin); Law 4 (the budget is the proof's own byte).",
+  "how": "A hypothesis, measured by the proof: add `PROOF_TIMEOUT_S = 300` at the top level of cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py. Budget = measured wall plus margin: 129 s idle on Windows, so 300 s is 2.3x it and 2.5x the 120 s default that already timed it out. No Linux wall is read yet; if akienasus measures above 300 s the number is re-measured, not guessed up. The mechanism is 8383a32d20c5's; aa750de17382 is PROVED, so this is a new ticket, not a decision on it.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the proof source declares PROOF_TIMEOUT_S as a top-level positive integer, 300, read through the tester's declared_timeout"
+      },
+      {
+        "n": 2,
+        "claim": "run_proof on a fixture carrying that proof's declared value, at the reseal door's 120 s caller budget, runs at 300: the budget the run records is 300, not 120"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: test_scratch_cannot_outlive_its_process.py declares a top-level PROOF_TIMEOUT_S = 300, and the tester's run_proof runs it at that budget.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof reads declared_timeout and runs run_proof at a 120 s caller budget, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/db_domain/proofs/test_the_scratch_proof_declares_a_budget_above_its_wall.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_proof_declares_its_own_time_limit.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py",
+    "cairn/devices/db_domain/proofs/test_the_scratch_proof_declares_a_budget_above_its_wall.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/proofs/test_scratch_cannot_outlive_its_process.py",
+      "cairn/devices/db_domain/proofs/test_the_scratch_proof_declares_a_budget_above_its_wall.py"
+    ],
+    "out": [
+      "cairn/devices/tester/device.py (the mechanism is 8383a32d20c5's)",
+      "every other proof"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "2026-11-19 on akiendell (Windows), origin/main f56f0f8fd: bin/cairn test at the default 120 s budget TIMED OUT (nothing written); at --timeout 540 it finished in 129 s wall (7 of 8 teeth pass; the one red, test_the_moved_proofs_stay_green, is the librarian's test_librarian_trees.py, queued for a Linux read, not a timeout). Its slow tooth runs the four _MOVED sibling proofs as subprocesses (timeout=300 each). aa750de17382 (PROVED) fixed the fork, not the budget.",
+      "how": "PYTHONPATH=. bash bin/cairn test of the proof on akiendell at the default budget (timeout) and at --timeout 540 (129 s)"
+    }
+  ]
+}
