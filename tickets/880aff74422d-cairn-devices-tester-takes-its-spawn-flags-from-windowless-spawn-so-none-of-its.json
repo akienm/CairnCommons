@@ -1,0 +1,79 @@
+{
+  "id": "880aff74422d",
+  "title": "cairn/devices/tester takes its spawn flags from windowless_spawn, so none of its subprocess calls opens a console window",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "Every subprocess spawn in cairn/devices/tester (cli.py, hollow.py, isolation.py, a_commit_that_reseals_leaves_a_clean_tree.py, red_tickets.py, reseal.py, working_bytes.py) takes its keywords from cairn.tools.windowless_spawn, so none opens a visible console window on Windows.",
+  "why": "Akien 2026-11-20: popups while he works on the same box are annoying and sometimes interrupt his typing. Measured 2026-11-20 on akiendell: 7 non-proof file(s) in cairn/devices/tester (cli.py, hollow.py, isolation.py, a_commit_that_reseals_leaves_a_clean_tree.py, red_tickets.py, reseal.py, working_bytes.py) call subprocess with neither detached_kwargs nor windowless_kwargs, and the scan that guards the helper looks only for Popen. This is cairn/devices/tester's share of the sweep under 364704f371dd.",
+  "traces_to": "CP4 (the system serves the person at the box); Law 4 (the widened scan enforces it); Rule 1 (the build lives inside its own component).",
+  "how": "In each named file, pass windowless_kwargs() (the caller waits) or detached_kwargs() (the child outlives it) to every subprocess call, importing from cairn.tools.windowless_spawn.windowless_spawn; a call that must show a terminal keeps none and carries a marker comment. Red-first proof cairn/devices/tester/proofs/test_tester_takes_its_spawn_flags_from_the_helper.py asserts unhelped_sites over cairn/devices/tester names nothing.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "unhelped_sites over cairn/devices/tester names no file"
+      },
+      {
+        "n": 2,
+        "claim": "the component's behaviour is unchanged: its existing proofs read as they did before the edit"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: every subprocess call in cli.py, hollow.py, isolation.py, a_commit_that_reseals_leaves_a_clean_tree.py, red_tickets.py, reseal.py, working_bytes.py takes the helper's keywords (clause 1).",
+      "writes_to": [
+        "cairn/devices/tester/cli.py",
+        "cairn/devices/tester/hollow.py",
+        "cairn/devices/tester/isolation.py",
+        "cairn/devices/tester/probes/a_commit_that_reseals_leaves_a_clean_tree.py",
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/tester/reseal.py",
+        "cairn/devices/tester/working_bytes.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/devices/tester/cli.py",
+        "cairn/devices/tester/hollow.py",
+        "cairn/devices/tester/isolation.py",
+        "cairn/devices/tester/probes/a_commit_that_reseals_leaves_a_clean_tree.py",
+        "cairn/devices/tester/red_tickets.py",
+        "cairn/devices/tester/reseal.py",
+        "cairn/devices/tester/working_bytes.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, modelled on the tester's.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_tester_takes_its_spawn_flags_from_the_helper.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/cli.py",
+      "cairn/devices/tester/hollow.py",
+      "cairn/devices/tester/isolation.py",
+      "cairn/devices/tester/probes/a_commit_that_reseals_leaves_a_clean_tree.py",
+      "cairn/devices/tester/red_tickets.py",
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/working_bytes.py",
+      "cairn/devices/tester/proofs/test_tester_takes_its_spawn_flags_from_the_helper.py"
+    ],
+    "out": [
+      "every other component",
+      "cairn/tools/windowless_spawn"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "7 non-proof file(s) in cairn/devices/tester call subprocess without helper keywords: cli.py, hollow.py, isolation.py, a_commit_that_reseals_leaves_a_clean_tree.py, red_tickets.py, reseal.py, working_bytes.py",
+      "how": "grep -rlE subprocess.(run|Popen|call|check_output|check_call) over cairn, bin and skills, minus proofs, then a check for detached_kwargs or windowless_kwargs in each, grouped by nearest intention+why.json"
+    }
+  ]
+}
