@@ -1,0 +1,74 @@
+{
+  "id": "21f9628872da",
+  "title": "the tester answers an exec ask over the bus with the run record of a seal-grade --exec of the command, and refuses loudly when its seal is unconfirmed",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's public interface (the bus) carries an `exec` verb: given a literal command it runs the seal-grade `--exec` path and replies the run record, and when its own seal is unconfirmed it replies the refusal and runs nothing.",
+  "why": "Measured 2026-11-19: the tester's verbs are run, notices and notice-seen (cairn/devices/tester/device.py:567). `run` takes a proof PATH and runs it at isolation none, so it is not seal-grade and cannot carry a verdict instrument, which is a literal command (outline 9.4.8.1.2). The seal-grade command run, run_exec (ticket 2c9eeab2da87), is a CLI entry only. So a box without bubblewrap (akiendell, whose verdicts for 35bb99574043 and 1eeeab70c59e exited 2 with 'cairn test --exec: refused — the instance seal is not confirmed') has nothing it can ask. Outline 9.4.8.1: such a box asks the sealer; RULE 1: the ask goes through the bus.",
+  "traces_to": "Law 8 (prove, then trust: a peer's re-run of an instrument is seal-grade or it is not a proof); RULE 1 (a device's public interface is the bus); Law 7 (a refused seal stays loud).",
+  "how": "A hypothesis, measured by the proof: TesterDevice.declared_verbs gains `exec` beside `run`; its handler runs run_exec's sealed path with stdout and stderr captured and replies {command, exit, timed_out, timeout_s, seconds, tail, seal_refused?} in the shape verdict.run_instrument already records. A refusal replies the exact `cairn test --exec: refused` line and runs no command. Red-first proof under cairn/devices/tester/proofs/, one tooth per clause, PROVES declared.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "the tester's `verbs` lists `exec`, and an `exec` ask of a passing command replies exit 0 with the record's keys command, exit, timed_out, timeout_s, seconds, tail"
+      },
+      {
+        "n": 2,
+        "claim": "an `exec` ask of a failing command replies that command's own exit code and its output tail, not a refusal"
+      },
+      {
+        "n": 3,
+        "claim": "an `exec` ask on a box whose seal cannot be confirmed replies the `cairn test --exec: refused` line in seal_refused, exit 2, and the command is not run (a marker file it would write does not exist)"
+      },
+      {
+        "n": 4,
+        "claim": "an `exec` ask with no command, or a non-string one, is refused by name and nothing is run"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the tester answers `exec` by calling run_exec's sealed path in-process with its output captured, and replies the record; it builds no seal of its own.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/codemother/machines/verdict/verdict.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof drives the verb through the device's declared_verbs, one tooth per clause, PROVES declared; the seal-confirmed teeth name a skip reason on a box without bwrap.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_exec_refuses_what_it_cannot_honour.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/tester/device.py",
+    "cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py"
+    ],
+    "out": [
+      "cairn/devices/codemother/machines/verdict (the consumer is 86cccb7d30f7)",
+      "federated bus routing (outline 5.5.3.8, a separate intention)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-19",
+      "saw": "TesterDevice.declared_verbs returns run, notices, notice-seen and the base verbs; no exec; run_exec is reached only through the CLI",
+      "how": "read cairn/devices/tester/device.py lines 555-580 and 988-1060 on akiendell at main c18939ee6"
+    }
+  ]
+}

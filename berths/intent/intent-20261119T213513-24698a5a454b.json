@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked: (a) reuse the existing `run` verb, rejected: it takes a proof path and runs isolation none, not seal-grade, and not a command (outline 9.4.8.1.2: the instrument is the literal command the sealer runs); (b) let each caller shell out to `cairn test --exec` on the sealer box, rejected: there is no remote shell, and a CLI entry is not a public interface.",
+      "hidden_assumption": "That run_exec can be called in-process from a bus handler: it uses the caller's own stdin/stdout/stderr and prints its refusal to stderr, so the handler must capture them. Also that a handler may take minutes (the bus handler bound is the caller's timeout).",
+      "prior_art": "In-house: 2c9eeab2da87 (run_exec, the sealed CLI entry, PROVED), 67b78ae59c1d (the `run` verb), 68cef2ddd8ef (the verdict runs instruments through --exec). Grepped CairnCommons tickets for a tester exec verb: none.",
+      "real_collision": "None with run (a different input). Related, not exclusive: 86cccb7d30f7 consumes this verb; federated routing (outline 5.5.3.8) is a separate intention."
+    },
+    "exit": "routed_forward",
+    "falsifier": "A bus ask `exec` of `true` returns exit 0 from a confirmed seal; of `false` returns exit 1; on a box whose seal cannot be confirmed it returns the refusal and no command ran; the verb is listed by `verbs`.",
+    "from_idea": "none, because it is a measured gap: ticket 86cccb7d30f7 and outline 9.4.8.1 (cairn/devices/cairn/requirements/09-codemother-device.md); the tester's verbs are at cairn/devices/tester/device.py:567",
+    "how": "Add an `exec` verb to TesterDevice.declared_verbs beside `run`: body {command, timeout}; it runs run_exec's sealed path and replies the run record {command, exit, timed_out, timeout_s, seconds, tail, seal_refused?}. A seal it cannot confirm replies a refusal carrying the exact cairn test --exec refusal line and runs nothing. First-cut: a hypothesis, the red-first proof measures it.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8 (prove, then trust: a peer's run of an instrument is seal-grade or it is not a proof); RULE 1 (the tester's public interface is the bus, so a seal-grade command run must be a verb, not a CLI entry); Law 7 (a refused seal stays loud and recorded).",
+    "what": "The tester answers an `exec` ask over the bus with the run record of a seal-grade `--exec` of the command, and refuses loudly when its own seal is unconfirmed."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The tester has no bus verb for a seal-grade command run: `run` takes a proof path at isolation none; `cairn test --exec` is CLI only. So a box without bwrap cannot ask a sealer for an instrument run."
+    },
+    {
+      "stratum": "code",
+      "text": "Consumer: 86cccb7d30f7 (the verdict on a box without bubblewrap asks the sealer). Federation routing is not cast here."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3d668bc66786",
+  "skill": "intent",
+  "title": "The tester answers an `exec` ask over the bus with the run record of a seal-grade `--exec` of the command, and refuses l",
+  "trace_id": "37091d05d745",
+  "when": "2026-11-19T21:35:13.909702"
+}
