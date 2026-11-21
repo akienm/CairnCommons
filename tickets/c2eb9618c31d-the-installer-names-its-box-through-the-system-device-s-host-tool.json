@@ -25,21 +25,35 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: each site reads the host from cairn.devices.system_rackmount.tools.host.host. Both `hostname or platform.node()...` defaults become `hostname or host_name()` with a lazy import from cairn.devices.system_rackmount.tools.host.host; the explicit hostname= parameter stays. ask_box_identity names the TLS identity from `me` (tls.make_identity(d, me)), and host_name() lowercases it; the dry_run tooth never makes an identity.",
+      "text": "D1 (clause 1): both `hostname or platform.node()` defaults (installer.py:134, :182) become `hostname or host_name()` with a lazy import from cairn.devices.system_rackmount.tools.host.host, `import platform` dropped; tooth test_it_asks_the_os_no_hostname scans the file's AST.",
       "writes_to": [
-        "cairn/devices/recovery/machines/installer/installer.py"
+        "cairn/devices/recovery/machines/installer/installer.py",
+        "cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py",
+        "cairn/devices/system_rackmount/tools/host/host.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2 (clause 2): tooth test_the_installer_names_its_box_with_os_uname_gone runs ask_cairn_home over a scratch rc with CAIRN_HOME_HOST unset and an asker answering 'x', os.uname deleted and platform._uname_cache cleared before and after.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py"
       ],
       "reads": [
         "cairn/devices/recovery/machines/installer/installer.py"
       ]
     },
     {
-      "n": 2,
-      "text": "D2: the red-first proof cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py, one tooth per clause, PROVES keyed to this ticket; it deletes os.uname for each call and restores it in finally, and reads no live ~/.cairn.",
+      "n": 3,
+      "text": "D3 (clause 3): tooth test_the_box_identity_knows_its_home_with_os_uname_gone runs ask_box_identity(dry_run=True) over a scratch tls_dir for host_name().upper()+'.lan' and for testing-rec-other-box; dry_run makes no identity.",
       "writes_to": [
         "cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py"
       ],
-      "reads": []
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
     }
   ],
   "bounds": {
