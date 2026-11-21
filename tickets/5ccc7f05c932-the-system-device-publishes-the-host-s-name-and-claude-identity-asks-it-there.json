@@ -1,0 +1,125 @@
+{
+  "id": "5ccc7f05c932",
+  "title": "the system device publishes the host's name, and claude_identity asks it there",
+  "owning_intention": "cairn/tools/base/intention+why.json",
+  "intention": "claude_identity.who() names this box's host on every OS Cairn runs on, Windows included. It asks the system device through a tool that device publishes, cairn/devices/system_rackmount/tools/host, so saveslate stops crashing on Windows and no tool reaches unpublished device code.",
+  "why": "Akien, 2026-11-21, relayed verbatim by akiendelllinux_cc_orchestrator: \"hostname should come from the system device.\" Measured: saveslate crashed on akiendell (Windows) at cairn/tools/base/claude_identity.py:108, '\"host\": os.uname().nodename', because os.uname does not exist on Windows. Saveslate auto-commit 4794006a7 (2026-11-20 19:54) changed the line to call cairn.devices.system_rackmount.rackmount.host_name, which was the right home but the wrong path. system_rackmount's public_interface is [], so the import is a RULE 1 breach, and encapsulation_breaches reds it on main today. That commit carried no ticket and no proof.",
+  "traces_to": "RULE 1 (a device's public interface is the bus plus any client tool it publishes); Law 8 (4794006a7 entered proven-space with no proof); Law 3 (the Windows crash is measured at n=1, from a packet still unread).",
+  "how": "Move host_name() and os_id() out of cairn/devices/system_rackmount/rackmount.py into a new published tool, cairn/devices/system_rackmount/tools/host/host.py. The spelling stays platform.node().split('.')[0].lower() and platform.system().lower(), with no socket import. The tool gets a charter shaped like cairn/devices/trouble/tools/store/intention+why.json: published_by_device true, and public_interface naming exactly cairn.devices.system_rackmount.tools.host.host. It is written through the artifact door before BUILDME. rackmount.py keeps neither function, because nothing else calls them. claude_identity.who() imports host_name lazily from the published module. The system_rackmount charter's public_interface names the module. Two red-first proofs: one in tools/base for who() and its imports (clauses 1-2), and one beside the tool for the tool alone (clause 3).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with os.uname deleted from the os module for the length of the call, claude_identity.who() returns a dict whose host is non-empty, contains no '.', equals its own lowercase, and equals cairn.devices.system_rackmount.tools.host.host.host_name()"
+      },
+      {
+        "n": 2,
+        "claim": "build_inspector.encapsulation_breaches lists no row whose file is cairn/tools/base/claude_identity.py, and claude_identity.py imports cairn.devices.system_rackmount.tools.host.host and no other cairn.devices module"
+      },
+      {
+        "n": 3,
+        "claim": "the published tool alone: with os.uname deleted, host_name() is non-empty, has no '.', and is lowercase; os_id() is one of windows, linux, darwin; host.py imports no socket; and its intention+why.json declares published_by_device true with public_interface exactly ['cairn.devices.system_rackmount.tools.host.host']"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the published tool. cairn/devices/system_rackmount/tools/host/host.py holds host_name() and os_id() moved from rackmount.py, with their docstrings ('the one place the os calls live'). Its intention+why.json follows the trouble/tools/store shape: published_by_device true, public_interface [the one module], owner none of its own (a tool has users), and held by system_rackmount.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/host/host.py",
+        "cairn/devices/system_rackmount/tools/host/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/rackmount.py",
+        "cairn/devices/trouble/tools/store/intention+why.json"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: rackmount.py keeps neither function. Measured 2026-11-21: nothing but claude_identity calls rackmount.host_name or rackmount.os_id.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/rackmount.py"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/rackmount.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: claude_identity.who() imports host_name from cairn.devices.system_rackmount.tools.host.host, lazily inside who() as it does today.",
+      "writes_to": [
+        "cairn/tools/base/claude_identity.py"
+      ],
+      "reads": [
+        "cairn/tools/base/claude_identity.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the system_rackmount charter's public_interface names cairn.devices.system_rackmount.tools.host.host. The write rides the artifact door.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/intention+why.json"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: a red-first proof cairn/tools/base/proofs/test_who_names_the_host_through_the_system_device.py, PROVES {1, 2}. Tooth 1 deletes os.uname (getattr/delattr, restored in finally) and calls who() over a scratch sessions dir. Tooth 2 reads encapsulation_breaches('.') for rows from claude_identity.py and the module's ImportFrom targets by ast.",
+      "writes_to": [
+        "cairn/tools/base/proofs/test_who_names_the_host_through_the_system_device.py"
+      ],
+      "reads": [
+        "cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py",
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 6,
+      "text": "D6: a red-first proof cairn/devices/system_rackmount/tools/host/proofs/test_the_host_tool_names_the_box.py, PROVES {3}, measuring the tool alone.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/host/proofs/test_the_host_tool_names_the_box.py"
+      ],
+      "reads": [
+        "cairn/devices/trouble/tools/store/proofs/test_the_store_tool_only_reads.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/system_rackmount/tools/host/host.py",
+      "cairn/devices/system_rackmount/tools/host/intention+why.json",
+      "cairn/devices/system_rackmount/rackmount.py",
+      "cairn/tools/base/claude_identity.py",
+      "cairn/devices/system_rackmount/intention+why.json",
+      "cairn/tools/base/proofs/test_who_names_the_host_through_the_system_device.py",
+      "cairn/devices/system_rackmount/tools/host/proofs/test_the_host_tool_names_the_box.py"
+    ],
+    "out": [
+      "validation_store.host_name and every other host-name site (spanning ticket B, one door names the host)",
+      "cairn/devices/cc/shim.py:100 (B's cc sibling)",
+      "cairn/tools/base/proofs/test_a_session_reads_which_claude_it_is.py's hand-spelled HOST (rides B)",
+      "a bus verb for the host's name (the no-bus callers rule it out)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "saveslate crashed on akiendell (Windows) at cairn/tools/base/claude_identity.py:108, os.uname absent; the measured packet is unread (akiendell offline 2026-11-21), so the crash site is taken from the line number and its code",
+      "how": "memory index line relayed by akiendelllinux_cc_orchestrator; git show 4794006a7^:cairn/tools/base/claude_identity.py line 108 reads '\"host\": os.uname().nodename'"
+    },
+    {
+      "when": "2026-11-21",
+      "saw": "encapsulation_breaches lists cairn/tools/base/claude_identity.py line 105 into cairn/devices/system_rackmount (module cairn.devices.system_rackmount.rackmount); system_rackmount public_interface is []",
+      "how": "PYTHONPATH=. python3 -c 'inspector.encapsulation_breaches(\".\")' on main dbae10a1e, akiendelllinux"
+    },
+    {
+      "when": "2026-11-21",
+      "saw": "Akien: \"hostname should come from the system device.\"",
+      "how": "relayed verbatim by akiendelllinux_cc_orchestrator, cross-session message 2026-11-21"
+    }
+  ]
+}
