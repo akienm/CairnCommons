@@ -1,0 +1,63 @@
+{
+  "id": "c2eb9618c31d",
+  "title": "the installer names its box through the system device's host tool",
+  "owning_intention": "cairn/devices/recovery/machines/installer/intention+why.json",
+  "intention": "The installer names its box through the system device's host tool: cairn/devices/recovery/machines/installer/installer.py:134; cairn/devices/recovery/machines/installer/installer.py:182 read the host from cairn.devices.system_rackmount.tools.host.host and nowhere else, so this component names its box on every OS.",
+  "why": "Akien, 2026-11-21, relayed by akiendelllinux_cc_orchestrator: \"hostname should come from the system device.\" Folded into outline 6.6.3.7 and 2.3.7.1.5 (branch akiendelllinux/host-door-outline, 97b4ce0b7). Measured 2026-11-21: cairn/devices/recovery/machines/installer/installer.py:134 (ask_cairn_home: platform.node().split('.')[0]); cairn/devices/recovery/machines/installer/installer.py:182 (ask_box_identity: platform.node().split('.')[0]) spell the host by hand, so a box with no os.uname (Windows) or a nodename the roster does not spell breaks here. Child of spanning ticket a577fd03e307 (one door names the host). Ticket 5ccc7f05c932 (READY c9824d056 on branch akiendelllinux/5ccc-host-door) builds the door, cairn/devices/system_rackmount/tools/host/host.py; this build starts after it lands on main, because the tool does not exist on main before then.",
+  "traces_to": "Outline 6.6.3.7 (the hostname comes from the system device); outline 2.3.7.1.5 (the system device's host tool is one of the client tools a device publishes, the named exception to 2.3.7; a CC by-line builds, 0.4.1); outline 17.26.1 (a published client tool lives with its device); RULE 1 (the system device's public interface is the tool it publishes); Law 1 (one answer, not N re-derivations of it).",
+  "how": "Both `hostname or platform.node()...` defaults become `hostname or host_name()` with a lazy import from cairn.devices.system_rackmount.tools.host.host; the explicit hostname= parameter stays. ask_box_identity names the TLS identity from `me` (tls.make_identity(d, me)), and host_name() lowercases it; the dry_run tooth never makes an identity.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an AST scan of cairn/devices/recovery/machines/installer/installer.py finds no call to os.uname, platform.node, platform.uname or socket.gethostname, and every host name those files read comes from cairn.devices.system_rackmount.tools.host.host.host_name"
+      },
+      {
+        "n": 2,
+        "claim": "with os.uname deleted, CAIRN_HOME_HOST absent from the environment, rc a scratch file and ask_text_fn recording its prompt and answering 'x', ask_cairn_home() returns status 'skipped' and its first prompt names host_name(); the scratch rc is unchanged"
+      },
+      {
+        "n": 3,
+        "claim": "with os.uname deleted and a scratch tls_dir, ask_box_identity(dry_run=True, home=host_name().upper() + '.lan') reports the home's held asks (not attaching), and ask_box_identity(dry_run=True, home='testing-rec-other-box') reports first contact with testing-rec-other-box"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: each site reads the host from cairn.devices.system_rackmount.tools.host.host. Both `hostname or platform.node()...` defaults become `hostname or host_name()` with a lazy import from cairn.devices.system_rackmount.tools.host.host; the explicit hostname= parameter stays. ask_box_identity names the TLS identity from `me` (tls.make_identity(d, me)), and host_name() lowercases it; the dry_run tooth never makes an identity.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/machines/installer/installer.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py, one tooth per clause, PROVES keyed to this ticket; it deletes os.uname for each call and restores it in finally, and reads no live ~/.cairn.",
+      "writes_to": [
+        "cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/machines/installer/installer.py",
+      "cairn/devices/recovery/machines/installer/proofs/test_the_installer_names_its_box_through_the_system_device.py"
+    ],
+    "out": [
+      "every other component's host sites (siblings under a577fd03e307)",
+      "OS-family checks (platform.system, sys.platform, os.name): outline 6.6.3.7 claims the hostname only",
+      "cairn/devices/system_rackmount/tools/host/ (ticket 5ccc7f05c932)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-21",
+      "saw": "cairn/devices/recovery/machines/installer/installer.py:134 (ask_cairn_home: platform.node().split('.')[0]); cairn/devices/recovery/machines/installer/installer.py:182 (ask_box_identity: platform.node().split('.')[0])",
+      "how": "grep -rnE 'os\\.uname\\(\\)|platform\\.node\\(\\)|socket\\.gethostname\\(\\)|platform\\.uname\\(\\)' over cairn/ skills/ bin/ on branch akiendelllinux/5ccc-host-door (c9824d056)"
+    }
+  ]
+}
