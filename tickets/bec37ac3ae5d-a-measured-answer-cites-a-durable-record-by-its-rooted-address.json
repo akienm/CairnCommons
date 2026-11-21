@@ -5,7 +5,7 @@
   "intention": "The answer door records --measured as a dataref address (cairn:///, cairncommons:///, instance:///, outline 17.28.1.1) and refuses a record that resolves inside no durable root, so an answer's measurement is findable on every box after the worktree or scratch dir that held it is gone.",
   "why": "Measured 2026-11-21: 34 of 319 measured answers in CairnCommons/questions/ cite a record outside this box's durable roots and 32 of them no longer resolve here, among them worktree paths (wt-2a20, wt-castpair, wt-4c4a, wt-unq, wt-q126), /tmp scratchpads and akienasus's home paths. open-2921d9c2dbb8 and open-a9795e2009c1, answered today on cffb99063d09, cite files under /home/akien/dev/src/wt-hostb, a worktree cleared when its work lands. A measurement whose record vanishes is an unmeasured claim (Law 3), in a record of truth (Law 7).",
   "traces_to": "Law 3 (nothing is known until measured) and Law 7 (errors are permanent in records of truth)",
-  "how": "answer() resolves the --measured path, finds the durable roots (D1), refuses a path under none of them, and records measured as the dataref address '<scheme>:///<posix relative path>', the scheme from cairn.tools.dataref.dataref.SCHEMES inverted; a new keyword roots= (default address.ROOTS) is the seam the proof uses. The two named records are repointed through the artifact door (D4).",
+  "how": "answer() resolves the --measured path, finds the durable roots from the artifact door's roots() followed through .git to the main checkout (D1), refuses a path under none of them, and records measured as the dataref address '<scheme>:///<posix relative path>' (D3). test_question.py's measured tooth moves its record under its scratch commons (D5). The two named records are repointed through the artifact door (D4).",
   "falsifier": {
     "clauses": [
       {
@@ -29,13 +29,14 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1 (clause 1): durable_roots(roots) in question.py returns {'repo': main checkout, 'commons': main checkout's sibling CairnCommons, 'instance': roots['instance']}. The main checkout is roots['repo'] when <repo>/.git is a directory; when it is a file ('gitdir: <common>/worktrees/<n>'), the common dir comes from that gitdir's commondir file (relative to the gitdir) and the main checkout is its parent. No subprocess. answer() resolves measured and refuses one under none of them, naming the path and the roots. The artifact door's roots() is not used: from inside a worktree it names the worktree.",
+      "text": "D1 (clause 1): durable_roots() in question.py returns {'cairn': main checkout, 'cairncommons': its commons, 'instance': address.ROOTS['instance']}, starting from the artifact door's roots() (the world _ticket_file already reads, so a proof's scratch world is the door's world). The main checkout is door.roots()['cairn'] when its .git is a directory or absent, and the commons is door.roots()['CairnCommons']; when .git is a file ('gitdir: <common>/worktrees/<n>'), the common dir comes from that gitdir's commondir file (relative to the gitdir), the main checkout is its parent, and the commons is the main checkout's sibling CairnCommons. No subprocess. answer() resolves measured and refuses one under none of them, naming the path and the roots, and writes nothing.",
       "writes_to": [
         "cairn/tools/question/question.py",
         "cairn/tools/question/proofs/test_a_measured_answer_cites_a_durable_record.py"
       ],
       "reads": [
         "cairn/tools/question/question.py",
+        "cairn/tools/artifact/artifact.py",
         "cairn/tools/base/address.py",
         "cairn/machines/corrosion/citation.py"
       ]
@@ -74,6 +75,16 @@
         "../CairnCommons/questions/open-2921d9c2dbb8.json",
         "cairn/tools/dataref/dataref.py"
       ]
+    },
+    {
+      "n": 5,
+      "text": "D5 (keeps c62df2454322's tooth true under the new door): teeth_measured in test_question.py writes its record under the scratch commons instead of the scratch tmp root, and expects answered_by 'measurement: cairncommons:///<name>' and measured equal to that address; the missing-record refusal (b) and the CLI path (c) keep their meaning.",
+      "writes_to": [
+        "cairn/tools/question/proofs/test_question.py"
+      ],
+      "reads": [
+        "cairn/tools/question/proofs/test_question.py"
+      ]
     }
   ],
   "bounds": {
@@ -81,7 +92,8 @@
       "cairn/tools/question/question.py",
       "cairn/tools/question/proofs/test_a_measured_answer_cites_a_durable_record.py",
       "../CairnCommons/questions/open-2921d9c2dbb8.json",
-      "../CairnCommons/questions/open-a9795e2009c1.json"
+      "../CairnCommons/questions/open-a9795e2009c1.json",
+      "cairn/tools/question/proofs/test_question.py"
     ],
     "out": [
       "the 32 other answers whose measured no longer resolves here (a separate backfill)",
