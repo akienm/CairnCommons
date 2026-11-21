@@ -1,0 +1,71 @@
+{
+  "id": "15d5d434f336",
+  "title": "the cc device names its host through the system device's host tool",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "The cc device names its host through the system device's host tool: cairn/devices/cc/shim.py:100; cairn/devices/cc/scripts/memory_sync.py:48; cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py:106; cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py:48; cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py:116 read the host from cairn.devices.system_rackmount.tools.host.host and nowhere else, so this component names its box on every OS.",
+  "why": "Akien, 2026-11-21, relayed by akiendelllinux_cc_orchestrator: \"hostname should come from the system device.\" Folded into outline 6.6.3.7 and 2.3.7.1.5 (branch akiendelllinux/host-door-outline, 97b4ce0b7). Measured 2026-11-21: cairn/devices/cc/shim.py:100 (poke_target: f\"{os.uname().nodename}_cc_0\"); cairn/devices/cc/scripts/memory_sync.py:48 (commit message: platform.node()); cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py:106 (os.uname().nodename); cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py:48 (platform.node().split('.')[0].lower()); cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py:116 (platform.node().split('.')[0].lower()) spell the host by hand, so a box with no os.uname (Windows) or a nodename the roster does not spell breaks here. Child of spanning ticket a577fd03e307 (one door names the host). Ticket 5ccc7f05c932 (READY c9824d056 on branch akiendelllinux/5ccc-host-door) builds the door, cairn/devices/system_rackmount/tools/host/host.py; this build starts after it lands on main, because the tool does not exist on main before then.",
+  "traces_to": "Outline 6.6.3.7 (the hostname comes from the system device); outline 2.3.7.1.5 (the system device's host tool is one of the client tools a device publishes, the named exception to 2.3.7; a CC by-line builds, 0.4.1); outline 17.26.1 (a published client tool lives with its device); RULE 1 (the system device's public interface is the tool it publishes); Law 1 (one answer, not N re-derivations of it).",
+  "how": "shim.py:100 becomes a lazy `from cairn.devices.system_rackmount.tools.host.host import host_name` inside poke_target. memory_sync.py runs by absolute path with no PYTHONPATH, so import host_name after its existing sys.path insert (memory_sync.py:52), and on ImportError fall back to naming no host in the commit message rather than failing the Stop hook. The three proofs bind their host from host_name() in place of the hand spelling, and test_an_idle_cc_session_is_told_it_has_mail.py:106 compares poke_target() to f\"{host_name()}_cc_0\". This is a proof edit: the intention those proofs show PROVED is unchanged, only where they read the name from.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "an AST scan of cairn/devices/cc/shim.py, cairn/devices/cc/scripts/memory_sync.py, cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py, cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py, cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py finds no call to os.uname, platform.node, platform.uname or socket.gethostname, and every host name those files read comes from cairn.devices.system_rackmount.tools.host.host.host_name"
+      },
+      {
+        "n": 2,
+        "claim": "with os.uname deleted from the os module for the call, CCShim.poke_target() returns host_name() + '_cc_0', the spelling superclaude gives the session (cairn/devices/cc/superclaude:260 lowercases the short hostname, :290 appends _cc_<instance>)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: each site reads the host from cairn.devices.system_rackmount.tools.host.host. shim.py:100 becomes a lazy `from cairn.devices.system_rackmount.tools.host.host import host_name` inside poke_target. memory_sync.py runs by absolute path with no PYTHONPATH, so import host_name after its existing sys.path insert (memory_sync.py:52), and on ImportError fall back to naming no host in the commit message rather than failing the Stop hook. The three proofs bind their host from host_name() in place of the hand spelling, and test_an_idle_cc_session_is_told_it_has_mail.py:106 compares poke_target() to f\"{host_name()}_cc_0\". This is a proof edit: the intention those proofs show PROVED is unchanged, only where they read the name from.",
+      "writes_to": [
+        "cairn/devices/cc/shim.py",
+        "cairn/devices/cc/scripts/memory_sync.py",
+        "cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py",
+        "cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py",
+        "cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/shim.py",
+        "cairn/devices/cc/scripts/memory_sync.py",
+        "cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py",
+        "cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py",
+        "cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof cairn/devices/cc/proofs/test_the_cc_device_names_its_host_through_the_system_device.py, one tooth per clause, PROVES keyed to this ticket; it deletes os.uname for each call and restores it in finally, and reads no live ~/.cairn.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_the_cc_device_names_its_host_through_the_system_device.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py",
+      "cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py",
+      "cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py",
+      "cairn/devices/cc/proofs/test_the_cc_device_names_its_host_through_the_system_device.py",
+      "cairn/devices/cc/scripts/memory_sync.py",
+      "cairn/devices/cc/shim.py"
+    ],
+    "out": [
+      "every other component's host sites (siblings under a577fd03e307)",
+      "OS-family checks (platform.system, sys.platform, os.name): outline 6.6.3.7 claims the hostname only",
+      "cairn/devices/system_rackmount/tools/host/ (ticket 5ccc7f05c932)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-21",
+      "saw": "cairn/devices/cc/shim.py:100 (poke_target: f\"{os.uname().nodename}_cc_0\"); cairn/devices/cc/scripts/memory_sync.py:48 (commit message: platform.node()); cairn/devices/cc/proofs/test_an_idle_cc_session_is_told_it_has_mail.py:106 (os.uname().nodename); cairn/devices/cc/proofs/test_a_launch_moves_off_a_held_instance.py:48 (platform.node().split('.')[0].lower()); cairn/devices/cc/proofs/test_superclaude_sets_cairn_user.py:116 (platform.node().split('.')[0].lower())",
+      "how": "grep -rnE 'os\\.uname\\(\\)|platform\\.node\\(\\)|socket\\.gethostname\\(\\)|platform\\.uname\\(\\)' over cairn/ skills/ bin/ on branch akiendelllinux/5ccc-host-door (c9824d056)"
+    }
+  ]
+}
