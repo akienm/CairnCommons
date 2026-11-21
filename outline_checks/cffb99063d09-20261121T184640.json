@@ -1,0 +1,119 @@
+{
+  "ticket": "cffb99063d09",
+  "at": "2026-11-21T18:46:40+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "reads": 3,
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1971021,
+      "duration_ms": 135618,
+      "is_error": false,
+      "session_id": "9b2be2ed-cf4a-49a3-94b4-9d53cba8042c"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1646321,
+      "duration_ms": 73882,
+      "is_error": false,
+      "session_id": "ad0749cb-a115-439e-aecc-9516337e267c"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.17924210000000002,
+      "duration_ms": 94766,
+      "is_error": false,
+      "session_id": "a8263da9-ce5d-45cd-b89a-e76f17cd16da"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "2b9ac293f42c3fb086de16ea395a87585cb4d4bdb93654fc327216e6e3eba15a",
+  "ticket_sha256": "b4af834e1f113a3094b24845ffb00da70ce8065c2d1d58a2eb783ed93cfd1c89",
+  "touches": [
+    {
+      "number": "2.3.7",
+      "text": "A device talks to other devices only over the bus, never by importing them."
+    },
+    {
+      "number": "2.3.7.1",
+      "text": "The exceptions are client tools a device publishes:"
+    },
+    {
+      "number": "6.6.3.1",
+      "text": "Recovery owns the OS and hardware Cairn runs on. Everything that is Cairn itself belongs to the Cairn device or to whichever device it's been delegated to."
+    },
+    {
+      "number": "9.4.2.3.1",
+      "text": "Runs a proof as its own process and writes a validation record (claim, caller, date, method, verdict, evidence, falsifier, horizon)."
+    },
+    {
+      "number": "17.13",
+      "text": "import_sieve: one parse of every .py into an import graph; what reaches what. WHY: enforces \"only the proxy reaches the host/database\" and RULE 1 by physics. USERS: CodeMother, the inference proxy."
+    },
+    {
+      "number": "17.13.1",
+      "text": "The RULE 1 check is a path check: code inside device bar may not import cairn.devices.foo (anything not under cairn.devices.bar), except a tool foo publishes (cairn.devices.foo.tools.<x>, its charter saying published_by_device). Inside one device there is one owner, so nothing is checked there. A charter's public_interface describes what the component offers (modules, functions, bus verbs, commands); the check does not read it. WHY: a path check is the simplest thing the code can test."
+    },
+    {
+      "number": "17.16",
+      "text": "proof_coverage: joins a ticket's falsifier clauses to the proofs that cover them and the seals that ran green. WHY: a falsifier nobody proves is a hypothesis (Law 3). USERS: the tester."
+    },
+    {
+      "number": "19.6",
+      "text": "RULE 1, ENCAPSULATION: every component talks to every other only through that component's public interface: a device's is the bus plus any client tool it publishes; a machine's or tool's is what its entry declares. Nothing outside a device reaches into its code, skills included. A ticket builds inside its own component, and its proofs measure only that component. WHY: it limits a change to the component that made it."
+    },
+    {
+      "number": "1.3.1",
+      "text": "Tool: a complete primitive. Has users, not an owner. Owns no state of its own. May use any library, other tools included. Lives in cairn/tools/ (17). Its data for a holder lives under that holder: ~/.cairn/devices/<device>/<instance>/tools/<tool>/. WHY: the rule keeps encapsulation useful inside our world, so the system stays within the complexity CC can manage. Forbidding libraries would forbid opening files. -amm"
+    },
+    {
+      "number": "17.25",
+      "text": "validation_store: reads and writes seals. USERS: the tester."
+    },
+    {
+      "number": "19.6.1",
+      "text": "Physics: the encapsulation_holds sieve in build_inspector, a device-path check. Code in device bar may not import cairn.devices.foo except a tool foo publishes. Inside one device nothing is checked."
+    },
+    {
+      "number": "6.6",
+      "text": "The host"
+    },
+    {
+      "number": "6.6.3",
+      "text": "INTENTION:"
+    },
+    {
+      "number": "17.26",
+      "text": "Where a tool lives: the general collection, cairn/tools/, is the default. A tool goes with its holder (cairn/devices/<d>/tools/) only when nothing else could ever use it (a tool for a part only that one device has). If there is any chance somebody else might want it, it goes in the general collection."
+    },
+    {
+      "number": "19.2.1",
+      "text": "Demonstrate inference compilation: a question answered once becomes structure (trees, code), and the model is spent only on the novel (Law 1)."
+    }
+  ],
+  "conflicts": [
+    {
+      "number": "2.3.7",
+      "text": "A device talks to other devices only over the bus, never by importing them.",
+      "ticket_says": "validation_store and every other component import directly from cairn.devices.system_rackmount.tools.host.host",
+      "why": "Outline 2.3.7 forbids devices from importing each other's code except for 4 explicitly listed exceptions (2.3.7.1). The host tool from system_rackmount is not among them, so this import violates the encapsulation rule unless the outline is updated to add it as a 5th exception"
+    },
+    {
+      "number": "17.26",
+      "text": "Where a tool lives: the general collection, cairn/tools/, is the default. A tool goes with its holder (cairn/devices/<d>/tools/) only when nothing else could ever use it (a tool for a part only that one device has). If there is any chance somebody else might want it, it goes in the general collection.",
+      "ticket_says": "host tool lives under cairn/devices/system_rackmount/tools/host/ and is used by every other component's host sites (siblings under a577fd03e307)",
+      "why": "Outline 17.26 specifies that a tool goes under cairn/devices/<d>/tools/ only when 'nothing else could ever use it.' Since the ticket explicitly shows multiple components using this tool, that condition is false. The tool should reside in cairn/tools/ per the outline's default location rule"
+    }
+  ],
+  "open_questions": [],
+  "unresolved": [],
+  "questions_opened": [
+    "open-a9795e2009c1",
+    "open-2921d9c2dbb8"
+  ],
+  "questions_already_open": []
+}
