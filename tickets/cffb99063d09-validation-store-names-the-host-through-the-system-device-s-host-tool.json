@@ -25,26 +25,44 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: each site reads the host from cairn.devices.system_rackmount.tools.host.host. Delete the body of host_name at validation_store.py:165-171 and bind the name by `from cairn.devices.system_rackmount.tools.host.host import host_name` at module level, so `vs.host_name` keeps resolving for cairn/devices/tester/cli.py:496 and the tester proof's patch at :121, and the store's own calls (193, 217, 517, 523, 542) read the module global. The tester needs no edit. The os_id fallbacks at :190-193 (platform.system) stay: the sole-door claim is the hostname's (outline 6.6.3.7).",
+      "text": "D1 (clause 1): delete the body of host_name at validation_store.py:165-171 and bind `from cairn.devices.system_rackmount.tools.host.host import host_name` at module level; the proof's tooth test_the_store_asks_the_os_no_hostname scans the store's AST and asserts vs.host_name is the tool's.",
       "writes_to": [
-        "cairn/tools/validation_store/validation_store.py"
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/tools/validation_store/proofs/test_the_store_names_the_host_through_the_system_device.py"
       ],
       "reads": [
-        "cairn/tools/validation_store/validation_store.py"
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/devices/system_rackmount/tools/host/host.py"
       ]
     },
     {
       "n": 2,
-      "text": "D2: the red-first proof cairn/tools/validation_store/proofs/test_the_store_names_the_host_through_the_system_device.py, one tooth per clause, PROVES keyed to this ticket; it deletes os.uname for each call and restores it in finally, and reads no live ~/.cairn.",
+      "text": "D2 (clause 2): tooth test_the_store_names_the_box_with_os_uname_gone deletes os.uname (clearing platform._uname_cache before and after, so the answer is asked fresh and never left cached for a later proof) and compares host_name() and host_facts()['hostname'] to the tool's.",
       "writes_to": [
         "cairn/tools/validation_store/proofs/test_the_store_names_the_host_through_the_system_device.py"
       ],
-      "reads": []
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/devices/system_rackmount/tools/host/host.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3 (clause 3): tooth test_a_rebound_host_name_moves_the_host_seam_seal rebinds vs.host_name and reads the host-seam seal path. And fe1cba85cb12's tooth the_tool_stands, which reds any cairn.devices import from the store, narrows to admit only a tool its device publishes (charter published_by_device true, the predicate encapsulation_holds reads, outline 17.13.1), with two in-tooth checks that device code proper (tester.device, rackmount) still reads as a reach. CC's decision: outline 2.3.7.1.5 and 6.6.3.7 route every caller through the published host tool, and a tool using a published tool keeps fe1c's why (the store stands a rung below the devices).",
+      "writes_to": [
+        "cairn/tools/validation_store/proofs/test_the_store_names_the_host_through_the_system_device.py",
+        "cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py",
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ]
     }
   ],
   "bounds": {
     "in": [
       "cairn/tools/validation_store/proofs/test_the_store_names_the_host_through_the_system_device.py",
+      "cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py",
       "cairn/tools/validation_store/validation_store.py"
     ],
     "out": [
@@ -58,6 +76,11 @@
       "when": "2026-11-21",
       "saw": "cairn/tools/validation_store/validation_store.py:165-171 (def host_name: platform.node().split('.')[0].lower())",
       "how": "grep -rnE 'os\\.uname\\(\\)|platform\\.node\\(\\)|socket\\.gethostname\\(\\)|platform\\.uname\\(\\)' over cairn/ skills/ bin/ on branch akiendelllinux/5ccc-host-door (c9824d056)"
+    },
+    {
+      "when": "2026-11-21",
+      "saw": "with the D1 import in place, cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py::the_tool_stands read RED: \"the tool imports device code: ['cairn.devices.system_rackmount.tools.host.host']\"; the other 2 teeth green",
+      "how": "bin/cairn test --exec python3 cairn/tools/validation_store/proofs/test_validation_store_is_a_tool.py in wt-cffb (branch akiendelllinux/cffb-host-store, on c9824d056)"
     }
   ]
 }
