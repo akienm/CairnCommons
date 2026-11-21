@@ -1,0 +1,70 @@
+{
+  "id": "50987e27621c",
+  "title": "a \"standing proofs stay green\" tooth reads the standing seals instead of re-running the proofs",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The tester's two standing-proof teeth ask whether the hollow proofs they name stand proven right now by reading their seals through cairn.tools.validation_store.validation_store.standing, fingerprint included, instead of re-running them, so both proofs seal green inside their own budgets and still read red over a red or stale seal.",
+  "why": "The re-run is what makes them red, and a bigger budget would only hide it. Those teeth re-run proofs that already carry their own seals, and component_color already reds tester when any of those seals goes red or stale, so the work is redundant (Law 1: re-deriving a settled answer is a defect). Measured 2026-11-21: cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py timed out at its 900 s budget solo, and cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py sealed red after 1522 s. The seal must be read with its fingerprint, or the tooth trusts a stale green, which is a hollow green and worse than the slow red (Law 8; orchestrator, 2026-11-21).",
+  "traces_to": "Law 1 (re-running a sealed proof re-derives a settled answer); Law 8 (prove, then trust: a proven peer's seal is leaned on, and a hollow green is worse than a red); Law 9 (a stale seal is not green); RULE 1 (the tester reads seals through validation_store's public interface, a tool with users).",
+  "how": "Replace each tooth's subprocess loop with a call to cairn.tools.validation_store.validation_store.standing over the same named proofs, asserting proven for each and putting standing()'s why in the assertion message. standing() already reds a missing seal, a red seal, and a green seal whose source_fingerprint no longer matches the closure it recorded (cairn/tools/validation_store/validation_store.py, standing), the same reading component_color makes, so the tooth trusts no stale green. Put the loop in one helper per file, e.g. _all_standing(paths), so a fixture tooth can ask it of planted paths. Add teeth for clause 2 (plant a scratch component with cairn.tools.scratch.scratch.scratch_dir: a proof file and its seal, once with verdict red, once green with a source_fingerprint that cannot match) and clause 3 (an AST scan over both files). PROVES keys this ticket's clauses to those teeth, and the existing keys (79aa8b19a840, 763379e32e3b) stay on the rewritten teeth. PROOF_TIMEOUT_S is lowered to what the remaining teeth measure, never raised.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "both proofs, cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py and cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py, seal green solo through bin/cairn test within their declared PROOF_TIMEOUT_S, once the standing proofs they name are sealed green over their current closures"
+      },
+      {
+        "n": 2,
+        "claim": "each standing-proof tooth (cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py::test_the_anchor_and_hollow_proofs_stay_green, cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py::test_the_standing_hollow_proofs_stay_green) reads red when one named proof's seal is red, and reads red when a named proof's seal is green but its source_fingerprint no longer matches the proof's current closure; each case is planted in a scratch component (a proof file beside its seal file, the path validations_path_for derives) and asked through the same helper the tooth uses"
+      },
+      {
+        "n": 3,
+        "claim": "neither tooth runs a standing proof as a subprocess: an AST scan of both files finds no subprocess call naming a proof path, and each tooth's answer comes from cairn.tools.validation_store.validation_store.standing(path)['proven'] for every named proof"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: both teeth read cairn.tools.validation_store.validation_store.standing over their named proofs through a helper; new teeth for clauses 2 and 3; PROVES keyed; PROOF_TIMEOUT_S lowered to a measured value. Replace each tooth's subprocess loop with a call to cairn.tools.validation_store.validation_store.standing over the same named proofs, asserting proven for each and putting standing()'s why in the assertion message. standing() already reds a missing seal, a red seal, and a green seal whose source_fingerprint no longer matches the closure it recorded (cairn/tools/validation_store/validation_store.py, standing), the same reading component_color makes, so the tooth trusts no stale green. Put the loop in one helper per file, e.g. _all_standing(paths), so a fixture tooth can ask it of planted paths. Add teeth for clause 2 (plant a scratch component with cairn.tools.scratch.scratch.scratch_dir: a proof file and its seal, once with verdict red, once green with a source_fingerprint that cannot match) and clause 3 (an AST scan over both files). PROVES keys this ticket's clauses to those teeth, and the existing keys (79aa8b19a840, 763379e32e3b) stay on the rewritten teeth. PROOF_TIMEOUT_S is lowered to what the remaining teeth measure, never raised.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py",
+        "cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py",
+        "cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py",
+        "cairn/tools/validation_store/validation_store.py",
+        "cairn/devices/tester/proofs/test_hollow.py",
+        "cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py",
+        "cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py"
+      ]
+    }
+  ],
+  "writes_to": [
+    "cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py",
+    "cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py",
+      "cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py"
+    ],
+    "out": [
+      "every other component",
+      "the three nested proofs themselves (cairn/devices/tester/proofs/test_hollow.py, cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py, cairn/devices/tester/proofs/test_hollow_anchors_before_the_build_that_stands.py)",
+      "cairn/tools/validation_store (read through standing(), unchanged)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-21",
+      "how": "bin/cairn test, solo on akiendelllinux, measured by akienasus_cc_0 (relayed 2026-11-21)",
+      "saw": "test_hollow 576 s green (budget 900); test_the_hollow_measures_the_repaired_build 738 s green (900); test_hollow_anchors_before_the_build_that_stands 101 s green (no budget). cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py declares 900 s and its tooth 3 runs all three serially (at least 1415 s): timed out at 900 s with nothing else running. cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py declares 2700 s and its tooth 4 runs test_hollow, hollow_anchor and repaired_build serially (about 576 + 900 capped + 738 s): sealed red after 1522 s; its 3 other teeth are green."
+    },
+    {
+      "when": "2026-11-21",
+      "how": "read origin/main at 86ac299ba",
+      "saw": "cairn/devices/tester/proofs/test_the_hollow_anchor_ignores_instrument_commits.py lines 171-178 and cairn/devices/tester/proofs/test_the_hollow_skips_only_the_instrument.py lines 161-168 each loop subprocess.run([sys.executable, <proof>], timeout=900) over three proofs"
+    }
+  ]
+}
