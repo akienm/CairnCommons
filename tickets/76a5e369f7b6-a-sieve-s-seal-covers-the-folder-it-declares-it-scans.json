@@ -1,0 +1,103 @@
+{
+  "id": "76a5e369f7b6",
+  "title": "a sieve's seal covers the folder it declares it scans",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "A proof whose subject is a folder declares SCANS, a list of repo-relative globs. Its seal's fingerprint covers what those globs match, so a repair to a scanned file, or a new matching file, moves the fingerprint and the commit's reseal re-runs the sieve instead of keeping its red as settled.",
+  "why": "Measured 2026-11-20 on akiendelllinux: the build commits for 0dbb6b5e940a (8ab52a07a) and f92d213f7dd0 (b47a845c1) each repaired files that two tester sieves scan. Both reseals printed those sieves as 'RED ... (rung 1 — settled ...)' even though diagnostic runs read them green twice. A sieve's closure holds the code it executes, never the files it reads, so the repair could not move its fingerprint, and only re-running it by name cleared it.",
+  "traces_to": "Law 1 (a settled answer is not re-derived, so the fingerprint must say what the answer was taken over) and Law 8 (a seal must measure its subject).",
+  "how": "The tester's seal reads a proof's module-level SCANS by ast.literal_eval (never by import), records evidence.scans, and unions the matches into fingerprint_closure. validation_store.closure_of, the one reader of a seal's closure, re-expands evidence.scans on each read. The two tester sieves declare SCANS. A red-first proof seals a fixture sieve and reads the fingerprint move.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a fixture sieve proof declaring SCANS, sealed through the tester, records evidence.scans and a fingerprint_closure naming every file its globs match"
+      },
+      {
+        "n": 2,
+        "claim": "after editing a file the SCANS globs match, sealed_fingerprint_now differs from the seal's recorded source_fingerprint"
+      },
+      {
+        "n": 3,
+        "claim": "after adding a new file the SCANS globs match, sealed_fingerprint_now differs from the seal's recorded source_fingerprint"
+      },
+      {
+        "n": 4,
+        "claim": "reseal with skip_settled over a sieve sealed red whose scanned file has since changed runs the proof, and does not return outcome settled-red"
+      }
+    ]
+  },
+  "constraints": [
+    "b7d5df9919fe clause 3 holds: cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py stays green, and a file a proof only reads as data, undeclared, stays out of its closure",
+    "a proof without SCANS seals the same fingerprint_closure as before the build",
+    "the two tester sieves cairn/devices/tester/proofs/test_tester_proofs_measure_only_tester.py and cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py keep every tooth's assertion and stay green"
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: validation_store.closure_of unions the sorted, repo-relative matches of evidence.scans (globs rooted at _REPO_ROOT, files only) into the recorded closure when evidence.scans is a list; it returns None exactly where it does today.",
+      "writes_to": [
+        "cairn/tools/validation_store/validation_store.py"
+      ],
+      "reads": [
+        "cairn/tools/validation_store/validation_store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: at the seal (device.py near _read_closure's call), the tester reads the proof's module-level SCANS with ast.literal_eval, records evidence['scans'], and joins its matches to the closure; a glob that matches nothing, or reaches outside the repo, is named in the run's output and not recorded.",
+      "writes_to": [
+        "cairn/devices/tester/device.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/device.py",
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the scratch-door sieve declares SCANS for the proofs it rglobs (cairn/devices/tester/**/proofs/test_*.py); measure_only_tester declares the tester tree it hands encapsulation_breaches (cairn/devices/tester/**/*.py).",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_tester_proofs_measure_only_tester.py",
+        "cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_tester_proofs_measure_only_tester.py",
+        "cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the red-first proof builds its fixture sieve under scratch_dir, one tooth per clause, and checks constraint 1 by running cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_sieve_seal_covers_the_folder_it_scans.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_a_module_loaded_by_path_is_in_the_seals_closure.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/validation_store/validation_store.py",
+      "cairn/devices/tester/device.py",
+      "cairn/devices/tester/proofs/test_tester_proofs_measure_only_tester.py",
+      "cairn/devices/tester/proofs/test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py",
+      "cairn/devices/tester/proofs/test_a_sieve_seal_covers_the_folder_it_scans.py"
+    ],
+    "out": [
+      "every other component; reseal.py is read, not written"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-20",
+      "saw": "both build-commit reseals printed 'reseal: N resealed · 3 settled-red' and named the two tester sieves as settled red, while bin/cairn test read each sieve green on two diagnostic passes (tester runs test-96f4befd5416, test-2098cdca851a, test-9844e5f56b23, test-e31e27f66b35)",
+      "how": "/var/tmp/proves/commitb.out and build.out on akiendelllinux, akienasus_cc_0"
+    },
+    {
+      "when": "2026-11-20",
+      "saw": "reseal.py:740 skips a red seal when sealed_fingerprint_now equals the recorded source_fingerprint; device.py:894 takes the closure from executed files plus the reach log only; closure_of (validation_store.py:339) is read at validation_store.py:364 and :609 and reseal.py:687 and :1114",
+      "how": "grep and sed of the house tree at 60c0cf4f5 on akiendelllinux"
+    }
+  ]
+}

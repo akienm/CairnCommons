@@ -1,0 +1,37 @@
+{
+  "answers": {
+    "assumption_check": "Measured 2026-11-20 on akiendelllinux: both build commits' reseals (wt-0dbb 8ab52a07a, wt-f92d b47a845c1) printed 'RED test_tester_proofs_measure_only_tester.py (rung 1 \u2014 settled ...)' and the same for test_the_testers_proofs_reach_temp_only_through_the_scratch_door.py, while diagnostic runs of both read green twice. Why: reseal.py:740 skips a red whose sealed_fingerprint_now equals the recorded fingerprint, and the closure is device.py:894's executed-file list, which holds no file a sieve only reads. Load-bearing assumption: every sieve's subject is writable as repo-relative globs. It is true of both tester sieves (proofs/test_*.py under the tester), and a run-time-computed subject stays out of scope.",
+    "builder_check": "A Haiku builder needs: (a) where the closure is taken: cairn/devices/tester/device.py:894, _read_closure(closure_out, proof, extra=reach). SCANS matches join extra there, and evidence['scans'] is recorded beside evidence['fingerprint_closure']. (b) Read SCANS with ast.literal_eval over the module-level assignment, never by importing the proof: the hollow takes subjects away. (c) cairn/tools/validation_store/validation_store.py:339 closure_of is the ONE reader: sealed_fingerprint_now :364, :609 and reseal.py :687 and :1114 all call it. Union the sorted, repo-relative glob matches (rooted at _REPO_ROOT) into the returned list when evidence.scans is a list. Return None exactly where it does today. (d) The two sieves declare SCANS = ['cairn/devices/tester/**/proofs/test_*.py'] (the scratch-door sieve's rglob at its :37), and measure_only_tester declares the tester tree it hands the encapsulation sieve. Read each proof's own scan before writing its glob. (e) The proof builds its fixture sieve under scratch_dir, never mkdtemp (the bare_temp_reach sieve reads docstrings too).",
+    "children": "none, because it is one seal recipe change in one component and the tool its seals read through",
+    "collision_check": "b7d5df9919fe clause 3 (PROVED): fixture data a proof only reads stays out of its closure, because a fixture's data is not the code under proof. A sieve's scanned folder IS its code under proof, so this is a distinction and not a collision. The line between the two is the SCANS declaration: a data read is not declared. Recorded as constraint 1, that ticket's clause-3 proof stays green (akiendelllinux_cc_0 2026-11-20). 143e3974647b chooses WHICH seals a commit re-runs. This ticket changes what a chosen seal's fingerprint covers, and that is the part settled-red reads.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "4 clauses, proof cairn/devices/tester/proofs/test_a_sieve_seal_covers_the_folder_it_scans.py: (1) a fixture sieve declaring SCANS, sealed through the tester, records evidence.scans and a fingerprint_closure naming every file its globs match; (2) editing a matched file moves sealed_fingerprint_now off the recorded fingerprint; (3) adding a new file that matches moves it too; (4) through reseal's skip_settled path, a sieve sealed red whose scanned file has since changed runs again rather than reading settled-red. Horizon: the next tester commit that repairs a file a sieve scans.",
+    "gates_bound": "code-seam: BUILDME entry gate, PROVEME build gate, PROVED exit gate",
+    "missing_check": "A file added after the seal is covered because closure_of re-expands the globs on every read (D1), not just at seal time. A glob reaching outside the repo, or one matching nothing, is refused at the seal: the evidence says what it matched. A proof without SCANS seals byte-for-byte the same closure as before (constraint 2). Nothing else in the component moves.",
+    "node_class": "code-seam",
+    "questions": "none, because akiendelllinux_cc_0 ruled it new and not b7d5df9919fe re-opened (2026-11-20), and the whys are in b7d5df9919fe clause 3",
+    "skill": "sorted",
+    "task_or_ticket": "ticket",
+    "title": "a sieve's seal covers the folder it declares it scans",
+    "watchme": "none, because every tester commit's reseal reads seals through closure_of in cairn/tools/validation_store/validation_store.py, so a sieve that still reads settled-red after a repair shows on the next land; the proof it ships with is the rest of its correctness",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A sieve's seal could not see what it measures, so after a repair the reseal kept its red as 'settled' and only re-running it by name cleared it. A declared SCANS makes the subject part of the fingerprint."
+    },
+    {
+      "stratum": "code",
+      "text": "closure_of is the single reader of a seal's closure (4 call sites), so re-expanding SCANS there covers recheck, settled-red and the commit's reseal in one place."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "9deb9a9b98e4",
+  "skill": "sorted",
+  "title": "a sieve's seal covers the folder it declares it scans",
+  "trace_id": "13ef91e724ae",
+  "when": "2026-11-20T18:24:53.263659"
+}

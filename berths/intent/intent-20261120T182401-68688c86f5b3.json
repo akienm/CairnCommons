@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: dropping the settled-red skip for sieves, or for every proof on commit. Rejected: it re-runs every red on every commit (Law 1), and it puts no reason on the seal. Considered: putting every file a proof opens into its closure. Rejected: that reverses b7d5df9919fe clause 3. A declared SCANS is the smallest change that names a sieve's subject.",
+      "hidden_assumption": "That every sieve's subject can be written as repo-relative globs. Both tester sieves rglob a fixed pattern, and that is true for them. A sieve whose subject is computed at run time would not fit, and it would stay blind as it is today.",
+      "prior_art": "In-house: b7d5df9919fe (PROVED) keeps fixture data reads out of the closure, clause 3; 6e50ed204abc and 734b22d09f2e widen the closure only to code executed; 675ab0daa171 narrows it to the import closure; 143e3974647b chooses which seals a commit re-runs. None declares a scanned folder. Grep of tickets/ and questions/ for fingerprint_closure plus scanned or settled-red found nothing that covers it.",
+      "real_collision": "b7d5df9919fe clause 3. Its why is that a fixture's data is not the code under proof. A sieve's scanned folder IS the code under proof, so the two are distinct and the distinction is recorded: SCANS is declared, while a data read is not. That ticket's clause-3 proof staying green is a constraint of this one (cc_0 2026-11-20)."
+    },
+    "exit": "routed_forward",
+    "falsifier": "after a repair to a file a sieve scans, a commit's reseal re-runs that sieve and reports it resealed, not settled-red; a fixture data read (b7d5df9919fe clause 3) stays out of its proof's closure",
+    "from_idea": "none, because it was measured at a land, not imagined: /var/tmp/proves/commitb.out on akiendelllinux records 'reseal: 3 settled-red' for two sieve proofs the build had repaired (wt-0dbb 8ab52a07a, wt-f92d b47a845c1)",
+    "how": "The proof declares a module-level SCANS list of repo-relative globs. The tester's seal reads it from the source (ast, no import), records it as evidence.scans and unions the matches into fingerprint_closure; validation_store.closure_of re-expands evidence.scans whenever it is read, so a file added later that matches moves the fingerprint too. The two tester sieves declare SCANS. A red-first proof seals a fixture sieve, edits and adds a scanned file, and reads the fingerprint move.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 1 (a settled answer is not re-derived, so the fingerprint has to say what the answer was taken over) and Law 8 (a sealed red that cannot be cleared by the repair is a seal that does not measure its subject).",
+    "what": "A proof whose subject is a folder declares what it scans, and its seal's fingerprint covers what those globs match, so a repair to a scanned file moves the fingerprint and the commit's reseal re-runs the sieve instead of keeping its red as settled."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A sieve proof's seal is blind to the folder it scans: after a repair the reseal keeps its red as 'settled' (Law 1), and only naming the proof by hand clears it. Measured at 0dbb and f92d's lands 2026-11-20."
+    },
+    {
+      "stratum": "code",
+      "text": "The fix keeps b7d5's rule (fixture data stays out of the closure) by making the subject declared: SCANS names it, and closure_of re-expands it on every read."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "ea73add94c49",
+  "skill": "intent",
+  "title": "A proof whose subject is a folder declares what it scans, and its seal's fingerprint covers what those globs match, so a",
+  "trace_id": "bebf004781c8",
+  "when": "2026-11-20T18:24:01.434909"
+}
