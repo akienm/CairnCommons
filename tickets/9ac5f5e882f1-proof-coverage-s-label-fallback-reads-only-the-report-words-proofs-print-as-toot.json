@@ -1,0 +1,66 @@
+{
+  "id": "9ac5f5e882f1",
+  "title": "proof_coverage's label fallback reads only the report words proofs print as tooth markers",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "The label fallback in teeth_printed mints a tooth only from the report tokens ok, pass, green, red and fail, so a green proof's indented data row that opens with another red-vocabulary word ('failed pull: rc 5 ...') is never read as a red tooth.",
+  "why": "Measured 2026-11-22: the GREEN seal cairn/devices/cc/validations/test_a_close_over_a_diverged_repo_rebases_or_stops.json carries teeth_red ['pull: rc 5, named, no crossing, 1 ahead, no rebase left open'], parsed from its data row '    failed pull: rc 5, ...' by _MARKER_LABEL (proof_coverage.py:93). It holds FIXME ae0d88a55edb with a red outside that ticket's bounds. 8e2018855b31 fixed only the path instance of this class; the invariant its tooth states, that the parser never invents a red from a green proof's printed data, still breaks for any red-vocabulary word opening a data row.",
+  "traces_to": "Law 8 and Law 9: a false red at the PROVED gate is distance the proof never reported. Law 1: fix the class, not the next instance.",
+  "how": "Resolve the _MARKER_LABEL marker against a narrower set LABEL_MARKERS = {ok, pass, green, red, fail} (folded); a label line whose marker is outside it mints nothing. _MARKER_FIRST and _MARKER_LAST keep GREEN_MARKERS/RED_MARKERS unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "teeth_printed over the stdout_tail of cairn/devices/cc/validations/test_a_close_over_a_diverged_repo_rebases_or_stops.json returns its 4 test_ teeth green and red empty"
+      },
+      {
+        "n": 2,
+        "claim": "over every other validations/*.json stdout_tail in the repo, teeth_printed returns the same green and red lists as the pre-change parser (copied into the proof as the baseline)"
+      },
+      {
+        "n": 3,
+        "claim": "a label line under ok, pass, green, red or fail still mints its tooth in either indented or colon form, and a label line under failed, error, errored, broken, passed or good mints none"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: add LABEL_MARKERS beside GREEN_MARKERS/RED_MARKERS in proof_coverage.py; in teeth_printed, when pattern is _MARKER_LABEL and the folded marker is not in LABEL_MARKERS, break without minting. Comment cites this ticket and the measured vocabulary (ok 454, PASS 480, green 306, GREEN 45, pass 18, RED 2 over 900 seals).",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: red-first proof, one tooth per clause, PROVES 1-3; clause 2 sweeps the repo's validations with the old teeth_printed copied in as baseline.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_a_green_proofs_data_row_mints_no_label_tooth.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py",
+        "cairn/devices/cc/validations/test_a_close_over_a_diverged_repo_rebases_or_stops.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "cairn/tools/proof_coverage/proofs/test_a_green_proofs_data_row_mints_no_label_tooth.py"
+    ],
+    "out": [
+      "every other component",
+      "the cc proof and its printer (8f5ab45e64c5: the printer is left alone)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "900 sealed stdout_tails reach teeth; label-fallback markers: ok 454, PASS 480, green 306, GREEN 45, pass 18, RED 2 (red seals), plus two data rows: 'failed pull:' (cc, green) and 'red  /var/tmp/...' (tester, already refused by _PATH_LABEL). 32 seals mix test_ teeth with real label teeth.",
+      "how": "python over **/validations/*.json evidence.stdout_tail, matching proof_coverage._MARKER_LABEL after skipping lines _MARKER_FIRST/_MARKER_LAST match, by akiendelllinux_cc_orchestrator"
+    }
+  ],
+  "builder_notes": "If ddc5cb6694d3/d845546b67b9 (NOTRUN marker) build after this and need a label-form NOTRUN, add it to LABEL_MARKERS. Unblocks ae0d88a55edb."
+}
