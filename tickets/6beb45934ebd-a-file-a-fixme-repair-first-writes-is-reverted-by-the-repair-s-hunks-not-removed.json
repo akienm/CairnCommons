@@ -1,0 +1,64 @@
+{
+  "id": "6beb45934ebd",
+  "title": "a file a FIXME repair first writes is reverted by the repair's hunks, not removed",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "The hollow measures a file that a ticket first writes after its first build against the world just before that ticket's own first write to it, so a file another ticket created after the first build is never deleted as the counterfactual.",
+  "why": "Measured 2026-11-22 on 69075b0e8212: two bin proofs created by 7989bb520e14 and 95557c2ed44f after 69075's 11-12 first build, edited by its FIXME repair f76659ed8, were removed by the hollow as 'absent before the build' and read HOLLOW; reverted by hand to f76659ed8^ each reds tooth 1. A sound ticket cannot reach PROVED.",
+  "traces_to": "Law 8: nothing enters proven-space without a proof a hollow build couldn't pass; Law 3: the reading measures what it says it measures.",
+  "how": "In measure()'s file loop, when _revert at the anchor removes a file that the oldest build commit touching it found already present (its parent holds the file), restore HEAD's bytes and take the build commits' hunks away with _revert_hunks instead. Red-first proof in a scratch repo.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch repo, a file another ticket created after ticket T's first build, then edited by T's FIXME repair, is reverted by T's own hunks under measure() (not removed), and its declared tooth reds"
+      },
+      {
+        "n": 2,
+        "claim": "a file T's first build created is still removed as absent before the build, and its declared tooth reds as today"
+      },
+      {
+        "n": 3,
+        "claim": "a file another ticket created after T's first build that no T build commit touches is not changed by the hollow"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in measure() (~1243), after how = _revert(...), when how starts with 'removed', the file is not deleted at HEAD, and the oldest commit in builds_in[root] that touches rel has a parent holding rel (git cat-file -e '<c>^:<rel>'), call _restore(wtree, rel) then _revert_hunks(wtree, rel, builds_in[root], repo_root=root); set revert_mode[key]='hunks' and how=\"reverted the build's hunks (the file predates the ticket's first write to it)\". A hunk that does not reverse-apply raises HollowUnmeasurable as today.",
+      "writes_to": [
+        "cairn/devices/tester/hollow.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/hollow.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof copies the scratch-repo fixture of test_the_hollow_measures_the_repaired_build.py (_fixture, _measure, _PROOF_SRC): commit A '<T>: build' creates x.py; commit B by another ticket creates y.py; a FIXME back-edge is journaled; commit C '<T>: build' edits y.py. One tooth per clause, PROVES keyed on this ticket.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_file_a_fixme_repair_first_writes_is_reverted_by_its_hunks.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_the_hollow_measures_the_repaired_build.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/hollow.py",
+      "cairn/devices/tester/proofs/test_a_file_a_fixme_repair_first_writes_is_reverted_by_its_hunks.py"
+    ],
+    "out": [
+      "every other component",
+      "the hollow's anchor rules (e08c996f939c, 06f0445e7a63)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "cairn test --hollow 69075b0e8212: 11 measured, 2 HOLLOW, both 'removed (absent before the build)' at anchor ea34a5d66d56 (/home/akien/.akien/temp/h69075.txt); by hand in a worktree at a7739d5e3, each file reverted alone to a3adcd7f2^ (same bytes as f76659ed8^) FAILs test_no_bin_proof_builds_a_bare_bash_argv naming its line 68, and both teeth PASS at the build",
+      "how": "cairn test --hollow 69075b0e8212 (no --seal) and a hand revert in a git worktree on akiendelllinux"
+    }
+  ]
+}
