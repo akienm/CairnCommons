@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: (a) a module-level memo with a TTL, rejected because a time bound is a guess and a later crossing in the same process would read a stale listing; (b) passing the listing down as an argument, rejected because proof_coverage.lacks and crossings_for sit three calls deep and would each grow a parameter; (c) caching in proof_coverage only, rejected because has_crossings and buildme_crossing are reached from other sieves too. A scope opened by the one caller that knows the tree is still (inspect) is the smallest change.",
+      "hidden_assumption": "That no sieve writes a new history.json during inspect(); measured by reading: inspect() is a read-only shake. If one did, its own journal would be missed until the next inspect(), which is the cost of the pin.",
+      "prior_art": "8ad6's one-shake ruling (inspect() docstring, 2026-08-06) is the same reasoning applied to sieves; _BREACH_CACHE, _CENSUS_DIRS and _IOU_CACHE in inspector.py are per-inspect caches cleared at entry. 50987 cured a similar cost by reading standing seals. No intention in intentions-congruency-lab names the journal walk.",
+      "real_collision": "None. crossings._index's docstring says the reader IS the event and the invalidation is a stat; the pin keeps the stat invalidation for bytes and pins only the listing, inside a scope a caller opens deliberately."
+    },
+    "exit": "routed_forward",
+    "falsifier": "(1) over one whole-tree inspect(), Path.rglob('history.json') is called at most once per root; (2) outside the scope journals() walks afresh each call, so a history.json created between two calls is seen by the second; (3) inside the scope a journal whose bytes change is re-parsed (the _index stat key still invalidates). WRONG INTENT if the whole-tree inspect() wall time drops by less than 60 s, since then the walk was not the cost.",
+    "from_idea": "none, because this is a measured cost, not an idea: the cProfile at /tmp/claude-1000/-home-akien-dev-src-cairn/0b2e196e-7177-4140-8585-e9f2200689b4/scratchpad/prof_pct.out (2026-11-22, akiendelllinux) shows crossings._index -> journals() rglob run 2041 times inside one proof_covers_the_ticket scan, ruled into a sibling ticket of 9cfc by the orchestrator",
+    "how": "crossings.py gains a scope (a context manager) that pins journals()'s listing per roots for its duration; inspect() opens that scope around its shake and post-shake scans. _index's stat-keyed parse cache is unchanged, so a journal written mid-sweep is still re-read; only the directory walk is pinned. A proof counts rglob calls over one whole-tree inspect() (1) and records its wall time.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 1 (the resolver is spent on the novel, not on re-deriving the settled): the tree does not change within one inspect(), so re-walking it 2041 times re-derives a settled listing; and 9cfc's 600 s bound on test_inspector, which this cost is breaking.",
+    "what": "One build_inspector inspect() walks the two roots for history.json once, not once per crossings lookup."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "proof_covers_the_ticket spends 164 of 253 s (cProfile) re-walking both repos for history.json, 2041 times in one sweep, because _index's cache key needs a fresh rglob each call."
+    },
+    {
+      "stratum": "code",
+      "text": "The PROVED re-judge (1000 tickets, 246 s) is a second, separate redundancy; it is a sibling ticket after this one."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "93340383c5c1",
+  "skill": "intent",
+  "title": "One build_inspector inspect() walks the two roots for history.json once, not once per crossings lookup.",
+  "trace_id": "3bf446b1ffed",
+  "when": "2026-11-22T14:36:42.518361"
+}

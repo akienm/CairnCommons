@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: inspect() writes no history.json while it runs. Measured by reading inspect() (inspector.py:5389 onward): the shake and the post-shake scans only read. If a sieve ever journals mid-sweep, that journal is missed until the next inspect(); falsifier clause 3 keeps byte changes to listed journals visible.",
+    "builder_check": "A builder needs: crossings.py:81 journals() and :101 _index() (the listing vs the stat key); that the scope is keyed per roots dict (tuple of sorted items) so a proof's scratch roots do not share the house listing; that inspect() at inspector.py:5389 opens it after the cache clears and closes it in a finally (a with block around the rest of the body); that the scope nests safely (an inner open is a no-op); and that the proof counts rglob by patching pathlib.Path.rglob for the duration of one inspect(). All of these are in the decisions.",
+    "children": "none, because the change is one scope in cairn/tools/base/crossings.py, one with-block in inspector.py, and one proof",
+    "collision_check": "crossings._index's docstring (the reader is the event; stat invalidation) is kept: only the listing is pinned, inside a scope a caller opens. 8ad6 one-shake is the same reasoning. No exclusive collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "(1) one whole-tree inspect() calls Path.rglob for history.json at most once per root; (2) with no scope open, a history.json created between two journals() calls is listed by the second; (3) inside an open scope, a listed journal whose bytes change is re-parsed by _index. Horizon: the measured whole-tree inspect() wall time, recorded in the proof's output; WRONG INTENT if it drops by under 60 s.",
+    "gates_bound": "code-seam: proved by the tester (red-first proof keyed PROVES 1-3, sealed; hollow run), feeds back to origin on failure (a red reseal raises a trouble on this ticket).",
+    "missing_check": "The walk count is measured over proof_covers_the_ticket (2041 of 2041 calls); other sieves that reach crossings (has_crossings, buildme_crossing) fall under the same scope because inspect() opens it around the whole body. Nothing asserted wrapped is unmeasured except the post-pin wall time, which is the falsifier's own measurement.",
+    "node_class": "code-seam",
+    "questions": "none, because the orchestrator ruled the pin as a CC mechanism (2026-11-22) and the cost is measured at /tmp/claude-1000/-home-akien-dev-src-cairn/0b2e196e-7177-4140-8585-e9f2200689b4/scratchpad/prof_pct.out",
+    "task_or_ticket": "ticket",
+    "title": "one inspect() walks the roots for history.json once",
+    "watchme": "none, because its effect is read by ticket 9cfc's re-measure of cairn/devices/codemother/machines/build_inspector/proofs/test_inspector.py, and its own proof measures the walk count",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A per-inspect scope pins crossings.journals(); 2041 rglobs become 1 per root."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "e9d55d238b3d",
+  "skill": "sorted",
+  "title": "one inspect() walks the roots for history.json once",
+  "trace_id": "4bf42e544eb7",
+  "when": "2026-11-22T14:37:05.448885"
+}

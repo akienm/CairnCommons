@@ -1,0 +1,76 @@
+{
+  "id": "7bdcd8a801df",
+  "title": "one inspect() walks the roots for history.json once",
+  "owning_intention": "cairn/devices/codemother/machines/build_inspector/intention+why.json",
+  "intention": "A whole-tree build_inspector inspect() lists the history.json journals of each root once, however many crossings lookups its sieves and scans make.",
+  "why": "Measured 2026-11-22 on akiendelllinux: a whole-tree inspect() takes 560.6 s, and test_inspector (one live inspect()) 579 s against its 600 s bound (ticket 9cfcc27ca2d3). cProfile of proof_covers_the_ticket alone: 253 s, of which 164 s is crossings._index -> journals(), an rglob('history.json') over both repos called 2041 times, ~80 ms each. _index caches its parse but keys the cache on a fresh rglob, so the walk is never saved. The tree does not change within one inspect().",
+  "traces_to": "Law 1 — the resolver is spent on the novel, not on re-deriving the settled: one sweep re-derives one directory listing 2041 times.",
+  "how": "crossings.py gains pinned_journals(), a context manager: while open, journals(roots) returns the listing walked on its first call for that roots key; nested opens are no-ops; on close the pin is dropped. _index keeps its (path, mtime, size) key, so a listed journal whose bytes change is re-parsed. inspect() opens the scope after its cache clears, around the rest of its body. The proof counts Path.rglob calls for 'history.json' over one whole-tree inspect() and prints the wall time.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "one whole-tree inspect() over the house tree calls Path.rglob('history.json') at most once per root, and the proof prints its wall time"
+      },
+      {
+        "n": 2,
+        "claim": "with no scope open, a history.json created under a scratch root between two journals() calls is listed by the second"
+      },
+      {
+        "n": 3,
+        "claim": "inside an open scope, a listed journal whose bytes change between two crossings_for calls is re-parsed: the second call sees the new entry"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: crossings.py gains pinned_journals() (contextlib.contextmanager), a module dict _PINNED keyed on tuple(sorted((k, str(v)) for k, v in _roots(roots).items())) that journals() consults while the scope is open; an inner open of an already-open scope is a no-op and leaves the outer's close to clear it.",
+      "writes_to": [
+        "cairn/tools/base/crossings.py"
+      ],
+      "reads": [
+        "cairn/tools/base/crossings.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: inspect() wraps everything after its three cache clears in 'with crossings.pinned_journals():'.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof, one tooth per clause; clause 1 patches pathlib.Path.rglob with a counting wrapper for one whole-tree inspect() and declares PROOF_TIMEOUT_S = 900; clauses 2 and 3 use a scratch roots dict passed to journals()/crossings_for.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/build_inspector/proofs/test_one_inspect_walks_the_journals_once.py"
+      ],
+      "reads": [
+        "cairn/tools/base/crossings.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/base/crossings.py",
+      "cairn/devices/codemother/machines/build_inspector/inspector.py",
+      "cairn/devices/codemother/machines/build_inspector/proofs/test_one_inspect_walks_the_journals_once.py"
+    ],
+    "out": [
+      "proof_coverage.lacks and the PROVED re-judge (a sibling ticket)",
+      "test_inspector's bound (ticket 9cfcc27ca2d3)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "proof_covers_the_ticket 253 s under cProfile, 164 s in crossings.journals() rglob over 2041 calls; whole-tree inspect() 560.6 s",
+      "how": "cProfile over inspector.proof_covers_the_ticket(Path('cairn')) with proof_coverage.lacks wrapped by a timer; output /tmp/claude-1000/-home-akien-dev-src-cairn/0b2e196e-7177-4140-8585-e9f2200689b4/scratchpad/prof_pct.out"
+    }
+  ]
+}
