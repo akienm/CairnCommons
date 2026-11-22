@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: (a) systemd-run --user exists on the Linux boxes and the setsid fallback stays for a box without it, exactly as the bash does today; (b) on nt there is no memory scope used now, and scoped_exec states 'not on this box' in its result instead of pretending; (c) the tool composes cairn/tools/windowless_spawn's detached_kwargs for the nt spawn, the pattern superclaude's _sc_spawn_detached already uses; (d) elevation on Linux keeps today's contract: sudo -n first, then a held CAIRN_SUDO_PW checked with sudo -S -k, the password never on a command line. Each is stated in the charter's how.",
+    "builder_check": "A Haiku-level builder needs, and the ticket carries: the bash line ranges each answer replaces (superclaude :10-30 detach, :19 addresses, :326-360 sudo, :386 venv dir, :620-690 ground loop unit, :700-760 web unit with reset-failed retry, :860-880 memory scope); the host tool as the shape (module + charter with published_by_device + public_interface); windowless_spawn's detached_kwargs for nt. Remaining question 'return values or exceptions?' is answered: every action returns a result dict {ok, how, detail}; only a programming error raises.",
+    "children": "none, because the tool is one module with eight answers and its callers are siblings under c3cd232ba0cf, not children",
+    "collision_check": "host (cairn/devices/system_rackmount/tools/host) answers 'which box, which OS' and stays pure; launch is the side-effecting half, so the two do not answer the same question. windowless_spawn is a cross-device helper about console flags; launch composes it and does not re-answer it. RULE 1: callers outside system_rackmount reach launch only because its charter is published_by_device. No exclusive-and-terminal collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "One tooth per clause in cairn/devices/system_rackmount/tools/launch/proofs/: (1) venv_bin_dir, box_addresses, port_listening (a socket the proof binds vs a free port), stream_is_console (a pty vs a pipe) and runs_shell_scripts equal what the bash computes on this box for the same input; (2) service_spawn starts a uniquely named transient user unit running a sleep, and a second call with the unit held returns held and starts nothing (unit stopped at teardown); (3) scoped_exec runs a child that reads its own cgroup's memory.max, which equals the value passed; (4) every answer's result names how it was answered (systemd, setsid, detached, not-on-this-box). On nt, teeth 2 and 3 print UNMEASURED off a native run. Horizon: wrong intent if a launch-path caller still needs an OS test this tool cannot answer.",
+    "gates_bound": "code-seam: proved by the tester (PROVES keyed on the launch proof, sealed red first on main; hollow run); teeth 2 and 3 measured natively on akiendell for nt; feeds back to origin on failure (a red reseal raises a trouble routed to this ticket).",
+    "missing_check": "This child builds only the tool and its proof. Moving the callers (superclaude.py, bin/cairn.py) onto it is children 3 and 5 of c3cd232ba0cf, not a gap here. The password prompt itself (reading from the tty) stays the caller's: the tool answers 'is elevation held' and 'does this password elevate', it does not own a terminal.",
+    "node_class": "code-seam",
+    "questions": "none, because the one design choice (new tool beside host vs extending host) is settled in collision_check by RULE 1 at CLAUDE.md, and every answer's Linux behavior is pinned to today's bash at cairn/devices/cc/superclaude",
+    "task_or_ticket": "ticket",
+    "title": "the system device publishes a launch tool that answers the launch path's OS questions",
+    "watchme": "none, because its proof cairn/devices/system_rackmount/tools/launch/proofs/ is the whole of its correctness until its callers move, and those callers' tickets (children of c3cd232ba0cf) carry the consumer measurement",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Child 1 of c3cd232ba0cf: cairn/devices/system_rackmount/tools/launch, eight OS answers each pinned to the bash line it replaces; host stays pure."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3ffef5c29796",
+  "skill": "sorted",
+  "title": "the system device publishes a launch tool that answers the launch path's OS questions",
+  "trace_id": "6ef8204af2db",
+  "when": "2026-11-22T15:58:33.333575"
+}

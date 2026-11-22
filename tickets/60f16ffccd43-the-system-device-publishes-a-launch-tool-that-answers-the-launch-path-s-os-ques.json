@@ -1,0 +1,397 @@
+{
+  "id": "60f16ffccd43",
+  "title": "the system device publishes a launch tool that answers the launch path's OS questions",
+  "owning_intention": "cairn/devices/system_rackmount/intention+why.json",
+  "intention": "cairn/devices/system_rackmount/tools/launch, a tool the system device publishes, answers every OS question the launch path asks: venv_bin_dir, box_addresses, port_listening, runs_shell_scripts, stream_is_console, service_spawn, scoped_exec and elevation. Each action returns {ok, how, detail}, and 'not on this box' is a stated answer.",
+  "why": "Measured 2026-11-22: cairn/devices/cc/superclaude answers eight OS questions in bash (uname at :10 and :386, hostname -I at :19, sudo at :326-360, systemd-run units at :620-760, ss -tlnH at :717, systemd-run --scope at :860-880). A Python superclaude (c3cd232ba0cf child 3) must ask them somewhere, and RULE 1 plus Akien 2026-11-21 ('hostname should come from the system device') put every OS answer in the system device.",
+  "traces_to": "RULE 1; outline 5.4.3.8 (Windows needs no bash); Law 1 (one answer per OS question).",
+  "how": "One module, launch.py, beside host/host.py, with a charter marked published_by_device. On Linux each answer reproduces the bash: venv_bin_dir picks Scripts or bin through host.os_id(); box_addresses reads hostname -I; port_listening reads the kernel's listening table (/proc/net/tcp and tcp6, state 0A; netstat on nt), never dialing, since sole_path forbids this tool a module that can dial; stream_is_console is isatty; runs_shell_scripts is os_id() != 'windows'; service_spawn runs systemd-run --user --unit with HOME/PATH setenv and append logs, reset-failed and retries once on 'already loaded', returns held when the unit is active, and falls back to setsid (start_new_session) when systemd-run is absent; on nt it spawns with windowless_spawn.detached_kwargs. scoped_exec execs under systemd-run --user --scope -p MemoryHigh/Max/SwapMax when a scope can start, else a plain exec, and states which. elevation reports passwordless, password-held (CAIRN_SUDO_PW checks with sudo -S -k over stdin) or none; on nt it reports whether the token is elevated (shell32 IsUserAnAdmin).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Linux, venv_bin_dir, box_addresses, port_listening (a port the proof binds vs one it does not), stream_is_console (a pty vs a pipe) and runs_shell_scripts return what the bash computes on this box for the same input"
+      },
+      {
+        "n": 2,
+        "claim": "service_spawn starts a uniquely named transient user unit, and a second call while it runs returns held and starts nothing"
+      },
+      {
+        "n": 3,
+        "claim": "scoped_exec runs a child whose own cgroup memory.max equals the MemoryMax passed (UNMEASURED off a box with systemd --user)"
+      },
+      {
+        "n": 4,
+        "claim": "every result names how it was answered (systemd, setsid, detached, scope, plain, not-on-this-box), and none is empty"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: a new published tool beside host, not an extension of host: host answers 'which box' and stays pure; launch spawns and execs. Its whole text is D4 (launch.py) and D5 (the charter); write each exactly as given.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/launch.py",
+        "cairn/devices/system_rackmount/tools/launch/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/host/host.py",
+        "cairn/devices/system_rackmount/tools/host/intention+why.json",
+        "cairn/devices/cc/superclaude"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: launch.py imports detached_kwargs and windowless_kwargs from cairn.tools.windowless_spawn.windowless_spawn (cairn/tools/windowless_spawn/windowless_spawn.py:24 and :34; each takes an optional os_name and returns a dict of Popen keyword arguments). Every subprocess call in launch.py passes **windowless_kwargs(); the nt branch of service_spawn passes **detached_kwargs() instead, so the service outlives the caller with no console window. The POSIX setsid fallback passes start_new_session=True plus **windowless_kwargs() (detached_kwargs on POSIX also sets start_new_session, so the two never both appear).",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ],
+      "reads": [
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: the red-first proof is already written and sealed red on main (commit b3c17da82) at cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py; the build does not edit it. It imports the tool inside each tooth, keys PROVES to clauses 1-4, names its unit cairn-launch-proof-<pid>-<time> and its scope cairn-launch-proof-scope-<pid>, stops and reset-fails the unit at teardown, and prints UNMEASURED for a tooth this box cannot run. The build's only act on it is the green reseal: bin/cairn test --seal cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py, which writes the validation beside it.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+        "cairn/devices/system_rackmount/tools/launch/validations/test_the_launch_tool_answers_the_launch_paths_os_questions.json"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: write cairn/devices/system_rackmount/tools/launch/launch.py exactly so (sha256 f5566925f500ca0e5eaf7bc525fe1ae21bf0fef7dc857e5d896dd83a9dc19807; the dry run of the proof against it, 2026-11-22, printed 4/4 teeth green):\n\"\"\"launch — the tool the system device publishes for the OS questions a launcher asks.\n\nTicket 60f16ffccd43 (child 1 of c3cd232ba0cf). The bash superclaude answered these itself, in\nbash (uname, hostname -I, sudo, systemd-run units and scopes, ss); a Python launcher asks HERE,\nso no launch-path module tests the OS (RULE 1; Akien 2026-11-21, \"hostname should come from the\nsystem device\"). ``host`` answers \"which box\"; this tool is its side-effecting sibling.\n\nEvery action returns ``{\"ok\", \"how\", \"detail\"}``. ``how`` says which way it was answered:\nsystemd, setsid, detached, held, scope, plain, passwordless, password-held, none, elevated,\nnot-elevated, not-on-this-box. A box that cannot do a thing gets a stated answer, never silence.\n\"\"\"\nfrom __future__ import annotations\n\nimport os\nimport shutil\nimport subprocess\nimport sys\nfrom pathlib import Path\n\nfrom cairn.devices.system_rackmount.tools.host.host import os_id\nfrom cairn.tools.windowless_spawn.windowless_spawn import detached_kwargs, windowless_kwargs\n\n_HELD_WORDS = (\"already loaded\", \"fragment file\", \"already exists\", \"already active\")\n\n\ndef _result(ok: bool, how: str, detail: str, **extra) -> dict:\n    return {\"ok\": ok, \"how\": how, \"detail\": detail, **extra}\n\n\ndef _windows() -> bool:\n    return os_id() == \"windows\"\n\n\ndef venv_bin_dir(venv) -> Path:\n    \"\"\"Where a venv keeps its executables: ``Scripts`` on Windows, ``bin`` elsewhere.\"\"\"\n    return Path(venv) / (\"Scripts\" if _windows() else \"bin\")\n\n\ndef box_addresses() -> list:\n    \"\"\"This box's own addresses, as ``hostname -I`` lists them; empty where it cannot be asked.\"\"\"\n    if _windows() or not shutil.which(\"hostname\"):\n        return []\n    got = subprocess.run([\"hostname\", \"-I\"], capture_output=True, text=True, timeout=10,\n                         **windowless_kwargs())\n    return got.stdout.split() if got.returncode == 0 else []\n\n\ndef port_listening(port: int) -> bool:\n    \"\"\"Is a TCP socket listening on ``port``, any address? (``ss -tlnH`` on Linux; netstat on Windows.)\n\n    Read from the kernel's own tables, never by dialing: this tool may not import a module that\n    can dial (build_inspector's sole_path rule).\n    \"\"\"\n    port = int(port)\n    if _windows():\n        got = subprocess.run([\"netstat\", \"-an\", \"-p\", \"TCP\"], capture_output=True, text=True,\n                             timeout=30, **windowless_kwargs())\n        for line in got.stdout.splitlines():\n            f = line.split()\n            if len(f) >= 4 and f[-1].upper() == \"LISTENING\" and f[1].rsplit(\":\", 1)[-1] == str(port):\n                return True\n        return False\n    for table in (\"/proc/net/tcp\", \"/proc/net/tcp6\"):\n        try:\n            rows = Path(table).read_text().splitlines()[1:]\n        except OSError:\n            continue\n        for row in rows:\n            f = row.split()\n            if len(f) > 3 and f[3] == \"0A\" and int(f[1].rsplit(\":\", 1)[1], 16) == port:\n                return True\n    return False\n\n\ndef runs_shell_scripts() -> bool:\n    \"\"\"Does this box run shell scripts? Windows runs Python, never bash (Akien).\"\"\"\n    return not _windows()\n\n\ndef stream_is_console(stream) -> bool:\n    \"\"\"Is this stream a terminal (a console on Windows)?\"\"\"\n    try:\n        return os.isatty(stream.fileno())\n    except (AttributeError, OSError, ValueError):\n        return False\n\n\ndef _systemd_user() -> bool:\n    return not _windows() and shutil.which(\"systemd-run\") is not None\n\n\ndef _unit_active(unit: str) -> bool:\n    got = subprocess.run([\"systemctl\", \"--user\", \"is-active\", f\"{unit}.service\"],\n                         capture_output=True, text=True, timeout=30, **windowless_kwargs())\n    return got.stdout.strip() in (\"active\", \"activating\", \"reloading\")\n\n\ndef service_spawn(unit: str, argv, log, cwd=None, env=None) -> dict:\n    \"\"\"Start ``argv`` as a long-lived service named ``unit``, outliving the caller.\n\n    Linux with systemd --user: a transient user unit parented on the user manager, HOME and PATH\n    carried in, stdout/stderr appended to ``log``; a held name reads ``held`` and starts nothing,\n    and a failed leftover of the name is reset and tried once more. Without systemd-run: a new\n    session (setsid). Windows: a detached process with no console window.\n    \"\"\"\n    log = Path(log)\n    log.parent.mkdir(parents=True, exist_ok=True)\n    cwd = str(cwd or os.getcwd())\n    argv = [str(a) for a in argv]\n    if _systemd_user():\n        if _unit_active(unit):\n            return _result(True, \"held\", f\"{unit}.service is already running; nothing started\")\n        envs = dict(env or {})\n        envs.setdefault(\"HOME\", os.environ.get(\"HOME\", \"\"))\n        envs.setdefault(\"PATH\", os.environ.get(\"PATH\", \"\"))\n        cmd = ([\"systemd-run\", \"--user\", \"--quiet\", \"--unit\", unit, \"--working-directory\", cwd]\n               + [f\"--setenv={k}={v}\" for k, v in envs.items()]\n               + [\"-p\", f\"StandardOutput=append:{log}\", \"-p\", f\"StandardError=append:{log}\", \"--\"] + argv)\n        got = subprocess.run(cmd, capture_output=True, text=True, timeout=60, **windowless_kwargs())\n        if got.returncode == 0:\n            return _result(True, \"systemd\", f\"started as {unit}.service\")\n        err = (got.stderr or got.stdout).strip()\n        if any(w in err for w in _HELD_WORDS):\n            if _unit_active(unit):\n                return _result(True, \"held\", f\"{unit}.service is already running: {err}\")\n            subprocess.run([\"systemctl\", \"--user\", \"reset-failed\", f\"{unit}.service\"],\n                           capture_output=True, timeout=30, **windowless_kwargs())\n            got = subprocess.run(cmd, capture_output=True, text=True, timeout=60, **windowless_kwargs())\n            if got.returncode == 0:\n                return _result(True, \"systemd\", f\"started as {unit}.service after reset-failed\")\n            err = (got.stderr or got.stdout).strip()\n        return _result(False, \"systemd\", f\"{unit}.service refused: {err}\")\n    full = dict(os.environ, **(env or {}))\n    with open(log, \"ab\") as fh:\n        if _windows():\n            subprocess.Popen(argv, cwd=cwd, env=full, stdin=subprocess.DEVNULL, stdout=fh,\n                             stderr=subprocess.STDOUT, **detached_kwargs())\n            return _result(True, \"detached\", f\"{unit} spawned detached with no console window\")\n        subprocess.Popen(argv, cwd=cwd, env=full, stdin=subprocess.DEVNULL, stdout=fh,\n                         stderr=subprocess.STDOUT, start_new_session=True, **windowless_kwargs())\n    return _result(True, \"setsid\", f\"{unit}: systemd-run unavailable, spawned in a new session; \"\n                                   \"it stays in this cgroup and dies with it\")\n\n\ndef scoped_argv(argv, mem_high: str, mem_max: str, swap_max: str, unit: str | None = None) -> dict:\n    \"\"\"The command line that runs ``argv`` under a memory-capped scope, and which way it was made.\n\n    The start attempt is the probe: a scope is offered only where ``systemd-run --user --scope``\n    can start one now. Elsewhere the argv comes back as given, ``how`` saying so.\n    \"\"\"\n    argv = [str(a) for a in argv]\n    if _windows():\n        return _result(True, \"not-on-this-box\", \"no memory scope on Windows; runs unscoped\", argv=argv)\n    if not _systemd_user():\n        return _result(True, \"plain\", \"systemd-run unavailable; runs unscoped\", argv=argv)\n    probe = subprocess.run([\"systemd-run\", \"--user\", \"--scope\", \"--quiet\", \"--\", \"true\"],\n                           capture_output=True, text=True, timeout=30, **windowless_kwargs())\n    if probe.returncode != 0:\n        return _result(True, \"plain\", f\"a scope would not start: {(probe.stderr or probe.stdout).strip()}\",\n                       argv=argv)\n    unit = unit or f\"superclaude-{os.getpid()}\"\n    return _result(True, \"scope\",\n                   f\"MemoryHigh={mem_high} MemoryMax={mem_max} MemorySwapMax={swap_max} (unit {unit}.scope)\",\n                   argv=[\"systemd-run\", \"--user\", \"--scope\", \"--quiet\", \"--unit\", f\"{unit}.scope\",\n                         \"-p\", f\"MemoryHigh={mem_high}\", \"-p\", f\"MemoryMax={mem_max}\",\n                         \"-p\", f\"MemorySwapMax={swap_max}\", \"--\"] + argv)\n\n\ndef scoped_exec(argv, mem_high: str, mem_max: str, swap_max: str, unit: str | None = None, log=None):\n    \"\"\"Replace this process with ``argv`` under a memory scope where the box has one.\n\n    ``log`` (a callable taking one line) hears which way it went before the exec. On Windows\n    there is no exec that keeps the console: the child runs and this process exits with its code.\n    \"\"\"\n    res = scoped_argv(argv, mem_high, mem_max, swap_max, unit)\n    if log:\n        log(f\"scope: {res['how']}: {res['detail']}\")\n    if _windows():\n        sys.exit(subprocess.run(res[\"argv\"]).returncode)\n    sys.stdout.flush(); sys.stderr.flush()\n    os.execvp(res[\"argv\"][0], res[\"argv\"])\n\n\ndef password_elevates(password: str) -> bool:\n    \"\"\"Does this password elevate (sudo -S -k, over stdin, never on a command line)?\"\"\"\n    if _windows() or not shutil.which(\"sudo\"):\n        return False\n    got = subprocess.run([\"sudo\", \"-S\", \"-k\", \"-p\", \"\", \"true\"], input=password + \"\\n\",\n                         capture_output=True, text=True, timeout=30, **windowless_kwargs())\n    return got.returncode == 0\n\n\ndef elevation() -> dict:\n    \"\"\"Can this session elevate, and how: passwordless, a held password, or not at all.\"\"\"\n    if _windows():\n        try:\n            import ctypes\n            admin = bool(ctypes.windll.shell32.IsUserAnAdmin())\n        except (AttributeError, OSError):\n            admin = False\n        return _result(admin, \"elevated\" if admin else \"not-elevated\",\n                       \"the token is elevated\" if admin else \"the token is not elevated; sudo is not on Windows\")\n    if not shutil.which(\"sudo\"):\n        return _result(False, \"none\", \"sudo is not on PATH\")\n    if subprocess.run([\"sudo\", \"-n\", \"true\"], capture_output=True, timeout=30,\n                      **windowless_kwargs()).returncode == 0:\n        return _result(True, \"passwordless\", \"sudo -n works\")\n    pw = os.environ.get(\"CAIRN_SUDO_PW\")\n    if pw and password_elevates(pw):\n        return _result(True, \"password-held\", \"CAIRN_SUDO_PW elevates; serve it with SUDO_ASKPASS\")\n    return _result(False, \"none\", \"sudo needs a password and none is held\")\n",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/host/host.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py",
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: write cairn/devices/system_rackmount/tools/launch/intention+why.json exactly so (sha256 5a26bba56ea08b9a3f20048977d62d969774988b02e41cde6c8c120493332a85), modeled on the host charter:\n{\n  \"component\": \"launch\",\n  \"runtime_role\": \"tool\",\n  \"role\": \"charter\",\n  \"schema_version\": \"v0 — component-charter shape; migrates into the intention envelope when MAP.md Q6 lands\",\n  \"node_class\": \"tool\",\n  \"node_class_role\": \"launch-path OS answers\",\n  \"published_by_device\": true,\n  \"public_interface\": [\n    \"cairn.devices.system_rackmount.tools.launch.launch\"\n  ],\n  \"what\": \"The system device's answers to the OS questions a launcher asks, published as a tool nested in the device beside host: venv_bin_dir, box_addresses, port_listening, runs_shell_scripts, stream_is_console (answers), and service_spawn, scoped_argv/scoped_exec, elevation/password_elevates (actions). Every action returns {ok, how, detail}; how names which way it was answered (systemd, setsid, detached, held, scope, plain, passwordless, password-held, none, elevated, not-elevated, not-on-this-box).\",\n  \"why\": \"Measured 2026-11-22: cairn/devices/cc/superclaude answered eight OS questions in bash (uname, hostname -I, sudo, systemd-run units and scopes, ss), and on akiendell that bash ran inside WSL. A Python launcher on every box (ticket c3cd232ba0cf; outline 5.4.3.8, 'so Windows needs no bash') has to ask them somewhere, and RULE 1 with Akien 2026-11-21 ('hostname should come from the system device') puts every OS answer in the system device. host stays the pure 'which box' reader; this is its side-effecting sibling.\",\n  \"claim_provenance\": {\"role\": \"cc-read\", \"what\": \"cc-read\", \"why\": \"akien\"},\n  \"entry\": \"BUILT by ticket 60f16ffccd43, 2026-11-22 (child 1 of c3cd232ba0cf).\",\n  \"invoke\": \"`from cairn.devices.system_rackmount.tools.launch import launch`. Prove: `bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py`.\",\n  \"state_and_history\": \"A TOOL HOLDS NO STATE OF ITS OWN (Law 6). The units it starts and the logs it appends belong to the caller that names them. Its first voyage, ticket 60f16ffccd43, is owned by cairn/devices/system_rackmount/ (the owning intention).\",\n  \"proof\": \"proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py (ticket 60f16ffccd43): the answers equal the bash on this box; a service spawn holds its unit name; a scoped exec runs under the MemoryMax passed; every result names how. Off a box with systemd --user, teeth 2 and 3 print UNMEASURED.\",\n  \"gates\": \"Import gate: encapsulation_holds in build_inspector (RULE 1) admits a reach into system_rackmount only through a published tool, and this charter says published_by_device. sole_path: the tool imports no module that can dial (port_listening reads the kernel's tables). Seal: the tester seals the proof into validations/ beside it.\",\n  \"falsifier\": \"Red if an answer differs from the bash on the same box for the same input; if a second spawn of a running unit starts anything; if a scoped child's memory.max differs from the cap passed; if a result's how is empty or outside the stated set; or if this charter stops declaring published_by_device and exactly its one module.\",\n  \"how_it_learns\": \"It does not; it asks the OS each time, deliberately dumb physics, and states which way it answered so the caller's log carries the measurement.\",\n  \"traces_to\": [\n    \"RULE 1 (encapsulation: a device's public interface is the bus plus any client tool it publishes)\",\n    \"outline 5.4.3.8 (the launcher is Python, so Windows needs no bash)\",\n    \"Law 6 (a tool has users; system_rackmount holds the code)\"\n  ],\n  \"owner\": \"None of its own — a tool has users (Law 6): superclaude.py and bin/cairn.py first (siblings under c3cd232ba0cf). Its code is held by system_rackmount, which publishes it; CC gates writes to that code and its proofs.\",\n  \"gated_by\": [\"CC\"]\n}\n",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/intention+why.json"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/host/intention+why.json"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/system_rackmount/tools/launch/launch.py",
+      "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+      "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+      "cairn/devices/system_rackmount/tools/launch/validations/test_the_launch_tool_answers_the_launch_paths_os_questions.json"
+    ],
+    "out": [
+      "cairn/devices/cc/superclaude and every caller (siblings under c3cd232ba0cf)",
+      "cairn/devices/system_rackmount/tools/host",
+      "a Windows memory scope (Job objects)",
+      "the tty password prompt, which stays the caller's"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "superclaude answers eight OS questions in bash: uname :10/:386, hostname -I :19, sudo :326-360, systemd-run units :620-760, ss -tlnH :717, systemd-run --scope :860-880",
+      "how": "grep -n over cairn/devices/cc/superclaude at cairn 342e38cba"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "ticket": "60f16ffccd43",
+      "request": "60f16ffccd43: the system device publishes a launch tool that answers the launch path's OS questions (cairn/devices/system_rackmount/tools/host/host.py, cairn/devices/cc/superclaude)",
+      "intent": "a new tool cairn/devices/system_rackmount/tools/launch/ the system device publishes beside host, answering the eight OS questions superclaude asks in bash today (venv bin dir, the box's addresses, a listening port, shell scripts, a console stream, a long-lived service spawn, a memory-capped exec, elevation), each action returning {ok, how, detail}; callers move in sibling tickets under c3cd232ba0cf",
+      "scope": "in: cairn/devices/system_rackmount/tools/launch/launch.py, cairn/devices/system_rackmount/tools/launch/intention+why.json, cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py. out: superclaude and every caller (sibling tickets), the host tool, a Windows memory scope, the tty password prompt.",
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "ticket": "60f16ffccd43",
+      "constraints": [
+        {
+          "text": "RULE 1: every component talks to another only through its public interface; a reach into a device goes through a tool it publishes (published_by_device)",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "host answers 'which box, which OS' and imports no socket; its falsifier reds if its charter stops publishing exactly its one module",
+          "source": "cairn/devices/system_rackmount/tools/host/intention+why.json",
+          "kind": "charter"
+        },
+        {
+          "text": "sole_path: no component but the listed doors imports a module that can dial (socket, urllib.request, http.client, ...)",
+          "source": "cairn/devices/codemother/machines/build_inspector/inspector.py",
+          "kind": "charter"
+        },
+        {
+          "text": "Linux behavior is pinned to today's bash (parent clause 1)",
+          "source": "CairnCommons/tickets/c3cd232ba0cf-cairn-launches-from-one-python-launcher-on-every-box-behind-a-thin-shim-per-plat.json",
+          "kind": "ticket"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/system_rackmount/tools/launch/launch.py",
+          "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+          "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+        ],
+        "out": [
+          "cairn/devices/cc/superclaude and every caller (siblings under c3cd232ba0cf)",
+          "cairn/devices/system_rackmount/tools/host",
+          "a Windows memory scope (Job objects)",
+          "the tty password prompt"
+        ]
+      },
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "ticket": "60f16ffccd43",
+      "sought": [
+        "every OS test in superclaude's launch path",
+        "an existing Python answer for each",
+        "the published-tool shape in system_rackmount",
+        "the nt spawn flags",
+        "a dial-free way to ask whether a port listens"
+      ],
+      "holdings": [
+        {
+          "what": "host_name, os_id: the published 'which box' reader and its charter shape",
+          "address": "cairn/devices/system_rackmount/tools/host/host.py"
+        },
+        {
+          "what": "detached_kwargs, windowless_kwargs: the nt spawn flag sets",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        },
+        {
+          "what": "the bash answers: uname :10/:386, hostname -I :19, sudo :326-360, systemd-run units :620-760, ss -tlnH :717, systemd-run --scope :860-880",
+          "address": "cairn/devices/cc/superclaude"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a published launch tool in system_rackmount",
+          "measure": "ls cairn/devices/system_rackmount/tools/ 2026-11-22: host only"
+        },
+        {
+          "what": "a Python answer for service spawn, memory scope or elevation",
+          "measure": "grep -rn 'systemd-run' --include=*.py cairn/ outside proofs 2026-11-22: none in system_rackmount; superclaude answers them in bash"
+        },
+        {
+          "what": "the proof test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+          "measure": "ls cairn/devices/system_rackmount/tools/launch/ at main 342e38cba: no such directory"
+        }
+      ],
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "ticket": "60f16ffccd43",
+      "sub_problems": [
+        {
+          "what": "the red-first proof, one tooth per clause, systemd teeth UNMEASURED off a box without systemd --user",
+          "why": "red-first (Law 8): the proof reds before the tool exists",
+          "kind": "build",
+          "fills": "the proof test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+          "uses": [
+            "cairn/devices/cc/superclaude"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+          ]
+        },
+        {
+          "what": "the five answers (venv_bin_dir, box_addresses, port_listening, runs_shell_scripts, stream_is_console), each reproducing the bash",
+          "why": "the pure answers superclaude.py and bin/cairn.py ask instead of testing the OS",
+          "kind": "build",
+          "fills": "a published launch tool in system_rackmount",
+          "uses": [
+            "cairn/devices/system_rackmount/tools/host/host.py",
+            "cairn/devices/cc/superclaude"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/launch.py"
+          ]
+        },
+        {
+          "what": "the actions (service_spawn with held and reset-failed, scoped_argv/scoped_exec, elevation/password_elevates), each returning {ok, how, detail}",
+          "why": "the side-effecting answers the bash gave through systemd-run and sudo, with nt answers stated",
+          "kind": "build",
+          "fills": "a Python answer for service spawn, memory scope or elevation",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py",
+            "cairn/devices/cc/superclaude"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/launch.py"
+          ]
+        },
+        {
+          "what": "the charter: published_by_device, exactly its one module",
+          "why": "encapsulation_holds admits a reach into the device only through a published tool",
+          "kind": "build",
+          "fills": "a published launch tool in system_rackmount",
+          "uses": [
+            "cairn/devices/system_rackmount/tools/host/host.py"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/intention+why.json"
+          ]
+        }
+      ],
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "ticket": "60f16ffccd43",
+      "standard": "red-first proof first (Law 8), then the charter that admits callers, then the pure answers, then the actions",
+      "order": [
+        {
+          "what": "the red-first proof, one tooth per clause, systemd teeth UNMEASURED off a box without systemd --user",
+          "why_now": "red-first: it lands and reds before any build file exists"
+        },
+        {
+          "what": "the charter: published_by_device, exactly its one module",
+          "why_now": "without published_by_device a caller's reach reds encapsulation_holds"
+        },
+        {
+          "what": "the five answers (venv_bin_dir, box_addresses, port_listening, runs_shell_scripts, stream_is_console), each reproducing the bash",
+          "why_now": "smallest, pure, and clause 1 turns green on it alone"
+        },
+        {
+          "what": "the actions (service_spawn with held and reset-failed, scoped_argv/scoped_exec, elevation/password_elevates), each returning {ok, how, detail}",
+          "why_now": "spawn and scope carry the systemd teeth and the most risk"
+        }
+      ],
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "standard": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "ticket": "60f16ffccd43",
+      "hypotheses": [
+        {
+          "piece": "the red-first proof, one tooth per clause, systemd teeth UNMEASURED off a box without systemd --user",
+          "expect": "before the build all four teeth print RED (no module launch)",
+          "falsifier": "any tooth green against the absent tool",
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py at the pre-build commit"
+        },
+        {
+          "piece": "the five answers (venv_bin_dir, box_addresses, port_listening, runs_shell_scripts, stream_is_console), each reproducing the bash",
+          "expect": "tooth 1 green: each answer equals the bash on this box",
+          "falsifier": "any answer differs from uname / hostname -I / ss / [ -t 0 ]",
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py after the build"
+        },
+        {
+          "piece": "the actions (service_spawn with held and reset-failed, scoped_argv/scoped_exec, elevation/password_elevates), each returning {ok, how, detail}",
+          "expect": "teeth 2-4 green: a held unit reads held, the scoped child's memory.max is 104857600, every how is in the set",
+          "falsifier": "a second unit starts, memory.max differs, or a how is empty",
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py after the build"
+        },
+        {
+          "piece": "the charter: published_by_device, exactly its one module",
+          "expect": "encapsulation_holds admits a caller importing the tool",
+          "falsifier": "the sieve reds a reach through it",
+          "instrument": "bin/cairn test cairn/devices/codemother/machines/build_inspector/proofs/test_encapsulation_holds.py after the build"
+        }
+      ],
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.8,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "ticket": "60f16ffccd43",
+      "criteria": [
+        {
+          "claim": "on Linux, venv_bin_dir, box_addresses, port_listening, stream_is_console and runs_shell_scripts return what the bash computes on this box for the same input",
+          "covers": [
+            "the red-first proof, one tooth per clause, systemd teeth UNMEASURED off a box without systemd --user",
+            "the five answers (venv_bin_dir, box_addresses, port_listening, runs_shell_scripts, stream_is_console), each reproducing the bash"
+          ],
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py (green seal)"
+        },
+        {
+          "claim": "service_spawn starts a uniquely named transient user unit, and a second call while it runs returns held and starts nothing",
+          "covers": [
+            "the actions (service_spawn with held and reset-failed, scoped_argv/scoped_exec, elevation/password_elevates), each returning {ok, how, detail}"
+          ],
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py (green seal)"
+        },
+        {
+          "claim": "scoped_exec runs a child whose own cgroup memory.max equals the MemoryMax passed",
+          "covers": [
+            "the actions (service_spawn with held and reset-failed, scoped_argv/scoped_exec, elevation/password_elevates), each returning {ok, how, detail}"
+          ],
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py (green seal)"
+        },
+        {
+          "claim": "every result names how it was answered, from the stated set, and none is empty; the charter publishes exactly its one module",
+          "covers": [
+            "the actions (service_spawn with held and reset-failed, scoped_argv/scoped_exec, elevation/password_elevates), each returning {ok, how, detail}",
+            "the charter: published_by_device, exactly its one module"
+          ],
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py (green seal)"
+        }
+      ],
+      "unknowns": [
+        "on nt every answer is UNMEASURED until a native akiendell run; Linux behavior is pinned to the bash"
+      ],
+      "confidence": 0.8,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}

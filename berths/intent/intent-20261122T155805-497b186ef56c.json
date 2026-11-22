@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Extending the existing host tool instead of a new one: rejected, host answers 'which box, which OS' and is pure; launch spawns and execs, a different responsibility with side effects. One tool per responsibility keeps host's proof unchanged. Considered windowless_spawn as the home: it is a cross-device tool about console flags, not the system device's OS answers; launch composes it.",
+      "hidden_assumption": "That systemd-run --user exists on every Linux box Cairn runs on (akienasus, akiendelllinux, akientiny); the bash falls back to setsid where it is missing and the tool keeps that fallback. That Windows has no memory-scope equivalent worth using now (a Job object is possible; out of bounds, stated as 'not on this box').",
+      "prior_art": "Consulted: cairn/devices/system_rackmount/tools/host (hostname, os_id; ticket 5ccc7f05c932); cairn/tools/windowless_spawn (detached_kwargs, windowless_kwargs, background_pythonw, hidden); bin/cairn.py's own venv lookup; superclaude's bash. None answers service spawn, scope or elevation from Python.",
+      "real_collision": "None exclusive-and-terminal. The bash superclaude keeps its own answers until child 3 replaces it; two answers stand for one release, which is the parent's ordering, not a collision."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when: (1) each answer returns the same value bash computes today on Linux for the same input (venv dir, addresses, a listening and a free port, a tty and a pipe); (2) service_spawn starts a named user unit, a second call with the unit held reports 'held' and spawns nothing; (3) scoped_exec on Linux runs its argv inside a scope whose MemoryMax reads back the value passed; (4) no module outside system_rackmount/tools tests os.name for these questions once its callers move (that is the callers' tickets); on nt every answer is UNMEASURED off a native run. Wrong intent if a caller still needs an OS test the tool cannot answer.",
+    "from_idea": "none, because it is child 1 of cast ticket c3cd232ba0cf (CairnCommons/tickets/c3cd232ba0cf-cairn-launches-from-one-python-launcher-on-every-box-behind-a-thin-shim-per-plat.json), whose how names it",
+    "how": "New published tool cairn/devices/system_rackmount/tools/launch/ (charter published_by_device, beside host). Its answers, each read today by bash in cairn/devices/cc/superclaude: venv_bin_dir(venv) (Scripts vs bin, superclaude:386); box_addresses() (hostname -I, :19); port_listening(port) (ss -tlnH, :717); runs_shell_scripts() (false on nt); stream_is_console(stream); service_spawn(unit, argv, log, cwd, env) (systemd-run --user --unit with reset-failed retry, else setsid; on nt DETACHED_PROCESS|CREATE_NO_WINDOW via windowless_spawn.detached_kwargs, :620-760); scoped_exec(argv, mem_high, mem_max, swap_max) (systemd-run --user --scope -p Memory*, else plain exec; on nt plain exec, :860-880); elevation() (sudo -n / held password probe; on nt whether the token is elevated). Each answer returns what it did and why in a result the caller logs, so 'not on this box' is a stated answer, never silence.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "RULE 1 (the system device answers OS questions through a tool it publishes); Akien 2026-11-21 'hostname should come from the system device', extended to every OS difference; outline 5.4.3.8 (Windows needs no bash); Law 1 (one answer per OS question, not one per caller).",
+    "what": "The system device publishes one tool, launch, that answers every OS question the launch path asks, so superclaude.py and bin/cairn.py ask it and never test the OS themselves."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Launcher child 1: the system device gets a second published tool, launch, for spawn, scope, elevation, port, console and venv answers; host stays pure."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "53a29327514b",
+  "skill": "intent",
+  "title": "The system device publishes one tool, launch, that answers every OS question the launch path asks, so superclaude.py and",
+  "trace_id": "6c97202f89bc",
+  "when": "2026-11-22T15:58:05.334061"
+}
