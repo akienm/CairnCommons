@@ -1,0 +1,75 @@
+{
+  "id": "c3cd232ba0cf",
+  "title": "cairn launches from one Python launcher on every box, behind a thin shim per platform",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "Cairn launches from one Python launcher on every box: bin/cairn.py dispatches, superclaude is Python, every OS difference is answered by a tool the system device publishes, and the only platform code left is a thin shim per platform (bin/cairn on Linux, bin/cairn.cmd on Windows) that finds Cairn's python and runs cairn.py.",
+  "why": "Measured 2026-11-22 on akiendell: `cairn superclaude` from an elevated PowerShell resolved bash to C:\\WINDOWS\\system32\\bash.exe and ran the session inside WSL (uname Linux 6.6.87.2-microsoft-standard-WSL2) under the doubled name akiendell_cc_akiendell_cc_0. Three bash files stand in the launch path: cairn/devices/cc/superclaude (882 lines), bin/cairn (320), cairn/devices/recovery/bootstrap.sh (496). Akien: 'THATS WHAT WE NEED TO FIX!'; 'akiendell is building a single cairn launcher in python. which i'm fine with. we still need bash and windows launchers that will handle doing (at)python <path>cairn blah blah blah blah or on bash without the (at)'.",
+  "traces_to": "Outline 5.4.3.8 (the launcher is Python, so Windows needs no bash) and 5.4.3.8.1 (a thin platform shell in front); outline 5.3.5.2.3 (--name overrides both); outline 10.3.2 (the CC device owns superclaude); RULE 1 (the system device answers OS questions through its published tools); Law 1 (one launcher, not a bash and a Python answer to one question).",
+  "how": "Spanning parent; children prove first, in this order: (1) the system device publishes the OS answers the launch path needs (elevate, long-lived singleton service spawn, memory-capped scope, is a port listening, does this box run shell scripts, is a stream a console); (2) recovery's floor verify/apply/report callable from Python; (3) cairn/devices/cc/superclaude.py over those tools, the bash file deleted; (4) bin/cairn becomes the bash twin of bin/cairn.cmd (find ~/.cairn/venv python, exec cairn.py, venv-absent and exit-70 fall over to a trouble); (5) bin/cairn.py: interactive verbs inherit the console, a shell script on a box that runs none is refused 126 by name; (6) the proofs that exec the bash superclaude move to the Python one, one child per component. This parent's own build is only its end-to-end proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Linux, `cairn superclaude` with no flag, with --new, and with --name x produces the same claude argv and the same launch-environment keys the bash superclaude produced at the pre-build commit (a recorded fixture)"
+      },
+      {
+        "n": 2,
+        "claim": "`cairn superclaude --name x` names the instance exactly x, never <host>_cc_x"
+      },
+      {
+        "n": 3,
+        "claim": "no launch-path file but bin/cairn has a bash shebang or names bash, and no launch-path module tests os.name, sys.platform or platform.system itself"
+      },
+      {
+        "n": 4,
+        "claim": "on akiendell, natively, `cairn superclaude` typed in PowerShell reaches claude with no bash.exe, wsl.exe or sudo in its process tree (UNMEASURED off nt)"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the end-to-end proof berths in the CC device (outline 10.3.2) and measures only the launch it owns: argv/env against a fixture recorded at the pre-build commit, the name, the launch path's text, and on nt the process tree.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_one_python_launcher_starts_cc_on_every_box.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/superclaude",
+        "bin/cairn.py",
+        "bin/cairn.cmd"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: --name x is x exactly (outline 5.3.5.2.3); the <host>_cc_ prefix is a defect the Python superclaude retires.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_one_python_launcher_starts_cc_on_every_box.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/requirements/05-cairn-device.md"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_one_python_launcher_starts_cc_on_every_box.py"
+    ],
+    "out": [
+      "every child's build (each is its own ticket and berths in its own component)",
+      "the 47 bash verb scripts outside the launch path",
+      "bootstrap.sh's floor lay-down beyond verify/apply/report"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "cairn superclaude from PowerShell ran inside WSL under the name akiendell_cc_akiendell_cc_0",
+      "how": "akiendell_cc_0 session: uname inside the launched session; ListAgents name"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "superclaude 882 lines bash, bin/cairn 320 bash, bootstrap.sh 496 bash; bin/cairn.cmd already a thin shim running bin/cairn.py",
+      "how": "wc -l and head on each at cairn a9007fd04"
+    }
+  ]
+}

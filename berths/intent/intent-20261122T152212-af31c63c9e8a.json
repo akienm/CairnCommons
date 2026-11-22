@@ -1,0 +1,40 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Looked at three. (a) Keep bash superclaude and make bin/cairn.py pick Git Bash on Windows: rejected, Akien 2026-11-22 \"thats why the fuck we picked python\"; Windows never runs bash. (b) A Python superclaude for Windows only, bash kept on Linux: Akien chose against it on 2026-11-22 (AskUserQuestion: one Python superclaude, every box), and it is two answers to one question (Law 1). (c) A PowerShell superclaude: a third language and still two implementations. One Python launcher is the smallest that holds.",
+      "hidden_assumption": "That every section of the bash superclaude has a Python or system-device answer on Windows: systemd-run units, cgroup scopes and tmux have none, so on Windows the system device answers 'not on this box' and the launcher reports it in the residue; that is assumed acceptable and is to be confirmed by Akien at the Windows run. Also assumed: the venv python is present on akiendell (bin/cairn.cmd already requires it).",
+      "prior_art": "In-house, consulted: bin/cairn.py already carries the dispatch in Python (outline 5.4.3.8) and bin/cairn.cmd is already the thin Windows shim. cairn/devices/system_rackmount/tools/host (ticket 5ccc7f05c932) is the pattern for an OS answer published by the system device. cairn/tools/windowless_spawn (detached_kwargs, windowless_kwargs, the hidden launcher from 364704f371dd) already answers the Windows spawn flags. cairn/tools/cgroup reads cgroups but does not create scopes. cairn/devices/recovery/machines/installer/installer.py is Python but does not carry bootstrap.sh's verify/apply/report. Congruency lab grep for superclaude/launcher: bin, cc, recovery, windowless_spawn, cgroup, system_word charters; none intends a bash launcher on Windows.",
+      "real_collision": "Outline 5.3.5.2.3 reads `cairn superclaude --name <x>` as using exactly x, while the bash superclaude prefixes <host>_cc_ to it (measured 2026-11-22: --name akiendell_cc_0 launched akiendell_cc_akiendell_cc_0; Akien: 'we goofed on the naming'). Not a collision between intentions: the outline is the source of truth and the code disagrees with it, so the Python superclaude uses x exactly and the doubled prefix is a defect it retires. No Law collides."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when, on akiendell, `cairn superclaude` typed in PowerShell reaches claude with no bash.exe and no wsl.exe anywhere in its process tree and no sudo prompt, and on the Linux boxes the same command produces the same claude argv and environment it does today; when `grep -l '^#!.*bash' bin/cairn.py cairn/devices/cc/superclaude*` finds no bash launcher beyond the bin/cairn shim; and when no launch-path module tests os.name / sys.platform / platform.system itself. Wrong intent if a Windows launch still needs a bash anywhere.",
+    "from_idea": "none, because the spec came from Akien directly on 2026-11-22 (relayed verbatim by akiendelllinux_cc_orchestrator: \"akiendell is building a single cairn launcher in python ... we still need bash and windows launchers that will handle doing (at)python <path>cairn\"), and it restates outline 5.4.3.8 / 5.4.3.8.1 in cairn/devices/cairn/requirements/05-cairn-device.md",
+    "how": "Spanning parent; children prove first. (1) the system device publishes the OS answers the launch path needs (how this box elevates, start a long-lived singleton service, run inside a memory-capped scope, is a port listening, does this box run shell scripts, is a stream a console). (2) recovery's floor verify/apply/report becomes callable from Python. (3) superclaude is rewritten in Python over those tools; the bash file is deleted. (4) bin/cairn becomes the bash twin of cairn.cmd: find the venv python, exec cairn.py, venv-absent and exit-70 fall over to a trouble. (5) bin/cairn.py: an interactive verb inherits the launcher's console, and a shell script on a box that runs none is refused by name (126), never looked up on PATH. (6) the proofs that drive the bash superclaude move to the Python one, one child per component.",
+    "shape": "new track",
+    "task_or_ticket": "ticket",
+    "traces_to": "Outline 5.4.3.8 (the launcher is Python so Windows needs no bash; a thin platform shell in front) and 10.3.2 (the CC device owns superclaude); the system device charter (OS-specific backing swapped behind its tools); RULE 1 (callers reach the system device only through its published tools); Law 1 (one launcher, not a bash and a Python answer to the same question); Telos: a working Windows box Akien can launch from.",
+    "what": "Cairn launches from one Python launcher on every box: bin/cairn.py dispatches, superclaude is Python, every OS difference is answered by a tool the system device publishes, and the only platform code left is a thin shim per platform (bin/cairn on Linux, bin/cairn.cmd on Windows) that finds Cairn's python and runs cairn.py."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Measured 2026-11-22: on akiendell, `cairn superclaude` from an elevated PowerShell resolved bash to C:\\WINDOWS\\system32\\bash.exe and ran the session inside WSL (uname: Linux 6.6.87.2-microsoft-standard-WSL2) under the doubled name akiendell_cc_akiendell_cc_0."
+    },
+    {
+      "stratum": "code",
+      "text": "Three bash files still stand in the launch path: cairn/devices/cc/superclaude (882 lines), bin/cairn (320), cairn/devices/recovery/bootstrap.sh (496). 47 of 61 tracked verb scripts are bash."
+    },
+    {
+      "stratum": "tree",
+      "text": "Outline 5.3.5.2.3 says --name <x> uses exactly x; the bash superclaude prefixes <host>_cc_. The outline stands: the Python superclaude uses x exactly."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "dbe9c0f84129",
+  "skill": "intent",
+  "title": "Cairn launches from one Python launcher on every box: bin/cairn.py dispatches, superclaude is Python, every OS differenc",
+  "trace_id": "7b47f437f2ef",
+  "when": "2026-11-22T15:22:12.738167"
+}
