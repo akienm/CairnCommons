@@ -1,14 +1,14 @@
 {
   "title": "a ticket whose build is on main has crossed BUILDME",
-  "owning_intention": "cairn/machines/build_inspector/intention+why.json",
-  "intention": "build_inspector reds every ticket whose cursor still reads [TICKETME:...] while the cairn repo's main carries at least one commit whose subject names its id before the subject's first colon and that changes code (any path outside press_office/ and outside *.md). The red names the ticket and the commits. A ticket past TICKETME, one named only after the colon (a passing mention), or one whose only naming commits are outline/question/doc commits, is not red.",
+  "owning_intention": "cairn/devices/codemother/machines/build_inspector/intention+why.json",
+  "intention": "build_inspector reds every ticket whose cursor stands at a stage before BUILDME in its own workflow path (THINKME, TICKETME, FIXME, any stage the path places ahead of BUILDME) while the cairn repo's main carries a commit whose subject names its id before the subject's first colon, that changes code (any path outside press_office/ and outside *.md), and that is newer than the ticket's latest forward BUILDME crossing (or the ticket never crossed BUILDME). The red names the ticket, its cursor and the commits. A ticket at or past BUILDME, one named only after the colon, one whose only naming commits are doc commits, or one whose naming code commits all predate its latest forward BUILDME crossing, is not red.",
   "why": "Measured 2026-11-14 on akiendell by census over commons main and origin/main (5399 commits): 113 tickets read [TICKETME:...]; 47 of them are named by at least one origin/main commit; 31 of the 47 carry a 'Linux seal of its proofs' or reseal commit, and 32 of the 47 have no fixme at all, so they were built, landed and sealed without a chart attempt or a BUILDME crossing. Two of two tickets the orchestrator picked as unbuilt (404d3f6f3d9b, 3ba20f30a585) were already built and sealed on main. The land and seal path is the integrator's own scripts (the orchestrator grepped the cairn repo: no python component moves a cursor there), so the rule cannot live there; it is a rule that matters (Law 4) and today is policy. A sieve reading the two records (commons state, repo log) makes the disagreement a red instead of a thing a mind finds by accident.",
   "traces_to": "Law 4 (a rule that matters is enforced by physics, not policy), Law 5 (a thing and its story may not contradict: the repo says built, the state says TICKETME), Law 9 (red is the default; a built ticket whose cursor says otherwise is a visible red, not a lost one).",
   "how": "A repo-level scan in inspector.py, called by inspect() beside slate_reach and unbuilt_intentions (not a per-component row sieve): read every tickets/*.state.json in the sibling CairnCommons for a [TICKETME:...] cursor (via _workflow_cursor), run one `git log --format=%H%x09%s --name-only` over the cairn repo's main, index commits whose subject names a ticket id (twelve lowercase hex), keep those that change at least one path outside press_office/ and outside *.md, and emit one finding per ticket id with its commit shas. RULE 1: the sieve reads records only and imports no machine. Proof: a scratch cairn repo and scratch commons, red first.",
   "bounds": {
     "in": [
-      "cairn/machines/build_inspector/inspector.py",
-      "cairn/machines/build_inspector/proofs/test_a_ticket_whose_build_is_on_main_has_crossed.py"
+      "cairn/devices/codemother/machines/build_inspector/inspector.py",
+      "cairn/devices/codemother/machines/build_inspector/proofs/test_a_ticket_whose_build_is_on_main_has_crossed.py"
     ],
     "out": [
       "the integrator's integrate scripts",
@@ -27,20 +27,25 @@
       "when": "2026-11-14",
       "saw": "False-positive census on origin/main (git log --name-only) against 114 [TICKETME:...] tickets: 43 are named by a code commit (the 47 upper bound drops 4 doc-only: 4c4a, 12443, dd79, d421, so the built count is at most 43, not 47); 42 of the 43 have a code commit whose subject names the id BEFORE the first colon, 1 (aa05710a5124) only after it, a passing mention; 8 of the 43 carry only seal commits in that lead position and 34 carry at least one non-seal lead commit (a build or red-first proof). So the measured built count is 42, and the lead-colon rule removes the one false positive.",
       "how": "scratchpad census_fp.py: git log origin/main --format='@@%H<TAB>%s' --name-only over the cairn repo, matched against the [TICKETME:...] state files in CairnCommons/tickets"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "88e30cde9bd4 was built onto main while its cursor read FIXME: commons 387f9a901 (13:45:34 -0700) moved it 'FIXME 1-3 answered ... back to BUILDME' as a queueme; cairn b02b26a59 '88e30cde9bd4: build (akiendelllinux_cc_0, 3fc8ebc8d by path)' landed at 13:45:42; the BUILDME crossing is cairn 9a3ed2742 at 13:50:44 and commons f40426580 at 13:50:46. Its last forward BUILDME before that was 489b5b2fa on 2026-11-13. A TICKETME-only cursor test misses this ticket.",
+      "how": "git log --date=iso origin/main | grep 88e30cde9bd4 in cairn, and git log over CairnCommons/tickets/88e30cde9bd4-*.state.json, read 2026-11-22"
     }
   ],
   "id": "a4a3f5634e7c",
   "outcomes": [
     {
       "n": 1,
-      "claim": "a ticket whose state reads [TICKETME:waiting] and whose id is named by a commit that changes a code file is reported, with that commit's sha",
+      "claim": "a ticket whose cursor stands before BUILDME in its path (TICKETME or FIXME) and whose id is named by a code commit newer than its latest forward BUILDME crossing is reported, with that commit's sha and the cursor",
       "writes_to": [],
       "reads": [],
       "after": []
     },
     {
       "n": 2,
-      "claim": "a ticket whose only naming commit changes press_office/ or a .md file, a ticket named only after the subject's first colon, a ticket past TICKETME with a code commit, and a TICKETME ticket named by no commit are each NOT reported",
+      "claim": "a ticket whose only naming commit changes press_office/ or a .md file, a ticket named only after the subject's first colon, a ticket past TICKETME with a code commit, and a TICKETME ticket named by no commit are each NOT reported, and a FIXME ticket whose naming code commits all predate its latest forward BUILDME crossing is NOT reported",
       "writes_to": [],
       "reads": [],
       "after": []
@@ -49,10 +54,10 @@
       "n": 3,
       "text": "the scan lives in build_inspector's inspector.py beside slate_reach and is wired into inspect(); the git read is one `git log` over main, never one per ticket.",
       "writes_to": [
-        "cairn/machines/build_inspector/inspector.py"
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
       ],
       "reads": [
-        "cairn/machines/build_inspector/inspector.py"
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
       ],
       "after": []
     },
@@ -67,9 +72,21 @@
       "n": 5,
       "text": "one proof over a scratch git repo and commons, one tooth per clause, red first.",
       "writes_to": [
-        "cairn/machines/build_inspector/proofs/test_a_ticket_whose_build_is_on_main_has_crossed.py"
+        "cairn/devices/codemother/machines/build_inspector/proofs/test_a_ticket_whose_build_is_on_main_has_crossed.py"
       ],
       "reads": [],
+      "after": []
+    },
+    {
+      "n": 6,
+      "text": "D-widen (orchestrator, 2026-11-22): the cursor test is every stage before BUILDME in the ticket's own path, not TICKETME alone, because the rule broke at FIXME (88e30cde9bd4, measured). 'Before BUILDME' is read from the workflow string's path order through workflow_grammar, never a hand list of stage names; 'newer than' compares the commit's committer time with the latest forward BUILDME crossing's at from cairn.tools.base.crossings.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/tools/base/crossings.py",
+        "cairn/tools/base/workflow_grammar.py"
+      ],
       "after": []
     }
   ]
