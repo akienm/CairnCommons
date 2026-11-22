@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Two load-bearing assumptions, both checked. (a) The hollow verb bounds each proof run itself: cairn/devices/tester/hollow.py passes timeout= (default 120 s, line 978) to tester.run_proof at line 1138 and reports a timed-out run as returncode None, so removing the shell bound cannot hang prove.sh on a stuck run. (b) Nothing reads prove.sh's exit as 0 by design after the hollow: it is the script's last line (prove.sh:29), and its callers (close loop, walk scripts) treat nonzero as a stop. The new exit code 6 joins 5 (a commit did not land) in the header comment.",
+    "builder_check": "A Haiku builder needs: the file (cairn/devices/cc/scripts/prove.sh, last line, 29); the exact cure (no `timeout`, keep `| tail -4` for display, read ${PIPESTATUS[0]}, on nonzero echo 'HOLLOW DID NOT FINISH (exit N)' and exit 6); the exit code (6, documented in the header beside 5); where the proof lives (cairn/devices/cc/proofs/test_a_hollow_that_does_not_finish_stops_the_prove.py) with PROVES {'ae531c6b49db': {'1','2','3'}}; how to stub (a fake bin/cairn whose `test --hollow` prints lines and exits a set code; sail.py and the commit steps stubbed or skipped the way sibling cc proofs do); and how to measure clause 3 behaviourally (a recording `timeout` placed first on PATH sees no call carrying --hollow). The ticket carries all of these.",
+    "children": "none, because the change is one script line and one proof (cairn/devices/cc/scripts/prove.sh)",
+    "collision_check": "95f8c561e742 and d48d54dccde6 record 'the hollow is exactly timeout 1500 bin/cairn test --hollow <ticket> --seal' as how their voyages ran: a record of a run, not a constraint on prove.sh, so a distinction, not a collision. 8b171277190c (sail's chart waits as long as a gate can take) is the same why on a sibling script: a caller's wait must not be shorter than the work it waits on. Law 7 on both sides; no exclusive-and-terminal conflict.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) a hollow exiting nonzero (124 from a killed run included) makes prove.sh exit 6 and print a line naming the hollow and its exit status; (2) a hollow exiting 0 leaves prove.sh's exit 0 with the hollow's last lines printed; (3) prove.sh wraps the hollow in no wall-clock bound of its own. Horizon: the first ticket whose hollow outruns 1500 s (cdfc928cc5ff, 323 files) completes through prove.sh. Wrong intent if a long hollow should be split or sampled instead.",
+    "gates_bound": "proved by the tester: cairn/devices/cc/proofs/test_a_hollow_that_does_not_finish_stops_the_prove.py under PROVES {'ae531c6b49db': {'1','2','3'}}, deterministic check-type, red-first on main, then hollow and codemother's clearance at PROVED; a red feeds back to origin through FIXME.",
+    "missing_check": "The proof must exercise prove.sh's hollow step, not a copy of its text: the builder runs prove.sh (or the hollow step extracted into a function it calls) against a stub bin/cairn on PATH in a scratch house, the way cairn/devices/cc/proofs/test_a_close_commits_only_the_house_paths_its_step_wrote.py stubs the house. Also wrapped: the header comment of prove.sh names exit 6.",
+    "node_class": "code-seam",
+    "questions": "none, because the bound choice is settled by the verb's own per-run bound in cairn/devices/tester/hollow.py, line 978",
+    "task_or_ticket": "ticket",
+    "title": "a hollow that does not finish stops prove.sh loudly",
+    "watchme": "none, because its proof cairn/devices/cc/proofs/test_a_hollow_that_does_not_finish_stops_the_prove.py is the whole of its correctness, and the live horizon is one named voyage, cdfc928cc5ff",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A shell step whose last command is `X | tail` exits with tail's status; prove.sh's hollow was that step, so a killed hollow read as a pass until the PROVED gate."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "7e1266ca805d",
+  "skill": "sorted",
+  "title": "a hollow that does not finish stops prove.sh loudly",
+  "trace_id": "5819ade32559",
+  "when": "2026-11-21T21:41:54.770371"
+}
