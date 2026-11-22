@@ -1,0 +1,59 @@
+{
+  "id": "0bfd1a530cd4",
+  "title": "a reach logger chains past another reach logger to the next real sitecustomize",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "When cairn/devices/tester/reach/sitecustomize.py chain-loads the next sitecustomize on sys.path, it skips any that is itself a tester reach logger (an outer seal's reach dir) and loads the first one past them, so inside a seal-in-a-seal only the inner tree's logger logs, and two reach dirs on PYTHONPATH never recurse.",
+  "why": "Measured 2026-11-21 on akiendelllinux by akienasus_cc_0: 0a807f816e9f's hollow check reverted sitecustomize.py to 9918f4e56 and its proof stayed green, because the reverted inner logger chained to the outer seal's built copy, which named the script for it (scratch measurement in ~/.akien/temp/0a80hollow.tUGO: old logger alone named 0 of 2 fixture scripts, new alone 2 of 2, old-then-new on PYTHONPATH named both). With two reach dirs and no stdlib endpoint the chain recursed (RecursionError: maximum recursion depth exceeded, in sitecustomize). So a proof that seals proofs measures the outer seal's logger bytes, not its own tree's. 0a80 was repaired at the proof (tooth 4, a436c85ec); the logger is still open. Sibling in the same family: c54d744aa9ac (open-8fee7c432219, the instance swap inside the tester's own seal). akiendelllinux_cc_0 grepped tickets and questions and found no covering ticket.",
+  "traces_to": "Law 8 (a hollow build passed: the outer logger answered for the reverted one); Law 3 (a seal's reach must be measured by the bytes under test).",
+  "how": "In reach/sitecustomize.py's chain-load, walk sys.path past this dir and skip any entry whose sitecustomize.py is a tester reach logger (identified by a marker constant the module carries), loading the first non-reach one. A red-first proof runs real children with two reach dirs on PYTHONPATH in both orders.",
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reach/sitecustomize.py",
+      "cairn/devices/tester/proofs/test_a_reach_logger_chains_past_another_reach_logger.py"
+    ],
+    "out": [
+      "cairn/devices/tester/device.py (the reach env it builds is unchanged)",
+      "the instance swap inside a seal (c54d744aa9ac)",
+      "every other component"
+    ]
+  },
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a child run with PYTHONPATH = [this tree's cairn/devices/tester/reach, a second reach dir whose logger writes a marker file] loads this tree's logger only: the marker is absent and the reach log carries one line per pid"
+      },
+      {
+        "n": 2,
+        "claim": "the same two dirs in the other order load the second dir's logger only (the first reach logger on the path is the one that logs)"
+      },
+      {
+        "n": 3,
+        "claim": "neither order prints 'Error in sitecustomize' or RecursionError on stderr"
+      },
+      {
+        "n": 4,
+        "claim": "a real non-reach sitecustomize further down sys.path still runs (a marker it sets is visible), so 734b22d09f2e's shadowing clause holds"
+      }
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-21",
+      "saw": "0a807f816e9f's hollow reverted sitecustomize.py to 9918f4e56 and the proof stayed green; in scratch, old logger alone named 0 of 2 fixture scripts, new alone 2 of 2, old-then-new on PYTHONPATH named both, and the two-dir chain raised RecursionError in sitecustomize",
+      "how": "akienasus_cc_0 on akiendelllinux, prove.sh hollow output and ~/.akien/temp/0a80hollow.tUGO"
+    }
+  ],
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1 (the /sorted builder_check): A Haiku builder needs: (1) where the chain-load is: the end of cairn/devices/tester/reach/sitecustomize.py, the loop that finds the next sitecustomize on sys.path past _HERE; (2) the marker: a module-level constant, e.g. CAIRN_TESTER_REACH_LOGGER = True, read from the candidate file's text (a plain substring check, no import) before exec; (3) the module must still import nothing from cairn; (4) the proof uses cairn.tools.scratch.scratch.scratch_dir for every temp dir (bare tempfile in tester proofs is red under f92d213f7dd0's proof), runs children with sys.executable and an env with PYTHONPATH and CAIRN_TESTER_REACH_LOG set explicitly, and parses the log as JSON lines {pid, files}; (5) PROVES = {'0bfd1a530cd4': {'1': ..., '4': ...}}. All five are written into the ticket's how and falsifier.",
+      "by": "akienasus_cc_0",
+      "step": "cast",
+      "source": "sorted",
+      "at": "2026-11-22T01:34:03+00:00",
+      "writes_to": [],
+      "reads": []
+    }
+  ]
+}
