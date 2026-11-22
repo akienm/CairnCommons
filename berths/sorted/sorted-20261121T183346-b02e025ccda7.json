@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "assumption_check": "Two load-bearing assumptions, both measured or bounded. (a) The inner seal overrides CAIRN_TESTER_REACH_LOG for its own children (device.py run_env sets it per run), so an outer logger reached by the chain only duplicates lines into the inner log; skipping it loses nothing the outer seal reads. Read at cairn/devices/tester/device.py:782-785 on 2026-11-21. (b) A reach logger can be told from a non-reach sitecustomize by a marker constant the module itself carries, not by its directory name, so a worktree or scratch copy is still recognised. The build must add that marker; the old logger (pre-build bytes) carries none, which is why clause 2 seeds the second reach dir from the built bytes.",
+    "builder_check": "A Haiku builder needs: (1) where the chain-load is: the end of cairn/devices/tester/reach/sitecustomize.py, the loop that finds the next sitecustomize on sys.path past _HERE; (2) the marker: a module-level constant, e.g. CAIRN_TESTER_REACH_LOGGER = True, read from the candidate file's text (a plain substring check, no import) before exec; (3) the module must still import nothing from cairn; (4) the proof uses cairn.tools.scratch.scratch.scratch_dir for every temp dir (bare tempfile in tester proofs is red under f92d213f7dd0's proof), runs children with sys.executable and an env with PYTHONPATH and CAIRN_TESTER_REACH_LOG set explicitly, and parses the log as JSON lines {pid, files}; (5) PROVES = {'0bfd1a530cd4': {'1': ..., '4': ...}}. All five are written into the ticket's how and falsifier.",
+    "children": "none, because the fix is one function in cairn/devices/tester/reach/sitecustomize.py and one proof",
+    "collision_check": "734b22d09f2e (a seal records the components its run reached) chose to chain-load the next sitecustomize so a shadowed system hook still runs; its WHY is that the shadowed hook's behaviour must not differ under a seal. This ticket keeps that why (clause 4 is 734b's clause 4) and narrows only which sitecustomize counts as 'next': never another reach logger. A distinction, not a collision. 0a807f816e9f repaired its own proof (tooth 4) and stays PROVED; this ticket removes the cause, after which tooth 4 is still correct.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Four clauses at cairn/devices/tester/proofs/test_a_reach_logger_chains_past_another_reach_logger.py, run under bin/cairn test: (1) [this tree's reach, a second reach dir whose logger writes a marker] loads only this tree's logger: marker absent, one log line per pid; (2) the reverse order loads only the second's; (3) neither order prints 'Error in sitecustomize' or RecursionError; (4) a real non-reach sitecustomize further down still runs. Horizon: red at HEAD (the chain loads the second reach logger and recurses), green with the build.",
+    "gates_bound": "code-seam@v2: proved by the tester (bin/cairn test on the falsifier's proof, red-first then green), hollow-checked at PROVEME against the pre-build sitecustomize.py, verdict and PROVED through clearance; a failure routes back through FIXME to the caster (akienasus_cc_0).",
+    "missing_check": "The recursion is measured only in a scratch layout of two reach dirs with no stdlib sitecustomize past them; on a real seal-in-a-seal the chain ends at the stdlib apport hook. Clause 3 asserts no recursion in the two-dir case, which covers both. Not covered and named out of bounds: the instance swap inside a seal (c54d744aa9ac). Nothing asserted-wrapped is unwrapped.",
+    "node_class": "code-seam",
+    "questions": "none, because every choice is CC's and is answered in assumption_check from cairn/devices/tester/device.py",
+    "task_or_ticket": "ticket",
+    "title": "a reach logger chains past another reach logger to the next real sitecustomize",
+    "watchme": "none, because its correctness is its proof, beside cairn/devices/tester/reach/sitecustomize.py, and every seal-in-a-seal hollow check re-measures it (0a807f816e9f)",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "A proof that seals proofs was measuring the OUTER seal's reach logger: 0a807f816e9f's hollow reverted sitecustomize.py and stayed green. Repaired at the proof (tooth 4); this ticket removes the cause at the logger."
+    },
+    {
+      "stratum": "tree",
+      "text": "Same family as c54d744aa9ac (the instance swap inside the tester's own seal): 'inside a seal, the outer seal's bytes answer'. Two instances now."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "e3945c63d377",
+  "skill": "sorted",
+  "title": "a reach logger chains past another reach logger to the next real sitecustomize",
+  "trace_id": "26df3c7affb1",
+  "when": "2026-11-21T18:33:46.686723"
+}
