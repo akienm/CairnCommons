@@ -1,0 +1,36 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered three: (a) per-file anchor = parent of T's first commit touching the file; (b) reuse _revert_hunks, already the 'build never happened' counterfactual (ticket ce92eb562cf9) but today invoked only when a proof printed no teeth; (c) have the ticket name build_commits. (b) is smallest and reuses a proven path; (a) is equivalent for a single touching commit but reverts later tickets' edits too. (c) does not help: build_commits are already found. Going with (b), falling back to (a) when hunks do not reverse-apply is NOT done; that raise stays loud as today.",
+      "hidden_assumption": "That a build commit is found for the FIXME repair: _build_commits greps the subject for the ticket id; f76659ed8 is '69075b0e8212: build ...' so it is. A repair landed under another subject would not be found and would still be removed; the ticket's build_commits field is the existing escape. Also assumed: the file's only hunks from T are in commits after its creation, so the reverse-apply lands on bytes the creator wrote.",
+      "prior_art": "Consulted: tickets e08c996f939c (PROVED; the anchor after a FIXME, for files the first build wrote), 06f0445e7a63 (PROVED; anchor before the build that stands), ce92eb562cf9 (_revert_hunks, retry only on no teeth), 404d3f6f3d9b (reading carried across reseal), d65fe3aa96e2 (moves), 7bd839827172 (deletions). None covers a file absent at the anchor that the ticket did not create. The tester charter in intentions-congruency-lab states the hollow's purpose (Law 8) and does not settle this case.",
+      "real_collision": "The comment in measure(): 'A proof the build created (absent before) is not read this way: removing a file loses every tooth it holds and would vouch for any proof at all.' Distinction, not collision: that rule is about a proof the BUILD created; here the build did not create the file, and the fix keeps removal for files T's first build created."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when: in a scratch repo, a file another ticket created after T's first build, then edited by T's FIXME repair, reverts to the repair's parent bytes under cairn test --hollow and the declared tooth reds; a file T's first build created is still removed exactly as today; and 69075b0e8212's hollow reads 0 hollow over its 11 files. Wrong intent if the hunks revert of the FIXME commit leaves the file green (then the proof, not the hollow, is short).",
+    "from_idea": "none, because this is a defect measured at its site, not an idea: the hollow's own diagnostic output for 69075b0e8212 is on disk at akiendelllinux:~/.akien/temp/h69075.txt (2 HOLLOW lines, 'removed (absent before the build)')",
+    "how": "In cairn/devices/tester/hollow.py measure()'s file loop, when _revert at the ticket's anchor returns 'removed (absent before the build)' but the ticket's build commits that touch the file (builds_in) start at a commit whose parent holds the file, the counterfactual is the build's own hunks taken away (_revert_hunks over those commits), not the file's absence. A red-first proof in cairn/devices/tester/proofs builds a scratch repo: ticket T's first build at commit A writes x.py; another ticket creates y.py at B; T's FIXME repair at C edits y.py; the proof's tooth reads y.py. Today the hollow removes y.py and reads HOLLOW; after the fix it reverts C's hunk and the tooth reds.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 8: nothing enters proven-space without a proof a hollow build couldn't pass. A hollow reading taken against the wrong counterfactual (deleting another ticket's file) reports HOLLOW on a real proof, so a sound ticket cannot reach PROVED (69075b0e8212 stands at PROVEME on it). Also Law 3: the reading must measure what it says it measures.",
+    "what": "The hollow measures a file that a ticket first writes in a later commit than its first build against the world just before that ticket's own first write to the file, so a file another ticket created after the first build is never deleted as the counterfactual."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "69075b0e8212 is a sound ticket held at PROVEME by the hollow: two bin proofs other tickets created after its first build, edited at its FIXME repair, were deleted as the counterfactual and read HOLLOW; by hand at the repair's parent they red."
+    },
+    {
+      "stratum": "code",
+      "text": "_revert_hunks already computes 'this build never happened'; the fix widens when it is used rather than adding a second counterfactual."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "d4807c6da244",
+  "skill": "intent",
+  "title": "The hollow measures a file that a ticket first writes in a later commit than its first build against the world just befo",
+  "trace_id": "ca0b8d9e8f44",
+  "when": "2026-11-22T14:58:23.010398"
+}
