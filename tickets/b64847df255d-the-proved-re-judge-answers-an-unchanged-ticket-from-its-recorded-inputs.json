@@ -1,0 +1,98 @@
+{
+  "id": "b64847df255d",
+  "title": "the PROVED re-judge answers an unchanged ticket from its recorded inputs",
+  "owning_intention": "cairn/tools/proof_coverage/intention+why.json",
+  "intention": "build_inspector's PROVED re-judge (proof_covers_the_ticket) re-runs proof_coverage.lacks() for a ticket only when an input that judgement read has changed, so an unchanged ticket is answered from the record of its last judgement and an inspect() spends the resolver only on what moved.",
+  "why": "Measured 2026-11-22 on akiendelllinux under the 7bdcd8a801df pin: proof_covers_the_ticket takes 107.5 s over 1033 proof_coverage.lacks() calls (1540 findings) on every whole-tree inspect, re-deriving judgements whose inputs did not move. 76 s is proof_binds_its_subject_at_call (28.5 s ast.parse over 6880 modules, _walk_bindings recursing transitively), 24.5 s _added_by_the_build's git show per decompose writes_to file, 8 s current source_fingerprint, 7 s chain_for_ticket. The modules a proof binds and the build's writes_to files are read by lacks() and lie outside the seal's directory_fingerprint, so a key of ticket bytes plus seal fingerprints would serve stale verdicts; the key is every input the judgement read.",
+  "traces_to": "Law 1 (the resolver is spent on the novel, not on re-deriving the settled): 1033 judgements re-derived on every inspect though almost none of their inputs moved. Law 8/9 bound the shortcut: a cache that serves green over a moved input is a hollow green, so the record is every input read, measured by an audit hook, not a hand list.",
+  "how": "proof_coverage.lacks gains a recorded-inputs cache. One judgement runs under a recorder: a sys.addaudithook 'open' hook, scoped by a flag to that one call, records every file opened with (mtime_ns, size, sha256); a wrapper over proof_coverage's own existence checks (Path.is_file / exists in _walk_bindings, _module_file, _added_by_the_build) records every path found ABSENT; every git read is recorded as the resolved commit sha plus the command (git show <sha>:<rel> needs no rehash; a ref that resolves to a new sha is a miss); the ticket's crossings entries and the decompose berth path ride the record. A hit is: ticket bytes equal, every recorded file re-stats equal (an mtime/size change falls through to sha256), every absent path still absent, every ref resolves to the recorded sha. The record berths as tool state under its holder, ~/.cairn/devices/codemother/0/tools/proof_coverage/0/lacks_cache.json (Law 6), passed in by proof_covers_the_ticket; no cache argument means today's uncached behaviour.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over the house tree a warm proof_covers_the_ticket returns findings identical to a cold run, and its wall time is lower; the proof prints both"
+      },
+      {
+        "n": 2,
+        "claim": "one byte flipped in the ticket, in a named proof's seal, in a module the proof binds two hops away, or in a decompose writes_to file each re-judges exactly that ticket and no other"
+      },
+      {
+        "n": 3,
+        "claim": "a recorded input deleted, or a file the judgement recorded absent created, re-judges that ticket"
+      },
+      {
+        "n": 4,
+        "claim": "a git ref recorded at one sha that now resolves to another re-judges that ticket, and a read at a fixed sha is not re-hashed"
+      },
+      {
+        "n": 5,
+        "claim": "under sys.addaudithook('open'), every file one lacks() call opens is in that call's recorded set"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: proof_coverage.lacks gains keyword-only cache: Path|None=None (the holder's directory); None is today's behaviour unchanged. With a cache, a record {ticket_sha, files:{path:[mtime_ns,size,sha256]}, absent:[path], git:[[args, sha]], crossings, chain} per ticket id lives in <cache>/lacks_cache.json, written atomically (tmp + os.replace). A hit: ticket bytes' sha equal, every file re-stats equal or rehashes equal, every absent path still absent, every recorded ref resolves (git rev-parse) to its sha, crossings_for(tid) and chain_for_ticket(tid) re-derived equal; then the recorded lacks return. Else re-judge and re-record.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py",
+        "cairn/tools/base/crossings.py",
+        "cairn/tools/chain/chain.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the recorder is one sys.addaudithook installed once per process, gated by a contextvars.ContextVar so only the judging call records 'open' events; absences are recorded by proof_coverage's own existence checks (a module-level _exists(path) helper used by _walk_bindings, _module_file, _resolve and _added_by_the_build); _git resolves any ref argument to its sha with rev-parse and records (args, sha).",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: inspector.proof_covers_the_ticket passes cache=address.instance_path('codemother', 0) / 'tools' / 'proof_coverage' / '0' (Law 6: the holder's state, the tool keeps none of its own address).",
+      "writes_to": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/build_inspector/inspector.py",
+        "cairn/tools/base/address.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the red-first proof drives lacks over a scratch commons and repo for clauses 2-5 (one tooth each) and over the house tree cold then warm for clause 1, with a scratch cache directory, never the live berth.",
+      "writes_to": [
+        "cairn/tools/proof_coverage/proofs/test_an_unchanged_ticket_is_answered_from_its_recorded_inputs.py"
+      ],
+      "reads": [
+        "cairn/tools/proof_coverage/proof_coverage.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/proof_coverage/proof_coverage.py",
+      "cairn/devices/codemother/machines/build_inspector/inspector.py",
+      "cairn/tools/proof_coverage/proofs/test_an_unchanged_ticket_is_answered_from_its_recorded_inputs.py"
+    ],
+    "out": [
+      "proof_coverage's judgement itself (what a lack is)",
+      "the seal store and validation_store.source_fingerprint",
+      "crossings.py and the 7bdcd8a801df pin",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "proof_covers_the_ticket 107.5 s wall over 1033 lacks() calls, 1540 findings; proof_binds_its_subject_at_call 76.1 s cumulative, ast.parse 28.5 s over 6880 calls, _added_by_the_build 24.5 s, _git 20.9 s over 1825 calls, sealed_fingerprint_now 8.3 s, chain_for_ticket 7.3 s",
+      "how": "cProfile over inspector.proof_covers_the_ticket(Path('/home/akien/dev/src/cairn/cairn')) inside crossings.pinned_journals() from wt-7bdc; output /tmp/claude-1000/-home-akien-dev-src-cairn/0b2e196e-7177-4140-8585-e9f2200689b4/scratchpad/prof_lacks.out"
+    }
+  ]
+}
