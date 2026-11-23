@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: (a) superclaude.py (device cc) may not import cairn.devices.recovery (RULE 1: only a published tool is importable), so floor.py is also a CLI: `python floor.py verify|apply|report` prints findings as JSON and exits 0 when the floor is up; child 3 calls it as a subprocess with PYTHONPATH=<repo root>, which is also how it works before the venv exists. (b) floor.py uses only the stdlib plus the launch tool (venv_bin_dir, runs_shell_scripts, elevation), whose imports are stdlib-only. (c) The Windows POSIX-names lay-down (bin -> Scripts, python3.exe) is not ported: it exists for bash launchers, and launch.runs_shell_scripts() is false on the box that needs it. (d) The sudo apt python3-venv repair keeps today's rule: only where launch.elevation() says ok; its password channel (CAIRN_SUDO_PW + SUDO_ASKPASS) stays the caller's, floor.py runs `sudo -n` or `sudo -A` only when the environment already carries them.",
+    "builder_check": "A Haiku-level builder needs, and the ticket carries: the bash line ranges to port (bootstrap.sh :187-248 verify, :250-343 apply, :355-395 report, :76-124 host python / venv python / stamp); the finding shape ({code, text}, text copied verbatim from the bash); the stamp format (repo root, python -V, sha256 of pyproject.toml, newline separated, at <venv>/.cairn-stamp); the venv python via launch.venv_bin_dir; the host-python candidate order (python3, python, py, accepted only if it runs and is major 3); the CLI contract in assumption_check (a). Remaining question 'raise or return?' is answered: never raise, every failure is a finding.",
+    "children": "none, because floor.py is one module with three functions and a CLI; its caller superclaude.py is a sibling under c3cd232ba0cf",
+    "collision_check": "bootstrap.sh answers the same questions in bash; the two coexist until child 3 retires its launch-path callers, which is the parent's ordering. The recovery charter's invoke and its 'Never fatal' rule carry over: floor functions return findings and never raise. launch (system device) answers the OS questions and is reached because it is published_by_device. No exclusive-and-terminal collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "One tooth per clause: (1) verify() over scratch CAIRN_VENV states returns [] for a good venv and a finding whose text begins with the bash's own lead words (VENV ABSENT, IMPORT ROOT BROKEN, IMPORT ROOT POINTS ELSEWHERE, psycopg2 MISSING, FLOOR IS STALE, NO RUNNABLE PYTHON 3) for each broken state; (2) apply() over an absent venv in a scratch dir brings it up and verify() is then empty (UNMEASURED where pip has no network); (3) report([]) returns '' and report(findings) writes preflight.json with floor_up false and returns text naming each; (4) `python floor.py verify` prints JSON findings and exits 1 with a finding, 0 without; (5) floor.py text has none of os.name, sys.platform, platform.system, 'bash', 'sudo -S'. Off nt, the nt-only behavior prints FAIL <tooth>: ...UNRAN... Horizon: wrong intent if child 3 still needs bash to get the floor.",
+    "gates_bound": "code-seam: proved by the tester (PROVES keyed 1-5 on the floor proof, sealed red first, hollow run); teeth needing a native Windows run print FAIL ...UNRAN... off nt and are measured on akiendell; feeds back to origin on failure (a red reseal raises a trouble routed to this ticket).",
+    "missing_check": "This child builds floor.py and its proof only. bootstrap.sh keeps cairn_wire_instances, first_run and the bash callers until child 3 moves superclaude; wire is out of bounds (it links POSIX names, nothing on Windows). Not a gap: the boot log namespace (~/.cairn/logs/boot lognote) is the bash logger; floor.py appends the same one-line records to ~/.cairn/logs/boot/floor.log so the reported-but-unfixed probe can read them, and that probe's path is checked at build time.",
+    "node_class": "code-seam",
+    "questions": "none, because the one design choice (CLI vs import across RULE 1) is settled in assumption_check (a) by RULE 1 at CLAUDE.md, and every finding's text is pinned to today's bash at cairn/devices/recovery/bootstrap.sh",
+    "task_or_ticket": "ticket",
+    "title": "recovery's floor is callable from Python, its findings returned as data",
+    "watchme": "none, because its proof cairn/devices/recovery/proofs/test_recovery_s_floor_runs_from_python.py is the whole of its correctness until child 3 (superclaude.py) calls it, and the reported-but-unfixed probe cairn/devices/recovery/probes (test_reported_but_unfixed_probe.py) already watches whether findings get fixed",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Child 2 of c3cd232ba0cf: recovery/floor.py (verify/apply/report as data, plus a JSON CLI because RULE 1 forbids cc importing recovery); POSIX-names lay-down not ported."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "a82db5f2a2af",
+  "skill": "sorted",
+  "title": "recovery's floor is callable from Python, its findings returned as data",
+  "trace_id": "a120693ef0e2",
+  "when": "2026-11-22T20:56:30.799017"
+}
