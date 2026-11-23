@@ -1,0 +1,71 @@
+{
+  "id": "8219a855a7c1",
+  "title": "superclaude.py installs an absent Claude Code, and a proof says so on every box",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "superclaude.py installs Claude Code when it is absent and says so with --dry-run; a proof measures it on Windows and Linux.",
+  "why": "Akien, 2026-11-11, quoted at cairn/devices/cc/superclaude:461: 'if claude is not installed, it should be'. Measured 2026-11-23: superclaude.py already carries the install branch and _install, written by 1941e93b25a3, but no proof drives it: test_superclaude_runs_from_python.py has no install tooth, and the only one is in test_superclaude_bare_box.py, which drives the bash that e179281f6eff retires.",
+  "traces_to": "Akien's 2026-11-11 ruling; Law 3 and Law 8; outline 10.3.2.1.",
+  "how": "One new proof drives main() through its seams with claude absent; superclaude.py changes only if a tooth reds on it.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with claude absent, --dry-run prints that a real launch would install it from the url (the default https://claude.ai/install.sh, or CAIRN_CLAUDE_INSTALLER), calls no installer, and exits 0"
+      },
+      {
+        "n": 2,
+        "claim": "a real launch with claude absent looks in ~/.local/bin first, then calls the installer with that url, and a claude found in ~/.local/bin is not installed over"
+      },
+      {
+        "n": 3,
+        "claim": "an install after which claude is still not on PATH exits 127 with FAILED on stderr"
+      },
+      {
+        "n": 4,
+        "claim": "_install fetches with curl or wget into sh where the launch tool says the box runs shell scripts, and runs the PowerShell installer where it does not"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: one proof, one tooth per clause, red first, driving main() through its which/install/out/err seams with a scratch HOME; a mutant of superclaude.py with the install branch removed reds teeth 1-3, and a mutant with the fetcher choice swapped reds tooth 4.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_superclaude_installs_an_absent_claude.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/superclaude.py",
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: superclaude.py changes only if a tooth reds on it, and then only the install branch (lines 133-143, 376-392); a red there that needs more is a FIXME, not a widening.",
+      "writes_to": [
+        "cairn/devices/cc/superclaude.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/superclaude.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/proofs/test_superclaude_installs_an_absent_claude.py",
+      "cairn/devices/cc/superclaude.py"
+    ],
+    "out": [
+      "cairn/devices/cc/superclaude",
+      "bin/cairn.py",
+      "cairn/devices/cc/proofs/test_superclaude_runs_from_python.py",
+      "the live network"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "superclaude.py:133-143 defines _install (curl or wget into sh, else powershell irm install.ps1) and :376-392 the absent-claude branch with the dry-run line and exit 127; test_superclaude_runs_from_python.py holds no tooth that names install.",
+      "how": "read superclaude.py and grep install over test_superclaude_runs_from_python.py on akiendell at origin/main ee12953c6"
+    }
+  ]
+}
