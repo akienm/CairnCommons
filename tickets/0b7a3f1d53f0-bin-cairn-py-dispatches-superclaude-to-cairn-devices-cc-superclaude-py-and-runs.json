@@ -1,0 +1,69 @@
+{
+  "id": "0b7a3f1d53f0",
+  "title": "bin/cairn.py dispatches superclaude to cairn/devices/cc/superclaude.py and runs interactive verbs with the console inherited",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "cairn superclaude runs cairn/devices/cc/superclaude.py through bin/cairn.py with the dispatcher's console inherited, so no bash, wsl or sudo is in its process tree.",
+  "why": "Measured 2026-11-22 on akiendell: cairn superclaude exited 127 silently because the dispatcher ran a bash launcher and where.exe lists WSL's bash.exe first. superclaude.py (1941e93b25a3) exists; nothing dispatches to it, and _run starts every verb with CREATE_NO_WINDOW, which gives an interactive claude a hidden console instead of this one.",
+  "traces_to": "Outline 10.3.2.1 and 5.4.3.8 (superclaude is Python; Windows needs no bash); Law 1 (the settled launcher is dispatched, not re-derived); Law 3 (the proof measures the spawn kwargs).",
+  "how": "bin/cairn.py: _wire_link takes an optional verb name; _wire_instances links cc/superclaude.py as the verb superclaude in instance 0's bin (a stale link at the bash is repointed); _wiring_gap reports that stale link; _run spawns a verb named in INTERACTIVE_VERBS = {'superclaude'} with no creationflags and no std handle keywords, so claude owns this console, and every other verb keeps windowless_kwargs. The 126 refusal of a shell script on a box that runs none stays.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "_wire_instances over scratch roots links cc/superclaude.py as <instance root>/superclaude/0/bin/superclaude, repoints a link at the bash, and _wiring_gap reports a stale link"
+      },
+      {
+        "n": 2,
+        "claim": "_run on the superclaude verb calls subprocess.call with [sys.executable, <the file>] and no creationflags, stdin, stdout or stderr keyword, while another verb still carries creationflags"
+      },
+      {
+        "n": 3,
+        "claim": "a script with a shell shebang on a box with no shell on PATH returns 126, naming the script"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _wire_link takes a verb name, _wire_instances and _wiring_gap use it for superclaude.py, and _run spawns INTERACTIVE_VERBS with the console inherited.",
+      "writes_to": [
+        "bin/cairn.py"
+      ],
+      "reads": [
+        "bin/cairn.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof, one tooth per clause, red first, with a scratch CLASS_ROOT and INSTANCE_ROOT and subprocess.call replaced to record kwargs.",
+      "writes_to": [
+        "bin/proofs/test_cairn_dispatches_superclaude_py.py",
+        "bin/validations/test_cairn_dispatches_superclaude_py.json"
+      ],
+      "reads": [
+        "bin/cairn.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn.py",
+      "bin/proofs/test_cairn_dispatches_superclaude_py.py",
+      "bin/validations/test_cairn_dispatches_superclaude_py.json"
+    ],
+    "out": [
+      "cairn/devices/cc/superclaude (the bash, child 6)",
+      "cairn/devices/cc/superclaude.py",
+      "the existing superclaude proofs (child 6)",
+      "bin/cairn and bin/cairn.cmd shims (child 4)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "bin/cairn.py _run starts every verb with windowless_kwargs(given=()), i.e. CREATE_NO_WINDOW; _wire_instances links cc/superclaude (the bash) as the verb",
+      "how": "read bin/cairn.py lines 140-145 and 214-219"
+    }
+  ]
+}
