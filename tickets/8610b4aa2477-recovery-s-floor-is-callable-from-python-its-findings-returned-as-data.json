@@ -1,0 +1,123 @@
+{
+  "id": "8610b4aa2477",
+  "title": "recovery's floor is callable from Python, its findings returned as data",
+  "owning_intention": "cairn/devices/recovery/intention+why.json",
+  "intention": "Recovery's floor (verify, apply, report) is callable from Python, so superclaude.py runs the preflight without bash and every finding comes back as data.",
+  "why": "Measured 2026-11-22 on akiendell: `cairn superclaude` resolved bash to C:\\Windows\\System32\bash.exe (WSL) and ran the session inside WSL; Git Bash is not on PATH. The preflight (cairn_bootstrap_verify/apply/report in bootstrap.sh, 496 lines) is sourced by that bash, so a Python superclaude (child 3 of c3cd232ba0cf) has no floor to call. Outline 10.3.2.1: superclaude is Python on every box and never elevates itself.",
+  "traces_to": "Outline 10.3.2.1 and 5.4.3.8 (superclaude is Python, Windows needs no bash); RULE 1 (OS answers come from the system device's published launch tool); Law 1 (one floor); Law 3 (verify measures; a stamp alone is not the floor).",
+  "how": "New cairn/devices/recovery/floor.py, stdlib plus the launch tool. verify() returns a list of findings {code, text} (empty = floor up) and fixes nothing; apply() repairs (half-built venv and dangling-interpreter venv rebuilt with --clear, parent dir made, ensurepip absent -> apt python3-venv only where launch.elevation() is ok and sudo already has -n or SUDO_ASKPASS, editable install, stamp last, re-verify) and returns the findings that survived; report(findings) writes ~/.cairn/logs/preflight.json and returns the text for --append-system-prompt ('' when up). Finding text is copied verbatim from bootstrap.sh (:187-248 verify, :250-343 apply, :355-395 report; helpers :76-124). Never raises: every failure is a finding. The venv python comes from launch.venv_bin_dir; the host python is the first of python3, python, py that runs and is major 3. Because RULE 1 forbids device cc importing cairn.devices.recovery, floor.py is also a CLI: `python floor.py verify|apply|report` prints JSON findings and exits 0 when the floor is up, 1 otherwise; child 3 calls it as a subprocess with PYTHONPATH set to the repo root. Also ported: the POSIX-names lay-down (bootstrap.sh :126-143, and its verify check :238), because readers remain (see measured): where launch.venv_bin_dir(venv) is Scripts, verify() reports WINDOWS VENV LACKS ITS POSIX NAMES when <venv>/bin/python3 does not run, and apply() lays Scripts/python3.exe and a bin -> Scripts link (os.symlink; a refusal is a finding). Not ported: cairn_wire_instances. bootstrap.sh stays until child 3 retires its launch-path callers.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "verify() over scratch CAIRN_VENV states returns [] for a good venv and, for each of absent venv, import root broken, import root elsewhere, psycopg2 missing, stale stamp and no runnable python, one finding whose text leads with the bash's own words (VENV ABSENT, IMPORT ROOT BROKEN, IMPORT ROOT POINTS ELSEWHERE, psycopg2 MISSING, FLOOR IS STALE, NO RUNNABLE PYTHON 3); and on a venv whose bin dir is Scripts, a missing <venv>/bin/python3 yields WINDOWS VENV LACKS ITS POSIX NAMES (UNMEASURED off nt: prints FAIL ...UNRAN...)"
+      },
+      {
+        "n": 2,
+        "claim": "apply() over an absent venv in a scratch dir brings the floor up so that verify() is then empty, and over a half-built venv (no pip) rebuilds it with --clear (UNMEASURED where pip has no network); on a Scripts venv apply() lays Scripts/python3.exe and bin -> Scripts so <venv>/bin/python3 runs"
+      },
+      {
+        "n": 3,
+        "claim": "report([]) returns '' and report(findings) writes preflight.json with floor_up false and the findings, and returns text naming each finding"
+      },
+      {
+        "n": 4,
+        "claim": "`python floor.py verify` prints the findings as JSON and exits 0 with none and 1 with some, run from a cwd that is not the repo root with PYTHONPATH set to it"
+      },
+      {
+        "n": 5,
+        "claim": "floor.py contains none of os.name, sys.platform, platform.system, the word bash, or a sudo password flag; its OS answers are imported from the launch tool"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: verify() and its helpers (host python, venv python, stamp want/file), ported from bootstrap.sh :76-124 and :187-248; findings as {code, text}; text verbatim.",
+      "writes_to": [
+        "cairn/devices/recovery/floor.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/bootstrap.sh",
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: apply(), ported from bootstrap.sh :250-343: --clear rebuild for half-built or interpreter-gone venvs, mkdir of the parent, apt python3-venv only when launch.elevation() is ok, editable install, stamp last, then verify().",
+      "writes_to": [
+        "cairn/devices/recovery/floor.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/bootstrap.sh",
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: report(findings), ported from bootstrap.sh :355-395: preflight.json under ~/.cairn/logs (HOME-relative, so a scratch HOME isolates it), the text for --append-system-prompt, one boot-log line per decision at ~/.cairn/logs/boot/floor.log.",
+      "writes_to": [
+        "cairn/devices/recovery/floor.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/bootstrap.sh"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: main(argv) as the CLI: verify|apply|report print JSON, exit 0 when no findings, 1 otherwise, 2 for a bad verb; `if __name__ == '__main__'` calls it. This is the door device cc uses (RULE 1).",
+      "writes_to": [
+        "cairn/devices/recovery/floor.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/bootstrap.sh"
+      ]
+    },
+    {
+      "n": 5,
+      "text": "D5: the red-first proof, its seal, and the charter's invoke line naming floor.py. The proof imports floor inside each tooth, builds scratch venvs under a scratch HOME, keys PROVES to clauses 1-5, and prints FAIL <tooth>: ...UNRAN... for a tooth this box cannot run. floor.py itself is written as one file by D1-D4.",
+      "writes_to": [
+        "cairn/devices/recovery/proofs/test_recovery_s_floor_runs_from_python.py",
+        "cairn/devices/recovery/validations/test_recovery_s_floor_runs_from_python.json",
+        "cairn/devices/recovery/intention+why.json",
+        "cairn/devices/recovery/floor.py"
+      ],
+      "reads": [
+        "cairn/devices/recovery/bootstrap.sh",
+        "cairn/devices/system_rackmount/tools/launch/launch.py",
+        "cairn/devices/recovery/proofs/test_bootstrap.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/recovery/floor.py",
+      "cairn/devices/recovery/proofs/test_recovery_s_floor_runs_from_python.py",
+      "cairn/devices/recovery/validations/test_recovery_s_floor_runs_from_python.json",
+      "cairn/devices/recovery/intention+why.json"
+    ],
+    "out": [
+      "cairn/devices/cc/superclaude and every caller (siblings under c3cd232ba0cf)",
+      "cairn/devices/recovery/bootstrap.sh (stays until child 3)",
+      "cairn_wire_instances and bootstrap_first_run.sh",
+      "cairn/devices/system_rackmount/tools/launch"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-22",
+      "saw": "cairn superclaude from elevated PowerShell on akiendell resolved bash to C:\\Windows\\System32\bash.exe (WSL) and exited 127 silently; Git Bash is not on PATH",
+      "how": "orchestrator's measurement relayed in the cross-session message, and where.exe bash"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "bootstrap.sh is 496 lines; cairn_bootstrap_verify at :187, apply at :250, report at :355; superclaude calls all three at :374-394",
+      "how": "grep -n and sed over cairn/devices/recovery/bootstrap.sh and cairn/devices/cc/superclaude at cairn 6b92ed0f8"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "2 launch-path-adjacent readers of <venv>/bin/python3 remain outside this ticket: cairn/devices/librarian/0/bin/librarian (export PATH=$CAIRN_VENV/bin; exec python3) and bin/cairn (until child 4); bin/cairn.py-bound verbs get python3 by PATH. recompile_gate.sh already falls back to Scripts/python.exe. 9 files name the venv path in all; 3 others (deletegate, isolation.py, address.py, installer.py) only mention it in prose",
+      "how": "grep -rE 'VENV}?/bin|venv}?/bin|.cairn/venv' bin cairn skills, excluding proofs, validations, json, md, at cairn 6b92ed0f8; orchestrator's instruction to keep the lay-down while any reader remains"
+    }
+  ]
+}

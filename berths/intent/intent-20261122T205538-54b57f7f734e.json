@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Shell out to bash from Python and parse its output: rejected, it keeps bash in the launch path, the thing the parent exists to remove (WSL bash.exe measured 2026-11-22). Porting only verify and leaving apply: rejected, superclaude calls verify then apply then report as one unit.",
+      "hidden_assumption": "That bootstrap.sh's findings text is relied on only as text (superclaude appends it to the system prompt), not parsed; and that no Windows consumer reads the bin/python3 POSIX names once bash is out of the launch path. Both are checked by grep at build time.",
+      "prior_art": "Consulted: cairn/devices/recovery/bootstrap.sh (the source being ported, with its measured-failure comments), recovery proofs test_bootstrap.py, launch.py (venv_bin_dir, elevation, runs_shell_scripts), congruency-lab cairn-devices-recovery charter. No Python floor exists.",
+      "real_collision": "None exclusive-and-terminal. bootstrap.sh and floor.py coexist until child 3 moves its caller; two answers for one release is the parent's ordering. bootstrap.sh's other functions (wire, first_run) are out of bounds."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when: (1) on Linux verify() over a fixture venv state (absent, half-built, import elsewhere, psycopg2 missing, stale stamp, good) returns the same finding set bootstrap.sh's cairn_bootstrap_verify wrote for the same state, and nothing for good; (2) apply() over an absent venv brings it up and verify() is then empty; (3) report() on no findings is empty and on findings writes preflight.json with floor_up false and returns text naming each; (4) floor.py contains no os.name, sys.platform, platform.system, 'bash' or 'sudo' literal; on nt every measurement is UNMEASURED off a native run and prints FAIL ...UNRAN... elsewhere. Wrong intent if a caller still needs bash to get the floor.",
+    "from_idea": "none, because it is child 2 of cast ticket c3cd232ba0cf (CairnCommons/tickets/c3cd232ba0cf-cairn-launches-from-one-python-launcher-on-every-box-behind-a-thin-shim-per-plat.json), whose how names it",
+    "how": "New cairn/devices/recovery/floor.py porting bootstrap.sh's cairn_bootstrap_verify/apply/report: verify() returns a list of findings (empty = floor up) and fixes nothing; apply() builds/repairs the venv (half-built --clear, dangling interpreter --clear, parent mkdir, ensurepip->apt python3-venv only where launch.elevation() allows, editable install, stamp last, re-verify) and returns findings; report(findings) writes ~/.cairn/logs/preflight.json and returns the text handed to claude via --append-system-prompt (empty when up). Findings are dicts {code, text}; the text is the bash text. Every OS question (venv bin dir, does this box need POSIX names, elevation) is asked of cairn/devices/system_rackmount/tools/launch; the module tests no os.name/sys.platform. The Windows POSIX-names lay-down is not ported: nothing on a box that runs no shell scripts (launch.runs_shell_scripts() false) reads those names. bootstrap.sh stays until child 3 retires its launch-path callers.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Outline 10.3.2.1 and 5.4.3.8 (superclaude is Python, Windows needs no bash); RULE 1 (OS answers come from the system device's published tool); Law 1 (one floor, asked from Python, not re-derived in a second language); Law 3 (verify measures, a stamp alone is not the floor).",
+    "what": "Recovery's floor (verify, apply, report) is callable from Python, so superclaude.py runs the preflight without bash and every finding comes back as data."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Launcher child 2: recovery gets floor.py (verify/apply/report as data); the Windows POSIX-names lay-down is deliberately not ported."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "c9800b2e39c4",
+  "skill": "intent",
+  "title": "Recovery's floor (verify, apply, report) is callable from Python, so superclaude.py runs the preflight without bash and",
+  "trace_id": "87b7e92c8a93",
+  "when": "2026-11-22T20:55:38.712832"
+}
