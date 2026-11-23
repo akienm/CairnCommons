@@ -101,5 +101,154 @@
       "saw": "outline check (outline_checks/b7b90c36cb37-20261123T120832.json) read the first cast's 'never drops a table' against outline 4.3.1.5.1.5.2 (6) and opened open-2bec6a1c39c5; the outline stands, so the claim is withdrawn. No ticket covers clause (6) (grep of tickets for 'dropped at run end' / 'carry its run id' finds only e4fd7f28faaf and 784eb1e92866, neither builds it)",
       "how": "cairn outlinecheck b7b90c36cb37; grep -l over CairnCommons/tickets"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "b7b90c36cb37: a test run reads from cairn_testing only the tables it created, built in cairn/devices/db_domain/tools/client/store.py",
+      "intent": "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. This makes outline 4.3.1.5.1.5.2 clause (5) true at the table grain (testing artifacts invisible to all but the run that made them) and e4fd7f28faaf's 'a table the run itself created'. Clause (6), each run's rows dropped at run end with the sleep cycle sweeping orphans, is not built here: this ticket neither drops nor forbids dropping.",
+      "scope": "in: cairn/devices/db_domain/tools/client/store.py, cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py, cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py; out: the bus and every other component (they reach the database through the store door), inferenceproxy (a4c8bf408dc2 reseals with no change to its tooth), the run-end drop and the orphan sweep of outline 4.3.1.5.1.5.2 (6) (the tester's and the sleep cycle's)",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/db_domain/tools/client/store.py",
+          "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py",
+          "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
+        ],
+        "out": [
+          "the bus and every other component (they reach the database through the store door)",
+          "inferenceproxy (a4c8bf408dc2 reseals with no change to its tooth)",
+          "the run-end drop and the orphan sweep of outline 4.3.1.5.1.5.2 (6) (the tester's and the sleep cycle's)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. Th"
+      ],
+      "holdings": [
+        {
+          "what": "the file the build writes",
+          "address": "cairn/devices/db_domain/tools/client/store.py"
+        },
+        {
+          "what": "the red-first proof on main, sealed red",
+          "address": "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. Th",
+          "measure": "on main the proof's teeth 2-4 red: run B read 1 row of bus_traffic, which run A created; live holds 156613"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "_ensure_registry, under a test run, adds cairn_owned.test_ids text[] NOT NULL DEFAULT '{}' (idempotent). create_owned_table, under a test run, appends the run's",
+          "why": "Measured 2026-11-23 (a4c8bf408dc2): inferenceproxy's keeps-its-answers LIVE tooth read 224 rows from cairn_testing.inferenceproxy_answers_nodes, which earlier runs had written (02:40-02:55, other test ids), instead of live's 20216. The router (store._read_connection) routes on 'cairn_testing holds t",
+          "kind": "build",
+          "fills": "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. Th",
+          "uses": [
+            "cairn/devices/db_domain/tools/client/store.py"
+          ],
+          "writes_to": [
+            "cairn/devices/db_domain/tools/client/store.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "_ensure_registry, under a test run, adds cairn_owned.test_ids text[] NOT NULL DEFAULT '{}' (idempotent). create_owned_table, under a test run, appends the run's",
+          "why_now": "a4c8bf408dc2 and f942a413f26d wait on it: the live tooth reads other runs' testing rows"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "_ensure_registry, under a test run, adds cairn_owned.test_ids text[] NOT NULL DEFAULT '{}' (idempotent). create_owned_table, under a test run, appends the run's",
+          "expect": "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. This makes outline 4.3.1.5.1.5.2 clause (5) true at the table grain (testing artifacts invisible to all but the run that made them) and e4fd7f28faaf's 'a table the run itself created'. Clause (6), each run's rows dropped at run end with the sleep cycle sweeping orphans, is not built here: this ticket neither drops nor forbids dropping.",
+          "falsifier": "(1) under test id A, a table created through create_owned_table is read by store.query from cairn_testing (its rows, not live's); (2) under test id B, the table A created is read LIVE: the count equals the count read with no test id, and an INSERT sent down that read path raises a read-only error; (3) a cairn_testing table whose cairn_owned row carries an empty test_ids routes no run to testing: under any test id it reads live; (4) after B also creates the table, both A and B read it from cairn_testing, and a third id C reads it live",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. This makes outline 4.3.1.5.1.5.2 clause (5) true at the table grain (testing artifacts invisible to al",
+          "instrument": "bin/cairn test cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py",
+          "timeout_s": 600,
+          "covers": [
+            "_ensure_registry, under a test run, adds cairn_owned.test_ids text[] NOT NULL DEFAULT '{}' (idempotent). create_owned_table, under a test run, appends the run's"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
