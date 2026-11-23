@@ -23,6 +23,11 @@
       "when": "2026-11-13",
       "saw": "remote.py _spawn passes '-p', 'SuccessExitStatus=3' in its systemd-run argv (line 229); the docstring at line 205 names 'SuccessExitStatus=3' and the note at line 243 says 'the flock decides; loser exits 3'. On current main the bus loser still exits EXIT_HELD=3 (bus/server.py), so today the flag is correct; the bus loser exits 0 only on ac71d984ebda-build (7718b16a2), which has not landed.",
       "how": "read remote.py 203-245; read bus/server.py serve() on main and on origin/ac71d984ebda-build"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "the build is on main (4fe491405, proof sealed on Linux ef57a6cb5) and its proof sealed green 2026-11-15; the ticket never crossed BUILDME, and outcomes [3, 4] were claimless migrated steps, so they fold into the claim outcomes [1, 2] as their writes_to, reads and via rather than minted as claims no tooth tests",
+      "how": "git log origin/main --grep=6ba3a921dd8d; the proof's PROVES dict"
     }
   ],
   "id": "6ba3a921dd8d",
@@ -30,36 +35,178 @@
     {
       "n": 1,
       "claim": "_spawn's systemd-run argv no longer carries -p SuccessExitStatus=3, where it did",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 2,
-      "claim": "remote.py no longer says the bus's second copy exits 3, in its docstring or notes, where it said so in two places",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 3,
-      "text": "remove the flag and reword the docstring and the note in remote.py; built only after ac71d984ebda is on main.",
       "writes_to": [
-        "cairn/tools/bus_client/remote.py"
+        "cairn/tools/bus_client/remote.py",
+        "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
       ],
       "reads": [
         "cairn/tools/bus_client/remote.py"
       ],
-      "after": []
+      "after": [],
+      "via": "remove the flag and reword the docstring and the note in remote.py; built only after ac71d984ebda is on main. one proof reading the source, one tooth per clause; red first, and red on a hollow build."
     },
     {
-      "n": 4,
-      "text": "one proof reading the source, one tooth per clause; red first, and red on a hollow build.",
+      "n": 2,
+      "claim": "remote.py no longer says the bus's second copy exits 3, in its docstring or notes, where it said so in two places",
       "writes_to": [
+        "cairn/tools/bus_client/remote.py",
         "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
       ],
-      "reads": [],
-      "after": []
+      "reads": [
+        "cairn/tools/bus_client/remote.py"
+      ],
+      "after": [],
+      "via": "remove the flag and reword the docstring and the note in remote.py; built only after ac71d984ebda is on main. one proof reading the source, one tooth per clause; red first, and red on a hollow build."
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "6ba3a921dd8d: bus_client no longer masks exit 3 when it starts the bus, once the bus loser exits quietly, built in cairn/tools/bus_client/remote.py",
+      "intent": "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads as a failed unit again. BUILDS AFTER ac71d984ebda LANDS ON MAIN: until the bus loser exits 0, the flag is correct.",
+      "scope": "in: cairn/tools/bus_client/remote.py, cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py; out: every other component, bus/server.py (ac71d984ebda), the base shim (ec6dc8002b27), superclaude (15e64f9fe960), akiendelllinux's 5370 FIXME (it lands first or is rebased over)",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/bus_client/remote.py",
+          "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
+        ],
+        "out": [
+          "every other component",
+          "bus/server.py (ac71d984ebda)",
+          "the base shim (ec6dc8002b27)",
+          "superclaude (15e64f9fe960)",
+          "akiendelllinux's 5370 FIXME (it lands first or is rebased over)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads a"
+      ],
+      "holdings": [
+        {
+          "what": "the file the build writes",
+          "address": "cairn/tools/bus_client/remote.py"
+        },
+        {
+          "what": "the red-first proof on main, sealed red",
+          "address": "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads a",
+          "measure": "measured before the build: _spawn passed success_exit_status=3 to systemd-run, masking the bus loser's exit 3 once the loser exits quietly"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "AFTER ac71d984ebda IS ON MAIN: delete the '-p', 'SuccessExitStatus=3' pair from _spawn's systemd-run argv; reword the docstring at line 205 and the note at line",
+          "why": "ac71d984ebda (branch ac71d984ebda-build, tip 7718b16a2, queued with akienasus) makes a second bus exit 0 quietly, as b38af5fd1852 did for the ground loop, per Akien's Q#93 answer (outline 5.3.5.2.1; the bus is CC's read of it). cairn/tools/bus_client/remote.py:229 still passes -p SuccessExitStatus=3",
+          "kind": "build",
+          "fills": "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads a",
+          "uses": [
+            "cairn/tools/bus_client/remote.py"
+          ],
+          "writes_to": [
+            "cairn/tools/bus_client/remote.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "AFTER ac71d984ebda IS ON MAIN: delete the '-p', 'SuccessExitStatus=3' pair from _spawn's systemd-run argv; reword the docstring at line 205 and the note at line",
+          "why_now": "a carry-forward red: the build has stood on main uncharted, and the orchestrator queued its crossing 2026-11-22"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "AFTER ac71d984ebda IS ON MAIN: delete the '-p', 'SuccessExitStatus=3' pair from _spawn's systemd-run argv; reword the docstring at line 205 and the note at line",
+          "expect": "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads as a failed unit again. BUILDS AFTER ac71d984ebda LANDS ON MAIN: until the bus loser exits 0, the flag is correct.",
+          "falsifier": "(1) _spawn's systemd-run argv no longer carries -p SuccessExitStatus=3, where it did; (2) remote.py no longer says the bus's second copy exits 3, in its docstring or notes, where it said so in two places",
+          "instrument": "bin/cairn test cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "_spawn in bus_client/remote.py starts the bus unit without -p SuccessExitStatus=3, and its docstring and note say a second bus exits 0 quietly, so a bus loser that regresses to the loud exit 3 reads as a failed unit again. BUILDS AFTER ac71d984ebda LANDS ON MAIN: until the bus loser exits 0, the fla",
+          "instrument": "cairn/tools/bus_client/proofs/test_remote_does_not_mask_a_loud_bus_loser_exit.py",
+          "timeout_s": 300,
+          "covers": [
+            "AFTER ac71d984ebda IS ON MAIN: delete the '-p', 'SuccessExitStatus=3' pair from _spawn's systemd-run argv; reword the docstring at line 205 and the note at line"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }

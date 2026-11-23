@@ -44,6 +44,11 @@
       "when": "2026-11-13",
       "saw": "Split by the orchestrator under RULE 1: b38a is ground_loop only. Windows: test_ground_loop.py's test_a_reader_never_sees_a_torn_record is red about one run in two on main AND on this branch (PermissionError / WinError 145 from beat.json while a reader holds it); unrelated to this change, a separate defect in write_record on Windows.",
       "how": "bin/cairn test <proof> run twice on main and twice on the branch worktree"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "the build is on main (35711160e) and its proof sealed green 2026-11-19; the ticket never crossed BUILDME, and outcomes [3, 4, 5] were claimless migrated steps, so they fold into the claim outcomes [1, 2] as their writes_to, reads and via rather than minted as claims no tooth tests",
+      "how": "git log origin/main --grep=b38af5fd1852; the proof's PROVES dict"
     }
   ],
   "writes_to": [
@@ -56,46 +61,194 @@
     {
       "n": 1,
       "claim": "a second ground loop started while the first is live exits 0 with nothing on stdout or stderr and leaves the first running; with --force it kills the old one and holds the claim",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 2,
-      "claim": "the ground loop's lock path contains the cairn instance segment (devices/cairn/0/...), not a host-global path",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 3,
-      "text": "--force is guard.force_claim (kills the record's pid, retries the claim); the runner _claim returns (claim, exit_code); the loser's exit is 0 and silent; a failed --force is loud, exit 3 (EXIT_FORCE_FAILED).",
       "writes_to": [
         "cairn/devices/cairn/machines/ground_loop/guard.py",
-        "cairn/devices/cairn/machines/ground_loop/__main__.py"
+        "cairn/devices/cairn/machines/ground_loop/__main__.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
       ],
       "reads": [
         "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
       ],
-      "after": []
+      "after": [],
+      "via": "--force is guard.force_claim (kills the record's pid, retries the claim); the runner _claim returns (claim, exit_code); the loser's exit is 0 and silent; a failed --force is loud, exit 3 (EXIT_FORCE_FAILED). ground_loop's own proof moves with it: test_the_doors_loser_exits_zero_and_says_nothing replaces the exit-3 tooth (PROVES bae622881f03 clause 7), and the no-takeover tooth now expects exit 0 and silence. one new proof, one tooth per clause."
     },
     {
-      "n": 4,
-      "text": "ground_loop's own proof moves with it: test_the_doors_loser_exits_zero_and_says_nothing replaces the exit-3 tooth (PROVES bae622881f03 clause 7), and the no-takeover tooth now expects exit 0 and silence.",
+      "n": 2,
+      "claim": "the ground loop's lock path contains the cairn instance segment (devices/cairn/0/...), not a host-global path",
       "writes_to": [
-        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
-      ],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 5,
-      "text": "one new proof, one tooth per clause.",
-      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/guard.py",
+        "cairn/devices/cairn/machines/ground_loop/__main__.py",
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
         "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
       ],
-      "reads": [],
-      "after": []
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+      ],
+      "after": [],
+      "via": "--force is guard.force_claim (kills the record's pid, retries the claim); the runner _claim returns (claim, exit_code); the loser's exit is 0 and silent; a failed --force is loud, exit 3 (EXIT_FORCE_FAILED). ground_loop's own proof moves with it: test_the_doors_loser_exits_zero_and_says_nothing replaces the exit-3 tooth (PROVES bae622881f03 clause 7), and the no-takeover tooth now expects exit 0 and silence. one new proof, one tooth per clause."
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "b38af5fd1852: a second ground loop exits quietly, --force replaces it, and the ground-loop lock path carries the cairn instance, built in cairn/devices/cairn/machines/ground_loop/__main__.py, cairn/devices/cairn/machines/ground_loop/guard.py, cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
+      "intent": "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for bus.lock) and shim naming (<device>_1) are separate tickets, RULE 1.",
+      "scope": "in: cairn/devices/cairn/machines/ground_loop/guard.py, cairn/devices/cairn/machines/ground_loop/__main__.py, cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py, cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py; out: every other component, the bus, the shim",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/ground_loop/guard.py",
+          "cairn/devices/cairn/machines/ground_loop/__main__.py",
+          "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py",
+          "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+        ],
+        "out": [
+          "every other component",
+          "the bus",
+          "the shim"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for "
+      ],
+      "holdings": [
+        {
+          "what": "the file the build writes",
+          "address": "cairn/devices/cairn/machines/ground_loop/__main__.py"
+        },
+        {
+          "what": "the file the build writes",
+          "address": "cairn/devices/cairn/machines/ground_loop/guard.py"
+        },
+        {
+          "what": "the file the build writes",
+          "address": "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
+        },
+        {
+          "what": "the red-first proof on main, sealed red",
+          "address": "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for ",
+          "measure": "measured before the build: a second ground loop exited 3 loudly, there was no --force, and the lock path did not carry the cairn instance"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/",
+          "why": "Measured 2026-11-12 on akiendell: live box: bus.lock held=True and ground_loop run.lock held=True (singleton.held); one bus launcher+child pair (1648->16184) and one ground_loop shim+child pair (23396->4904), no duplicates; the bus child 16184 owns conhost 16980, the ground_loop child 4904 none seen",
+          "kind": "build",
+          "fills": "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for ",
+          "uses": [
+            "cairn/devices/cairn/machines/ground_loop/__main__.py",
+            "cairn/devices/cairn/machines/ground_loop/guard.py",
+            "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/ground_loop/__main__.py",
+            "cairn/devices/cairn/machines/ground_loop/guard.py",
+            "cairn/devices/cairn/machines/ground_loop/proofs/test_ground_loop.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/",
+          "why_now": "a carry-forward red: the build has stood on main uncharted, and the orchestrator queued its crossing 2026-11-22"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/",
+          "expect": "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for bus.lock) and shim naming (<device>_1) are separate tickets, RULE 1.",
+          "falsifier": "(1) a second ground loop started while the first is live exits 0 with nothing on stdout or stderr and leaves the first running; with --force it kills the old one and holds the claim; (2) the ground loop's lock path contains the cairn instance segment (devices/cairn/0/...), not a host-global path",
+          "instrument": "bin/cairn test cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "A ground loop that finds a live one exits 0 quietly and leaves it running; --force kills the old one and takes the claim; the ground loop's lock path carries the cairn instance. The bus (clause 1 for bus.lock) and shim naming (<device>_1) are separate tickets, RULE 1.",
+          "instrument": "cairn/devices/cairn/machines/ground_loop/proofs/test_a_second_loop_exits_quietly_and_force_replaces_it.py",
+          "timeout_s": 300,
+          "covers": [
+            "Census first: for ground_loop, bus, rack and a cc name on the bus, record what a spin-up does when a live copy exists. Then close each gap with the cairn/tools/"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
