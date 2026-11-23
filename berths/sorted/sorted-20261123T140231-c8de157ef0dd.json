@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing and stated: (1) the tester's evidence.not_run_teeth is set only when verdict is RED and every failing tooth printed UNRAN (device.py:839-842, unran_only), so a proof with one UNRAN tooth and one real red carries no not_run_teeth and the baseline still refuses, which is correct. (2) A tooth UNRAN at HEAD stays out of every reversion reading; if a revert made it run, it could only add a green, never fake a red. (3) The hollow's per-file reading stays a dict of file -> list of redded teeth, because clearance.hollow_lacks (clearance.py:757-840) reads any non-list value as unreadable. So the unread teeth must NOT be written as a key inside evidence.hollow[tid]; they go to a sibling evidence key.",
+    "builder_check": "Questions a Haiku builder would need answered, now answered here. Where is the baseline? hollow.py run_all() and the `missing` computation just after it (about lines 1150-1216 at 2026-11-23); run_all must keep each proof's not_run_teeth from record['evidence']. What is subtracted? declared_teeth[rel] minus baseline green minus not_run[rel]; the declared set used by later readings drops not_run[rel] too. Where do the unread teeth land? evidence['hollow_not_run'][tid] = {proof_rel: sorted(teeth)} beside evidence['hollow'], through the same store write the seal already uses; never inside evidence['hollow'][tid]. What does the all-UNRAN refusal say? HollowUnmeasurable naming the proof, the teeth, and 'not run on this host'. What is the UNRAN line format? Whatever device.py's unran_only parses; the proof fixture should print a tooth the same way an existing host-bound proof does (cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py tooth 1). Proof timeout: keep under 300s, one scratch repo per clause.",
+    "children": "none, because the change is one function in cairn/devices/tester/hollow.py and its proof",
+    "collision_check": "No real collision. 64ae0df3f1f3 already distinguishes UNRAN from red for the seal, and this carries the same distinction one function further into the hollow. 50ac45cde4dd (the verdict's host_bound_reading) is the same idea at the verdict door and is untouched. bfcb0d1cab45 changes the hollow's revert set (mode-only builds) in the same file, hollow.py. That is a sequencing fact, not a collision: this builds after bfcb lands, as the next tester-suite reseal.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Four clauses, each a tooth in a new proof under cairn/devices/tester/proofs/, driving hollow over a scratch repo whose proof has tooth A (reads the subject, runs everywhere) and tooth B (prints the UNRAN line the tester's unran_only reads): (1) A reds on the revert and B is UNRAN, so the hollow returns {subject: [A]} and records B as unread on this host, with no HollowUnmeasurable; (2) A does not read the subject, so the reading is {subject: []}; (3) both teeth UNRAN, so HollowUnmeasurable is raised and names the teeth not run on this host; (4) B fails outright at HEAD (a real red), so HollowUnmeasurable is raised as today. Horizon: the 8c829d9b38b8 and 3647 Linux hollows seal after the build lands.",
+    "gates_bound": "proved by the tester: a new proof under cairn/devices/tester/proofs/ with PROVES keyed to this ticket, one tooth per clause, deterministic, red-first on main, then hollow and cc's clearance at PROVED; a red feeds back to origin through FIXME.",
+    "missing_check": "Wrapped: the baseline subtraction, where the unread teeth are recorded, the all-UNRAN case (still refuses, now naming the host), and the ran-and-failed case (unchanged). Clearance does not change: a non-empty list stands, and an empty list reds hollow_file. That is the named cost: a subject only the host-bound tooth watches reads hollow_file on Linux and must be hollowed on the host that can run it. Not in scope: making the Windows-side hollow read a proof born in its build commit (akiendell's report); that is unmeasured here and gets its own ticket if a Windows run reproduces it.",
+    "node_class": "code-seam",
+    "questions": "none, because the shape was settled with the orchestrator on 2026-11-23 (baseline drops not_run_teeth, the seal names them, clearance is unchanged), and every choice traces to Laws 3, 7 and 8 and to the existing 64ae0df3f1f3 distinction",
+    "task_or_ticket": "ticket",
+    "title": "the hollow reads a tooth this host cannot run as unread, not as red at HEAD",
+    "watchme": "none, because its proof (cairn/devices/tester/proofs/test_the_hollow_reads_a_tooth_this_host_cannot_run_as_unread.py) is the whole of its correctness, and its live consumers are the held hollows of 8c829d9b38b8 and 364704f371dd at PROVEME",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Cast after 8c82's Linux hollow refused at the HEAD baseline on a Windows-only UNRAN tooth; 3647 holds the same way. akienasus builds it after bfcb, since both are in hollow.py."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "2b22f7dadd3a",
+  "skill": "sorted",
+  "title": "the hollow reads a tooth this host cannot run as unread, not as red at HEAD",
+  "trace_id": "6ac0dbe1da03",
+  "when": "2026-11-23T14:02:31.054989"
+}
