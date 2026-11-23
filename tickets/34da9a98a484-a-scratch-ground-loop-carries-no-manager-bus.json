@@ -23,6 +23,11 @@
       "when": "2026-11-12",
       "saw": "manager env CAIRN_BUS_HOME=akiendelllinux.local:7419; a transient unit prints it; with -p UnsetEnvironment=CAIRN_BUS_HOME it prints none (count 0)",
       "how": "systemctl --user show-environment; systemd-run --user --quiet --wait --pipe [-p UnsetEnvironment=CAIRN_BUS_HOME] -- env | grep CAIRN_BUS_HOME"
+    },
+    {
+      "when": "2026-11-22",
+      "saw": "the build is on main (c6948b58a, then 9de9aa069 for the proof's HOME) and its proof sealed green 2026-11-20, but the ticket never crossed BUILDME; outcomes 3 and 4 were claimless migrated steps, and the proof's PROVES keys only 1 and 2, so the steps fold into outcomes 1 and 2 as their writes_to, reads and via rather than minted as claims no tooth tests",
+      "how": "git log origin/main --grep=34da9a98a484; the PROVES dict in cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py; cairn/tools/base/validations/test_a_scratch_loop_carries_no_manager_bus.json"
     }
   ],
   "writes_to": [
@@ -33,39 +38,181 @@
     {
       "n": 1,
       "claim": "a scratch-HOME spawn's systemd-run argv sets every CAIRN_* the caller carries and unsets every manager CAIRN_* the caller lacks, and a unit run with those flags carries no CAIRN_BUS_HOME",
-      "writes_to": [],
-      "reads": [],
-      "after": []
+      "writes_to": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+      ],
+      "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/scratch/scratch.py",
+        "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py"
+      ],
+      "after": [],
+      "via": "ensure_ground_loop adds the scratch-only env flags; the setsid branch and the live path are unchanged. the proof is new, two teeth, argv captured in-process plus one real transient unit."
     },
     {
       "n": 2,
       "claim": "a spawn under the account's own HOME has the same argv as before this ticket",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 3,
-      "text": "ensure_ground_loop adds the scratch-only env flags; the setsid branch and the live path are unchanged.",
       "writes_to": [
-        "cairn/tools/base/shim.py"
-      ],
-      "reads": [
         "cairn/tools/base/shim.py",
-        "cairn/tools/scratch/scratch.py"
-      ],
-      "after": []
-    },
-    {
-      "n": 4,
-      "text": "the proof is new, two teeth, argv captured in-process plus one real transient unit.",
-      "writes_to": [
         "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
       ],
       "reads": [
+        "cairn/tools/base/shim.py",
+        "cairn/tools/scratch/scratch.py",
         "cairn/tools/base/proofs/test_a_loop_a_test_run_starts_is_the_runs.py"
       ],
-      "after": []
+      "after": [],
+      "via": "the live-HOME branch of ensure_ground_loop builds the same systemd-run argv as before; the setsid branch is untouched."
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "34da9a98a484: a scratch ground loop carries no manager bus, built in cairn/tools/base/shim.py",
+      "intent": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's.",
+      "scope": "in: cairn/tools/base/shim.py, cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py; out: the setsid branch, live-HOME spawns, the bus unit (ticket 6c9db321d638), cairn/tools/base/proofs/test_shim_starts_the_loop.py (ticket ea6e465680a3)",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/base/shim.py",
+          "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+        ],
+        "out": [
+          "the setsid branch",
+          "live-HOME spawns",
+          "the bus unit (ticket 6c9db321d638)",
+          "cairn/tools/base/proofs/test_shim_starts_the_loop.py (ticket ea6e465680a3)"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's."
+      ],
+      "holdings": [
+        {
+          "what": "the file the build writes",
+          "address": "cairn/tools/base/shim.py"
+        },
+        {
+          "what": "the red-first proof on main, sealed red",
+          "address": "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's.",
+          "measure": "measured 2026-11-12 on akienasus: a transient systemd-run --user unit prints CAIRN_BUS_HOME=akiendelllinux.local:7419, and ensure_ground_loop set only HOME and PATH by hand, so a scratch-HOME loop dialed the live bus"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "In ensure_ground_loop, after argv is built and before '--': if env_home != pwd.getpwuid(os.getuid()).pw_dir (a scratch HOME), (a) for each os.environ key starti",
+          "why": "Measured 2026-11-12 on akienasus: `systemctl --user show-environment` holds CAIRN_BUS_HOME=akiendelllinux.local:7419 and CAIRN_HOME_HOST=akiendelllinux.local, and a transient `systemd-run --user --wait --pipe -- env` prints CAIRN_BUS_HOME=akiendelllinux.local:7419. cairn/tools/base/shim.py ensure_gr",
+          "kind": "build",
+          "fills": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's.",
+          "uses": [
+            "cairn/tools/base/shim.py"
+          ],
+          "writes_to": [
+            "cairn/tools/base/shim.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "In ensure_ground_loop, after argv is built and before '--': if env_home != pwd.getpwuid(os.getuid()).pw_dir (a scratch HOME), (a) for each os.environ key starti",
+          "why_now": "a carry-forward red: the build has stood on main uncharted since 2026-11-12, and the orchestrator queued its crossing 2026-11-22"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "In ensure_ground_loop, after argv is built and before '--': if env_home != pwd.getpwuid(os.getuid()).pw_dir (a scratch HOME), (a) for each os.environ key starti",
+          "expect": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's.",
+          "falsifier": "(1) a scratch-HOME spawn's systemd-run argv sets every CAIRN_* the caller carries and unsets every manager CAIRN_* the caller lacks, and a unit run with those flags carries no CAIRN_BUS_HOME; (2) a spawn under the account's own HOME has the same argv as before this ticket",
+          "instrument": "bin/cairn test cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "A ground loop that cairn/tools/base/shim.py spawns as a systemd unit under a scratch HOME carries the caller's CAIRN_ environment and none of the user manager's.",
+          "instrument": "cairn/tools/base/proofs/test_a_scratch_loop_carries_no_manager_bus.py",
+          "timeout_s": 300,
+          "covers": [
+            "In ensure_ground_loop, after argv is built and before '--': if env_home != pwd.getpwuid(os.getuid()).pw_dir (a scratch HOME), (a) for each os.environ key starti"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
