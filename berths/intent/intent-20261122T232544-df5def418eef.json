@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered: (a) a bigger default --timeout for every reseal, rejected because 8383a32d20c5 made the budget the proof's own declaration so slow proofs are named, not hidden; (b) speeding the proof up, which is a separate aim and would leave the budget undeclared anyway. The declaration is the precedent shape (6437cfd935bb, cf32e6f141e0), so this is it.",
+      "hidden_assumption": "That 284 s at load 2.2 is representative; a loaded box roughly doubles walls here (b648's house clause 107 s off load vs 171 s cached cold under load), so 900 s carries that margin. That declared_timeout reads a top-level int by AST, measured by its use in 6437's tooth 1.",
+      "prior_art": "In house: 8383a32d20c5 (a proof declares its own time limit) is the mechanism; 6437cfd935bb and cf32e6f141e0 are the same fix on two other proofs, and their red-first proofs are the template. Congruency lab consulted via recompile_gate.sh: nothing else budgets test_call_time_binding.",
+      "real_collision": "None. b64847df255d also writes inside proof_coverage but touches proof_coverage.py and its own proof, not test_call_time_binding.py; the one-suite-reseal-at-a-time rule orders the commits (this one after b648), it does not collide."
+    },
+    "exit": "routed_forward",
+    "falsifier": "(1) test_call_time_binding.py declares a top-level PROOF_TIMEOUT_S = 900, read by AST the way the tester reads it (None today, so red before the build); (2) under cairn test with a caller budget below a scratch fixture's run, the fixture carrying that declared value finishes green, while the same fixture undeclared or declared below its run does not. WRONG INTENT if a reseal touching proof_coverage still times the proof out at 900 s on an unloaded box (then the proof itself is too slow and the fix is speed, not budget).",
+    "from_idea": "none, because this is a measured timeout, not an idea: the b648 build commit 2f16e8c7b's reseal (output /tmp/claude-1000/-home-akien-dev-src-cairn/0b2e196e-7177-4140-8585-e9f2200689b4/scratchpad/b648_buildcommit.out) printed 'TIMEOUT cairn/tools/proof_coverage/proofs/test_call_time_binding.py (timed out after 120s under isolation none)', and the orchestrator queued the PROOF_TIMEOUT_S fix after b64847df255d",
+    "how": "Add a top-level PROOF_TIMEOUT_S = 900 to cairn/tools/proof_coverage/proofs/test_call_time_binding.py (measured 284 s wall green at load 2.2; 900 s is 3.2x that, room for a loaded box). The red-first proof copies 6437cfd935bb's test_the_census_proof_declares_a_budget_above_its_wall, retargeted: tooth 1 reads the declaration by AST, tooth 2 runs a scratch fixture through cairn test at a caller budget below its run with two controls. Mechanism is 8383a32d20c5's.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 9 (green is earned: a seal standing over an old fingerprint because its proof timed out is not a measured green) and Law 3 (the budget follows the measured wall)",
+    "what": "test_call_time_binding declares its own time limit above its measured wall, so a reseal that touches proof_coverage runs it to a verdict instead of timing it out at the 120 s default and leaving its seal standing over an old fingerprint."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "test_call_time_binding.py ran 284 s wall green at load 2.2 on 2026-11-22, more than twice the 120 s reseal default that times it out."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "0db647ccbc97",
+  "skill": "intent",
+  "title": "test_call_time_binding declares its own time limit above its measured wall, so a reseal that touches proof_coverage runs",
+  "trace_id": "6b2efd62f62c",
+  "when": "2026-11-22T23:25:44.667857"
+}
