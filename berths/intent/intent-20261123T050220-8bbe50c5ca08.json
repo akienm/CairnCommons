@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "A per-run schema scopes by construction, but measured: bus.py:354 and skill_block/counters.py:175 hard-code schema 'public', so the bus would re-run ADD COLUMN verb under every test. Drop-on-claim or teardown-drop would delete a concurrent run's table (several CC sessions test on this box at once). The set is the smallest change that stays inside store.py.",
+      "hidden_assumption": "That every table in cairn_testing enters through create_owned_table. Measured: store.py is the only CREATE TABLE site in cairn/ outside proofs, and all 8 testing tables carry a cairn_owned row. A raw CREATE added later would bypass the stamp and read live (the safe side).",
+      "prior_art": "e4fd7f28faaf is the parent design, and its intention already names this scope ('a table the run itself created'); grep of tickets/questions for 'testing partition', 'keeps its answers' and '224' found only 98ab0e9db57f and a4c8bf408dc2. This is e4fd's clause made true, not a new rule.",
+      "real_collision": "None exclusive: e4fd's D5 ('a table the run created through store.write is read from cairn_testing') stays green as tooth 1. Distinction recorded: e4fd's code read 'cairn_testing holds it' as 'the run created it'; under concurrent and repeated runs those differ."
+    },
+    "exit": "routed_forward",
+    "falsifier": "(1) under test id A, a table A created reads from cairn_testing; (2) under test id B, A's table reads live (count == bare) and an INSERT down that path raises read-only; (3) an empty test_ids routes no run to testing; (4) after B also creates it, A and B both read testing and C reads live. Wrong intent if a4c8's proof still reds after this proves.",
+    "from_idea": "none, because it was measured, not imagined: /home/akien/dev/src/CairnCommons/tickets/a4c8bf408dc2-the-red-proof-cairn-devices-inferenceproxy-proofs-test-the-proxy-keeps-its-answe.json carries the measurement",
+    "how": "cairn_owned in cairn_testing gains test_ids text[]; create_owned_table appends the creating run's CAIRN_TESTER_TEST_ID (guarded against a duplicate); _read_connection routes to testing only when this run's id = ANY(test_ids) for a named table. Stale rows from other runs become invisible; nothing is dropped. Red-first proof under db_domain/tools/client/proofs/.",
+    "shape": "aside: a child of a4c8bf408dc2, which waits on it",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 4 (e4fd's scope clause becomes physics in the router, not a word in its docstring) and Law 9 (a4c8's red is the router's distance from its own charter)",
+    "what": "Under a test run, store.query reads a table from cairn_testing only when this run created it; every other run reads that table live and read-only, as e4fd7f28faaf's intention says."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "e4fd's router read any table any run left in cairn_testing, so a live read-only tooth (inferenceproxy keeps-its-answers) read 224 test rows instead of 20216 live; the fix scopes routing by a per-table set of creating test ids, with nothing dropped."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "fa49aa79e131",
+  "skill": "intent",
+  "title": "Under a test run, store.query reads a table from cairn_testing only when this run created it; every other run reads that",
+  "trace_id": "9a4e540058a1",
+  "when": "2026-11-23T05:02:20.750415"
+}

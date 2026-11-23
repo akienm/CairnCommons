@@ -1,0 +1,110 @@
+{
+  "ticket": "b7b90c36cb37",
+  "at": "2026-11-23T12:13:01+00:00",
+  "ran": true,
+  "model": "claude-haiku-4-5-20251001",
+  "reads": 3,
+  "meta": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.1476101,
+      "duration_ms": 52475,
+      "is_error": false,
+      "session_id": "d79bc50d-a80e-40fc-80e1-d9708aa0aaef"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.16513909999999998,
+      "duration_ms": 75194,
+      "is_error": false,
+      "session_id": "d62ef3a1-5610-42d9-9cc9-6be924b705ac"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "rc": 0,
+      "cost_usd": 0.17272110000000002,
+      "duration_ms": 88921,
+      "is_error": false,
+      "session_id": "c53bd6d1-1ace-4642-b602-b2cbd579491c"
+    }
+  ],
+  "outline_path": "/home/akien/dev/src/cairn/cairn/devices/cairn/requirements",
+  "outline_sha256": "53fd2755b50a74221e93af716b7dad4480ea30a78bd56a629ca06457c3b276dc",
+  "ticket_sha256": "53dc27956dae5604004cb9a9abb07cea04bdb1bdec7ee40dd0b0626d2ddacc01",
+  "touches": [
+    {
+      "number": "4.3.1.5.1.5",
+      "text": "Proofs run against a TESTING database, separate from live."
+    },
+    {
+      "number": "4.3.1.5.1.5.1",
+      "text": "A proof MAY read the live database; what a test writes stays out of live, either in the TESTING database or marked as a testing artifact that the rest of the system ignores. WHY: reading live saves populating test data; ignoring testing artifacts keeps them from leaking into what the system believes. Test against live, marked as testing. -amm"
+    },
+    {
+      "number": "4.3.1.5.1.5.2",
+      "text": "How the TESTING database works. (1) The db proxy is the seam (4.3.1.5.1.4.1.1, 11.3.7): proofs, devices and tools never choose a database; the proxy chooses by session context. (2) The test runner sets the context, never the proof: bin/cairn test and the hollow run open every db session with context=testing, so a proof can neither forget it nor pick live (Law 4). (3) In testing context, writes go only to the TESTING database: same schema, rows from a reserved address range, so a testing address never collides with a live one. (4) In testing context, reads are an overlay: testing rows first, live underneath, live pinned at the seq the run started at. A proof reads live with no fixtures, what it wrote shadows live for that run only, and the run repeats within itself. (5) In live context the proxy never consults the TESTING database, so testing artifacts are invisible to all but the run that made them, by construction rather than by filtering. (6) Each run's testing rows carry its run id and are dropped at run end; the sleep cycle sweeps orphans. (7) A proof over live data asserts invariants, never snapshots; a tooth that needs an exact value writes its fixture into the overlay first. Until the per-box proxy exists, the same routing sits in the store door (db_domain) and moves into the proxy when it is built. WHY: a context the proof sets is a context a proof can forget; the runner is the one place every proof passes through. - akiendelllinux_orchestrator -amm"
+    },
+    {
+      "number": "11.3",
+      "text": "DATABASE PROXY DEVICE (cairn/devices/dbproxy/)"
+    },
+    {
+      "number": "11.3.1",
+      "text": "The only way to the database. WHY: the authentication is wrapped up in it, and every table has exactly one owner who gates every write; an ownerless table can't be made (Postgres refuses it)."
+    },
+    {
+      "number": "11.3.6",
+      "text": "Who holds tables: every table of learning is a tree in the memory model (4.3.1.5), owned by the librarian and delegated to the devices that learn. A table that is not learning is an exception and names why; the bus's message table is the first (5.5.3.4.1)."
+    },
+    {
+      "number": "11.3.7",
+      "text": "Every box runs its own instance of the database proxy, and everything on that box talks only to it (4.3.1.5.1.4.1.1). Each box's proxy is its own instance (1.3.4), so this agrees with 5.5.3.8 (\"a device runs on one box\"): no instance is duplicated, the class has one instance per box, like the foundational set of 5.5.3.8.1. WHY: the local read is fast, and the cache it fills is every box's backup. -amm; the fit with 5.5.3.8 - akienasus_cc_0"
+    },
+    {
+      "number": "4.3.1.5",
+      "text": "The memory model. Everything Cairn keeps as LEARNING in database memory is these five things, and only these. Logs, troubles, git records and a device's own state keep their own homes (4.3.2-4.3.4). WHY: one kind of access everywhere."
+    },
+    {
+      "number": "4.3.1.5.1.4",
+      "text": "The sync is the backup, and a local database is a cache of the master. A local call for a node or tree the box does not hold is fed from the master and populates the local copy. If the box holds 12 rows and is asked for row 123, the rows between are added as NOTCACHED."
+    },
+    {
+      "number": "4.3.1.5.1.4.1.1",
+      "text": "The full copy is a byproduct of the cache, not a separate backup. Every box runs its own database proxy (11.3.7), and a device, machine or tool only ever talks to its local one. A read is answered locally when the row is local and current; otherwise the local proxy gets it from another host's proxy, returns it, and caches it locally in the background. Sleep cycles also sync the databases across hosts, so NOTCACHED is a transient state and every box slowly builds a full copy. WHY: the cache already makes every copy, so there is no separate backup to make, and the same caching keeps every read as fast as possible. -amm"
+    },
+    {
+      "number": "4.3.1.5.1.4.1.2",
+      "text": "A write goes through the local proxy to the home's proxy; the home writes it and stamps its seq, and the other boxes get it by the read fill and the sleep-cycle sync. The home is the one writer (4.3.1.5.1.6.9: slots come from the home). WHY: one writer means no box holds a row the home lacks, so the copies never conflict. - akiendelllinux_orchestrator -amm"
+    },
+    {
+      "number": "4.3.1.5.1.6",
+      "text": "The node schema, with a flexible metadata field. WHY: nodes have to be really fast, and row ids are fastest; a payload can be anything, so a node points into blobs and lists."
+    },
+    {
+      "number": "11.3.5.1",
+      "text": "A remote box keeps its own database and syncs it with the home box's (6.3.7.4). Node rows are the same on every box; the sync fills the blanks a box holds open (4.3.1.5.1.1). WHY: the local copy is fast, and the sync is the backup."
+    },
+    {
+      "number": "11.3.5.1.2",
+      "text": "The sync is owned by the database proxy, not by the devices whose tables it fills. WHY: its operations are then transparent to every other device, and the proxies are cooperatively the database's admins (Q#106). -amm"
+    },
+    {
+      "number": "9.4.2.3.7",
+      "text": "Test tiers: commit, hourly, daily and weekly. Each tier runs only what it must, so a commit needs only its own proofs and the long runs wait for the long tiers; nothing runs just in case."
+    },
+    {
+      "number": "9.4.2.3.7.1",
+      "text": "Commit: the proofs of the component the ticket changed, since RULE 1 bounds a change to its component. Passing them puts the component in service, yellow: proven where it changed, not yet measured against what depends on it. In service needs only the best we can do now: 80% trust."
+    }
+  ],
+  "conflicts": [],
+  "open_questions": [],
+  "unresolved": [
+    "Law 4",
+    "Law 9"
+  ],
+  "questions_opened": [],
+  "questions_already_open": []
+}

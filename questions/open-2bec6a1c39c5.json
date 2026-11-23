@@ -1,0 +1,16 @@
+{
+  "id": "open-2bec6a1c39c5",
+  "date": "2026-11-23",
+  "ticket": "b7b90c36cb37",
+  "question": "Ticket b7b90c36cb37 says \"Testing tables are never dropped; they persist and are scoped by test_ids so concurrent runs can share cairn_testing (bounds: 'no teardown drop'). Decision D2: 'It never removes an id and never drops a table.'\", but outline 4.3.1.5.1.5.2 reads \"How the TESTING database works. (1) The db proxy is the seam (4.3.1.5.1.4.1.1, 11.3.7): proofs, devices and tools never choose a database; the proxy chooses by session context. (2) The test runner sets the context, never the proof: bin/cairn test and the hollow run open every db session with context=testing, so a proof can neither forget it nor pick live (Law 4). (3) In testing context, writes go only to the TESTING database: same schema, rows from a reserved address range, so a testing address never collides with a live one. (4) In testing context, reads are an overlay: testing rows first, live underneath, live pinned at the seq the run started at. A proof reads live with no fixtures, what it wrote shadows live for that run only, and the run repeats within itself. (5) In live context the proxy never consults the TESTING database, so testing artifacts are invisible to all but the run that made them, by construction rather than by filtering. (6) Each run's testing rows carry its run id and are dropped at run end; the sleep cycle sweeps orphans. (7) A proof over live data asserts invariants, never snapshots; a tooth that needs an exact value writes its fixture into the overlay first. Until the per-box proxy exists, the same routing sits in the store door (db_domain) and moves into the proxy when it is built. WHY: a context the proof sets is a context a proof can forget; the runner is the one place every proof passes through. - akiendelllinux_orchestrator -amm\" (The outline prescribes 'Each run's testing rows... are dropped at run end; the sleep cycle sweeps orphans.' The ticket's persistent storage model contradicts the outline's deletion-at-runend model, fundamentally changing the testing database lifecycle from temporary (dropped) to permanent (scoped and shared).). Which stands, the ticket or the outline?",
+  "why_it_blocks": "the ticket and the component outline disagree; building it would build one of them wrong",
+  "raised_by": "cc (superclaude-56973.scope)",
+  "born_of": null,
+  "source": "outline_check",
+  "resolved": true,
+  "answer": "outline stands; the ticket is rewritten. b7b90c36cb37 no longer says it never drops: its intention now names outline 4.3.1.5.1.5.2 (5) as what it builds (at the table grain) and (6), the run-end drop and orphan sweep, as out of its bounds, neither built nor forbidden. Re-checked against the outline: conflicts [] over 3 reads.",
+  "answered_by": "measurement: cairncommons:///outline_checks/b7b90c36cb37-20261123T121301.json, recorded by caller class cc",
+  "answered_at": "2026-11-23T05:13:22-07:00",
+  "spawned": [],
+  "measured": "cairncommons:///outline_checks/b7b90c36cb37-20261123T121301.json"
+}

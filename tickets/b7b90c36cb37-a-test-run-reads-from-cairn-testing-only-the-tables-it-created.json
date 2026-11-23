@@ -1,0 +1,105 @@
+{
+  "id": "b7b90c36cb37",
+  "title": "a test run reads from cairn_testing only the tables it created",
+  "owning_intention": "cairn/devices/db_domain/intention+why.json",
+  "intention": "Under a test run, store.query reads a table from cairn_testing only when THIS run created it (its test id is in the table's cairn_owned.test_ids); any other run reads that table live and read-only. This makes outline 4.3.1.5.1.5.2 clause (5) true at the table grain (testing artifacts invisible to all but the run that made them) and e4fd7f28faaf's 'a table the run itself created'. Clause (6), each run's rows dropped at run end with the sleep cycle sweeping orphans, is not built here: this ticket neither drops nor forbids dropping.",
+  "why": "Measured 2026-11-23 (a4c8bf408dc2): inferenceproxy's keeps-its-answers LIVE tooth read 224 rows from cairn_testing.inferenceproxy_answers_nodes, which earlier runs had written (02:40-02:55, other test ids), instead of live's 20216. The router (store._read_connection) routes on 'cairn_testing holds the table', which is not 'this run created it' once runs repeat or overlap. Several CC sessions test on this box at once, so the scope must not drop or claim another run's table.",
+  "traces_to": "Law 4 (e4fd's scope clause becomes physics in the router) and Law 9 (a4c8bf408dc2's red is the router's distance from its own charter).",
+  "how": "_ensure_registry, under a test run, adds cairn_owned.test_ids text[] NOT NULL DEFAULT '{}' (idempotent). create_owned_table, under a test run, appends the run's id: UPDATE ... SET test_ids = array_append(test_ids, id) WHERE table_name = t AND NOT (id = ANY(test_ids)), on insert and on an existing row. _read_connection routes to cairn_testing only when a named table's registry row holds this run's id. Red-first proof, one tooth per clause.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "under test id A, a table created through create_owned_table is read by store.query from cairn_testing (its rows, not live's)"
+      },
+      {
+        "n": 2,
+        "claim": "under test id B, the table A created is read LIVE: the count equals the count read with no test id, and an INSERT sent down that read path raises a read-only error"
+      },
+      {
+        "n": 3,
+        "claim": "a cairn_testing table whose cairn_owned row carries an empty test_ids routes no run to testing: under any test id it reads live"
+      },
+      {
+        "n": 4,
+        "claim": "after B also creates the table, both A and B read it from cairn_testing, and a third id C reads it live"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: under a test run, _ensure_registry adds test_ids text[] NOT NULL DEFAULT '{}' to cairn_owned (ADD COLUMN IF NOT EXISTS; it runs on every connect()). The live registry is untouched: with no test id nothing routes.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: create_owned_table, under a test run, appends CAIRN_TESTER_TEST_ID to the table's test_ids, guarded against a duplicate, whether the row is new or already stood. Removing a run's rows at run end is outline 4.3.1.5.1.5.2 (6), not this decision.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: _read_connection routes to cairn_testing only when some named table's cairn_owned row has this run's id = ANY(test_ids); otherwise live, read-only, as today.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    },
+    {
+      "n": 4,
+      "text": "D4: the red-first proof sets and clears CAIRN_TESTER_TEST_ID around each call (database_name() reads it at call time), names its tables uniquely per run, writes a live twin of the same name for the count comparison, drops both databases' copies and registry rows at exit, one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py"
+      ],
+      "reads": [
+        "cairn/devices/db_domain/tools/client/store.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/db_domain/tools/client/store.py",
+      "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reads_only_the_testing_tables_it_created.py",
+      "cairn/devices/db_domain/tools/client/proofs/test_a_test_run_reaches_a_testing_database_never_the_live_one.py"
+    ],
+    "out": [
+      "the bus and every other component (they reach the database through the store door)",
+      "inferenceproxy (a4c8bf408dc2 reseals with no change to its tooth)",
+      "the run-end drop and the orphan sweep of outline 4.3.1.5.1.5.2 (6) (the tester's and the sleep cycle's)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "cairn_testing.inferenceproxy_answers_nodes held 224 rows (02:40-02:55) before the a4c8 proof's 04:30 run; that run's live tooth 7 read 224 before its own sibling tooth 9 wrote 51 more (04:30-04:32); live holds 20216",
+      "how": "rows grouped by minute of created in cairn_testing; the proof's TEETH order; its RED output"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "store.py is the only CREATE TABLE site in cairn/ outside proofs; all 8 cairn_testing tables carry a cairn_owned row; four modules hard-code schema 'public' (bus.py:354, skill_block/counters.py:175, two migrations), ruling out a per-run schema",
+      "how": "grep -rn 'CREATE TABLE' and schema 'public' over cairn/; pg_tables vs cairn_owned in cairn_testing"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "reviewed by the orchestrator: a single last-claimer stamp would flake under every concurrent pair of runs, so the stamp is a set",
+      "how": "orchestrator cross-session review of the design"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "outline check (outline_checks/b7b90c36cb37-20261123T120832.json) read the first cast's 'never drops a table' against outline 4.3.1.5.1.5.2 (6) and opened open-2bec6a1c39c5; the outline stands, so the claim is withdrawn. No ticket covers clause (6) (grep of tickets for 'dropped at run end' / 'carry its run id' finds only e4fd7f28faaf and 784eb1e92866, neither builds it)",
+      "how": "cairn outlinecheck b7b90c36cb37; grep -l over CairnCommons/tickets"
+    }
+  ]
+}

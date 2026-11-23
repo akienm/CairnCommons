@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Load-bearing: every cairn_testing table enters through store.create_owned_table (measured: store.py is the only CREATE TABLE site in cairn/ outside proofs; all 8 testing tables carry a cairn_owned row). And the store reads the run's id from CAIRN_TESTER_TEST_ID at call time, as database_name() already does. A table born before the column (the 275 stale answer rows' table) carries an empty set and routes no run to testing: the safe side.",
+    "builder_check": "A Haiku builder needs: the test-id env name (store._TEST_ID_ENV, CAIRN_TESTER_TEST_ID); that the proof must set and clear the id around each call (database_name() reads it at call time); unique scratch-like table names per tooth, dropped at exit in both databases; that clause 2's 'bare count' reads with the id unset; and that _ensure_registry runs on every connect(), so the ALTER must be idempotent. All are in the decisions.",
+    "children": "none, because the change is one function pair in cairn/devices/db_domain/tools/client/store.py; it is itself the child of a4c8bf408dc2",
+    "collision_check": "e4fd7f28faaf, the parent design: its intention already says 'a table the run itself created', so this makes its clause true rather than contradicting it; its D5 tooth (a table the run created reads testing) stays green as clause 1. Distinction recorded: 'cairn_testing holds it' and 'this run created it' differ under repeated and concurrent runs.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Four clauses, one tooth each, red-first against the current router: (1) A's own table reads testing; (2) B reads A's table live, count == bare count, INSERT raises read-only; (3) an empty set routes no run; (4) after B also creates, A and B read testing, C reads live. Clauses 2 and 4 red on main today; 1 and 3 guard. Horizon: a4c8bf408dc2's proof reseals green with no change to its tooth.",
+    "gates_bound": "code-seam: proved by the tester (red-first proof, one tooth per falsifier clause, sealed red first; hollow run), feeds back to origin on failure (a red reseal raises a trouble on this ticket).",
+    "missing_check": "Covered: the column's birth (ADD COLUMN IF NOT EXISTS in _ensure_registry, in cairn_testing only, since the live registry never routes); the stamp on an existing row (append, not overwrite); the read path under no test id (unchanged). Not covered on purpose: unbounded growth of test_ids, measured at build (array_length) and recorded, follow-up only if large.",
+    "node_class": "code-seam",
+    "questions": "none, because every spec choice was settled against the parent's own intention in /home/akien/dev/src/CairnCommons/tickets/e4fd7f28faaf-a-test-run-reaches-a-testing-database-never-the-live-one.json and recorded in this ticket's measured",
+    "task_or_ticket": "ticket",
+    "title": "a test run reads from cairn_testing only the tables it created",
+    "watchme": "none, because its red-first proof beside cairn/devices/db_domain/tools/client/store.py is the whole of its correctness, and the reseal of the red proof that /home/akien/dev/src/CairnCommons/tickets/a4c8bf408dc2-the-red-proof-cairn-devices-inferenceproxy-proofs-test-the-proxy-keeps-its-answe.json carries is the live consumer",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The router's scope becomes a per-table set of creating test ids: concurrent runs both read their own, a third reads live, and the 275 stale rows go invisible without a drop."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "18e03f933a11",
+  "skill": "sorted",
+  "title": "a test run reads from cairn_testing only the tables it created",
+  "trace_id": "418189a72fe0",
+  "when": "2026-11-23T05:02:58.633696"
+}
