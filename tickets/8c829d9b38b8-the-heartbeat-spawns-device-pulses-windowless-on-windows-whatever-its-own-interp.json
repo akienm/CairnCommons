@@ -59,5 +59,158 @@
       "saw": "repeated pop-ups while the python.exe-started loop ran, none after the stop",
       "how": "Akien's report on akienlivingroom, plus Get-CimInstance Win32_Process and Stop-Process"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "8c829d9b38b8: the heartbeat spawns device pulses windowless on Windows whatever its own interpreter (cairn/devices/cairn/machines/ground_loop/heartbeat.py)",
+      "intent": "On Windows the beat spawns each device's pulse through background_pythonw, so the pulse tree holds no python.exe, no conhost.exe and no visible console window; off Windows the argv is unchanged and the pulse still runs and is recorded.",
+      "scope": "in: cairn/devices/cairn/machines/ground_loop/heartbeat.py, cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py; out: ground_loop/__main__.py execv, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Every component talks to every other only through its public interface: heartbeat reaches windowless_spawn by its published helpers.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+          "cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py"
+        ],
+        "out": [
+          "cairn/devices/cairn/machines/ground_loop/__main__.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how heartbeat.spawn_pulses picks its interpreter, against the 2026-11-23 EnumWindows measurement"
+      ],
+      "holdings": [
+        {
+          "what": "the spawn under change",
+          "address": "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+        },
+        {
+          "what": "the helper that names the windowless interpreter",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof that reads the pulse's process tree and visible console windows",
+          "measure": "run the proof before the fix and read tooth 1 red with conhost.exe, python.exe and python3.exe in the tree"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1+D2: spawn_pulses spawns background_pythonw() instead of sys.executable; the proof reads the tree with CIM and EnumWindows",
+          "why": "Measured 2026-11-23 on akiendell: every visible ConsoleWindowClass window was venv python3.exe running groundloop/pulse.py, spawned by spawn_pulses with sys.executable under detached_kwargs.",
+          "kind": "build",
+          "fills": "a proof that reads the pulse's process tree and visible console windows",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+            "cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1+D2: spawn_pulses spawns background_pythonw() instead of sys.executable; the proof reads the tree with CIM and EnumWindows",
+          "why_now": "built red-first on akiendell/8c82-pulse-windowless e1bbc21c2: tooth 1 red before, green after"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1+D2: spawn_pulses spawns background_pythonw() instead of sys.executable; the proof reads the tree with CIM and EnumWindows",
+          "expect": "Windows: tree holds only pythonw.exe; off Windows argv[0] is sys.executable; the pulse runs and the beat records path, mtime and pid.",
+          "falsifier": "(1) on Windows the pulse tree holds no python.exe, conhost.exe or visible console window; (2) off Windows the pulse argv is unchanged; (3) the pulse still runs and its entry is recorded",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of test_a_pulse_owns_no_console_on_windows.py passes on its host, one per falsifier clause",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/cairn/machines/ground_loop/proofs/test_a_pulse_owns_no_console_on_windows.py",
+          "timeout_s": 600,
+          "covers": [
+            "D1+D2: spawn_pulses spawns background_pythonw() instead of sys.executable; the proof reads the tree with CIM and EnumWindows"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
