@@ -1,0 +1,83 @@
+{
+  "id": "bfcb0d1cab45",
+  "title": "the hollow reverts a file's git mode as well as its bytes",
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "intention": "cairn test --hollow takes a build's mode change away with its byte change: a file whose bytes are identical at the anchor but whose git index mode differs is reverted to the anchor's mode in the hollow worktree (index and working tree), measured by its teeth, and restored to HEAD's mode before the next file, instead of reading UNWRIT.",
+  "why": "Measured 2026-11-23 on akiendelllinux at 846b6ca0eaf7's PROVEME: the build only set cairn/devices/cc/superclaude.py from git mode 100644 to 100755 (bytes unchanged), and `bin/cairn test --hollow 846b6ca0eaf7 --seal` read it 'UNWRIT ... identical at the pre-build commit — the build did not write it', so the reading measured nothing and PROVED would refuse with hollow_evidence_absent. By hand, the same worktree with `git update-index --chmod=-x` on that file redded tooth 1 naming 'superclaude.py 100644': the counterfactual was measurable, the hollow just compares bytes only (hollow.py _revert, the read_bytes() == blob.stdout test).",
+  "traces_to": "Law 8 (nothing enters proven-space without a proof a hollow build couldn't pass: a mode-only build is a build, and its hollow must be measurable rather than unmeasured) and Law 3 (an UNWRIT on a file the build did write is a measurement reported wrong).",
+  "how": "In hollow.py, _revert compares the anchor's mode (`git ls-tree <commit> -- rel`) with the worktree index's (`git -C wtree ls-files -s -- rel`) as well as the bytes; where only the mode differs it sets it with `git -C wtree update-index --chmod=±x -- rel` and chmods the working file, and returns a 'reverted (mode ...)' how. _restore puts the index mode back with the bytes. A red-first proof builds a scratch two-commit repo whose build commit only flips a file to 100755.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch repo whose build commit changes only v's git mode 100644 to 100755 (bytes identical), with a fixture proof whose tooth reads `git ls-files -s v` and needs 100755, measure() reports v as reverted, not unchanged, and its reading is checked (the tooth reds), never UNWRIT"
+      },
+      {
+        "n": 2,
+        "claim": "the same repo with a fixture tooth that never reads v's mode reports v hollow"
+      },
+      {
+        "n": 3,
+        "claim": "after v is measured, the hollow worktree's index and working-file mode of v are HEAD's again (100755), so a second build file measured after it reads its own result"
+      },
+      {
+        "n": 4,
+        "claim": "a build file whose bytes and mode are both identical at the anchor still reads UNWRIT"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: hollow.py _revert reads the anchor's mode with `git -C <repo_root> ls-tree <commit> -- rel` and the worktree's with `git -C <worktree> ls-files -s -- rel`. Bytes identical and mode equal: 'unchanged' as now. Mode differs (100644 vs 100755): `git -C <worktree> update-index --chmod=+x|-x -- rel` plus the working file's exec bits set to match, and the how names both modes ('reverted (mode 100755 -> 100644)'); bytes that differ are written as now and the mode set the same way. A git failure here raises HollowUnmeasurable (Law 7). _restore resets the index entry (`git -C <worktree> reset -q -- rel`) before its checkout, so a mode set in the index is undone with the bytes, and still raises when it cannot.",
+      "writes_to": [
+        "cairn/devices/tester/hollow.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/hollow.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof cairn/devices/tester/proofs/test_the_hollow_reverts_a_mode_only_build.py, PROVES bfcb0d1cab45 keys 1-4, one tooth per clause, each over a scratch git repo made through the scratch door (copy the fixture shape of cairn/devices/tester/proofs/test_hollow_measures_a_deletion.py), calling hollow.measure as that proof does.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_hollow_reverts_a_mode_only_build.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/proofs/test_hollow_measures_a_deletion.py"
+      ]
+    }
+  ],
+  "constraints": [
+    "the hollow still never writes the house tree: every mode change happens in its own worktree",
+    "a no-op reversion (bytes and mode identical) stays UNWRIT, never HOLLOW"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/hollow.py",
+      "cairn/devices/tester/proofs/test_the_hollow_reverts_a_mode_only_build.py"
+    ],
+    "out": [
+      "846b6ca0eaf7 itself (it closes after this is PROVED, by its own sealed hollow)",
+      "symlink and submodule modes (120000, 160000): no build has changed one yet",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "`bin/cairn test --hollow 846b6ca0eaf7 --seal`: 'UNWRIT cairn/devices/cc/superclaude.py (identical at the pre-build commit — the build did not write it)'; the build bdaa40c91 changed only the mode 100644 -> 100755",
+      "how": "the hollow run and git show --summary bdaa40c91 on akiendelllinux"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "a scratch worktree at HEAD with `git update-index --chmod=-x cairn/devices/cc/superclaude.py`: 846b's tooth 1 FAIL naming 'cairn/devices/cc/superclaude.py 100644' (akiendelllinux ~/.akien/temp/846b-hand-hollow-20261123.txt)",
+      "how": "the proof run by hand in that worktree"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "hollow.py _revert returns 'unchanged' when target.read_bytes() == the anchor blob, and reads no mode anywhere",
+      "how": "read of cairn/devices/tester/hollow.py _revert and _restore"
+    }
+  ]
+}
