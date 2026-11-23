@@ -1,0 +1,79 @@
+{
+  "id": "e36513d126cf",
+  "title": "a bin/cairn run from a worktree leaves the live instance's links where they point",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "A bin/cairn run from a checkout that is not the house never repoints an existing link under the live instance root to its own tree; only a missing link is laid.",
+  "why": "Measured 2026-11-23 on akiendelllinux: `bin/cairn outlinecheck` run from /home/akien/dev/src/wt-e179 at 12:51 left ~/.cairn/devices/superclaude/0/bin/superclaude -> /home/akien/dev/src/wt-e179/cairn/cairn/devices/cc/superclaude.py. bin/cairn.py's _superclaude_stale reads any link that does not resolve to THIS checkout's superclaude.py as stale, _wiring_gap then fires _wire_instances, and _wire_link repoints every stale symlink to the running checkout. So the live launcher follows whichever tree ran last, and clearing a worktree leaves it dangling. The other 19 live instance links read rewritten at 12:53, the next house run, which suggests they had moved too (not yet measured directly).",
+  "traces_to": "Law 6 (everything has one owner: the live instance's links are the house's, and a worktree writes them ambiently) and CLAUDE.md's three roots (class-space code in a scratch tree reaching into instance-space).",
+  "how": "In bin/cairn.py, _superclaude_stale and _wire_link treat a symlink as stale only when it dangles or points outside every checkout of this repo (git rev-parse --git-common-dir equal); a link into another checkout of the same repo is left. A red-first proof runs a worktree's bin/cairn over a scratch instance root whose links point at a second scratch checkout and needs them unchanged.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a bin/cairn run from checkout B over an instance root whose superclaude and class-verb links point into checkout A of the same repo leaves every link pointing into A"
+      },
+      {
+        "n": 2,
+        "claim": "the same run over an instance root with a link absent lays that link"
+      },
+      {
+        "n": 3,
+        "claim": "a link that dangles, or points at the bash superclaude, is repointed as today"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: bin/cairn.py's _superclaude_stale and _wire_link judge a symlink stale only when it dangles, or resolves outside every worktree of this repo (git rev-parse --git-common-dir of the link's target tree equals the running checkout's), or (for superclaude) resolves to the bash superclaude; a live link into another checkout of this repo stands.",
+      "writes_to": [
+        "bin/cairn.py"
+      ],
+      "reads": [
+        "bin/cairn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof bin/proofs/test_a_worktree_run_leaves_the_live_links_alone.py, PROVES e36513d126cf keys 1-3, makes two scratch git worktrees of one scratch repo carrying a stub bin/cairn.py tree, and drives the real bin/cairn.py's wiring functions over a scratch CAIRN_INSTANCE_ROOT; one tooth per clause.",
+      "writes_to": [
+        "bin/proofs/test_a_worktree_run_leaves_the_live_links_alone.py"
+      ],
+      "reads": [
+        "bin/proofs/test_the_floor_links_a_class_verb_that_landed_late.py"
+      ]
+    }
+  ],
+  "constraints": [
+    "a proof launch never uses the live instance root",
+    "the house remains the one checkout whose runs repoint a dangling live link"
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn.py",
+      "bin/proofs/test_a_worktree_run_leaves_the_live_links_alone.py"
+    ],
+    "out": [
+      "bootstrap.sh's cairn_wire_instances (retired by e179281f6eff)",
+      "superclaude.py's mode (ticket 846b6ca0eaf7)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "~/.cairn/devices/superclaude/0/bin/superclaude -> /home/akien/dev/src/wt-e179/cairn/cairn/devices/cc/superclaude.py, mtime 12:51, after `bin/cairn outlinecheck e179281f6eff` from wt-e179",
+      "how": "ls -l on akiendelllinux, 12:52"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "bin/cairn.py _superclaude_stale returns True for a symlink whose resolve() is not CLASS_ROOT/cc/superclaude.py of the running checkout; _wire_link repoints any symlink whose resolve() differs from the running script",
+      "how": "read of bin/cairn.py lines 183-249 in wt-e179"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "the orchestrator ruled: cast its own ticket, do not build it before e179281f6eff; CAIRN_INSTANCE_ROOT set to scratch for worktree runs stands meanwhile",
+      "how": "cross-session message from akiendelllinux_cc_orchestrator, 2026-11-23"
+    }
+  ]
+}

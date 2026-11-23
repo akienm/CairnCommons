@@ -1,0 +1,67 @@
+{
+  "id": "7226562916d7",
+  "title": "the launch tool's proof reads its child's cgroup through the cgroup tool",
+  "owning_intention": "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+  "intention": "The launch tool's scoped-exec tooth reads the child's own cgroup through cairn.tools.cgroup.cgroup.cgroup_of, so cairn/tools/cgroup/cgroup.py stays the one python reader of /proc/<pid>/cgroup and the ground loop's one-reader tooth reads green.",
+  "why": "Measured 2026-11-23 on akiendelllinux: cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py reds 'exactly one file READS /proc/<pid>/cgroup from python', readers [cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py, cairn/tools/cgroup/cgroup.py, cairn/tools/cgroup/proofs/test_cgroup.py]. 60f16ffccd43 (PROVED; red-first proof sealed b3c17da82, 2026-11-22) wrote _READ_MAX, a one-liner that opens /proc/self/cgroup with read_text() inside the scoped child. No ticket names the red (grep of tickets and questions for the proof name and the tooth's words). Under Law 9 being on main earlier exempts nothing.",
+  "traces_to": "Law 9 (a red on main carries a ticket) and Law 1 (the cgroup parse is settled once in cairn/tools/cgroup; re-deriving it in a proof is the defect the one-reader tooth guards).",
+  "how": "Rewrite _READ_MAX in the launch proof so the scoped child puts the repo root on sys.path, imports cgroup_of from cairn.tools.cgroup.cgroup, and prints memory.max from /sys/fs/cgroup + cgroup_of('self'); tooth 3's assertion is unchanged. The ground loop proof is unchanged and goes green.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py arm six reads green: the python readers of /proc/<pid>/cgroup are cairn/tools/cgroup/cgroup.py and its own proof only"
+      },
+      {
+        "n": 2,
+        "claim": "the launch proof's scoped-exec tooth still needs the child's memory.max to equal 100M, read through cgroup_of"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py, _READ_MAX becomes a child that inserts the repo root on sys.path, imports cgroup_of from cairn.tools.cgroup.cgroup, and prints 'memory.max' and the text of /sys/fs/cgroup<cgroup_of('self')>/memory.max; test_a_scoped_exec_runs_under_the_memory_max_passed passes the repo root into it as it already does for the launch import. No other line changes; its seal is resealed in the build.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+        "cairn/tools/cgroup/cgroup.py",
+        "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+      ]
+    }
+  ],
+  "constraints": [
+    "the ground loop proof's one-reader tooth is not weakened, widened or given a declared exemption for this file",
+    "the launch proof still measures the kernel's memory.max, not the tool's word for it"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+    ],
+    "out": [
+      "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py (unchanged; it is the red)",
+      "cairn/tools/cgroup (its interface, used as published)",
+      "launch.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py RED: 'FAIL exactly one file READS /proc/<pid>/cgroup from python — readers: [cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py, cairn/tools/cgroup/cgroup.py, cairn/tools/cgroup/proofs/test_cgroup.py]'",
+      "how": "bin/cairn test in wt-e179 at main, ~/.akien/temp/e179-base2/test_ground_loop_survives_its_caller.out on akiendelllinux"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py lines 142-143: _READ_MAX = \"import pathlib; cg = pathlib.Path('/proc/self/cgroup').read_text()...\", added by 60f16ffccd43's red-first seal b3c17da82 (2026-11-22)",
+      "how": "sed and git log on akiendelllinux"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "no ticket or question names test_ground_loop_survives_its_caller's one-reader red or the launch proof as a reader",
+      "how": "grep of CairnCommons tickets/ and questions/ at origin/main for 'exactly one file READS', 'launch_paths_os_questions'"
+    }
+  ]
+}
