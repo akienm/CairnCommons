@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Keep the bash and fix the bash lookup (prefer Git Bash): rejected, it leaves two launchers (UnseenUniversity superclaude.ps1 and this) and a bash dependency on Windows, which the parent c3cd232ba0cf removes. Port only the Windows path: rejected, two launchers per box is the defect.",
+      "hidden_assumption": "That the existing superclaude proofs read the bash text only and can keep passing while both launchers exist; and that scoped_exec's Windows path (run and exit with the child's code) gives the console to claude. Both are measured at build: grep the proofs, run the dry-run.",
+      "prior_art": "Consulted: cairn/devices/cc/superclaude (the source, with its measured-failure comments), cairn/devices/cc/proofs/test_superclaude_*.py (bare_box, memory_scope, sets_cairn_user, wire), launch.py (service_spawn, scoped_exec, port_listening, stream_is_console, elevation), UnseenUniversity bin/superclaude.ps1 (runs claude in this console), recovery floor.py (child 2, 8610b4aa2477). No Python superclaude exists.",
+      "real_collision": "None exclusive-and-terminal. The bash and the .py coexist until child 5 repoints bin/cairn.py; the ordering is the parent's. The bash's sudo-password read is kept only where launch.runs_shell_scripts() is true."
+    },
+    "exit": "routed_forward",
+    "falsifier": "Done when: (1) --dry-run prints the resolved context state and claude command with the bash's flag semantics (--1m wins over a 200K environment, --200k imposes, env then file default 200K); (2) a held instance moves to the next free one; (3) the preflight runs floor.py verify then apply, and its residue rides --append-system-prompt, empty when the floor is up; (4) the ground loop and web server start through the launch tool, never when --dry-run, the web server not when port 80 listens or the box is not the cairn home; (5) the restart flags relaunch with --continue or fresh, DO_NOT_RESTART wins; (6) claude is spawned with inherited stdio in this console; (7) the module has none of os.name, sys.platform, platform.system, a bash literal, or a sudo password flag, and no sudo prompt where the launch tool says shell scripts do not run. Wrong intent if cairn superclaude on akiendell still needs bash.",
+    "from_idea": "none, because it is child 3 of cast ticket c3cd232ba0cf (CairnCommons/tickets/c3cd232ba0cf-cairn-launches-from-one-python-launcher-on-every-box-behind-a-thin-shim-per-plat.json), whose how names it",
+    "how": "New cairn/devices/cc/superclaude.py porting the 882-line bash cairn/devices/cc/superclaude: flag parse and the context switch (command line > environment > file default), instance and held-instance move, session name and CAIRN_USER, preflight by calling recovery's floor.py as a subprocess CLI (RULE 1: cc may not import recovery) with the residue riding --append-system-prompt, memory_link.py, the CAIRN_FLOOR_FINDINGS carry-in, claude install when absent, the flags home and the restart loop (inner mode), the ground loop and web server via launch.service_spawn, port 80 via launch.port_listening, the trace wire, --dry-run, tmux mode, and the memory scope via launch.scoped_exec. Sudo is asked only where launch.runs_shell_scripts() is true. claude runs in THIS console with inherited stdio, as UnseenUniversity bin/superclaude.ps1 does. Every OS question goes through cairn/devices/system_rackmount/tools/launch/launch.py; the module has no os.name, sys.platform, platform.system test. The bash stays until bin/cairn.py dispatches to the .py (child 5).",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Outline 10.3.2.1 and 5.4.3.8 (superclaude is Python; Windows needs no bash); RULE 1 (OS answers come from the system device's published tool; recovery is reached through its CLI); Law 1 (the settled launcher is ported, not re-derived); Law 3 (the proof measures the launch plan, not a claim).",
+    "what": "superclaude is Python: cairn/devices/cc/superclaude.py launches Claude Code on every box with the same standing contract the bash launcher has, asking the launch tool every OS question, so no bash is in the launch path."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "Launcher child 3: cc/superclaude.py ports the bash launcher; OS questions via the launch tool; recovery reached through floor.py's CLI."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "0da15cda9410",
+  "skill": "intent",
+  "title": "superclaude is Python: cairn/devices/cc/superclaude.py launches Claude Code on every box with the same standing contract",
+  "trace_id": "cf5f1cb9dfc1",
+  "when": "2026-11-22T21:12:36.673874"
+}
