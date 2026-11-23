@@ -29,7 +29,7 @@
   "decisions": [
     {
       "n": 1,
-      "text": "D1: the tester answers `exec` by calling run_exec's sealed path in-process with its output captured, and replies the record; it builds no seal of its own.",
+      "text": "D1: the tester answers `exec` by running the one sealed door, `cairn test --exec`, as a child process with stdout and stderr captured, and replies the record; it builds no seal of its own. Not in-process: run_exec inherits the caller's stdio and run_owned spawns on it, so capturing it in-process inside a bus handler would redirect the whole server's fd 1 and 2 under concurrent asks (measured by reading cairn/devices/tester/device.py run_exec); the child is the capture boundary.",
       "writes_to": [
         "cairn/devices/tester/device.py"
       ],
@@ -70,5 +70,153 @@
       "saw": "TesterDevice.declared_verbs returns run, notices, notice-seen and the base verbs; no exec; run_exec is reached only through the CLI",
       "how": "read cairn/devices/tester/device.py lines 555-580 and 988-1060 on akiendell at main c18939ee6"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "21f9628872da: the tester answers an exec ask over the bus with the run record of a seal-grade --exec of the command (cairn/devices/tester/device.py)",
+      "intent": "The tester declares an `exec` verb: given a command it runs the one sealed door `cairn test --exec` as a captured child and replies the record; an unconfirmed seal replies the refusal line and runs nothing; a missing or non-string command is refused by name.",
+      "scope": "in: cairn/devices/tester/device.py, cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py; out: cairn/devices/codemother/machines/verdict, federated bus routing, every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Every component talks to every other only through its public interface: the verdict reaches the tester by this bus verb.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/tester/device.py",
+          "cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py"
+        ],
+        "out": [
+          "cairn/devices/codemother/machines/verdict",
+          "federated bus routing",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how the tester's declared verbs answer, against verdict.run_instrument's record shape"
+      ],
+      "holdings": [
+        {
+          "what": "the tester device whose declared_verbs gains exec",
+          "address": "cairn/devices/tester/device.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof that drives the exec verb through declared_verbs",
+          "measure": "run the proof against origin/main device.py and read all four teeth red (measured 2026-11-23 on akiendell)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1+D2: the exec verb as a captured `cairn test --exec` child, and the proof that drives it through declared_verbs",
+          "why": "Measured 2026-11-23: a Windows verdict is refused because bwrap is absent; the sealer must answer an exec ask over the bus (86cccb7d30f7).",
+          "kind": "build",
+          "fills": "a proof that drives the exec verb through declared_verbs",
+          "uses": [],
+          "writes_to": [
+            "cairn/devices/tester/device.py",
+            "cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1+D2: the exec verb as a captured `cairn test --exec` child, and the proof that drives it through declared_verbs",
+          "why_now": "built red-first on akiendell/21f9-tester-exec-verb 5ade4e2b0: four teeth red on origin/main, teeth 3 and 4 green on Windows, 1 and 2 UNRAN there"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1+D2: the exec verb as a captured `cairn test --exec` child, and the proof that drives it through declared_verbs",
+          "expect": "exec is declared; passing and failing asks reply the record; an unconfirmed seal replies exit 2 with seal_refused and runs nothing; a bad command is refused by name.",
+          "falsifier": "clauses 1-4 of the ticket",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of the proof passes where it can run, one per falsifier clause",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/tester/proofs/test_the_tester_answers_an_exec_ask.py",
+          "timeout_s": 900,
+          "covers": [
+            "D1+D2: the exec verb as a captured `cairn test --exec` child, and the proof that drives it through declared_verbs"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
