@@ -23,6 +23,10 @@
       {
         "n": 4,
         "claim": "on Windows the hand-off holds no gap and no overlap: the old loop writes no beat after it releases run.lock, the successor claims it, no instant has two holders, and the measured release-to-claim interval is reported against the beat cadence and stays below it"
+      },
+      {
+        "n": 5,
+        "claim": "a transient refused replace of beat.json (WinError 5) is retried and the beat record lands, so a reader or scanner holding the file for an instant cannot kill the loop"
       }
     ]
   },
@@ -57,16 +61,26 @@
       "reads": [
         "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
       ]
+    },
+    {
+      "n": 4,
+      "text": "D4: heartbeat.write_record retries os.replace on PermissionError (20 tries, 50 ms) before raising. Measured 2026-11-23 on akiendell while building D2: a loop crashed with WinError 5 at os.replace(beat.json) while the proof read it, 3 of 6 runs; a loop that dies there leaves the gap clause 4 forbids.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+      ]
     }
   ],
   "bounds": {
     "in": [
       "cairn/devices/cairn/machines/ground_loop/__main__.py",
       "cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py",
-      "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py",
+      "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
     ],
     "out": [
-      "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
       "every other component"
     ]
   },
@@ -76,5 +90,161 @@
       "saw": "visible ConsoleWindowClass windows were venv python3.exe launchers spawned detached (pulse.py, started by heartbeat.spawn_pulses); the same call shape stands in this site's source.",
       "how": "EnumWindows poller at 20-40 ms over two runs of about 350 s on akiendell; source read of cairn/devices/cairn/machines/ground_loop/__main__.py"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "46b04f7a0563: on Windows the ground loop restarts itself through a windowless pythonw successor (cairn/devices/cairn/machines/ground_loop/__main__.py)",
+      "intent": "A changed own file on Windows leaves a pythonw successor with no console and no gap or overlap in the lock hand-off; off Windows it stays os.execv; write_record retries a transient WinError 5.",
+      "scope": "in: cairn/devices/cairn/machines/ground_loop/__main__.py, cairn/devices/cairn/machines/ground_loop/heartbeat.py, cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py, cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py; out: every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Every component talks to every other only through its public interface: pulse reaches windowless_spawn by its published helpers.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/cairn/machines/ground_loop/__main__.py",
+          "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+          "cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py",
+          "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
+        ],
+        "out": [
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "how the loop restarts on nt, against the 2026-11-23 measurement that os.execv is not in place there"
+      ],
+      "holdings": [
+        {
+          "what": "the restart under change",
+          "address": "cairn/devices/cairn/machines/ground_loop/__main__.py"
+        },
+        {
+          "what": "the beat record writer",
+          "address": "cairn/devices/cairn/machines/ground_loop/heartbeat.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof that reads the successor's tree, the lock hand-off and a transient refused replace",
+          "measure": "run the proof against origin/main code and read four teeth red (measured 2026-11-23)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1-D4: _restart helper, the proof, test_heartbeat 2a on nt, write_record retry",
+          "why": "Measured 2026-11-23 on akiendell: os.execv on Windows starts a python.exe-console process and the old one exits; a beat.json replace refused by a reader killed the loop (WinError 5) in 3 of 6 runs.",
+          "kind": "build",
+          "fills": "a proof that reads the successor's tree, the lock hand-off and a transient refused replace",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "cairn/devices/cairn/machines/ground_loop/__main__.py",
+            "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+            "cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py",
+            "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1-D4: _restart helper, the proof, test_heartbeat 2a on nt, write_record retry",
+          "why_now": "built red-first on akiendell/46b0-loop-restart-windows: four teeth red on origin/main code, green after"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1-D4: _restart helper, the proof, test_heartbeat 2a on nt, write_record retry",
+          "expect": "Windows: successor under pythonw, old pid gone, no console in the tree, hand-off interval below cadence; off Windows execv; flags honored; transient WinError 5 retried.",
+          "falsifier": "clauses 1-5 of the ticket",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of the proof passes on its host, one per falsifier clause",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py",
+          "timeout_s": 900,
+          "covers": [
+            "D1-D4: _restart helper, the proof, test_heartbeat 2a on nt, write_record retry"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
