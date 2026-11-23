@@ -1,0 +1,65 @@
+{
+  "id": "4c9a6ec90b5d",
+  "title": "the web server's ground-loop pulse starts its listener windowless on Windows whatever its own interpreter",
+  "owning_intention": "cairn/devices/web_server/intention+why.json",
+  "intention": "On Windows the web server's pulse starts the listener through background_pythonw, so a silent port 80 never opens a console window; off Windows the argv is unchanged.",
+  "why": "Measured 2026-11-23 on akiendell: the visible console windows were venv python3.exe launchers spawned with detached_kwargs; heartbeat.spawn_pulses was one (ticket 8c829d9b38b8). pulse.ensure at cairn/devices/web_server/groundloop/pulse.py:143 has the same shape: `python: str = sys.executable` reaches _detached under detached_kwargs, so a silent port starts the listener as a python.exe console. HYPOTHESIS (Law 3): the shape is read in source, not yet measured as a window; the proof must red first.",
+  "traces_to": "Law 3 and Law 8 (measured, with a proof a hollow build could not pass); outline 10.3.2.1; Akien 2026-11-23 via the orchestrator: akiendell is still throwing up windows as it goes.",
+  "how": "pulse.ensure defaults its python to windowless_spawn.background_pythonw() instead of sys.executable (an explicit python argument still wins); a red-first proof starts the listener on a scratch port and reads the spawned tree and the visible ConsoleWindowClass windows with EnumWindows.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Windows ensure() on a silent scratch port starts a listener tree holding no python.exe, no conhost.exe and no visible console window"
+      },
+      {
+        "n": 2,
+        "claim": "off Windows the listener argv[0] is still sys.executable"
+      },
+      {
+        "n": 3,
+        "claim": "an explicit python argument is used as given, and a held port spawns nothing"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: ensure's python default becomes background_pythonw(); nothing else in pulse.py changes.",
+      "writes_to": [
+        "cairn/devices/web_server/groundloop/pulse.py"
+      ],
+      "reads": [
+        "cairn/devices/web_server/groundloop/pulse.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof starts the listener on a scratch port with unit=None and reads the tree (CIM) and visible console windows (EnumWindows); one tooth per clause, each UNRAN on the host that cannot run it.",
+      "writes_to": [
+        "cairn/devices/web_server/proofs/test_the_pulse_starts_the_listener_windowless_on_windows.py"
+      ],
+      "reads": [
+        "cairn/devices/web_server/groundloop/pulse.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/web_server/groundloop/pulse.py",
+      "cairn/devices/web_server/proofs/test_the_pulse_starts_the_listener_windowless_on_windows.py"
+    ],
+    "out": [
+      "cairn/devices/web_server/listener.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "visible ConsoleWindowClass windows were venv python3.exe launchers spawned detached (pulse.py, started by heartbeat.spawn_pulses); the same call shape stands in this site's source.",
+      "how": "EnumWindows poller at 20-40 ms over two runs of about 350 s on akiendell; source read of cairn/devices/web_server/groundloop/pulse.py"
+    }
+  ]
+}

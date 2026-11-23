@@ -1,0 +1,76 @@
+{
+  "id": "46b04f7a0563",
+  "title": "on Windows the ground loop restarts itself through pythonw and a successor, because os.execv does not replace a process there",
+  "owning_intention": "cairn/devices/cairn/machines/ground_loop/intention+why.json",
+  "intention": "When its own files change on Windows the ground loop restarts as a windowless successor and the old image exits, so test_heartbeat's restart tooth stops reading red there; off Windows it still re-execs in place.",
+  "why": "Measured 2026-11-23 on akiendell: test_heartbeat.py's tooth 'a changed own file re-execs the loop in place' reads restarted=False, pid=17112 vs 16876 (and pid=24280 vs 1884 with heartbeat.py unedited), a red that stood before ticket 8c829d9b38b8. os.execv on Windows starts a new process and the old one exits, so the pid cannot stay and the successor runs sys.executable, the venv python.exe launcher (a console, per ticket 8c829d9b38b8's measurement); __main__.py:120 is named in that ticket's why. HYPOTHESIS (Law 3): that execv's successor owns a console is read from the launcher measurement, not yet measured on this path.",
+  "traces_to": "Law 3 and Law 8 (measured, with a proof a hollow build could not pass); outline 10.3.2.1; Akien 2026-11-23 via the orchestrator: akiendell is still throwing up windows as it goes.",
+  "how": "In __main__.py the restart branch calls a restart helper: off nt os.execv as now; on nt it starts [background_pythonw(), *orig_argv[1:]] detached, releases the run lock, and exits 0 so the successor takes the lock. A red-first proof drives a loop over a scratch home, changes its own file, and reads a new 'started' in beat.json from a pythonw tree with no conhost and no visible console, with the old pid gone.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "on Windows a changed own file leaves a successor loop that writes a new started to beat.json, runs from pythonw with no python.exe, conhost.exe or visible console window in its tree, and the old pid is gone"
+      },
+      {
+        "n": 2,
+        "claim": "off Windows the restart is os.execv(sys.executable, orig_argv): the same pid, a new image"
+      },
+      {
+        "n": 3,
+        "claim": "COMMAND_DO_NOT_RESTART still suppresses the restart and COMMAND_EXIT still stops the loop with rc 0, on both"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: __main__.py gains a restart helper: os.execv off nt, a detached background_pythonw successor plus a clean exit on nt.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/__main__.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/__main__.py",
+        "cairn/tools/windowless_spawn/windowless_spawn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof drives a loop over a scratch home on the host and reads beat.json and the process tree; one tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/__main__.py"
+      ]
+    },
+    {
+      "n": 3,
+      "text": "D3: test_heartbeat.py's restart tooth reads 'same pid' only where the OS can keep it; on nt it reads a new started and a new live pid. HELD on the question opened at /sorted: the tooth is a spec clause (charter falsifier 2: 're-execing in place') and only his head can say whether a successor is 'in place' on Windows.",
+      "writes_to": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
+      ],
+      "reads": [
+        "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cairn/machines/ground_loop/__main__.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_a_changed_own_file_restarts_the_loop_windowless_on_windows.py",
+      "cairn/devices/cairn/machines/ground_loop/proofs/test_heartbeat.py"
+    ],
+    "out": [
+      "cairn/devices/cairn/machines/ground_loop/heartbeat.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "visible ConsoleWindowClass windows were venv python3.exe launchers spawned detached (pulse.py, started by heartbeat.spawn_pulses); the same call shape stands in this site's source.",
+      "how": "EnumWindows poller at 20-40 ms over two runs of about 350 s on akiendell; source read of cairn/devices/cairn/machines/ground_loop/__main__.py"
+    }
+  ]
+}
