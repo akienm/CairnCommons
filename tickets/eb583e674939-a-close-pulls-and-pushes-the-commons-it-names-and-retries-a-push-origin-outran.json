@@ -1,0 +1,85 @@
+{
+  "id": "eb583e674939",
+  "title": "a close pulls and pushes the commons it names, and retries a push origin outran",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "close.sh's sync_repo pulls and pushes the repo it is handed (the commons included) under that repo's own door lock, and when a push fails it pulls --rebase and pushes again, at most 3 pushes in all, before stopping with NOT PUSHED and exit 5 as today.",
+  "why": "Measured 2026-11-23 on akiendelllinux: close exited 5 three times (a577fd03e307 once, ddbaaf055105 twice) with 'NOT PUSHED: /home/akien/dev/src/CairnCommons ... ! [rejected] main -> main (fetch first)' after a sealed hollow and a confirmed verdict. The bash -x trace (/home/akien/.akien/temp/close_ddbaaf055105_105122.log) shows sync_repo running `cd $d && cairn artifact quiet -- git pull -q --rebase --autostash`, and `cairn artifact quiet -- pwd` run from the commons prints the cairn root: bin/cairn chdirs there and _quiet passes no cwd, its -C (default '.') choosing only the lock. So the commons pull re-pulls the house under the house's lock, the commons is never pulled, and its push fails whenever origin moved at all; another hand crossing tickets into the commons every few seconds (11 origin commits in ~5 minutes) made that nearly every close.",
+  "traces_to": "Law 7 (errors are loud at diagnostic surfaces and permanent in records of truth: the close names a push it never prepared for, and leaves the records it meant to land unpushed) and Law 3 (nothing is known until measured: the pull close.sh believes updates the commons updates the house).",
+  "how": "In sync_repo, run every git through `git -C \"$d\"` under `cairn artifact quiet -C \"$d\" --` (pull and rebase --abort), push with `git -C \"$d\" push -q`, and loop: up to 3 times pull (a failed pull aborts its rebase and ends the loop), push, break on success. The ahead count, NOT PUSHED line and return 1 after the loop are unchanged. Red-first proof beside close.sh drives close.sh as written over scratch bare origins, with a git shim on PATH making origin move deterministically before close's pushes.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a close whose commons origin took another hand's commit before the close began exits 0, the commons 0 commits ahead of origin, and origin holds both the close's record line and the other hand's commit"
+      },
+      {
+        "n": 2,
+        "claim": "a close whose commons origin takes another hand's commit once, between the close's pull and its push, exits 0 with the commons 0 ahead and both commits on origin"
+      },
+      {
+        "n": 3,
+        "claim": "a close whose commons origin takes another hand's commit before every push exits 5, prints NOT PUSHED naming the commons, and attempted exactly 3 pushes to the commons"
+      },
+      {
+        "n": 4,
+        "claim": "a close over a commons in sync with origin exits 0 with the commons 0 ahead, as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: sync_repo runs `$C/bin/cairn artifact quiet -C \"$d\" -- git -C \"$d\" pull -q --rebase --autostash` (and the same for `rebase --abort` after a failed pull) and `git -C \"$d\" push -q`, inside a loop of at most 3 tries: pull; a failed pull aborts its rebase and ends the loop; push; success ends the loop. The ahead count, NOT PUSHED line and return 1 after the loop stay as written.",
+      "writes_to": [
+        "cairn/devices/cc/scripts/close.sh"
+      ],
+      "reads": [
+        "cairn/devices/cc/scripts/close.sh",
+        "cairn/tools/artifact/__main__.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof copies the scaffolding of 979a's proof (_repo, _world, _env, _close, _ahead and its bin/cairn and sail.py stubs) and adds a `git` shim first on PATH: its real git is shutil.which('git') taken before PATH changes; when argv holds `push` and its -C directory (or cwd) resolves to the scratch commons, it appends a line to a count file and, while the count is at most N (N=1 for clause 2, N=99 for clause 3, 0 otherwise), first pushes another hand's commit to the commons origin from a third clone; then it execs real git with the same argv. One tooth per clause.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_a_close_pulls_and_pushes_the_commons_it_names.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py"
+      ]
+    }
+  ],
+  "constraints": [
+    "close.sh calls the artifact tool only through its published quiet verb with -C; _quiet itself is not changed (RULE 1: it is the artifact tool's interface)",
+    "after the 3rd failed push the close still stops with NOT PUSHED and exit 5 before any crossing it has not made (979a63671481)"
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/scripts/close.sh",
+      "cairn/devices/cc/proofs/test_a_close_pulls_and_pushes_the_commons_it_names.py"
+    ],
+    "out": [
+      "cairn/tools/artifact (_quiet's cwd)",
+      "cairn/devices/cc/scripts/commons_paths.py and house_paths.py (what a close stages)",
+      "cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py (979a's proof, unchanged)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "close.sh exited 5 after a sealed hollow and confirmed verdict: sync_repo on CairnCommons printed 'NOT PUSHED ... ! [rejected] main -> main (fetch first) ... (2 commit(s) not on origin)'",
+      "how": "bash -x close.sh ddbaaf055105 on akiendelllinux, trace /home/akien/.akien/temp/close_ddbaaf055105_105122.log"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "`cd ~/dev/src/CairnCommons && bin/cairn artifact quiet -- pwd` and `-- git rev-parse --show-toplevel` both print /home/akien/dev/src/cairn; a quiet pull left the commons 'behind 6' where a bare `git pull --rebase` then fetched eb028d18d..7f281cfe4",
+      "how": "ssh akiendelllinux, by hand"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "979a's proof tooth test_a_diverged_commons_is_rebased_and_pushed_or_named passes when rc != 0 and the output names NOT PUSHED and the commons, which is the bug's own output",
+      "how": "read of cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py lines 140-156"
+    }
+  ]
+}

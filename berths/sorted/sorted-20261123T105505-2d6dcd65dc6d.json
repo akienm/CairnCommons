@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Three load-bearing assumptions, each read on disk. (a) `cairn artifact quiet` runs its command with no cwd: cairn/tools/artifact/__main__.py _quiet calls subprocess.run(cmd) inside door_lock(Path(where)), where defaults to '.', and bin/cairn chdirs to the cairn root; measured on akiendelllinux, `cd ~/dev/src/CairnCommons && bin/cairn artifact quiet -- pwd` prints /home/akien/dev/src/cairn. (b) sync_repo is the only pull/push in cc's scripts: grep of cairn/devices/cc/scripts/*.sh for 'artifact quiet' hits close.sh:20 and :24 only, and prove.sh has no pull or push. (c) A rejected push exits nonzero and leaves the branch ahead; the retry keys on that exit, not on git's English.",
+    "builder_check": "A Haiku builder needs: the site (cairn/devices/cc/scripts/close.sh, sync_repo, lines 18-33); the exact forms (`$C/bin/cairn artifact quiet -C \"$d\" -- git -C \"$d\" pull -q --rebase --autostash`, the same for `rebase --abort`, `git -C \"$d\" push -q`); the loop (try=1..3: pull; on pull failure abort the rebase and stop the loop; push; on success break), and the unchanged tail (ahead count, NOT PUSHED, return 1); the proof path (cairn/devices/cc/proofs/test_a_close_pulls_and_pushes_the_commons_it_names.py, PROVES four clauses); the scaffolding to copy (cairn/devices/cc/proofs/test_a_close_over_a_diverged_repo_rebases_or_stops.py: _repo, _world, _env, _close, _ahead, its bin/cairn and sail.py stubs); and the race, made deterministic: a `git` shim first on PATH (its real git from shutil.which before PATH changes) that, when its argv contains `push` and its -C directory or cwd is the scratch commons, counts the attempt in a file and, for the first N attempts (N=1 for clause 2, N=99 for clause 3), first pushes another hand's commit to the commons origin from a third clone, then execs real git. The ticket carries all of these.",
+    "children": "none, because the change is one function in one script plus its proof (cairn/devices/cc/scripts/close.sh)",
+    "collision_check": "979a63671481 (PROVED) owns 'a repo not pushed stops the close with exit 5 before any crossing'; this keeps that stop after the bounded retries, a distinction recorded. 91908f3b3bb3 and d3b8cdf81a41 (what close stages) are untouched. RULE 1: close.sh is cc's own script; it calls the artifact tool's published quiet verb with its -C argument, as the verb's help names it.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clauses: (1) a close whose commons origin took another hand's commit before the close exits 0, the commons 0 commits ahead of origin, and origin holds both the close's record line and the other hand's commit; (2) a close whose commons origin takes another hand's commit once, between the close's pull and its push, exits 0 with the commons 0 ahead and both commits on origin; (3) a close whose commons origin takes another hand's commit before every push exits 5, prints NOT PUSHED naming the commons, and attempted exactly 3 pushes to the commons; (4) a close over a commons in sync with origin exits 0 with 0 ahead, as before. Horizon: today's host-tool batch closes with no exit 5. Wrong intent if close should not push the commons at all.",
+    "gates_bound": "proved by the tester: cairn/devices/cc/proofs/test_a_close_pulls_and_pushes_the_commons_it_names.py under PROVES four clauses, deterministic, red-first on main, then hollow and cc's clearance at PROVED; a red feeds back to origin through FIXME.",
+    "missing_check": "Wrapped: the rebase --abort after a failed pull also runs in the house today (close.sh:24) and moves to `git -C \"$d\"` in the same act; the lock moves to the commons' own (`-C \"$d\"`); after the 3rd failed push the NOT PUSHED line and exit 5 are unchanged, so 979a63671481's stop-before-crossing clause stands. Out, recorded: _quiet's own cwd behaviour (the artifact tool's interface), the commons commit selection (commons_paths.py), and 979a's proof (its diverged tooth stays as written; the new proof is the strict one).",
+    "node_class": "code-seam",
+    "questions": "none, because the retry bound (3) and the shape were set by the orchestrator against the measured trace /home/akien/.akien/temp/close_ddbaaf055105_105122.log, and nothing here is a spec choice only Akien can settle",
+    "task_or_ticket": "ticket",
+    "title": "a close pulls and pushes the commons it names, and retries a push origin outran",
+    "watchme": "none, because its proof cairn/devices/cc/proofs/test_a_close_pulls_and_pushes_the_commons_it_names.py is the whole of its correctness, and the live horizon is today's host-tool batch closing (ticket ddbaaf055105)",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "close.sh's commons sync re-pulled the house: `cairn artifact quiet` runs its command from the cairn root, and its -C picks only the lock. 979a's proof reads green over it because its tooth accepts NOT PUSHED as a pass."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "8efdd9bfdac8",
+  "skill": "sorted",
+  "title": "a close pulls and pushes the commons it names, and retries a push origin outran",
+  "trace_id": "4480b934f4a6",
+  "when": "2026-11-23T10:55:05.935757"
+}
