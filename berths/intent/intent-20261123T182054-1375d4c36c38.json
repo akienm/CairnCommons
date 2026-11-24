@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "challenge": {
+      "back_up": "proceed",
+      "better_approach": "Considered superclaude.py setting the property after the spawn: measured 2026-11-23, `systemctl --user set-property --runtime <unit> CollectMode=inactive-or-failed` refuses ('Cannot set property CollectMode'). Considered superclaude.py calling systemd-run itself: that re-implements the launch tool beside it, against RULE 1. An explicit collect= parameter was weighed against reading the env: the env is what the shell keyed on (cairn/devices/cc/superclaude at ef541167c line 623), and every caller that marks a unit for a run already passes the id there, so no caller changes.",
+      "hidden_assumption": "That every service_spawn caller in a test run puts CAIRN_TESTER_TEST_ID in env= rather than only in os.environ; superclaude.py builds `mark` from env and passes it (superclaude.py:464). A caller that relies on os.environ alone would not be marked.",
+      "prior_art": "The shell superclaude did exactly this (ef541167c:cairn/devices/cc/superclaude:623-624). grep of CairnCommons/tickets for CollectMode and service_spawn: the launch tool's ticket 60f16ffccd43 and the .py's ticket 1941e93b25a3 never mention CollectMode, so the port dropped it unrecorded.",
+      "real_collision": "None: ticket d50d162c5428 and f04d5ef26a48 want exactly this outcome; outside a run the default CollectMode is kept (tooth 4 of test_a_unit_a_test_run_starts_is_the_runs), which the falsifier's second clause preserves."
+    },
+    "exit": "routed_forward",
+    "falsifier": "With CAIRN_TESTER_TEST_ID in the env passed to service_spawn, a unit whose process exits non-zero is gone (LoadState not-found) within 10s; without it, the same unit stays loaded and failed. If the first stays failed, or the second is collected, this is not done.",
+    "from_idea": "none, because it was measured while building ticket e179281f6eff (CairnCommons/tickets/e179281f6eff-the-bash-superclaude-is-retired-its-callers-and-proofs-move-to-superclaude-py-an.json), not imagined first",
+    "how": "In service_spawn's systemd branch, add `-p CollectMode=inactive-or-failed` when the env handed to the unit carries CAIRN_TESTER_TEST_ID; a red-first proof at the launch tool spawns a failing argv with and without the test id and reads the unit's LoadState after it fails.",
+    "shape": "aside",
+    "task_or_ticket": "ticket",
+    "traces_to": "Law 2 (CP1-CP6 hold in the process that builds the system: a test run leaves no unit of its own, ticket d50d162c5428) and Law 3 (measured 2026-11-23: test_a_unit_a_test_run_starts_is_the_runs reds 'loop killed gone=False state=failed' once superclaude.py launches through service_spawn).",
+    "what": "launch.service_spawn starts a unit that a test run asked for (its env carries CAIRN_TESTER_TEST_ID) with CollectMode=inactive-or-failed, so a failed test unit is collected the way the shell superclaude's were."
+  },
+  "block": "skill:intent",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "The Python port of superclaude dropped the shell's CollectMode mark on test-run units; systemd refuses to set it after start, so it belongs in launch.service_spawn."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "4f8144869fe0",
+  "skill": "intent",
+  "title": "launch.service_spawn starts a unit that a test run asked for (its env carries CAIRN_TESTER_TEST_ID) with CollectMode=ina",
+  "trace_id": "259979fd3dc9",
+  "when": "2026-11-23T18:20:54.054266"
+}

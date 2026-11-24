@@ -1,0 +1,32 @@
+{
+  "answers": {
+    "assumption_check": "Two assumptions carry load. (1) Every caller that starts a unit for a test run passes CAIRN_TESTER_TEST_ID in env=: measured, superclaude.py builds mark from env and hands it to service_spawn for both the ground loop and the web unit (superclaude.py:464-481), and it is the only caller outside proofs (grep service_spawn under cairn/ and bin/). (2) CollectMode is accepted by systemd-run -p on this systemd: the shell passed it there for months (ef541167c:cairn/devices/cc/superclaude:624), and set-property refusing it after start was measured 2026-11-23. Neither is left implicit.",
+    "builder_check": "A Haiku builder needs: the exact line (in service_spawn's systemd branch, extend cmd with ['-p', 'CollectMode=inactive-or-failed'] when (env or {}).get('CAIRN_TESTER_TEST_ID')); that the reset-failed retry reuses cmd and so carries it too; the proof's argv (sys.executable -c 'import sys; sys.exit(3)'), unit names cairn-proof-collect-<pid>-<n>, a 10s poll of systemctl --user show -p LoadState, and a finally that stops and reset-fails both units; and that the proof must not run under a test id it inherits for clause 2, so it strips CAIRN_TESTER_TEST_ID from the env it passes. All of this is in the ticket's decisions.",
+    "children": "none, because the change is one argv extension in cairn/devices/system_rackmount/tools/launch/launch.py plus its proof",
+    "collision_check": "Tickets d50d162c5428 and f04d5ef26a48 want a test run's units collected; outside a run the manager's default CollectMode is kept (f04d5ef26a48's tooth 4), and clause 2 holds that. The launch charter's why (every OS answer in the system device, RULE 1) is served: the property rides the one door that starts units instead of a second spawner in superclaude.py. No collision.",
+    "disposition": "cast",
+    "exit": "routed_forward",
+    "falsifier_check": "Clause 1: with CAIRN_TESTER_TEST_ID in env, a unit whose argv exits non-zero is gone (LoadState not-found) within 10s. Clause 2: with no test id, the same failing unit stays loaded with ActiveState failed (the proof then reset-fails it). Horizon: this proof, red-first on main (clause 1 red, clause 2 green), green after the build; then e179281f6eff's test_a_failed_unit_of_a_run_collects_itself reads green.",
+    "gates_bound": "proved by the tester: a new proof cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py with PROVES keyed to this ticket, one tooth per clause, red-first on main, then hollow and clearance at PROVED; a red feeds back to origin through FIXME.",
+    "missing_check": "The setsid and Windows branches start no unit, so there is nothing to collect there; the proof prints UNMEASURED off systemd --user, as the existing launch proof does for teeth 2 and 3. The held path starts nothing and is untouched. Nothing asserted-wrapped is open.",
+    "node_class": "code-seam",
+    "questions": "none, because the shell's settled behaviour (cairn/devices/cc/superclaude at ef541167c, lines 623-624) is the spec, and cairn/devices/cairn/requirements/10-cc-device.md 10.3.2.1 makes superclaude.py its replacement",
+    "task_or_ticket": "ticket",
+    "title": "launch.service_spawn marks a test run's unit collectable, so a failed test unit is collected",
+    "watchme": "none, because its proof (cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py) is the whole of its correctness, and its live consumer is cairn/devices/recovery/proofs/test_a_unit_a_test_run_starts_is_the_runs.py, which every reseal runs",
+    "workflow": "code-seam@v2: THINKME -> [TICKETME:waiting] -> BUILDME -> PROVEME -> PROVED"
+  },
+  "block": "skill:sorted",
+  "bullets": [
+    {
+      "stratum": "code",
+      "text": "superclaude.py's port lost the shell's CollectMode mark on test units; it lands in launch.service_spawn, the one door that starts units."
+    }
+  ],
+  "exit": "routed_forward",
+  "finding_id": "3ccd0ae7e13b",
+  "skill": "sorted",
+  "title": "launch.service_spawn marks a test run's unit collectable, so a failed test unit is collected",
+  "trace_id": "b5ee349da1a6",
+  "when": "2026-11-23T18:21:30.358021"
+}

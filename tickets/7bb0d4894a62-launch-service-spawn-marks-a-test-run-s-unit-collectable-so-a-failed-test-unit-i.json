@@ -1,0 +1,65 @@
+{
+  "id": "7bb0d4894a62",
+  "title": "launch.service_spawn marks a test run's unit collectable, so a failed test unit is collected",
+  "owning_intention": "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+  "intention": "launch.service_spawn starts a unit whose env carries CAIRN_TESTER_TEST_ID with CollectMode=inactive-or-failed, so a test run's failed unit is collected; outside a run the default is kept.",
+  "why": "Measured 2026-11-23 building e179281f6eff: once superclaude.py launches the ground loop through service_spawn, test_a_unit_a_test_run_starts_is_the_runs reds 'loop killed gone=False state=failed'. The shell passed -p CollectMode=inactive-or-failed under a test id (ef541167c:cairn/devices/cc/superclaude:623-624); service_spawn cannot, and systemctl set-property refuses CollectMode after start. e179281f6eff waits on this ticket.",
+  "traces_to": "Law 2 (a test run leaves no unit of its own, tickets d50d162c5428 and f04d5ef26a48) and RULE 1 (every OS action through the system device's launch tool).",
+  "how": "Extend service_spawn's systemd-run argv with -p CollectMode=inactive-or-failed when env carries CAIRN_TESTER_TEST_ID; a red-first proof spawns a failing argv with and without the id.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with CAIRN_TESTER_TEST_ID in the env passed to service_spawn, a unit whose process exits non-zero is gone (LoadState not-found) within 10s"
+      },
+      {
+        "n": 2,
+        "claim": "with no CAIRN_TESTER_TEST_ID in that env, the same failing unit stays loaded with ActiveState failed"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: in service_spawn's systemd branch, cmd gains ['-p','CollectMode=inactive-or-failed'] when (env or {}).get('CAIRN_TESTER_TEST_ID'); the reset-failed retry reuses cmd and carries it too. No other branch changes.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/launch/launch.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the proof spawns [sys.executable,'-c','import sys; sys.exit(3)'] as cairn-proof-collect-<pid>-<n>, once with CAIRN_TESTER_TEST_ID and once with it stripped from env and os.environ's copy, polls systemctl --user show -p LoadState -p ActiveState for 10s, and in a finally stops and reset-fails both. Off systemd --user it prints UNMEASURED and exits 0.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/system_rackmount/tools/launch/launch.py",
+      "cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py"
+    ],
+    "out": [
+      "cairn/devices/cc/superclaude.py (e179281f6eff's)",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "systemctl --user set-property --runtime <unit>.service CollectMode=inactive-or-failed: 'Cannot set property CollectMode, or unknown property.'; the killed unit stayed loaded/failed",
+      "how": "systemd-run --user a sleep unit, set-property, kill -s KILL, show LoadState ActiveState"
+    },
+    {
+      "when": "2026-11-23",
+      "saw": "test_a_failed_unit_of_a_run_collects_itself: loop killed gone=False state='failed' with superclaude.py; green on ef541167c with the shell",
+      "how": "the proof run in wt-e179 and in a worktree at ef541167c"
+    }
+  ]
+}
