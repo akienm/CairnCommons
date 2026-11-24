@@ -57,5 +57,158 @@
       "saw": "1 non-proof file(s) in cairn/tools/proof_coverage call subprocess without helper keywords: proof_coverage.py",
       "how": "grep -rlE subprocess.(run|Popen|call|check_output|check_call) over cairn, bin and skills, minus proofs, then a check for detached_kwargs or windowless_kwargs in each, grouped by nearest intention+why.json"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "8f6d8d9b647b: cairn/tools/proof_coverage takes its spawn flags from windowless_spawn, so none of its subprocess calls opens a console window",
+      "intent": "Every subprocess call in cairn/tools/proof_coverage's proof_coverage.py takes windowless_kwargs() from cairn.tools.windowless_spawn, so none opens a visible console on Windows; proof_coverage.py still imports and answers.",
+      "scope": "in: cairn/tools/proof_coverage/proof_coverage.py, cairn/tools/proof_coverage/proofs/test_proof_coverage_takes_its_spawn_flags_from_the_helper.py; out: every other component, cairn/tools/windowless_spawn",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Every component talks to every other only through its public interface: proof_coverage reaches windowless_spawn by its published helper.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/tools/proof_coverage/proof_coverage.py",
+          "cairn/tools/proof_coverage/proofs/test_proof_coverage_takes_its_spawn_flags_from_the_helper.py"
+        ],
+        "out": [
+          "every other component",
+          "cairn/tools/windowless_spawn"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which proof_coverage spawn sites lack the helper's keywords, by the helper's own scanner unhelped_sites"
+      ],
+      "holdings": [
+        {
+          "what": "proof_coverage.py under change",
+          "address": "cairn/tools/proof_coverage"
+        },
+        {
+          "what": "the helper that names the keywords",
+          "address": "cairn/tools/windowless_spawn/windowless_spawn.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a proof that scans cairn/tools/proof_coverage for unhelped spawn sites",
+          "measure": "run the proof before the edit and read both teeth red (measured red 2026-11-23 on akiendell: proof_coverage.py named)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1+D2: windowless_kwargs() on every subprocess call in proof_coverage.py, and the proof that scans proof_coverage",
+          "why": "Akien 2026-11-20: popups while he works are annoying; measured that proof_coverage.py spawns with no helper keywords.",
+          "kind": "build",
+          "fills": "a proof that scans cairn/tools/proof_coverage for unhelped spawn sites",
+          "uses": [
+            "cairn/tools/windowless_spawn/windowless_spawn.py"
+          ],
+          "writes_to": [
+            "cairn/tools/proof_coverage/proof_coverage.py",
+            "cairn/tools/proof_coverage/proofs/test_proof_coverage_takes_its_spawn_flags_from_the_helper.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1+D2: windowless_kwargs() on every subprocess call in proof_coverage.py, and the proof that scans proof_coverage",
+          "why_now": "built red-first on akiendell/8f6d-windowless 459db7d92: both teeth red before, green after; the 11 existing proof_coverage proofs read the same before and after (8 green, 2 red; the 2 reds were red before the edit)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1+D2: windowless_kwargs() on every subprocess call in proof_coverage.py, and the proof that scans proof_coverage",
+          "expect": "unhelped_sites over cairn/tools/proof_coverage names nothing; proof_coverage imports and still answers.",
+          "falsifier": "(1) unhelped_sites over cairn/tools/proof_coverage names a file; (2) proof_coverage fails to import or loses its helper keywords",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/tools/proof_coverage/proofs/test_proof_coverage_takes_its_spawn_flags_from_the_helper.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of the proof passes where it runs, one per falsifier clause",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/tools/proof_coverage/proofs/test_proof_coverage_takes_its_spawn_flags_from_the_helper.py",
+          "timeout_s": 300,
+          "covers": [
+            "D1+D2: windowless_kwargs() on every subprocess call in proof_coverage.py, and the proof that scans proof_coverage"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
