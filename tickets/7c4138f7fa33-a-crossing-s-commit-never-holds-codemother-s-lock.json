@@ -1,0 +1,69 @@
+{
+  "id": "7c4138f7fa33",
+  "title": "a crossing's commit never holds codemother's lock",
+  "owning_intention": "cairn/devices/codemother/machines/clearance/intention+why.json",
+  "intention": "Clearance's queueme hands the crossing to the gate's own worker and returns at once, and the worker replies to the asker by reply_to when the crossing (and its records' commit) is done, so every other codemother ask is answered while a crossing's commit and its pre-commit reseal run.",
+  "why": "Measured 2026-11-24 on akiendelllinux: b03dce633aa8's PROVEME queueme ran ticket.passed inline, and commit_crossing_records' git commit (pid 84628) ran 7m56s and counting under the pre-commit reseal (pid 84674, cairn.devices.tester.cli --reseal --stage). Meanwhile the asker's reach timed out at 120 s and a hollow's resolves_to ask to codemother timed out at 300 s ('no reply to envelope 8b20ec6c… from codemother within 300.0s'). e4714e460e32 took chart and verdict stages off the shim lock; clearance was not among them.",
+  "traces_to": "Law 7 — the starvation is loud only because 11d79defab3b made it so; CP1 — a gate that cannot answer while it is busy elsewhere answers nobody.",
+  "how": "Copy chart_gate's per-stage FIFO worker (_WORKERS, reply_to) into the clearance gate: queueme validates the fileref and answers queued at once; one worker drains the FIFO, running today's body unchanged and posting the dict it returns today to the asker by reply_to. A red-first proof drives a crossing whose records sit in a scratch git repo with a sleeping pre-commit hook.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "while a crossing's commit takes 30 s (a scratch repo whose pre-commit hook sleeps), a second ask to the clearance device is answered within 5 s"
+      },
+      {
+        "n": 2,
+        "claim": "the queueme asker receives the crossing's answer (the workflow, or the refusal) by reply_to once the commit lands, the same dict queueme returns today"
+      },
+      {
+        "n": 3,
+        "claim": "two queuemes for one ticket cross in the order sent, the second starting only after the first's commit lands"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the clearance gate's queueme validates the fileref, enqueues the envelope on the gate's one FIFO, and answers {accepted: true, queued: true, ticket}; one worker per process runs today's body and posts its answer by reply_to, as chart_gate does (cairn/devices/codemother/machines/chart_gate/gate.py lines 38-77).",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/gate.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/gate.py",
+        "cairn/devices/codemother/machines/chart_gate/gate.py",
+        "cairn/machines/ticket/ticket.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: a red-first proof, one tooth per clause, drives the gate in-process over a scratch commons and a scratch git repo whose pre-commit hook sleeps 30 s.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/clearance/proofs/test_a_crossings_commit_never_holds_codemothers_lock.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/clearance/proofs/test_a_clearance_refusal_to_fixme_leaves_its_records_committed.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/clearance/gate.py",
+      "cairn/devices/codemother/machines/clearance/proofs/test_a_crossings_commit_never_holds_codemothers_lock.py"
+    ],
+    "out": [
+      "cairn/machines/ticket/ticket.py (commit_crossing_records stands)",
+      "the pre-commit reseal and its budget",
+      "cairn/devices/codemother/machines/chart_gate",
+      "sail.py's reach timeout",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-24",
+      "saw": "clearance did not answer b03dce633aa8 within 120s; ps showed pid 84628 `git -C .../outline_check commit -q -m crossing records: b03dce633aa8 passed into PROVEME` at 07:56 elapsed with child 84674 `cairn.devices.tester.cli --reseal --stage`; a concurrent `cairn test --hollow` failed 'inspect resolves_to refused: no reply ... from codemother within 300.0s'; the crossing landed once the commit finished (83c80dbeb)",
+      "how": "sail.py cross b03dce633aa8; ps -p 84628 -o pid,etime,args; bin/cairn test --hollow b03dce633aa8 --seal"
+    }
+  ]
+}
