@@ -1,0 +1,58 @@
+{
+  "id": "3213aed6b00c",
+  "title": "a commit seals a proof it adds",
+  "intention": "The pre-commit reseal runs a staged proof file that has no seal yet, as one of the proofs of the component that owns it, so a commit that adds a proof lands with that proof's seal.",
+  "why": "Measured 2026-11-24 on akiendelllinux (cairn dde12e2d0): proofs_touching (cairn/devices/tester/reseal.py:339) chooses from census() (:299), and census builds its rows only from validations/*.json, so a proof with no validation is never a row and no commit runs it. On 11-24 the red-first teeth of 0d98f7325181 and f5859eae9e08 were committed as new files (a92ca9d99, f64e95bfe) and landed with no seal; both were sealed by hand (79ca822c5). The orchestrator counts n=4 across the 11-21..11-24 voyages. Recorded at ~/.cairn/devices/cc/0/measurements/land-hook-gaps-2026-11-24.md.",
+  "how": "In proofs_touching, a staged path matching <component>/proofs/test_*.py that census holds no row for is added to the result, so reseal_all runs it and --stage stages its first seal. A red-first proof seals red, which is the seal it should carry.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over a scratch repo, proofs_touching of a staged new proofs/test_x.py with no validation returns that proof"
+      },
+      {
+        "n": 2,
+        "claim": "a staged non-proof file with no validation adds no proof, and a staged sealed proof is returned exactly once"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/tester/reseal.py proofs_touching adds a staged proof file the census does not hold.",
+      "writes_to": [
+        "cairn/devices/tester/reseal.py"
+      ],
+      "reads": [
+        "cairn/devices/tester/reseal.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/tester/proofs/test_a_commit_seals_a_proof_it_adds.py, one PROVES key per clause, over a scratch repo.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_a_commit_seals_a_proof_it_adds.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/reseal.py",
+      "cairn/devices/tester/proofs/test_a_commit_seals_a_proof_it_adds.py"
+    ],
+    "out": [
+      "the hook script (the ruling is its own ticket)",
+      "census() itself (its other readers want sealed rows only)"
+    ]
+  },
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "traces_to": "Law 8 (a proof enters proven-space with its seal, taken by the tester, not by a hand that remembered) and Law 4 (the reseal door is physics; a gap a hand fills each time is policy).",
+  "measured": [
+    {
+      "when": "2026-11-24",
+      "saw": "Measured 2026-11-24 on akiendelllinux (cairn dde12e2d0): proofs_touching (cairn/devices/tester/reseal.py:339) chooses from census() (:299), and census builds its rows only from validations/*.json, so a proof with no validation is never a row and no commit runs it. On 11-24 the red-first teeth of 0d98f7325181 and f5859eae9e08 were committed as new files (a92ca9d99, f64e95bfe) and landed with no seal; both were sealed by hand (79ca822c5). The orchestrator counts n=4 across the 11-21..11-24 voyages. Recorded at ~/.cairn/devices/cc/0/measurements/land-hook-gaps-2026-11-24.md.",
+      "how": "read of cairn/devices/tester/reseal.py and cairn/devices/tester/hooks/pre-commit on main dde12e2d0 and the 11-24 voyage logs, recorded at ~/.cairn/devices/cc/0/measurements/land-hook-gaps-2026-11-24.md"
+    }
+  ]
+}

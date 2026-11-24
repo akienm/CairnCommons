@@ -1,0 +1,59 @@
+{
+  "id": "1515f3b2ee29",
+  "title": "the commit's reseal carries the landing ticket as its ruling",
+  "intention": "The pre-commit hook passes CAIRN_RESEAL_RULING, when the landing hand sets it, to the reseal as --ruling, so a build commit under an open repair ladder lands its seal when rung 4 admits that ticket; rung4_refusal still judges the id.",
+  "why": "Measured 2026-11-24 on akiendelllinux (cairn dde12e2d0): the hook runs `cli --reseal --stage` (cairn/devices/tester/hooks/pre-commit) and names no ruling, while the cli takes --ruling beside --stage (cli.py:585, since e8be83a46ea9). On 11-24 b563bf636e5d's build commit was refused at rung 4 on test_scratch.py and resealed by hand with --ruling b563bf636e5d. Recorded at ~/.cairn/devices/cc/0/measurements/land-hook-gaps-2026-11-24.md.",
+  "how": "In the hook, if CAIRN_RESEAL_RULING is non-empty, append --ruling \"$CAIRN_RESEAL_RULING\" to the reseal call; unset, the call is unchanged. The ladder's own judge decides whether the id admits the change; the hook only carries it. The installed copy follows by `cairn test --reseal-install`.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "run with a stub python in a scratch repo and CAIRN_RESEAL_RULING=<id>, the hook calls the reseal with --ruling <id>"
+      },
+      {
+        "n": 2,
+        "claim": "with CAIRN_RESEAL_RULING unset or empty, the hook calls the reseal with no --ruling, as before"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/devices/tester/hooks/pre-commit appends --ruling from CAIRN_RESEAL_RULING when set.",
+      "writes_to": [
+        "cairn/devices/tester/hooks/pre-commit"
+      ],
+      "reads": [
+        "cairn/devices/tester/hooks/pre-commit",
+        "cairn/devices/tester/cli.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/tester/proofs/test_the_commit_reseal_carries_the_landing_ruling.py, one PROVES key per clause.",
+      "writes_to": [
+        "cairn/devices/tester/proofs/test_the_commit_reseal_carries_the_landing_ruling.py"
+      ],
+      "reads": []
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/tester/hooks/pre-commit",
+      "cairn/devices/tester/proofs/test_the_commit_reseal_carries_the_landing_ruling.py"
+    ],
+    "out": [
+      "rung4_refusal (unchanged: it still judges the id)",
+      "sail.py (a build commit is the landing hand's own git commit; sail makes none)"
+    ]
+  },
+  "owning_intention": "cairn/devices/tester/intention+why.json",
+  "traces_to": "Law 8 (a proof enters proven-space with its seal, taken by the tester, not by a hand that remembered) and Law 4 (the reseal door is physics; a gap a hand fills each time is policy).",
+  "measured": [
+    {
+      "when": "2026-11-24",
+      "saw": "Measured 2026-11-24 on akiendelllinux (cairn dde12e2d0): the hook runs `cli --reseal --stage` (cairn/devices/tester/hooks/pre-commit) and names no ruling, while the cli takes --ruling beside --stage (cli.py:585, since e8be83a46ea9). On 11-24 b563bf636e5d's build commit was refused at rung 4 on test_scratch.py and resealed by hand with --ruling b563bf636e5d. Recorded at ~/.cairn/devices/cc/0/measurements/land-hook-gaps-2026-11-24.md.",
+      "how": "read of cairn/devices/tester/reseal.py and cairn/devices/tester/hooks/pre-commit on main dde12e2d0 and the 11-24 voyage logs, recorded at ~/.cairn/devices/cc/0/measurements/land-hook-gaps-2026-11-24.md"
+    }
+  ]
+}
