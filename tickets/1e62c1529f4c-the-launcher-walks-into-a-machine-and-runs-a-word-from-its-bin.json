@@ -1,0 +1,74 @@
+{
+  "id": "1e62c1529f4c",
+  "title": "the launcher walks into a machine and runs a word from its bin",
+  "owning_intention": "bin/intention+why.json",
+  "intention": "`cairn <device> <machine> [<machine> ...] <word> args` steps into cairn/devices/<device>/machines/<machine>/ for each word naming a machine there, and runs <word> from the innermost machine's bin/ with the rest as argv.",
+  "why": "Measured 2026-11-24 on akiendelllinux (cairn dde12e2d0): outline 5.4.3.2 says the launcher, at each level, asks 'is the next word a machine here? Step into it and take the next word', so `cairn foo bar baz` runs baz from machine bar's bin/. bin/cairn.py has no machine lookup (grep 'machine' in it returns nothing): after the device it checks only cairn/devices/<device>/bin/<word> (class_word) and the instance bin. Three cast launcher tickets put the walk out of bounds and none casts it: 30366e99655a, 211facd306d7, ba777080011b (bounds.out 'the machine walk of 5.4.3.2'). Found when df6d835d2cb3 needed sudo_relay's shortcut in its machine bin/ (outline 5.4.3.7) and outlinecheck open-96f92cb3a322 reded the device-bin workaround. Recorded at ~/.cairn/devices/cc/0/measurements/launcher-machine-walk-2026-11-24.md.",
+  "traces_to": "Law 5 (a shortcut lives at the address of what it serves) and RULE 1 (outline 5.4.3.3: shortcuts live beside what they serve).",
+  "how": "In bin/cairn.py, just before the class_word check: for any instance (2.3.4.2: nothing in a device's code differs by instance), when rest[0] names a directory CLASS_ROOT/<device>/machines/<rest[0]>, step into it and drop the word; repeat while the next word names a directory under that level's machines/. Then, if the next word is a script in that level's bin/ (_is_script), _run it with the remaining words. Stepped into a machine but the next word is no script in that level's bin/ (or there is none): it is a bus verb to that level (5.4.3.2), and a message addresses a device instance (5.5.3.10) whose boundary holds its machines (2.3.2.1), so the launcher sends the words unchanged to the device's bus mouth, machine words first: _bus(bus_name, rest) with rest as typed, the device answering for its machine. A first word naming no machine leaves today's path untouched. Red-first proof over a scratch CAIRN_CLASS_ROOT, as bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py does.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "with a scratch class root whose <device>/machines/m/bin holds an executable `go`, `cairn <device> m go a b` runs it with argv a b and its exit code is the command's"
+      },
+      {
+        "n": 2,
+        "claim": "with <device>/machines/m/machines/n/bin/go, `cairn <device> m n go a` runs the nested script with argv a"
+      },
+      {
+        "n": 3,
+        "claim": "`cairn <device> m nope x` reaches the bus mouth with argv ['<device>', 'm', 'nope', 'x'], and no machine-bin script runs"
+      },
+      {
+        "n": 4,
+        "claim": "a first word naming no machine still reaches the device class bin and the bus mouth as before, and bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py passes unchanged"
+      },
+      {
+        "n": 5,
+        "claim": "`cairn <device>.1 m go a` runs the same machine script with argv a"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: the machine walk in bin/cairn.py main(), before class_word, for every instance.",
+      "writes_to": [
+        "bin/cairn.py"
+      ],
+      "reads": [
+        "bin/cairn.py",
+        "bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: bin/proofs/test_the_launcher_walks_into_a_machine.py, one PROVES key per clause, scratch CAIRN_INSTANCE_ROOT and CAIRN_CLASS_ROOT, bus mouth stubbed by CAIRN_BUS_MOUTH.",
+      "writes_to": [
+        "bin/proofs/test_the_launcher_walks_into_a_machine.py"
+      ],
+      "reads": [
+        "bin/proofs/test_the_launcher_reads_the_bin_beside_the_code.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "bin/cairn.py",
+      "bin/proofs/test_the_launcher_walks_into_a_machine.py"
+    ],
+    "out": [
+      "help listing a machine's bin/ (211facd306d7, ba777080011b's lane)",
+      "moving any shortcut into a machine bin/ (df6d835d2cb3 does sudo_relay's)",
+      "how a device's bus answers a verb whose first word names one of its machines: the device's own handler, not the launcher"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-24",
+      "saw": "Measured 2026-11-24 on akiendelllinux (cairn dde12e2d0): outline 5.4.3.2 says the launcher, at each level, asks 'is the next word a machine here? Step into it and take the next word', so `cairn foo bar baz` runs baz from machine bar's bin/. bin/cairn.py has no machine lookup (grep 'machine' in it returns nothing): after the device it checks only cairn/devices/<device>/bin/<word> (class_word) and the instance bin. Three cast launcher tickets put the walk out of bounds and none casts it: 30366e99655a, 211facd306d7, ba777080011b (bounds.out 'the machine walk of 5.4.3.2'). Found when df6d835d2cb3 needed sudo_relay's shortcut in its machine bin/ (outline 5.4.3.7) and outlinecheck open-96f92cb3a322 reded the device-bin workaround. Recorded at ~/.cairn/devices/cc/0/measurements/launcher-machine-walk-2026-11-24.md.",
+      "how": "read of outline 5.4.3.2-5.4.3.7, grep of bin/cairn.py, bounds.out of the three launcher tickets, recorded at ~/.cairn/devices/cc/0/measurements/launcher-machine-walk-2026-11-24.md"
+    }
+  ]
+}
