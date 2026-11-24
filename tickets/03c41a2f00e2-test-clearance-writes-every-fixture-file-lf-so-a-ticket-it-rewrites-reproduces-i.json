@@ -29,29 +29,164 @@
     {
       "n": 1,
       "claim": "every write_text call in test_clearance.py passes newline='\\n' (ast), where 14 of 16 write_text/write_bytes calls did not",
-      "writes_to": [],
-      "reads": [],
-      "after": []
-    },
-    {
-      "n": 2,
-      "text": "newline=\"\\n\" on every write_text in test_clearance.py.",
       "writes_to": [
-        "cairn/devices/codemother/machines/clearance/proofs/test_clearance.py"
+        "cairn/devices/codemother/machines/clearance/proofs/test_clearance.py",
+        "cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py"
       ],
       "reads": [
         "cairn/devices/codemother/machines/clearance/proofs/test_clearance.py"
       ],
       "after": []
-    },
-    {
-      "n": 3,
-      "text": "one ast proof, one tooth per clause; red first.",
-      "writes_to": [
-        "cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py"
-      ],
-      "reads": [],
-      "after": []
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "03c41a2f00e2: test_clearance writes every fixture file LF, so a ticket it rewrites reproduces its bytes on Windows",
+      "intent": "Every write_text in test_clearance.py passes newline='\n', so its fixtures are LF bytes on every box.",
+      "scope": "in: cairn/devices/codemother/machines/clearance/proofs/test_clearance.py, cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py; out: every other component",
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "constraints": [
+        {
+          "text": "Nothing is known until measured. An unmeasured claim is a hypothesis and is labeled as one.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "Nothing enters proven-space without a proof a hollow build couldn't pass.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        },
+        {
+          "text": "test_clearance.py changes only its own fixture writes; no other component is touched.",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/codemother/machines/clearance/proofs/test_clearance.py",
+          "cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py"
+        ],
+        "out": [
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "sought": [
+        "which write_text calls in test_clearance.py lack newline LF"
+      ],
+      "holdings": [
+        {
+          "what": "test_clearance.py write_text calls",
+          "address": "cairn/devices/codemother/machines/clearance/proofs/test_clearance.py"
+        },
+        {
+          "what": "the ast proof",
+          "address": "cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a Windows measurement of the ast proof: red before the last fix, green after",
+          "measure": "run the proof on akiendell before the line-2130 fix and read 0/1 red (line 2130 named), after read 1/1 green (measured 2026-11-23, 1b8267599)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "sub_problems": [
+        {
+          "what": "D1+D2: newline LF on every write_text in test_clearance.py (the last, line 2130, on akiendell 1b8267599) and the ast proof",
+          "why": "Measured 2026-11-13 on akiendell: a CRLF fixture ticket makes _send_to_fixme fail with IllegalTransition; Linux covered 15 of 16 calls, Windows found the 16th.",
+          "kind": "build",
+          "fills": "a Windows measurement of the ast proof: red before the last fix, green after",
+          "uses": [],
+          "writes_to": [
+            "cairn/devices/codemother/machines/clearance/proofs/test_clearance.py",
+            "cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "order": [
+        {
+          "what": "D1+D2: newline LF on every write_text in test_clearance.py (the last, line 2130, on akiendell 1b8267599) and the ast proof",
+          "why_now": "measured on akiendell 2026-11-23: ast proof 0/1 red (line 2130) before, 1/1 green after; test_clearance.py green before and after"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "hypotheses": [
+        {
+          "piece": "D1+D2: newline LF on every write_text in test_clearance.py (the last, line 2130, on akiendell 1b8267599) and the ast proof",
+          "expect": "every write_text call in test_clearance.py passes newline LF.",
+          "falsifier": "(1) a write_text call in test_clearance.py lacks newline LF",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "criteria": [
+        {
+          "claim": "every tooth of the proof passes where it runs, one per falsifier clause",
+          "instrument": "PYTHONUTF8=1 PYTHONPATH=. python bin/cairn.py test --seal cairn/devices/codemother/machines/clearance/proofs/test_clearance_writes_every_fixture_lf.py",
+          "timeout_s": 300,
+          "covers": [
+            "D1+D2: newline LF on every write_text in test_clearance.py (the last, line 2130, on akiendell 1b8267599) and the ast proof"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.85,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
