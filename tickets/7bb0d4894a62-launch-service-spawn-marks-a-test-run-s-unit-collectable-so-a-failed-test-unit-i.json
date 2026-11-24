@@ -61,5 +61,212 @@
       "saw": "test_a_failed_unit_of_a_run_collects_itself: loop killed gone=False state='failed' with superclaude.py; green on ef541167c with the shell",
       "how": "the proof run in wt-e179 and in a worktree at ef541167c"
     }
-  ]
+  ],
+  "chart": {
+    "orient": {
+      "request": "launch.service_spawn starts a unit whose env carries CAIRN_TESTER_TEST_ID with CollectMode=inactive-or-failed, so a test run's failed unit is collected; outside a run the default is kept.",
+      "intent": "In cairn/devices/system_rackmount/tools/launch/launch.py's service_spawn, the systemd-run branch adds -p CollectMode=inactive-or-failed when the env handed to the unit carries CAIRN_TESTER_TEST_ID, restoring for superclaude.py the mark the shell superclaude gave a test run's units (ef541167c:cairn/devices/cc/superclaude:623-624; the prior orient for f04d5ef26a48's ask, orient-20261005T214203-6c951759bdb9, is the same aim at the shell). A new proof at the launch tool spawns a failing argv with and without the id.",
+      "scope": "IN: launch.py's service_spawn systemd branch (its reset-failed retry reuses the same cmd) and the new proof cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py. OUT: superclaude.py and every caller (e179281f6eff's); the setsid and Windows branches (they start no unit); scoped_argv/scoped_exec; the existing launch proof (read only, must stay 4/4).",
+      "ticket": "7bb0d4894a62",
+      "unknowns": [
+        "whether any service_spawn caller in a test run passes the test id only through os.environ rather than env= (superclaude.py passes it in env=; it is the only non-proof caller measured)"
+      ],
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "tree",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "intent_ref": "/home/akien/.cairn/devices/chart/0/packets/orient-20261123T183335-f8172bd2254b.json",
+      "ticket": "7bb0d4894a62",
+      "constraints": [
+        {
+          "text": "Red if an answer differs from the bash on the same box for the same input; if a second spawn of a running unit starts anything; if a scoped child's memory.max differs from the cap passed; if a result's how is empty or outside the stated set (launch charter falsifier): the existing launch proof must stay 4/4",
+          "source": "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+          "kind": "charter"
+        },
+        {
+          "text": "sole_path: the tool imports no module that can dial; the change adds an argv element only",
+          "source": "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+          "kind": "charter"
+        },
+        {
+          "text": "a test run's units carry its test id and collect themselves on failure; outside a run the units keep the manager's default CollectMode",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/f04d5ef26a48-a-unit-a-test-run-starts-is-the-runs.json",
+          "kind": "ticket"
+        },
+        {
+          "text": "bounds.in is launch.py and the new proof only; superclaude.py is e179281f6eff's and out",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/7bb0d4894a62-launch-service-spawn-marks-a-test-run-s-unit-collectable-so-a-failed-test-unit-i.json",
+          "kind": "ticket"
+        },
+        {
+          "text": "RULE 1: a proof measures only its own component; every OS action goes through the system device's published launch tool",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "cairn/devices/system_rackmount/tools/launch/launch.py service_spawn systemd branch",
+          "cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py"
+        ],
+        "out": [
+          "cairn/devices/cc/superclaude.py and every caller",
+          "service_spawn's setsid and Windows branches",
+          "scoped_argv and scoped_exec",
+          "the existing launch proof (read only)",
+          "the launch charter's wording"
+        ]
+      },
+      "unknowns": [
+        "whether a caller in a test run passes the test id only through os.environ (only superclaude.py measured; it uses env=)"
+      ],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "constrain_ref": "/home/akien/.cairn/devices/chart/0/packets/constrain-20261123T183406-7a6d748bd60f.json",
+      "ticket": "7bb0d4894a62",
+      "sought": [
+        "service_spawn's systemd-run argv and its reset-failed retry",
+        "every non-proof caller of service_spawn and how it passes the test id",
+        "the shell superclaude's CollectMode mark",
+        "an existing proof that a test run's service_spawn unit is collected",
+        "whether CollectMode can be set after a unit starts"
+      ],
+      "holdings": [
+        {
+          "what": "service_spawn builds one cmd for systemd-run and reuses it for the reset-failed retry; envs = env plus HOME and PATH",
+          "address": "cairn/devices/system_rackmount/tools/launch/launch.py"
+        },
+        {
+          "what": "the existing launch proof (4 teeth, 60f16ffccd43): a service spawn holds its unit name",
+          "address": "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+        },
+        {
+          "what": "superclaude.py hands service_spawn env=mark, mark carrying CAIRN_TESTER_TEST_ID when set, for the ground loop and the web unit",
+          "address": "cairn/devices/cc/superclaude.py"
+        },
+        {
+          "what": "the consumer tooth test_a_failed_unit_of_a_run_collects_itself",
+          "address": "cairn/devices/recovery/proofs/test_a_unit_a_test_run_starts_is_the_runs.py"
+        },
+        {
+          "what": "the launch tool's charter",
+          "address": "cairn/devices/system_rackmount/tools/launch/intention+why.json"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a CollectMode property in service_spawn's systemd-run argv",
+          "measure": "grep -n CollectMode cairn/devices/system_rackmount/tools/launch/*.py returned nothing at ef541167c"
+        },
+        {
+          "what": "a proof that a test run's service_spawn unit is collected when it fails",
+          "measure": "grep -rn CollectMode cairn/devices/system_rackmount/tools/launch/proofs/ returned nothing; the new proof reds tooth 1 at ef541167c (state loaded/failed after 10s)"
+        },
+        {
+          "what": "a way to set CollectMode after start",
+          "measure": "systemctl --user set-property --runtime <unit>.service CollectMode=inactive-or-failed exited 1: 'Cannot set property CollectMode, or unknown property.' (2026-11-23)"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "survey_ref": "/home/akien/.cairn/devices/chart/0/packets/survey-20261123T183425-565acdc97340.json",
+      "ticket": "7bb0d4894a62",
+      "sub_problems": [
+        {
+          "what": "write the red-first proof that a test run's failing unit is collected and one outside a run stays failed",
+          "why": "D2: the proof must red on main before the build, so the change is measured, not narrated",
+          "kind": "build",
+          "fills": "a proof that a test run's service_spawn unit is collected when it fails",
+          "uses": [
+            "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py"
+          ]
+        },
+        {
+          "what": "service_spawn adds CollectMode=inactive-or-failed when env carries CAIRN_TESTER_TEST_ID",
+          "why": "D1: the property must ride the start, since set-property refuses it afterwards; the retry reuses cmd and carries it",
+          "kind": "build",
+          "fills": "a CollectMode property in service_spawn's systemd-run argv",
+          "uses": [
+            "cairn/devices/system_rackmount/tools/launch/launch.py"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/launch.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "decompose_ref": "/home/akien/.cairn/devices/chart/0/packets/decompose-20261123T183437-9d3ad84bcf0a.json",
+      "ticket": "7bb0d4894a62",
+      "order": [
+        {
+          "what": "write the red-first proof that a test run's failing unit is collected and one outside a run stays failed",
+          "why_now": "red-first: the proof must red on main before the build commit"
+        },
+        {
+          "what": "service_spawn adds CollectMode=inactive-or-failed when env carries CAIRN_TESTER_TEST_ID",
+          "why_now": "the build, measured by the proof that already reds"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "triage_ref": "/home/akien/.cairn/devices/chart/0/packets/triage-20261123T183456-bbc3813f5cd9.json",
+      "ticket": "7bb0d4894a62",
+      "hypotheses": [
+        {
+          "piece": "write the red-first proof that a test run's failing unit is collected and one outside a run stays failed",
+          "expect": "the new proof reds tooth 1 on main (the test-run unit stays loaded/failed after 10s) and tooth 2 reads green",
+          "falsifier": "tooth 1 green on main before the build, or tooth 2 red",
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py --seal at the red-first commit"
+        },
+        {
+          "piece": "service_spawn adds CollectMode=inactive-or-failed when env carries CAIRN_TESTER_TEST_ID",
+          "expect": "with the build both teeth read green, the existing launch proof stays 4/4, and e179281f6eff's test_a_failed_unit_of_a_run_collects_itself reads green once that ticket lands",
+          "falsifier": "tooth 1 still red, tooth 2 red (a unit outside a run collected), or the existing launch proof below 4/4",
+          "instrument": "bin/cairn test cairn/devices/system_rackmount/tools/launch/proofs/test_a_test_run_unit_is_collected_when_it_fails.py and cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py at the build commit"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
 }
