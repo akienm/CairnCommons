@@ -1,0 +1,246 @@
+{
+  "id": "4aafe74aff69",
+  "title": "the launch tool's proof reads its child's cgroup through the cgroup tool",
+  "owning_intention": "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+  "intention": "The launch tool's proof asks cairn/tools/cgroup for the scoped child's cgroup instead of reading /proc/self/cgroup itself, so cairn/tools/cgroup stays the sole reader the ground loop's proof holds it to.",
+  "why": "Measured 2026-11-24: cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py reds on main, its sole-reader check listing the launch tool's proof beside cairn/tools/cgroup/cgroup.py and its own proof. The reader came in with 60f16ffccd43 (PROVED), whose _READ_MAX constant spells its own read of /proc/self/cgroup. The red reds the recovery component, so every PROVED gate over recovery (e179281f6eff's first) is refused while it stands.",
+  "traces_to": "Law 9 — a red on main stays red until the code is fixed; RULE 1 — the read of /proc/<pid>/cgroup is the cgroup tool's, reached through its public interface.",
+  "how": "_READ_MAX puts the repo on sys.path and calls cairn.tools.cgroup.cgroup.cgroup_of() for the path it joins under /sys/fs/cgroup; no tooth changes in either proof.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "test_ground_loop_survives_its_caller.py's 'exactly one file READS /proc/<pid>/cgroup from python' check is green, its readers being cairn/tools/cgroup/cgroup.py and cairn/tools/cgroup/proofs/test_cgroup.py only"
+      },
+      {
+        "n": 2,
+        "claim": "test_the_launch_tool_answers_the_launch_paths_os_questions.py's test_a_scoped_exec_runs_under_the_memory_max_passed stays green, the child reading memory.max 104857600"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _READ_MAX (line 142) becomes a %-built string that does sys.path.insert(0, <repo>), imports cgroup_of from cairn.tools.cgroup.cgroup, and joins its answer under /sys/fs/cgroup; the parent child string formats it with %r as today.",
+      "writes_to": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+      ],
+      "reads": [
+        "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+        "cairn/tools/cgroup/cgroup.py",
+        "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+      "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+    ],
+    "out": [
+      "the ground loop proof's teeth and sanctioned readers",
+      "cairn/tools/cgroup",
+      "launch.py",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-24",
+      "saw": "test_ground_loop_survives_its_caller.py red on main: readers ['cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py', 'cairn/tools/cgroup/cgroup.py', 'cairn/tools/cgroup/proofs/test_cgroup.py']",
+      "how": "bin/cairn test cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py in the house at e0eb67251"
+    }
+  ],
+  "chart": {
+    "orient": {
+      "request": "The launch tool's proof asks cairn/tools/cgroup for the scoped child's cgroup instead of reading /proc/self/cgroup itself, so cairn/tools/cgroup stays the sole reader the ground loop's proof holds it to.",
+      "intent": "In cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py, the _READ_MAX child string stops reading /proc/self/cgroup with pathlib and calls cairn.tools.cgroup.cgroup.cgroup_of() instead, so cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py's sole-reader check (red on main since 60f16ffccd43) reads green.",
+      "scope": "IN: the _READ_MAX constant in the launch tool's proof. OUT: every tooth of both proofs, the ground loop proof's sanctioned readers, cairn/tools/cgroup, launch.py, every other component.",
+      "ticket": "4aafe74aff69",
+      "unknowns": [
+        "whether the scoped child's interpreter finds cairn without the repo on sys.path (assumed not; the child string inserts it)"
+      ],
+      "confidence": 0.9,
+      "provenance": {
+        "intent": "claude",
+        "scope": "claude"
+      }
+    },
+    "constrain": {
+      "intent_ref": "/home/akien/.cairn/devices/chart/0/packets/orient-20261124T020320-de06968c9475.json",
+      "ticket": "4aafe74aff69",
+      "constraints": [
+        {
+          "text": "Red if a scoped child's memory.max differs from the cap passed (launch charter falsifier): the scoped-exec tooth must stay green",
+          "source": "cairn/devices/system_rackmount/tools/launch/intention+why.json",
+          "kind": "charter"
+        },
+        {
+          "text": "THE READ IS A TOOL'S: the read of /proc/*/cgroup berths at cairn/tools/cgroup and is imported; any other reader is a finding (sole-reader check)",
+          "source": "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py",
+          "kind": "charter"
+        },
+        {
+          "text": "bounds.in is the launch tool's proof (and the red proof, read only); no tooth changes",
+          "source": "/home/akien/dev/src/CairnCommons/tickets/4aafe74aff69-the-launch-tool-s-proof-reads-its-child-s-cgroup-through-the-cgroup-tool.json",
+          "kind": "ticket"
+        },
+        {
+          "text": "RULE 1: a component reaches another only through its public interface; cairn/tools/cgroup is a tool with users",
+          "source": "CLAUDE.md",
+          "kind": "law"
+        }
+      ],
+      "bounds": {
+        "in": [
+          "the _READ_MAX constant in cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+        ],
+        "out": [
+          "every tooth of both proofs",
+          "the ground loop proof's sanctioned readers",
+          "cairn/tools/cgroup",
+          "launch.py",
+          "every other component"
+        ]
+      },
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "intent_ref": "floor",
+        "bounds": "claude"
+      }
+    },
+    "survey": {
+      "constrain_ref": "/home/akien/.cairn/devices/chart/0/packets/constrain-20261124T020340-8f9926bda71d.json",
+      "ticket": "4aafe74aff69",
+      "sought": [
+        "every python file that reads /proc/<pid>/cgroup",
+        "the cgroup tool's public read",
+        "how the launch proof's scoped child is run and what sys.path it has",
+        "the sole-reader check's reader rule"
+      ],
+      "holdings": [
+        {
+          "what": "cgroup_of(pid='self') returns the cgroup v2 path after '0::', or None",
+          "address": "cairn/tools/cgroup/cgroup.py"
+        },
+        {
+          "what": "_READ_MAX reads /proc/self/cgroup with pathlib; the parent child string inserts the repo on sys.path and runs _READ_MAX under scoped_exec as python -c",
+          "address": "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+        },
+        {
+          "what": "a file is a reader when a line naming /proc/.../cgroup carries read_text(, open( or readlines(; readers minus the tool's proof must equal {cairn/tools/cgroup/cgroup.py}",
+          "address": "cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py"
+        },
+        {
+          "what": "the tool's own proof, the one sanctioned second reader",
+          "address": "cairn/tools/cgroup/proofs/test_cgroup.py"
+        }
+      ],
+      "absences": [
+        {
+          "what": "a launch proof read of the child's cgroup through cairn/tools/cgroup",
+          "measure": "grep -n cgroup_of cairn/devices/system_rackmount/tools/launch/proofs/*.py returned nothing at e0eb67251"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "constrain_ref": "floor",
+        "sought": "claude",
+        "holdings": "claude",
+        "absences": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "decompose": {
+      "survey_ref": "/home/akien/.cairn/devices/chart/0/packets/survey-20261124T020359-a3758152d703.json",
+      "ticket": "4aafe74aff69",
+      "sub_problems": [
+        {
+          "what": "the launch proof's scoped child reads its cgroup through cgroup_of",
+          "why": "D1: the sole-reader check counts the launch proof while it spells its own /proc/self/cgroup read; routing it through the tool leaves the tool the one reader",
+          "kind": "build",
+          "fills": "a launch proof read of the child's cgroup through cairn/tools/cgroup",
+          "uses": [
+            "cairn/tools/cgroup/cgroup.py",
+            "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+          ],
+          "writes_to": [
+            "cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "survey_ref": "floor",
+        "sub_problems": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "triage": {
+      "decompose_ref": "/home/akien/.cairn/devices/chart/0/packets/decompose-20261124T020412-196f9c5789ac.json",
+      "ticket": "4aafe74aff69",
+      "order": [
+        {
+          "what": "the launch proof's scoped child reads its cgroup through cgroup_of",
+          "why_now": "the only piece; the red proof test_ground_loop_survives_its_caller.py already reds on main"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "decompose_ref": "floor",
+        "order": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "hypothesize": {
+      "triage_ref": "/home/akien/.cairn/devices/chart/0/packets/triage-20261124T020415-1aa311d3b6bb.json",
+      "ticket": "4aafe74aff69",
+      "hypotheses": [
+        {
+          "piece": "the launch proof's scoped child reads its cgroup through cgroup_of",
+          "expect": "with the build the ground loop proof's sole-reader check reads green (readers: cairn/tools/cgroup/cgroup.py and its proof) and the launch proof stays 4/4, its scoped child reading memory.max 104857600",
+          "falsifier": "the sole-reader check still lists the launch proof, or the scoped-exec tooth reds",
+          "instrument": "bin/cairn test cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py"
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "triage_ref": "floor",
+        "hypotheses": "claude",
+        "unknowns": "claude"
+      }
+    },
+    "validate": {
+      "hypothesize_ref": "/home/akien/.cairn/devices/chart/0/packets/hypothesize-20261124T020431-a91c18ed623c.json",
+      "ticket": "4aafe74aff69",
+      "criteria": [
+        {
+          "claim": "with the build the ground loop proof's sole-reader check seals green and the launch proof stays 4/4",
+          "instrument": "bin/cairn test cairn/devices/recovery/proofs/test_ground_loop_survives_its_caller.py cairn/devices/system_rackmount/tools/launch/proofs/test_the_launch_tool_answers_the_launch_paths_os_questions.py",
+          "covers": [
+            "the launch proof's scoped child reads its cgroup through cgroup_of"
+          ]
+        },
+        {
+          "claim": "a hollow build reds the proof: reverting the launch proof's _READ_MAX reds the ground loop's sole-reader check",
+          "instrument": "bin/cairn test --hollow 4aafe74aff69",
+          "covers": [
+            "the launch proof's scoped child reads its cgroup through cgroup_of"
+          ]
+        }
+      ],
+      "unknowns": [],
+      "confidence": 0.9,
+      "provenance": {
+        "hypothesize_ref": "floor",
+        "criteria": "claude",
+        "unknowns": "claude"
+      }
+    }
+  }
+}
