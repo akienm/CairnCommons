@@ -1,0 +1,65 @@
+{
+  "id": "902331ff6212",
+  "title": "retire counts a namer only where the target's name ends, not inside a sibling's",
+  "owning_intention": "cairn/devices/codemother/machines/retire/intention+why.json",
+  "intention": "CodeMother's retire counts a file as naming a target only where the target's path or dotted module ends as a whole name, so a sibling whose name has the target's as a prefix (superclaude beside superclaude.py) is not a namer.",
+  "why": "Measured 2026-11-23: retiring cairn/devices/cc/superclaude from wt-e179 found 18 namers and 47 proofs; every namer named the sibling superclaude.py or a cairn.devices.cc.superclaude* module, never the bash. The door ran 47 proofs twice with no per-proof bound and timed out at 600s and again at 3000s, killed mid-act with the bash moved aside.",
+  "traces_to": "Law 3 — the namers and callers lists are measurements and the substring match made them wrong; Law 1 — the door re-derived 47 proofs' verdicts for files that never name the target.",
+  "how": "In namers(), match each needle with a right boundary: re.escape(needle) followed by (?![A-Za-z0-9_\\-])(?!\\.[A-Za-z0-9_]). A red-first proof builds a scratch repo through cairn.tools.scratch.scratch.scratch_dir and asserts namers() over target tool beside tool.py.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "in a scratch repo holding target pkg/tool beside pkg/tool.py, a file naming only pkg/tool.py and a file naming only pkg.tool_extra are not namers of pkg/tool: namers() returns []"
+      },
+      {
+        "n": 2,
+        "claim": "a file naming pkg/tool followed by a space, and a file ending a sentence with pkg/tool. are namers of pkg/tool"
+      },
+      {
+        "n": 3,
+        "claim": "the dotted needle obeys the same boundary: a file naming pkg.tool followed by a space is a namer of pkg/tool, and one naming pkg.tooling is not"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: namers() matches each needle with a compiled right-boundary regex instead of a substring test; needles() is unchanged.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/retire/retire.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/retire/retire.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: the red-first proof calls namers() over a scratch repo from scratch_dir, one tooth per clause, no runner.",
+      "writes_to": [
+        "cairn/devices/codemother/machines/retire/proofs/test_retire_names_only_where_the_target_name_ends.py"
+      ],
+      "reads": [
+        "cairn/devices/codemother/machines/retire/proofs/test_retire_checks_callers_in_the_act.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/codemother/machines/retire/retire.py",
+      "cairn/devices/codemother/machines/retire/proofs/test_retire_names_only_where_the_target_name_ends.py"
+    ],
+    "out": [
+      "retire's runner and per-proof timeout",
+      "needles()",
+      "every other component"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "18 namers / 47 proofs for cairn/devices/cc/superclaude, all naming superclaude.py or cairn.devices.cc.superclaude* modules; retire timed out at 600s and 3000s",
+      "how": "retire.namers + proofs_for over wt-e179/cairn; bin/cairn codemother retire cairn/devices/cc/superclaude (log ~/.akien/temp/cc0-pending-2026-11-23/e179_retire.log)"
+    }
+  ]
+}
