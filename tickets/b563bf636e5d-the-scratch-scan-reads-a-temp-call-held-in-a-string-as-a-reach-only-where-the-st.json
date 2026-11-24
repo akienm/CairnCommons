@@ -1,0 +1,62 @@
+{
+  "id": "b563bf636e5d",
+  "title": "the scratch scan reads a temp call held in a string as a reach only where the string runs",
+  "owning_intention": "cairn/tools/scratch/intention+why.json",
+  "intention": "bare_temp_reach names a mkdtemp or gettempdir held in a string only where the string, or a name bound to it, reaches a call that runs text or writes it where it can be run, so a command a gate only judges reads as data and a child script's text still reads as a reach.",
+  "why": "Measured 2026-11-23 on akiendelllinux (cairn e0c2b62ac): bare_temp_reach named bin/proofs/test_delete_gate.py:187, a measured shell command held in a string. Its one consumer is `for command in measured: assert gate.verdict(command) is None` (:193), and bin/cmd/deletegate has no subprocess, exec, eval, Popen or os.system call site. So it is data the delete gate judges, not a reach, yet it reds scratch's corpus tooth and bin's own (red tickets 0746da231128, a30a49e8631f, e3b9eef2fc1e). The scan reads strings on purpose: 008baf08f4d8's reach was a child script's text (248a29f29^, the git-env proof line 46), written with write_text and run with subprocess. The file test_delete_gate.py does call subprocess (:286-305, the gate run on a JSON payload), so a per-file 'has a sink' rule cannot tell the two apart; the rule must follow each string.",
+  "traces_to": "Law 9 (a red from a scan reading data as a reach is distance from no spec, and it blocks every component the corpus tooth reads) and Law 4 (the door stays physics: the reach the scan was built for, 008baf08f4d8's, is still named).",
+  "how": "In bare_temp_reach, parse each proof; a string holding a temp word whose value reaches no sink call (exec, eval, compile, os.system/popen, subprocess.*, run/call, write/write_text/write_bytes, a local function that calls one) has its span marked data, and a hit inside a data span is not named. Flow is followed up through expressions, across names bound by assignment, for targets and returns; a binding it cannot follow counts as running. Text outside strings counts as before; an unparseable file reads line by line as before. Built on akienasus/b563-scan-sink-flow (d9909fce1).",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "over one fixture proof, bare_temp_reach names exactly the string written to a file that is run, the string handed to subprocess, and the bare call, and names neither the measured command a judge only reads, the assert message nor the docstring"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: cairn/tools/scratch/scratch.py bare_temp_reach marks the spans of strings that reach no running call as data (_data_string_spans, _runs, _bound_runs); its docstring says so.",
+      "writes_to": [
+        "cairn/tools/scratch/scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/scratch.py",
+        "bin/proofs/test_delete_gate.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/tools/scratch/proofs/test_scratch.py gains test_bare_temp_reach_names_a_string_only_where_it_runs, PROVES b563bf636e5d key '1', exact equality over a 17-line fixture, inside the control-group file the corpus tooth already exempts.",
+      "writes_to": [
+        "cairn/tools/scratch/proofs/test_scratch.py"
+      ],
+      "reads": [
+        "cairn/tools/scratch/proofs/test_scratch.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/tools/scratch/scratch.py",
+      "cairn/tools/scratch/proofs/test_scratch.py"
+    ],
+    "out": [
+      "bin/proofs/test_delete_gate.py (unchanged: its string is data)",
+      "every component's own scratch-door tooth (0d98f7325181, f5859eae9e08 carry theirs)"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-23",
+      "saw": "bare_temp_reach named bin/proofs/test_delete_gate.py:187, a measured shell command held in a string. Its one consumer is `for command in measured: assert gate.verdict(command) is None` (:193), and bin/cmd/deletegate has no subprocess, exec, eval, Popen or os.system call site. So it is data the delete gate judges, not a reach, yet it reds scratch's corpus tooth and bin's own (red tickets 0746da231128, a30a49e8631f, e3b9eef2fc1e). The scan reads strings on purpose: 008baf08f4d8's reach was a child script's text (248a29f29^, the git-env proof line 46), written with write_text and run with subprocess. The file test_delete_gate.py does call subprocess (:286-305, the gate run on a JSON payload), so a per-file 'has a sink' rule cannot tell the two apart; the rule must follow each string",
+      "how": "grep and read of bin/proofs/test_delete_gate.py:180-196 and bin/cmd/deletegate for call sites, recorded at ~/.cairn/devices/cc/0/measurements/b563bf636e5d-delete-gate-187-sink-trace.txt"
+    },
+    {
+      "when": "2026-11-24",
+      "saw": "on akienasus/b563-scan-sink-flow, the tooth reds with scratch.py reverted (the old scan names the docstring, the measured command and the assert message) and greens with the build; the repo-wide scan names only the clearance and recovery sites; 248a29f29^'s git-env proof is still named at lines 46 and 81",
+      "how": "bin/cairn test --exec 'python3 -m pytest -q -p no:cacheprovider cairn/tools/scratch/proofs/test_scratch.py -k ...' in ~/dev/src/wt-b563/cairn, with and without the build"
+    }
+  ]
+}
