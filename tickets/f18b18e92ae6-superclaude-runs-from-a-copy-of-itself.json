@@ -1,0 +1,67 @@
+{
+  "id": "f18b18e92ae6",
+  "title": "superclaude runs from a copy of itself",
+  "owning_intention": "cairn/devices/cc/intention+why.json",
+  "intention": "superclaude.py finds the repo and its own scripts from where the repo is, not from where its file sits, so a copy laid in an instance bin runs as the symlink does, and a copy that can find no repo says so and stops.",
+  "why": "Measured 2026-11-24 by akiendell_cc_0 on akiendell (b0931d04a912's scratch box): bin/cairn run through MSYS bash laid devices/superclaude/0/bin/superclaude as a COPY (is_symlink False, resolve() stayed in the scratch bin), and superclaude.py died \"can't open file .../devices/superclaude/0/bin/scripts/memory_link.py\": cairn/devices/cc/superclaude.py:147 builds the script path from _FILE.parent. With MSYS=winsymlinks:nativestrict the same run laid a symlink and the dry run exited 0. Read on akiendelllinux (cairn 0ba928548): cairn/devices/cc/superclaude.py:37 is `_REPO = _FILE.parents[3]`, the same derivation from the file's own place; imports survived the copy only because dispatch sets PYTHONPATH to the repo (bin/cairn.py near :164) (inference, labelled as such by akiendell: the floor path at :138 breaks too). A second site makes copies: bin/cairn.py _wire_link's shutil.copy2 fallback (:198, :206). Recorded at ~/.cairn/devices/cc/0/measurements/superclaude-copy-2026-11-24.md.",
+  "traces_to": "Law 7 (a failure is loud at its diagnostic surface, not a missing-file traceback three hops away) and CP6 (a copy where a link was meant is the world being unsafe; the script survives it).",
+  "how": "In cairn/devices/cc/superclaude.py: _REPO is the first of _FILE.parents[3], then each PYTHONPATH entry, that holds cairn/devices/cc/superclaude.py; none holds it: print 'superclaude: cannot find the cairn repo (ran from <_FILE>; set PYTHONPATH to the repo)' to stderr, exit 2. Every path built from _FILE.parent (memory_link at :147, any other scripts/ path) is built from _REPO/cairn/devices/cc instead. Red-first proof copies superclaude.py into a scratch dir and runs it with --dry-run.",
+  "falsifier": {
+    "clauses": [
+      {
+        "n": 1,
+        "claim": "a copy of cairn/devices/cc/superclaude.py in a scratch dir, run with PYTHONPATH set to the repo and --dry-run, exits 0 and no stderr line names a path under the scratch dir"
+      },
+      {
+        "n": 2,
+        "claim": "the same copy run with PYTHONPATH empty exits 2 and its stderr says it cannot find the cairn repo"
+      },
+      {
+        "n": 3,
+        "claim": "no path in cairn/devices/cc/superclaude.py is built from _FILE.parent; cairn/devices/cc/proofs/test_superclaude_wire.py and cairn/devices/cc/proofs/test_superclaude_runs_from_python.py pass unchanged"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "n": 1,
+      "text": "D1: _REPO is searched for, not assumed; scripts paths come from _REPO; the no-repo case exits 2 loudly.",
+      "writes_to": [
+        "cairn/devices/cc/superclaude.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/superclaude.py",
+        "bin/cairn.py"
+      ]
+    },
+    {
+      "n": 2,
+      "text": "D2: cairn/devices/cc/proofs/test_superclaude_runs_from_a_copy_of_itself.py, one PROVES key per clause, the copy and scratch dirs under the tester's scratch door.",
+      "writes_to": [
+        "cairn/devices/cc/proofs/test_superclaude_runs_from_a_copy_of_itself.py"
+      ],
+      "reads": [
+        "cairn/devices/cc/proofs/test_superclaude_wire.py",
+        "cairn/devices/cc/proofs/test_superclaude_runs_from_python.py"
+      ]
+    }
+  ],
+  "bounds": {
+    "in": [
+      "cairn/devices/cc/superclaude.py",
+      "cairn/devices/cc/proofs/test_superclaude_runs_from_a_copy_of_itself.py"
+    ],
+    "out": [
+      "bin/cairn.py _wire_link's shutil.copy2 fallback (the second site that lays copies): its own ticket on bin if a copy must be announced or refused",
+      "MSYS bash's ln -s laying a copy (winsymlinks): a host-seam setting, not code",
+      "every other script the launcher wires into an instance bin"
+    ]
+  },
+  "measured": [
+    {
+      "when": "2026-11-24",
+      "saw": "Measured 2026-11-24 by akiendell_cc_0 on akiendell (b0931d04a912's scratch box): bin/cairn run through MSYS bash laid devices/superclaude/0/bin/superclaude as a COPY (is_symlink False, resolve() stayed in the scratch bin), and superclaude.py died \"can't open file .../devices/superclaude/0/bin/scripts/memory_link.py\": cairn/devices/cc/superclaude.py:147 builds the script path from _FILE.parent. With MSYS=winsymlinks:nativestrict the same run laid a symlink and the dry run exited 0. Read on akiendelllinux (cairn 0ba928548): cairn/devices/cc/superclaude.py:37 is `_REPO = _FILE.parents[3]`, the same derivation from the file's own place; imports survived the copy only because dispatch sets PYTHONPATH to the repo (bin/cairn.py near :164) (inference, labelled as such by akiendell: the floor path at :138 breaks too). A second site makes copies: bin/cairn.py _wire_link's shutil.copy2 fallback (:198, :206). Recorded at ~/.cairn/devices/cc/0/measurements/superclaude-copy-2026-11-24.md.",
+      "how": "akiendell_cc_0's run of b093's proof box on akiendell (relayed, each claim labelled measured or inference), plus a read of superclaude.py and bin/cairn.py on akiendelllinux, recorded at ~/.cairn/devices/cc/0/measurements/superclaude-copy-2026-11-24.md"
+    }
+  ]
+}
